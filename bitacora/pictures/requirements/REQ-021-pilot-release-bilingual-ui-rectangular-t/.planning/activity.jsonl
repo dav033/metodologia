@@ -395,3 +395,8 @@
 {"at": "2026-10-29T11:00:01-05:00", "who": "Designer", "kind": "design", "sp": "SP-5", "text": "decoraciones@v1: direcciones listas para comparar y elegir", "diff": ""}
 {"at": "2026-10-29T11:30:17-05:00", "who": "Tú → Designer", "kind": "design", "sp": "SP-5", "text": "decoraciones@v1: elegida dirección B · Espacio de composición", "diff": ""}
 {"at": "2026-10-29T11:30:45-05:00", "who": "Tú", "kind": "flow", "sp": "SP-4", "text": "Confirmaste SP-4 en la web; sigue SP-5", "diff": ""}
+{"at": "2026-10-29T11:36:34-05:00", "who": "Designer", "kind": "design", "sp": "SP-5", "text": "decoraciones@v1 · borrador 1 listo", "diff": ""}
+{"at": "2026-10-29T11:37:22-05:00", "who": "Tú → Designer", "kind": "design", "sp": "SP-6", "text": "gasto-ia@v1: elegida dirección C · Desglose en el lugar", "diff": ""}
+{"at": "2026-10-29T11:38:38-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 322 secciones traducidas", "diff": ""}
+{"at": "2026-10-29T11:41:13-05:00", "who": "Tú → Designer", "kind": "feedback", "sp": "SP-7", "text": "herramientas-chat@v1 · A: Me gusta esta direccion pero prefieroq eu sea como una barra en la izquierda que tenga como las haerramientas yqeus e peuda ir como cambiando entre ellas, como una sisebar oa glo asi", "diff": ""}
+{"at": "2026-10-29T11:41:14-05:00", "who": "Designer", "kind": "design", "sp": "SP-7", "text": "herramientas-chat@v1: iterando dirección A · Operación en paralelo", "diff": ""}

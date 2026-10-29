@@ -1252,124 +1252,124 @@ La interfaz sigue el idioma del navegador en la primera visita y la elección de
 
 
 
-### M4 — Editable modules and chat → 3D
-Users edit modules and quartets beyond colours, and the normal chat recommends ready-made 3D decorations that open in the workshop.
+### M4 — Módulos editables y chat → 3D
+Los usuarios editan módulos y cuartetos más allá de los colores, y el chat normal recomienda decoraciones 3D listas para usar que se abren en el taller.
 
-- **SP-11 — Editable modules and quartets** (no Designer, Planner ruling after round 16): A user edits a module or quartet in the scene beyond its colours (the exact edits are settled with the owner in this subplan) and the counts and shopping list update. Covers R15.
+- **SP-11 — Módulos y cuartetos editables** (sin Designer, resolución del Planner después de la ronda 16): Un usuario edita un módulo o cuarteto en la escena más allá de sus colores (las ediciones exactas se acuerdan con el propietario en este subplan) y se actualizan las cantidades y la lista de compras. Cubre R15.
 
 <!-- SP-11 tasks -->
 
-  SP-11 tasks (owner round 16 q6 a, 2026-10-29): only spacing between quartets and thickness of columns, arches and garlands. Today `armarTrenza` (src/lib/globos3d/trenza.ts) fixes them with PASO_POR_DIAMETRO = 0.8 and RADIO_TRENZA_POR_DIAMETRO = 0.62 and the editor (EditorTrenzaCompleto in ParametrosPieza.tsx) has no control for them. Ranges 0.6–1.2 and 0.5–0.8 diameters are a Planner ruling (below 0.6 balloons overlap, above 1.2 gaps show); the defaults stay the constants. No Designer (Planner ruling): two sliders in the existing editor follow its slider pattern. Cut order 2 (owner): SP-11 drops before chat→3D if late.
-  DAG: T11.1 (engine and schema) → T11.2 (editor controls) → T11.3 integration → T11.4 audit; CG-11 adds SP-11 after CG-10.
+  Tareas de SP-11 (respuesta del propietario a la pregunta 6 de la ronda 16, 2026-10-29): solo el espacio entre cuartetos y el grosor de las columnas, los arcos y las guirnaldas. Actualmente, `armarTrenza` (src/lib/globos3d/trenza.ts) los fija con PASO_POR_DIAMETRO = 0.8 y RADIO_TRENZA_POR_DIAMETRO = 0.62, y el editor (EditorTrenzaCompleto en ParametrosPieza.tsx) no tiene controles para ellos. Los rangos de 0.6–1.2 y 0.5–0.8 diámetros son una resolución del Planner (por debajo de 0.6 los globos se superponen; por encima de 1.2 se ven espacios); los valores predeterminados siguen siendo las constantes. Sin Designer (resolución del Planner): dos controles deslizantes en el editor existente siguen el patrón de controles deslizantes que ya utiliza. Orden de recorte 2 (propietario): SP-11 se elimina antes que chat→3D si hay retrasos.
+  DAG: T11.1 (motor y esquema) → T11.2 (controles del editor) → T11.3 integración → T11.4 auditoría; CG-11 agrega SP-11 después de CG-10.
 
-- [ ] T11.1 — Optional spacing and thickness in the quartet engine and the scene schema · repo: pictures · after: T100 · verify: `npm run trenza:test-separacion -- --test-name-pattern=rango-y-defecto` · files: src/lib/globos3d/trenza.ts, src/lib/globos3d/piezas.ts, src/lib/globos3d/esquema-escena.ts, src/lib/globos3d/hoja-armado-estructura.ts, scripts/test/test-trenza-separacion.ts · resources: package.json scripts, contract:taller-scene · covers: R15 · kind: implement · subplan: SP-11 · ui: no
+- [ ] T11.1 — Espacio y grosor opcionales en el motor de cuartetos y el esquema de escena · repo: pictures · después de: T100 · verificar: `npm run trenza:test-separacion -- --test-name-pattern=rango-y-defecto` · archivos: src/lib/globos3d/trenza.ts, src/lib/globos3d/piezas.ts, src/lib/globos3d/esquema-escena.ts, src/lib/globos3d/hoja-armado-estructura.ts, scripts/test/test-trenza-separacion.ts · recursos: scripts de package.json, contract:taller-scene · cubre: R15 · tipo: implementación · subplan: SP-11 · interfaz: no
 
-  Classification: complexity medium; scope small_change; risk medium; coupling medium; confidence high; estimate 120 minutes.
-  Fields `separacion?: number` and `grosor?: number` (in diameters) on columna and arco and in OpcionesGuirnalda; `armarTrenza` reads them with the constants as defaults. npm script `trenza:test-separacion` = `tsx --conditions=react-server --test scripts/test/test-trenza-separacion.ts`; the existing goldens (`npm run globos3d:test`) stay unchanged.
+  Clasificación: complejidad media; alcance small_change; riesgo medio; acoplamiento medio; confianza alta; estimación: 120 minutos.
+  Campos `separacion?: number` y `grosor?: number` (en diámetros) para columna y arco, y en OpcionesGuirnalda; `armarTrenza` los lee y usa las constantes como valores predeterminados. El script de npm `trenza:test-separacion` = `tsx --conditions=react-server --test scripts/test/test-trenza-separacion.ts`; los goldens existentes (`npm run globos3d:test`) permanecen sin cambios.
 
-  - Acceptance / functional: Columns, arches and garlands built from quartets accept an optional spacing between quartets of 0.6 to 1.2 balloon diameters and an optional thickness of 0.5 to 0.8 diameters; without them every existing piece, count and golden scene is byte-identical, and values outside the range are refused by the scene schema. Check: `npm run trenza:test-separacion -- --test-name-pattern=rango-y-defecto`
-  - Acceptance / functional: Changing the spacing of a column, arch or garland changes its number of quartets as height or length divided by the spacing, and the balloon counts, the shopping list and the assembly sheet change accordingly, while changing only the thickness changes no count. Check: `npm run trenza:test-separacion -- --test-name-pattern=conteos`
+  - Aceptación / funcional: Las columnas, los arcos y las guirnaldas construidos con cuartetos aceptan un espacio opcional entre cuartetos de 0.6 a 1.2 diámetros de globo y un grosor opcional de 0.5 a 0.8 diámetros; sin esos valores, cada pieza, cantidad y escena golden existente es idéntica byte por byte, y el esquema de escena rechaza los valores fuera del rango. Comprobación: `npm run trenza:test-separacion -- --test-name-pattern=rango-y-defecto`
+  - Aceptación / funcional: Cambiar el espacio de una columna, un arco o una guirnalda cambia su cantidad de cuartetos según la altura o la longitud dividida por el espacio, y las cantidades de globos, la lista de compras y la hoja de armado cambian en consecuencia, mientras que cambiar solo el grosor no altera ninguna cantidad. Comprobación: `npm run trenza:test-separacion -- --test-name-pattern=conteos`
 
-- [ ] T11.2 — Spacing and thickness controls in the column, arch and garland editor · repo: pictures · after: T11.1 · verify: `npm run trenza:test-ui -- --solo controles` · files: src/components/tres-d/ParametrosPieza.tsx, src/components/tres-d/textos/taller-edicion.ts, scripts/test/test-ui-separacion-trenza.ts · resources: package.json scripts · covers: R15 · kind: implement · subplan: SP-11 · ui: no
+- [ ] T11.2 — Controles de espacio y grosor en el editor de columnas, arcos y guirnaldas · repo: pictures · después de: T11.1 · verificar: `npm run trenza:test-ui -- --solo controles` · archivos: src/components/tres-d/ParametrosPieza.tsx, src/components/tres-d/textos/taller-edicion.ts, scripts/test/test-ui-separacion-trenza.ts · recursos: scripts de package.json · cubre: R15 · tipo: implementación · subplan: SP-11 · interfaz: no
 
-  Classification: complexity low; scope small_change; risk low; coupling medium; confidence high; estimate 75 minutes.
-  npm script `trenza:test-ui` = `tsx scripts/test/test-ui-separacion-trenza.ts`.
+  Clasificación: complejidad baja; alcance small_change; riesgo bajo; acoplamiento medio; confianza alta; estimación: 75 minutos.
+  El script de npm `trenza:test-ui` = `tsx scripts/test/test-ui-separacion-trenza.ts`.
 
-  - Acceptance / functional: Selecting a column, arch or garland shows spacing and thickness controls in its editor with the current value in centimetres and a reset to the default; moving them updates the scene, the counts and the shopping list, and undo restores the previous values. Check: `npm run trenza:test-ui -- --solo controles`
-  - Acceptance / functional: A scene holding pieces with spacing and thickness saves as a project, reopens with the same values and exports to GLB with the edited geometry. Check: `npm run trenza:test-ui -- --solo guardar-y-exportar`
+  - Aceptación / funcional: Al seleccionar una columna, un arco o una guirnalda, el editor muestra controles de espacio y grosor con el valor actual en centímetros y una opción para restablecer el valor predeterminado; al moverlos, se actualizan la escena, las cantidades y la lista de compras, y deshacer restaura los valores anteriores. Comprobación: `npm run trenza:test-ui -- --solo controles`
+  - Aceptación / funcional: Una escena que contiene piezas con espacio y grosor se guarda como proyecto, se vuelve a abrir con los mismos valores y se exporta a GLB con la geometría editada. Comprobación: `npm run trenza:test-ui -- --solo guardar-y-exportar`
 
-- [ ] T11.3 — Browser end-to-end: edit spacing and thickness, save, reopen and export · repo: pictures · after: T11.2 · verify: `npm run trenza:test-integracion` · files: scripts/test/test-integracion-separacion-trenza.ts, .evidence/REQ-021/SP-11.integration.json · resources: package.json scripts · covers: R15 · kind: test · subplan: SP-11
+- [ ] T11.3 — Prueba integral en navegador: editar el espacio y el grosor, guardar, volver a abrir y exportar · repo: pictures · después de: T11.2 · verificar: `npm run trenza:test-integracion` · archivos: scripts/test/test-integracion-separacion-trenza.ts, .evidence/REQ-021/SP-11.integration.json · recursos: scripts de package.json · cubre: R15 · tipo: prueba · subplan: SP-11
 
-  Classification: complexity medium; scope small_change; risk medium; coupling medium; confidence medium; estimate 60 minutes.
-  npm script `trenza:test-integracion` = `tsx scripts/test/test-integracion-separacion-trenza.ts`.
+  Clasificación: complejidad media; alcance small_change; riesgo medio; acoplamiento medio; confianza media; estimación: 60 minutos.
+  El script de npm `trenza:test-integracion` = `tsx scripts/test/test-integracion-separacion-trenza.ts`.
 
-  - Acceptance / integration: On a production build against the REQ-021 database, a Master Designer edits the spacing and thickness of a column and an arch, sees the counts and shopping list change, saves the project, reopens it in another browser with the same values, and exports a GLB whose column height is unchanged. Check: `npm run trenza:test-integracion`
+  - Aceptación / integración: En una compilación de producción contra la base de datos de REQ-021, un Master Designer edita el espacio y el grosor de una columna y un arco, ve cambiar las cantidades y la lista de compras, guarda el proyecto, lo vuelve a abrir en otro navegador con los mismos valores y exporta un GLB cuya columna conserva la misma altura. Comprobación: `npm run trenza:test-integracion`
 
-- [ ] T11.4 — SP-11 audit: quartet spacing and thickness, counts and compatibility · repo: pictures · after: T11.3 · verify: `bitacora.py audit-ledger check .evidence/REQ-021/SP-11.findings.json` · files: .evidence/REQ-021/SP-11.audit.md, .evidence/REQ-021/SP-11.findings.json · resources: ledger:SP-11 · covers: R15 · kind: audit · subplan: SP-11
+- [ ] T11.4 — Auditoría de SP-11: espacio y grosor de los cuartetos, cantidades y compatibilidad · repo: pictures · después de: T11.3 · verificar: `bitacora.py audit-ledger check .evidence/REQ-021/SP-11.findings.json` · archivos: .evidence/REQ-021/SP-11.audit.md, .evidence/REQ-021/SP-11.findings.json · recursos: ledger:SP-11 · cubre: R15 · tipo: auditoría · subplan: SP-11
 
-  Classification: complexity medium; scope small_change; risk high; coupling medium; confidence medium; estimate 55 minutes.
-  Read-only; checks the spacing and thickness ranges, count updates and unchanged existing scenes.
+  Clasificación: complejidad media; alcance small_change; riesgo alto; acoplamiento medio; confianza media; estimación: 55 minutos.
+  Solo lectura; comprueba los rangos de espacio y grosor, las actualizaciones de cantidades y que las escenas existentes permanezcan sin cambios.
 
-  - Acceptance / static: An independent audit of SP-11 checks the spacing and thickness ranges, count updates and unchanged existing scenes, records every confirmed defect with the task that must redo it in the SP-11 findings ledger, and the ledger has no open critical or high finding. Check: `bitacora.py audit-ledger check .evidence/REQ-021/SP-11.findings.json`
+  - Aceptación / estática: Una auditoría independiente de SP-11 comprueba los rangos de espacio y grosor, las actualizaciones de cantidades y que las escenas existentes permanezcan sin cambios; registra cada defecto confirmado, junto con la tarea que debe rehacerlo, en el registro de hallazgos de SP-11; y el registro no tiene hallazgos críticos ni altos abiertos. Comprobación: `bitacora.py audit-ledger check .evidence/REQ-021/SP-11.findings.json`
 
 <!-- /SP-11 tasks -->
 
 <!-- CG-11 tasks -->
 
-  Composition gate CG-11: SP-1, SP-2, SP-14, SP-3, SP-4, SP-5, SP-6, SP-7, SP-8, SP-9, SP-10, SP-11 (cumulative).
+  Puerta de composición CG-11: SP-1, SP-2, SP-14, SP-3, SP-4, SP-5, SP-6, SP-7, SP-8, SP-9, SP-10, SP-11 (acumulativo).
 
-- [ ] T101 — Composition check CG-11: edited structures in saved projects, decorations and English · repo: pictures · after: T11.4 · verify: `npm run trenza:test-integracion -- --modo CG-11` · files: .evidence/REQ-021/CG-11.integration.json · resources: candidate:CG-11 · covers: R15 · kind: test
+- [ ] T101 — Comprobación de composición CG-11: estructuras editadas en proyectos guardados, decoraciones e inglés · repo: pictures · después de: T11.4 · verificar: `npm run trenza:test-integracion -- --modo CG-11` · archivos: .evidence/REQ-021/CG-11.integration.json · recursos: candidate:CG-11 · cubre: R15 · tipo: prueba
 
-  Classification: complexity medium; scope small_change; risk medium; coupling medium; confidence medium; estimate 40 minutes.
+  Clasificación: complejidad media; alcance small_change; riesgo medio; acoplamiento medio; confianza media; estimación: 40 minutos.
   `npm run trenza:test-integracion -- --modo CG-11`.
 
-  - Acceptance / integration: On the integrated candidate with SP-11, an edited column saves as a project and as a personal decoration, reopens with the same spacing, and its editor controls read in English for an English account. Check: `npm run trenza:test-integracion -- --modo CG-11`
+  - Aceptación / integración: En la versión candidata integrada con SP-11, una columna editada se guarda como proyecto y como decoración personal, se vuelve a abrir con el mismo espacio y sus controles del editor aparecen en inglés para una cuenta en inglés. Comprobación: `npm run trenza:test-integracion -- --modo CG-11`
 
 <!-- /CG-11 tasks -->
 
 
-- **SP-12 — Normal chat recommends ready-made 3D decorations** (UI: `chat-a-3d@v1`): In two or three messages the normal chat defines the need and recommends existing 3D decorations that open in the Taller 3D as a new project, using the real catalogue and engine. Covers R13.
+- **SP-12 — El chat normal recomienda decoraciones 3D listas para usar** (UI: `chat-a-3d@v1`): En dos o tres mensajes, el chat normal determina la necesidad y recomienda decoraciones 3D existentes que se abren en el Taller 3D como un proyecto nuevo, usando el catálogo y el motor reales. Cubre R13.
 
 <!-- SP-12 tasks -->
 
-  SP-12 tasks (owner round 16 q7 a, 2026-10-29): every plan sees 2–3 recommended ready-made decorations with image, name and count; only Master Designer and staff see «Abrir en el Taller» (decoraciones.explorar), without naming the plan. Recommendations come from the SP-7 gallery index (galeria-index@1: IDEAS_ASISTENTE and IDEAS_SEMPERTEX) and counts from each idea's own shopping list, never from the model. Cut order 3 (owner): chat→3D drops before the never-cut items if late.
-  DAG: T12.1 (design) ∥ T12.2 (recommender and chat tool) → T12.3 (cards) → T12.4 integration → T12.5 visual review → T12.6 audit; CG-12 adds SP-12 after CG-11.
+  Tareas de SP-12 (respuesta del propietario a la pregunta 7 de la ronda 16, 2026-10-29): todos los planes muestran de 2 a 3 decoraciones recomendadas listas para usar con imagen, nombre y cantidad; solo Master Designer y el personal ven «Abrir en el Taller» (decoraciones.explorar), sin mencionar el plan. Las recomendaciones provienen del índice de galería de SP-7 (galeria-index@1: IDEAS_ASISTENTE e IDEAS_SEMPERTEX) y las cantidades, de la lista de compras propia de cada idea, nunca del modelo. Orden de recorte 3 (propietario): chat→3D se elimina antes que los elementos que nunca se recortan si hay retrasos.
+  DAG: T12.1 (diseño) ∥ T12.2 (recomendador y herramienta de chat) → T12.3 (tarjetas) → T12.4 integración → T12.5 revisión visual → T12.6 auditoría; CG-12 agrega SP-12 después de CG-11.
 
-- [ ] T12.1 — Copy the owner-approved chat-a-3d@v1 contract into the repository · repo: pictures · after: T101 · verify: `test -s design/contracts/chat-a-3d@v1.md` · files: design/contracts/chat-a-3d@v1.md · resources: design:chat-a-3d@v1 · covers: R13 · kind: design · subplan: SP-12 · ui: no
+- [ ] T12.1 — Copiar en el repositorio el contrato chat-a-3d@v1 aprobado por el propietario · repo: pictures · después de: T101 · verificar: `test -s design/contracts/chat-a-3d@v1.md` · archivos: design/contracts/chat-a-3d@v1.md · recursos: design:chat-a-3d@v1 · cubre: R13 · tipo: diseño · subplan: SP-12 · interfaz: no
 
-  Classification: complexity low; scope isolated_fix; risk low; coupling medium; confidence high; estimate 10 minutes.
-  The scheduler supplies the plan-approved draft; the task copies it unchanged.
+  Clasificación: complejidad baja; alcance isolated_fix; riesgo bajo; acoplamiento medio; confianza alta; estimación: 10 minutos.
+  El planificador proporciona el borrador aprobado para el plan; la tarea lo copia sin cambios.
 
-  - Acceptance / static: The owner-approved chat-a-3d@v1 contract is copied byte for byte into design/contracts/chat-a-3d@v1.md. Check: `test -s design/contracts/chat-a-3d@v1.md`
+  - Aceptación / estática: El contrato chat-a-3d@v1 aprobado por el propietario se copia byte por byte en design/contracts/chat-a-3d@v1.md. Comprobación: `test -s design/contracts/chat-a-3d@v1.md`
 
-- [ ] T12.2 — Deterministic 3D decoration recommender and its guided-chat tool · repo: pictures · after: T101 · verify: `npm run recomendaciones:test -- --test-name-pattern=ranking` · files: src/lib/recomendaciones-3d/recomendar.ts, src/app/api/asistente-guiado/route.ts, src/lib/ia/guiado/prompt-guiado.ts, scripts/test/test-recomendaciones-3d.ts · resources: package.json scripts, contract:galeria-index · covers: R13 · kind: implement · subplan: SP-12 · ui: no
+- [ ] T12.2 — Recomendador determinista de decoraciones 3D y su herramienta para el chat guiado · repo: pictures · después de: T101 · verificar: `npm run recomendaciones:test -- --test-name-pattern=ranking` · archivos: src/lib/recomendaciones-3d/recomendar.ts, src/app/api/asistente-guiado/route.ts, src/lib/ia/guiado/prompt-guiado.ts, scripts/test/test-recomendaciones-3d.ts · recursos: scripts de package.json, contract:galeria-index · cubre: R13 · tipo: implementación · subplan: SP-12 · interfaz: no
 
-  Classification: complexity medium; scope small_change; risk medium; coupling medium; confidence medium; estimate 120 minutes.
-  Tool `recomendar_decoraciones_3d` {ocasion, tamano, colores} → `[{ id, nombre, imagen, globos }]`. npm script `recomendaciones:test` = `tsx --conditions=react-server --test scripts/test/test-recomendaciones-3d.ts`.
+  Clasificación: complejidad media; alcance small_change; riesgo medio; acoplamiento medio; confianza alta; estimación: 120 minutos.
+  Herramienta `recomendar_decoraciones_3d` {ocasion, tamano, colores} → `[{ id, nombre, imagen, globos }]`. El script de npm `recomendaciones:test` = `tsx --conditions=react-server --test scripts/test/test-recomendaciones-3d.ts`.
 
-  - Acceptance / functional: Given a brief with event type, approximate size and colours, the recommender returns two or three existing gallery decorations ranked by occasion, colour match and size, each with its id, name, preview image and total balloon count taken from the decoration's own shopping list, and returns none rather than a weak match when nothing fits. Check: `npm run recomendaciones:test -- --test-name-pattern=ranking`
-  - Acceptance / functional: Within at most three customer messages the guided chat collects the brief and calls the recommendation tool; its reply names only the decorations the tool returned, and a stubbed model that tries to name another decoration or another count is corrected by the final-text guard. Check: `npm run recomendaciones:test -- --test-name-pattern=herramienta`
+  - Aceptación / funcional: Dado un resumen que indica el tipo de evento, el tamaño aproximado y los colores, el recomendador devuelve de dos a tres decoraciones existentes de la galería, clasificadas según la ocasión, la coincidencia de colores y el tamaño. Cada una incluye su id, nombre, imagen de vista previa y cantidad total de globos obtenida de la lista de compras propia de la decoración. Si no hay ninguna que coincida, no devuelve resultados en vez de sugerir una coincidencia débil. Comprobación: `npm run recomendaciones:test -- --test-name-pattern=ranking`
+  - Aceptación / funcional: En un máximo de tres mensajes del cliente, el chat guiado recopila el resumen y llama a la herramienta de recomendación; su respuesta nombra solo las decoraciones devueltas por la herramienta, y el control del texto final corrige una respuesta de un modelo simulado que intenta nombrar otra decoración o indicar otra cantidad. Comprobación: `npm run recomendaciones:test -- --test-name-pattern=herramienta`
 
-- [ ] T12.3 — Recommendation cards in the guided chat with a plan-gated open button · repo: pictures · after: T12.1, T12.2 · verify: `npm run recomendaciones:test-ui` · files: src/components/guiado/TarjetaRecomendacion3D.tsx, src/components/guiado/textos/recomendaciones-3d.ts, scripts/test/test-ui-recomendaciones-3d.ts · resources: package.json scripts, contract:permission-map · covers: R13 · kind: implement · subplan: SP-12 · ui: yes
+- [ ] T12.3 — Tarjetas de recomendación en el chat guiado con un botón para abrir, sujeto al plan · repo: pictures · después de: T12.1, T12.2 · verificar: `npm run recomendaciones:test-ui` · archivos: src/components/guiado/TarjetaRecomendacion3D.tsx, src/components/guiado/textos/recomendaciones-3d.ts, scripts/test/test-ui-recomendaciones-3d.ts · recursos: scripts de package.json, contract:permission-map · cubre: R13 · tipo: implementación · subplan: SP-12 · interfaz: sí
 
-  Classification: complexity low; scope small_change; risk medium; coupling medium; confidence medium; estimate 75 minutes.
-  npm script `recomendaciones:test-ui` = `tsx scripts/test/test-ui-recomendaciones-3d.ts`.
+  Clasificación: complejidad baja; alcance small_change; riesgo medio; acoplamiento medio; confianza media; estimación: 75 minutos.
+  El script de npm `recomendaciones:test-ui` = `tsx scripts/test/test-ui-recomendaciones-3d.ts`.
 
-  - Acceptance / functional: The chat shows each recommendation as a card with preview, name in the session's language and balloon count; «Abrir en el Taller» appears only for accounts with decoraciones.explorar and opens /3d?decoracion=<id> as a new project, and other accounts see the card without the button and without any mention of a plan. Check: `npm run recomendaciones:test-ui`
+  - Aceptación / funcional: El chat muestra cada recomendación como una tarjeta con vista previa, nombre en el idioma de la sesión y cantidad de globos; «Abrir en el Taller» aparece solo para cuentas con decoraciones.explorar y abre /3d?decoracion=<id> como un proyecto nuevo; las demás cuentas ven la tarjeta sin el botón y sin ninguna mención de un plan. Comprobación: `npm run recomendaciones:test-ui`
 
-- [ ] T12.4 — Browser end-to-end: recommendations for two plans and opening one in the Taller · repo: pictures · after: T12.3 · verify: `npm run recomendaciones:test-integracion` · files: scripts/test/test-integracion-recomendaciones-3d.ts, .evidence/REQ-021/SP-12.integration.json · resources: package.json scripts · covers: R13 · kind: test · subplan: SP-12
+- [ ] T12.4 — Prueba integral en navegador: recomendaciones para dos planes y apertura de una en el Taller · repo: pictures · después de: T12.3 · verificar: `npm run recomendaciones:test-integracion` · archivos: scripts/test/test-integracion-recomendaciones-3d.ts, .evidence/REQ-021/SP-12.integration.json · recursos: scripts de package.json · cubre: R13 · tipo: prueba · subplan: SP-12
 
-  Classification: complexity medium; scope small_change; risk medium; coupling medium; confidence medium; estimate 75 minutes.
-  npm script `recomendaciones:test-integracion` = `tsx scripts/test/test-integracion-recomendaciones-3d.ts`.
+  Clasificación: complejidad media; alcance small_change; riesgo medio; acoplamiento medio; confianza media; estimación 75 minutos.
+  El script de npm `recomendaciones:test-integracion` = `tsx scripts/test/test-integracion-recomendaciones-3d.ts`.
 
-  - Acceptance / integration: On a production build, with expected results written from the SPEC, an Entusiasta describes a birthday in two messages and gets two or three recommendation cards without an open button, and a Master Designer gets the same cards, opens one in the Taller as a new unsaved project and saves it. Check: `npm run recomendaciones:test-integracion`
+  - Aceptación / integración: En una compilación de producción, con los resultados esperados escritos a partir de SPEC, un Entusiasta describe un cumpleaños en dos mensajes y obtiene dos o tres tarjetas de recomendación sin botón para abrir; un Master Designer obtiene las mismas tarjetas, abre una en el Taller como proyecto nuevo sin guardar y lo guarda. Comprobación: `npm run recomendaciones:test-integracion`
 
-- [ ] T12.5 — SP-12 visual review against the chat-a-3d@v1 contract · repo: pictures · after: T12.4 · verify: `bitacora.py audit-ledger check .evidence/REQ-021/SP-12.visual.findings.json` · files: .evidence/REQ-021/SP-12.visual.md, .evidence/REQ-021/SP-12.visual.findings.json · resources: ledger:SP-12-visual · covers: R13 · kind: audit · subplan: SP-12
+- [ ] T12.5 — Revisión visual de SP-12 según el contrato chat-a-3d@v1 · repo: pictures · después de: T12.4 · verificar: `bitacora.py audit-ledger check .evidence/REQ-021/SP-12.visual.findings.json` · archivos: .evidence/REQ-021/SP-12.visual.md, .evidence/REQ-021/SP-12.visual.findings.json · recursos: ledger:SP-12-visual · cubre: R13 · tipo: auditoría · subplan: SP-12
 
-  Classification: complexity medium; scope small_change; risk medium; coupling medium; confidence medium; estimate 45 minutes.
-  Reviewer axis `visual` (rendered-ui-fidelity-audit).
+  Clasificación: complejidad media; alcance small_change; riesgo medio; acoplamiento medio; confianza media; estimación 45 minutos.
+  Eje del Reviewer `visual` (rendered-ui-fidelity-audit).
 
-  - Acceptance / static: The rendered recommendation cards with and without the open button match the approved chat-a-3d@v1 contract at phone, tablet and desktop widths, and every finding is recorded with the task to redo in the SP-12 visual ledger. Check: `bitacora.py audit-ledger check .evidence/REQ-021/SP-12.visual.findings.json`
+  - Aceptación / estática: Las tarjetas de recomendación renderizadas, con y sin el botón para abrir, coinciden con el contrato chat-a-3d@v1 aprobado en anchos de teléfono, tableta y escritorio, y cada hallazgo queda registrado con la tarea que debe rehacerse en el ledger visual de SP-12. Comprobación: `bitacora.py audit-ledger check .evidence/REQ-021/SP-12.visual.findings.json`
 
-- [ ] T12.6 — SP-12 audit: recommendation sources, invented values and the open-button gate · repo: pictures · after: T12.5 · verify: `bitacora.py audit-ledger check .evidence/REQ-021/SP-12.findings.json` · files: .evidence/REQ-021/SP-12.audit.md, .evidence/REQ-021/SP-12.findings.json · resources: ledger:SP-12 · covers: R13 · kind: audit · subplan: SP-12
+- [ ] T12.6 — Auditoría de SP-12: fuentes de recomendaciones, valores inventados y control del botón para abrir · repo: pictures · después de: T12.5 · verificar: `bitacora.py audit-ledger check .evidence/REQ-021/SP-12.findings.json` · archivos: .evidence/REQ-021/SP-12.audit.md, .evidence/REQ-021/SP-12.findings.json · recursos: ledger:SP-12 · cubre: R13 · tipo: auditoría · subplan: SP-12
 
-  Classification: complexity medium; scope small_change; risk high; coupling medium; confidence medium; estimate 55 minutes.
-  Read-only; checks recommendation sources, invented names or counts and the open-button permission.
+  Clasificación: complejidad media; alcance small_change; riesgo alto; acoplamiento medio; confianza media; estimación 55 minutos.
+  Solo lectura; comprueba las fuentes de recomendaciones, los nombres o cantidades inventados y el permiso para abrir.
 
-  - Acceptance / static: An independent audit of SP-12 checks recommendation sources, invented names or counts and the open-button permission, records every confirmed defect with the task that must redo it in the SP-12 findings ledger, and the ledger has no open critical or high finding. Check: `bitacora.py audit-ledger check .evidence/REQ-021/SP-12.findings.json`
+  - Aceptación / estática: Una auditoría independiente de SP-12 comprueba las fuentes de recomendaciones, los nombres o cantidades inventados y el permiso para abrir, registra cada defecto confirmado junto con la tarea que debe rehacerlo en el ledger de hallazgos de SP-12, y el ledger no tiene hallazgos críticos o altos abiertos. Comprobación: `bitacora.py audit-ledger check .evidence/REQ-021/SP-12.findings.json`
 
 <!-- /SP-12 tasks -->
 
 <!-- CG-12 tasks -->
 
-  Composition gate CG-12: SP-1, SP-2, SP-14, SP-3, SP-4, SP-5, SP-6, SP-7, SP-8, SP-9, SP-10, SP-11, SP-12 (cumulative).
+  Puerta de composición CG-12: SP-1, SP-2, SP-14, SP-3, SP-4, SP-5, SP-6, SP-7, SP-8, SP-9, SP-10, SP-11, SP-12 (acumulativo).
 
-- [ ] T102 — Composition check CG-12: chat recommendations into saved projects, in both languages · repo: pictures · after: T12.6 · verify: `npm run recomendaciones:test-integracion -- --modo CG-12` · files: .evidence/REQ-021/CG-12.integration.json · resources: candidate:CG-12 · covers: R13 · kind: test
+- [ ] T102 — Comprobación de composición CG-12: recomendaciones del chat a proyectos guardados, en ambos idiomas · repo: pictures · después de: T12.6 · verificar: `npm run recomendaciones:test-integracion -- --modo CG-12` · archivos: .evidence/REQ-021/CG-12.integration.json · recursos: candidate:CG-12 · cubre: R13 · tipo: prueba
 
-  Classification: complexity medium; scope small_change; risk medium; coupling medium; confidence medium; estimate 40 minutes.
+  Clasificación: complejidad media; alcance small_change; riesgo medio; acoplamiento medio; confianza media; estimación 40 minutos.
   `npm run recomendaciones:test-integracion -- --modo CG-12`.
 
-  - Acceptance / integration: On the integrated candidate with SP-12, an English Master Designer gets English recommendation cards, opens one as a new project, edits a column's spacing and saves it, and the AI spend view shows the chat call under its tag. Check: `npm run recomendaciones:test-integracion -- --modo CG-12`
+  - Aceptación / integración: En el candidato integrado con SP-12, un Master Designer en inglés recibe tarjetas de recomendación en inglés, abre una como proyecto nuevo, edita el espaciado de una columna y la guarda; la vista de gasto de IA muestra la llamada del chat bajo su etiqueta. Comprobación: `npm run recomendaciones:test-integracion -- --modo CG-12`
 
 <!-- /CG-12 tasks -->
 

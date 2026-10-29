@@ -14,184 +14,184 @@ owner: David
 
 # Espacio de composición — direction b
 
-## 1. Identity and traceability
+## 1. Identidad y trazabilidad
 
-Planning exploration, **draft and unapproved**. This direction is a candidate for `decoraciones@v1`, not the canonical contract. The owner chooses a direction in the comparison; a later finalizer writes the canonical contract. Nothing here approves the plan or authorizes implementation.
+Exploración de planificación, **borrador sin aprobar**. Esta dirección es una candidata para `decoraciones@v1`, no el contrato canónico. El propietario elige una dirección en la comparación; posteriormente, un finalizador redacta el contrato canónico. Nada de lo aquí presentado aprueba el plan ni autoriza la implementación.
 
-Scope: SP-5, R8, shared `decoraciones@v1.r3.behavior.md`, SPEC § “Behavior — SP-5 (round 11 answered)” and PLAN.json revision 15. Consumers after independent approval: T5.1 copies the contract, T5.3 implements the personal library, T5.5 reviews its rendered result. This exploration creates only its two candidate HTMLs, TSX, built HTML, this note and axis JSON, plus the explicitly requested delegation result. No repository, canonical artifact, SPEC, PLAN, changelog or preview is changed.
+Alcance: SP-5, R8, `decoraciones@v1.r3.behavior.md` compartido, SPEC § “Behavior — SP-5 (round 11 answered)” y revisión 15 de PLAN.json. Consumidores después de la aprobación independiente: T5.1 copia el contrato, T5.3 implementa la biblioteca personal y T5.5 revisa el resultado renderizado. Esta exploración crea únicamente sus dos HTML candidatos, TSX, HTML compilado, esta nota y el JSON de ejes, además del resultado de la delegación solicitada explícitamente. No se modifica ningún repositorio, artefacto canónico, SPEC, PLAN, registro de cambios ni vista previa.
 
-Read-only evidence: both repositories' `src/app/globals.css`, `src/app/layout.tsx`, `src/components/tres-d/Biblioteca.tsx` and `Taller3D.tsx`. `Biblioteca.tsx` is identical in t12 and asesor. Their theme token blocks match; globals.css differences concern an icon-button extraction and prompt-bar styling, not the palette used here. Existing surface: Taller `/3d`, selected-piece/current-scene save controls, name/occasion form, thumbnail library, occasion/color/balloon filters, item preview, “Añadir a mi escena” and removal of browser-local items. Existing storage is `taller3d:biblioteca-propia:v1`. Server/account separation is the required change.
+Evidencia de solo lectura: `src/app/globals.css`, `src/app/layout.tsx`, `src/components/tres-d/Biblioteca.tsx` y `Taller3D.tsx` de ambos repositorios. `Biblioteca.tsx` es idéntico en t12 y asesor. Sus bloques de tokens del tema coinciden; las diferencias de globals.css corresponden a la extracción de un botón con icono y al estilo de la barra de prompts, no a la paleta utilizada aquí. Superficie existente: Taller `/3d`, controles para guardar la pieza seleccionada o la escena actual, formulario de nombre/ocasión, biblioteca de miniaturas, filtros por ocasión/color/globos, vista previa del elemento, “Añadir a mi escena” y eliminación de elementos locales del navegador. El almacenamiento existente es `taller3d:biblioteca-propia:v1`. La separación por servidor/cuenta es el cambio requerido.
 
-Sibling inputs read: `cuentas-admin@v1.md/.html`, `planes@v1.md/.html` and `proyectos@v1.md/.html`. Their finalized shared shell vocabulary is retained: Pictures/Sempertex ring-and-dot masthead, language selector, account disclosure, 24px H1, neutral horizontal route rule, embedded Geist and rounded controls. Proyectos' chosen r12 source supplies the shell and production token mapping; the changed library arrangement is composed anew.
+Se leyeron las entradas de subplanes relacionados: `cuentas-admin@v1.md/.html`, `planes@v1.md/.html` y `proyectos@v1.md/.html`. Se conserva el vocabulario de su shell compartido finalizado: cabecera de Pictures/Sempertex con anillo y punto, selector de idioma, menú desplegable de cuenta, H1 de 24px, regla horizontal neutra entre rutas, Geist integrado y controles redondeados. El origen r12 elegido de Proyectos aporta el shell y la correspondencia de tokens de producción; la nueva disposición de la biblioteca se compone desde cero.
 
-Impact classification: **breaking UI candidate** for T5.3, subject to owner selection; the spatial library/ficha arrangement, focus navigation and responsive behavior need implementation and T5.5 review. No approved predecessor is changed. Production compatibility is unverified; this is not a storage or authorization implementation.
+Clasificación del impacto: **candidata a cambio incompatible de UI** para T5.3, sujeta a la elección del propietario; la disposición espacial de la biblioteca/ficha, la navegación por foco y el comportamiento adaptable requieren implementación y revisión de T5.5. No se modifica ningún predecesor aprobado. La compatibilidad en producción no está verificada; esto no implementa almacenamiento ni autorización.
 
-## 2. Purpose and users
+## 2. Propósito y usuarios
 
-The working question is “Which saved decoration do I want to add to my current project?” A signed-in account with Taller, including Master Designer and staff, saves the whole scene or its selected piece with name and occasion. Success requires server-confirmed account storage, later retrieval from another browser and placement into an owned project.
+La pregunta de trabajo es “¿Qué decoración guardada quiero añadir a mi proyecto actual?”. Una cuenta autenticada con acceso a Taller, incluida Master Designer y el personal, guarda la escena completa o su pieza seleccionada con nombre y ocasión. Para considerar que la operación fue exitosa, el almacenamiento de la cuenta debe confirmarse en el servidor, debe ser posible recuperar los elementos desde otro navegador y colocarlos en un proyecto propio.
 
-Staff can inspect another account's library read-only. The owner and read-only label remain visible, and placement creates a copy in the staff member's own project. Rename, edit and delete controls are absent for the foreign original. Accounts without Taller do not enter this library; granting access remains with the established account/role surface.
+El personal puede inspeccionar en modo de solo lectura la biblioteca de otra cuenta. La etiqueta de propietario y solo lectura permanece visible, y al colocar el elemento se crea una copia en un proyecto propio del miembro del personal. No hay controles para renombrar, editar ni eliminar el original de otra cuenta. Las cuentas sin Taller no acceden a esta biblioteca; el acceso se concede desde la superficie establecida de cuentas/roles.
 
-## 3. Approach, composition and thumbnail choice
+## 3. Enfoque, composición y elección de miniatura
 
-**Chosen thumbnail:** `decoraciones@v1.r3.dir-b.html.candidate-1.html` — lateral library, central preview, right inspector. The list, search and occasion filter remain visible while the selected decoration has a large preview and its actions occupy one stable edge. It fits the existing Taller's canvas-and-inspector working model while changing only the personal-library area.
+**Miniatura elegida:** `decoraciones@v1.r3.dir-b.html.candidate-1.html` — biblioteca lateral, vista previa central e inspector a la derecha. La lista, la búsqueda y el filtro por ocasión permanecen visibles mientras la decoración seleccionada tiene una vista previa amplia y sus acciones ocupan un borde fijo. Se ajusta al modelo de trabajo existente de Taller, con lienzo e inspector, y cambia solo el área de la biblioteca personal.
 
-Candidate 2, `decoraciones@v1.r3.dir-b.html.candidate-2.html`, places the library in a bottom tray below preview and ficha. Its thumbnail makes the preview wider but compresses collection navigation and omits the search/filter area from the tray. Candidate 1 better accommodates this brief's required library controls without creating another page. Both small visual compositions were written and rendered before the complete TSX was built.
+La candidata 2, `decoraciones@v1.r3.dir-b.html.candidate-2.html`, coloca la biblioteca en una bandeja inferior, debajo de la vista previa y la ficha. Su miniatura amplía la vista previa, pero comprime la navegación de la colección y omite del área de la bandeja la búsqueda y los filtros. La candidata 1 satisface mejor los controles de biblioteca requeridos en este encargo sin crear otra página. Ambas composiciones visuales pequeñas se escribieron y renderizaron antes de crear el TSX completo.
 
-| Axis | Observable direction |
+| Eje | Dirección observable |
 |---|---|
-| concept | Espacio de composición: keep the existing Taller shell and arrange the personal library, isolated preview and item inspector as three connected working areas. |
-| layout | At 1100px+ a 280px library, flexible central preview and 264px inspector share one continuous workshop panel; at 640–1099px the inspector sits below the preview; at 320–639px all three areas stack. |
-| navigation | Preserve the Pictures/Sempertex masthead and neutral Taller 3D/Proyectos route rule. Inside the workshop, Biblioteca/Vista previa/Ficha moves focus to each area; account/browser source buttons change the list without changing route. |
-| typography | Use the existing embedded Geist Sans and Geist Mono. H1 stays 24px; inspector heading 20px, library heading 18px, item name 14px, labels 12–14px and supporting metadata 12–13px. |
-| density | A compact thumbnail list and a single expanded item share the screen; filters beyond occasion use native disclosure. Desktop insets are 20–24px inside the inherited shell, with 20px phone gutters and 44px controls. |
-| components | Recompose real installed shadcn Button, Input and Skeleton with Animate UI/Base UI Dialog and AlertDialog; use semantic native source buttons, selects and details, an inline SVG mock scene and a Motion shared area marker. |
-| colour | Use only Pictures globals.css tokens and the finalized sibling aliases: fondo/superficie/texto/acento plus Taller preview roles; texto-tenue supplies accessible control edges, and exito/error/aviso identify actual feedback. Both themes retain the same palette and fonts. |
-| motion | Spatial choreography: library travels 20px from the left, inspector 24px from the right, records stagger 65ms, preview seats horizontally and its object enters with 25px travel/−12deg Y rotation. Expressive travel 640ms, natural 360ms, subtle 160ms, easing cubic-bezier(.23,1,.32,1); shared area marker uses the kit profile spring. Reduced motion and still mode remove all travel. |
+| concepto | Espacio de composición: conservar el shell existente de Taller y organizar la biblioteca personal, la vista previa aislada y el inspector del elemento en tres áreas de trabajo conectadas. |
+| layout | A partir de 1100px, una biblioteca de 280px, una vista previa central flexible y un inspector de 264px comparten un panel continuo de taller; entre 640–1099px, el inspector queda debajo de la vista previa; entre 320–639px, las tres áreas se apilan. |
+| navegación | Conservar la cabecera de Pictures/Sempertex y la regla neutra entre las rutas Taller 3D/Proyectos. Dentro del taller, Biblioteca/Vista previa/Ficha mueve el foco a cada área; los botones de origen de cuenta/navegador cambian la lista sin cambiar de ruta. |
+| tipografía | Usar Geist Sans y Geist Mono integrados, que ya existen. H1 permanece en 24px; encabezado del inspector en 20px, encabezado de biblioteca en 18px, nombre del elemento en 14px, etiquetas en 12–14px y metadatos de apoyo en 12–13px. |
+| densidad | Una lista compacta de miniaturas y un elemento expandido ocupan la pantalla; los filtros distintos de ocasión usan un desplegable nativo. Los márgenes internos en escritorio son de 20–24px dentro del shell heredado, con márgenes laterales de 20px en teléfonos y controles de 44px. |
+| componentes | Recomponer los componentes reales instalados de shadcn Button, Input y Skeleton con Animate UI/Base UI Dialog y AlertDialog; usar botones de origen semánticos nativos, selectores y details, una escena de ejemplo SVG en línea y un indicador de área compartida de Motion. |
+| color | Usar solo los tokens de Pictures globals.css y los alias finalizados de subplanes relacionados: fondo/superficie/texto/acento, más los roles de vista previa de Taller; texto-tenue proporciona bordes accesibles para controles, y exito/error/aviso identifican comentarios reales. Ambos temas conservan la misma paleta y tipografías. |
+| movimiento | Coreografía espacial: la biblioteca entra desde la izquierda desplazándose 20px, el inspector desde la derecha con 24px, los registros aparecen en secuencia con intervalos de 65ms, la vista previa se posiciona horizontalmente y su objeto entra desplazándose 25px/girando −12deg en Y. Desplazamiento expresivo de 640ms, natural de 360ms, sutil de 160ms, con curva cubic-bezier(.23,1,.32,1); el indicador de área compartida usa el perfil de resorte del kit. El movimiento reducido y el modo estático eliminan todo desplazamiento. |
 
-The workshop toolbar retains the current project's identity and existing Deshacer/Rehacer, Foto realista and Lista de compra vocabulary. The preview explicitly does not modify that open project. “Añadir a mi escena” changes the mock scene only after activation and reports an owned copy. The global decoration catalogue stays separate.
+La barra de herramientas del taller conserva la identidad del proyecto actual y el vocabulario existente de Deshacer/Rehacer, Foto realista y Lista de compra. La vista previa indica explícitamente que no modifica el proyecto abierto. “Añadir a mi escena” cambia la escena de ejemplo solo al activarse y confirma que se creó una copia propia. El catálogo global de decoraciones permanece separado.
 
-## 4. Fixed design system and actual components
+## 4. Sistema de diseño fijo y componentes reales
 
-No palette, font or identity is introduced. Local Next WOFF2 assets embed Geist Sans and Geist Mono; no font is fetched. Rounded shell/control roles remain those of the sibling drafts (panel 32px, inset 24px, field 18px, pill 999px); the existing Taller frame uses its sibling 24px radius.
+No se incorpora ninguna paleta, tipografía ni identidad nueva. Los recursos locales WOFF2 de Next integran Geist Sans y Geist Mono; no se descargan fuentes. Los roles de bordes redondeados del shell/controles siguen los de los borradores relacionados (panel 32px, margen interno 24px, campo 18px, píldora 999px); el marco existente de Taller usa el radio de 24px del subplan relacionado.
 
-| Product token | Kit role / use |
+| Token del producto | Rol/uso del kit |
 |---|---|
-| `--fondo`, `--texto` | background, foreground |
-| `--superficie`, `--superficie-2` | card/popover and secondary/muted surfaces |
-| `--texto-suave`, `--texto-tenue` | supporting text; accessible control-edge alias |
-| `--acento`, `--sobre-acento`, `--acento-hover` | primary, primary-foreground, hover |
-| `--borde`, `--borde-suave` | decorative boundaries and dividers |
-| `--exito`, `--exito-suave` | confirmed save and placed-copy feedback |
-| `--error`, `--error-suave`, `--aviso`, `--aviso-suave` | failure and unsupported-piece feedback |
-| `--taller-visor`, `--taller-panel`, `--taller-barra` | preview, its context and workshop chrome |
+| `--fondo`, `--texto` | fondo, primer plano |
+| `--superficie`, `--superficie-2` | superficies de tarjeta/desplegable y secundaria/atenuada |
+| `--texto-suave`, `--texto-tenue` | texto de apoyo; alias para bordes accesibles de controles |
+| `--acento`, `--sobre-acento`, `--acento-hover` | principal, primer plano del color principal, hover |
+| `--borde`, `--borde-suave` | límites decorativos y divisores |
+| `--exito`, `--exito-suave` | confirmación de guardado y comentario de copia colocada |
+| `--error`, `--error-suave`, `--aviso`, `--aviso-suave` | error y comentario de pieza no compatible |
+| `--taller-visor`, `--taller-panel`, `--taller-barra` | vista previa, su contexto y la interfaz del taller |
 
-The entry contains explicit light/dark values copied from production/sibling sources, once per theme. Examples: fondo `#faf9fc/#0b0c10`, texto `#1c1425/#f4f5f7`, acento `#6d3fe0/#9479ff`, sobre-acento `#ffffff/#120b24`. Active global navigation uses text and its rule; primary-action colour identifies the placement/save action. The SVG illustration uses the same tokens and is visibly example data, not a proposed stored-thumbnail format.
+La página incluye valores explícitos para los temas claro/oscuro, copiados de fuentes de producción/subplanes relacionados, una vez por tema. Ejemplos: fondo `#faf9fc/#0b0c10`, texto `#1c1425/#f4f5f7`, acento `#6d3fe0/#9479ff`, sobre-acento `#ffffff/#120b24`. La navegación global activa usa texto y su regla; el color de acción principal identifica la acción de guardar/colocar. La ilustración SVG usa los mismos tokens y se identifica claramente como dato de ejemplo, no como formato propuesto para las miniaturas almacenadas.
 
-| Actual source:id / variant / states | Import or implementation |
+| Fuente real:id / variante / estados | Importación o implementación |
 |---|---|
-| shadcn:button / default, outline, destructive / normal, hover, focus, disabled, busy | `@/components/ui/button` |
-| shadcn:input / text / filled, empty, invalid, disabled, focus | `@/components/ui/input` |
-| shadcn:skeleton / item thumbnail and lines / loading | `@/components/ui/skeleton` |
-| shadcn:dialog / rename and metadata edit / open, validation, pending, closed | `@/components/ui/dialog` using installed Animate UI/Base UI |
-| shadcn:alert-dialog / removal / confirmation, pending, cancel | `@/components/ui/alert-dialog` using installed Animate UI/Base UI |
-| kit:mockup / native inspection / view, state, scene, theme, motion | `mountMockup/useMockup` from `@kit/mockup` |
-| kit:motion / profile / expressive, natural, subtle, reduced | `useMotionProfile` from `@kit/motion`, `motion.i` from `motion/react` |
-| custom:source-nav, zone-nav, library-record, preview, inspector | Semantic HTML and project-token CSS, not claimed as an installed library component |
-| custom:account-disclosure | Native details/summary retained from sibling shell |
+| shadcn:button / default, outline, destructive / normal, hover, foco, deshabilitado, en curso | `@/components/ui/button` |
+| shadcn:input / text / con contenido, vacío, no válido, deshabilitado, foco | `@/components/ui/input` |
+| shadcn:skeleton / miniatura y líneas del elemento / carga | `@/components/ui/skeleton` |
+| shadcn:dialog / edición del nombre y metadatos / abierto, validación, pendiente, cerrado | `@/components/ui/dialog` con Animate UI/Base UI instalado |
+| shadcn:alert-dialog / eliminación / confirmación, pendiente, cancelar | `@/components/ui/alert-dialog` con Animate UI/Base UI instalado |
+| kit:mockup / inspección nativa / vista, estado, escena, tema, movimiento | `mountMockup/useMockup` de `@kit/mockup` |
+| kit:motion / perfil / expresivo, natural, sutil, reducido | `useMotionProfile` de `@kit/motion`, `motion.i` de `motion/react` |
+| custom:source-nav, zone-nav, library-record, preview, inspector | HTML semántico y CSS con tokens del proyecto; no se presenta como componente de una biblioteca instalada |
+| custom:account-disclosure | details/summary nativos conservados del shell relacionado |
 
-The installed component workspace reports installed/built and 96/96 entries available. No fallback, package install, asset download or runtime network request was used.
+El espacio de trabajo de componentes instalado indica que está instalado/compilado y que hay 96/96 entradas disponibles. No se usaron alternativas, instalaciones de paquetes, descargas de recursos ni solicitudes de red en tiempo de ejecución.
 
-## 5. Navigation and interaction model
+## 5. Modelo de navegación e interacción
 
-The product masthead and Taller 3D/Proyectos routes remain recognizable and neutral. Proyectos/account/plans destinations remain owned by sibling subplans; contextual controls display a clearly marked mockup scope notice rather than fabricating new product screens. Sign out in the mockup immediately clears its account fixture and demonstrates the isolation placeholder; this is not proof of authentication.
+La cabecera del producto y las rutas Taller 3D/Proyectos siguen siendo reconocibles y neutras. Los destinos Proyectos/cuenta/planes pertenecen a los subplanes relacionados; los controles contextuales muestran un aviso de alcance de maqueta claramente identificado en lugar de inventar nuevas pantallas del producto. Cerrar sesión en la maqueta borra inmediatamente los datos de ejemplo de la cuenta y muestra el estado vacío de aislamiento; esto no demuestra que haya autenticación.
 
-Within the changed area, Biblioteca/Vista previa/Ficha move focus to labelled areas. They scroll only when needed, with a shared moving selection marker. In save views the final area is labelled Guardar and the name field receives focus; phone scroll brings that form into view. Selecting a library item changes its preview and ficha without replacing the open project.
+En el área modificada, Biblioteca/Vista previa/Ficha mueven el foco a áreas etiquetadas. Solo desplazan la página cuando es necesario, con un indicador de selección compartido que se mueve. En las vistas de guardado, la última área se etiqueta como Guardar y el campo de nombre recibe el foco; en teléfonos, el desplazamiento muestra el formulario. Seleccionar un elemento de la biblioteca cambia su vista previa y ficha sin reemplazar el proyecto abierto.
 
-Source controls distinguish “En mi cuenta” from “En este navegador”. Staff viewing another account sees “En esta cuenta” and an explicit owner selector. That selector is a provisional demonstration of authorized scope, not a client authorization rule. Source changes clear search/filter selection. Search, occasion/type/color/balloon filters operate on a small labelled example subset, with a no-results recovery. In this subset all records contain latex; only scenes contain white balloons. Other catalogue options are intentionally absent from this small fixture.
+Los controles de origen distinguen entre “En mi cuenta” y “En este navegador”. El personal que inspecciona otra cuenta ve “En esta cuenta” y un selector explícito de propietario. Ese selector es una demostración provisional del alcance autorizado, no una regla de autorización del cliente. Cambiar el origen borra la selección de búsqueda/filtros. La búsqueda y los filtros de ocasión/tipo/color/globos funcionan sobre un pequeño subconjunto de ejemplo etiquetado, con una opción de recuperación cuando no hay resultados. Todos los registros de este subconjunto contienen látex; solo las escenas contienen globos blancos. Las demás opciones del catálogo se omiten deliberadamente de estos pocos datos de ejemplo.
 
-Buttons and links that would replace the save target are held during a pending save. Dialogs contain focus; Escape/cancel and successful completion restore the surviving trigger, with inspector fallback after removal. Foreign-account forced planning dialogs show a read-only explanation without a mutation form/action. Loading and account switching suppress item dialogs as well as list/detail/preview data.
+Los botones y enlaces que reemplazarían el destino de guardado quedan bloqueados mientras hay un guardado pendiente. Los diálogos mantienen el foco; Escape/cancelar y la finalización correcta devuelven el foco al activador que siga disponible, con el inspector como alternativa tras una eliminación. Los diálogos de planificación activados para otra cuenta muestran una explicación de solo lectura sin formulario ni acción de modificación. La carga y el cambio de cuenta ocultan los diálogos de elementos, además de los datos de lista/detalle/vista previa.
 
-## 6. Flows
+## 6. Flujos
 
-1. **Save the scene:** choose “Guardar toda la escena en mi biblioteca” → inspect whole-scene preview → name and occasion → Guardar → pending, duplicate submission disabled → show saved only after simulated confirmation → “Ver en mi biblioteca”. Implementation must use a real server confirmation, and support reload/other-browser retrieval.
-2. **Save a selected piece:** choose existing “Guardar en mi biblioteca” in selected-piece context → piece-only preview and same form → confirmed account save. Unsupported pieces show the existing “Esta pieza no se puede guardar sola.” message and disabled save. The sample footer action illustrates that existing selected-piece entry.
-3. **Recover save failure:** error remains with name and occasion visible → “Reintentar guardar” → same target/input while pending → confirmation. Failed saves do not enter the account list or receive a saved label.
-4. **Find/place:** select source → search/filter → choose thumbnail row → inspect name/type/occasion/owner → “Añadir a mi escena” → owned copy feedback. The original decoration remains in its library. Static placement is illustrative; it is not the 3D engine.
-5. **Staff inspect/place:** authorized staff scope → Cuenta de ejemplo → owner/read-only treatment → absent rename/edit/delete → add a copy to their own project. No original mutation or ownership change is offered.
-6. **Owner metadata/removal:** Renombrar or Editar → named fields → wait for confirmation → update list/ficha; Q2 still governs content-edit scope. Removal uses AlertDialog; cancel keeps the item, confirmed server removal updates the account list. Existing browser-local removal updates only its group immediately and never imports it.
-7. **Account isolation:** account switch/sign out → clear previous server list, detail, thumbnail and preview before loading the next account → neutral skeleton → next account's empty list. The example continuation button is a mock inspection aid, not a production account-switch flow. Legacy browser storage is not migrated or mutated by this transition.
+1. **Guardar la escena:** elegir “Guardar toda la escena en mi biblioteca” → inspeccionar la vista previa de la escena completa → ingresar nombre y ocasión → Guardar → mostrar estado pendiente y deshabilitar envíos duplicados → confirmar el guardado solo después de una confirmación simulada → “Ver en mi biblioteca”. La implementación debe usar una confirmación real del servidor y admitir recarga/recuperación desde otro navegador.
+2. **Guardar una pieza seleccionada:** elegir “Guardar en mi biblioteca” existente en el contexto de una pieza seleccionada → vista previa solo de la pieza y el mismo formulario → confirmar el guardado en la cuenta. Las piezas no compatibles muestran el mensaje existente “Esta pieza no se puede guardar sola.” y el guardado deshabilitado. La acción de ejemplo al pie ilustra la entrada existente para piezas seleccionadas.
+3. **Recuperarse de un error al guardar:** el error permanece visible con el nombre y la ocasión → “Reintentar guardar” → mismo destino/entrada mientras está pendiente → confirmación. Los guardados fallidos no se agregan a la lista de la cuenta ni reciben una etiqueta de guardado.
+4. **Buscar/colocar:** seleccionar el origen → buscar/filtrar → elegir una fila de miniatura → inspeccionar nombre/tipo/ocasión/propietario → “Añadir a mi escena” → comentario de copia propia. La decoración original permanece en su biblioteca. La colocación estática es ilustrativa; no corresponde al motor 3D.
+5. **Inspeccionar/colocar como personal:** ámbito autorizado del personal → Cuenta de ejemplo → tratamiento de propietario/solo lectura → opciones para renombrar/editar/eliminar ausentes → añadir una copia al proyecto propio. No se ofrece modificar el original ni cambiar su propietario.
+6. **Editar metadatos/eliminar como propietario:** Renombrar o Editar → campos con nombre → esperar la confirmación → actualizar la lista/ficha; Q2 sigue rigiendo el alcance de edición del contenido. Para eliminar, se usa AlertDialog; cancelar conserva el elemento y confirmar su eliminación en el servidor actualiza la lista de la cuenta. La eliminación existente de elementos locales del navegador actualiza solo su grupo de inmediato y nunca los importa.
+7. **Aislamiento de cuentas:** cambiar de cuenta/cerrar sesión → borrar la lista del servidor, el detalle, la miniatura y la vista previa anteriores antes de cargar la siguiente cuenta → mostrar un esqueleto neutro → mostrar la lista vacía de la siguiente cuenta. El botón de continuación de ejemplo es una ayuda de inspección de la maqueta, no un flujo de cambio de cuenta en producción. Esta transición no migra ni modifica el almacenamiento heredado del navegador.
 
-## 7. Views and content boundaries
+## 7. Vistas y límites del contenido
 
-| Native view | Changed area and main action |
+| Vista nativa | Área modificada y acción principal |
 |---|---|
-| `library` | Own account/browser collection, search/filter, central selected-item preview and right ficha. Main action: Añadir a mi escena. Owner-only server metadata and removal actions. |
-| `save-scene` | Same shell/library/preview arrangement; right inspector becomes the whole-scene name/occasion form. Main action: Guardar. |
-| `save-piece` | Same arrangement with selected-piece preview and form, including unsupported-piece recovery. |
-| `staff` | Same arrangement with owner scope and visible read-only treatment. Main action adds an owned copy; foreign-original mutation controls are absent. Selecting Mi cuenta demonstrates the staff member's own library. |
+| `library` | Colección de la cuenta/navegador propio, búsqueda/filtro, vista previa central del elemento seleccionado y ficha a la derecha. Acción principal: Añadir a mi escena. Metadatos del servidor y acciones para quitar elementos solo para el propietario. |
+| `save-scene` | La misma disposición de estructura/biblioteca/vista previa; el inspector derecho pasa a ser el formulario de nombre/ocasión de toda la escena. Acción principal: Guardar. |
+| `save-piece` | La misma disposición, con vista previa de la pieza seleccionada y formulario, incluida la recuperación ante piezas no compatibles. |
+| `staff` | La misma disposición, con alcance del propietario y tratamiento de solo lectura visible. La acción principal añade una copia propia; no aparecen controles para modificar el original ajeno. Al seleccionar Mi cuenta se muestra la biblioteca propia del miembro del personal. |
 
-Native scene inspector: none, rename, edit, remove. The last uses real AlertDialog. Planning inspector labels stay Vista/Estado/Diálogo/Tema/Movimiento and retain “Mockup”. All names are “de ejemplo”, occasions come from the existing UI, and no customer identity, date, claim or marketing heading is invented. ES/EN product copy is switched through the inherited language control.
+Inspector nativo de escena: ninguno, renombrar, editar, quitar. La última acción usa un AlertDialog real. Las etiquetas del inspector de planificación siguen siendo Vista/Estado/Diálogo/Tema/Movimiento y conservan “Mockup”. Todos los nombres son “de ejemplo”, las ocasiones provienen de la interfaz existente y no se inventan identidades de clientes, fechas, afirmaciones ni encabezados de marketing. El texto del producto ES/EN cambia mediante el control de idioma heredado.
 
-The account-deletion guard is an existing account-management consequence (“saved decorations prevent delete; deactivate instead”), not a new admin screen in this Taller exploration. Its service and account UI acceptance belong to the plan's owners; no delete-account control is added here.
+La protección contra la eliminación de la cuenta es una consecuencia existente de la gestión de cuentas (“las decoraciones guardadas impiden eliminarla; desactívala en su lugar”), no una pantalla nueva de administración en esta exploración del Taller. La aceptación de su servicio e interfaz de cuenta corresponde a los responsables del plan; aquí no se añade ningún control para eliminar la cuenta.
 
-## 8. State catalogue
+## 8. Catálogo de estados
 
-| Native state | Applicable view / observable behavior |
+| Estado nativo | Vista aplicable / comportamiento observable |
 |---|---|
-| `normal` | All views: confirmed example records or ready name/occasion form. |
-| `loading` | Account list skeletons, neutral preview and inspector; no stale account record or item action. |
-| `empty` | Empty server collection with save-scene entry for an owner; local source still contains its independent fixture. |
-| `list-error` | Account-load error and Reintentar; no authoritative record/preview while the read failed. Browser group remains independent. |
-| `saving` | Save views: retained name/occasion, disabled submission, “Guardando en mi cuenta…”, no new saved result. |
-| `saved` | Save views: “Guardado en mi cuenta” and Ver en mi biblioteca. Only confirmed records appear as saved in list views. |
-| `save-failed` | Save views: preserved editable values, error, Reintentar guardar. |
-| `account-switch` | All views: previous server list/details/art/owner data removed before next-account skeleton; no item dialogs. |
-| `placed` | Library/staff: owned-copy feedback and illustrative current-project preview. Original library item remains. |
-| `validation` | Save views: empty name input, associated error and visible recovery. A trimmed non-empty name is the provisional rule. |
-| `action-error` | Ficha: action not completed, item retained and retry. No success/deletion is claimed on failure. |
-| `unsupported` | Selected-piece save: existing unsupported-piece explanation; save disabled. Not applicable to whole-scene save. |
+| `normal` | Todas las vistas: registros de ejemplo confirmados o formulario listo de nombre/ocasión. |
+| `loading` | Esqueletos de la lista de la cuenta, vista previa neutra e inspector; ningún registro ni acción de elemento obsoletos de la cuenta. |
+| `empty` | Colección vacía del servidor con acceso para guardar una escena para el propietario; la fuente local conserva su fixture independiente. |
+| `list-error` | Error al cargar la cuenta y opción Reintentar; mientras falle la lectura no se muestra ningún registro/vista previa autoritativos. El grupo del navegador sigue siendo independiente. |
+| `saving` | Vistas de guardado: nombre/ocasión conservados, envío deshabilitado, “Guardando en mi cuenta…”, sin un nuevo resultado guardado. |
+| `saved` | Vistas de guardado: “Guardado en mi cuenta” y Ver en mi biblioteca. Solo los registros confirmados aparecen como guardados en las vistas de lista. |
+| `save-failed` | Vistas de guardado: valores editables conservados, error, Reintentar guardar. |
+| `account-switch` | Todas las vistas: se quitan los datos previos del servidor, la lista, los detalles, las imágenes y el propietario antes de mostrar el esqueleto de la siguiente cuenta; no se muestran diálogos de elementos. |
+| `placed` | Biblioteca/personal: confirmación de copia propia y vista previa ilustrativa del proyecto actual. El elemento original de la biblioteca permanece. |
+| `validation` | Vistas de guardado: campo de nombre vacío, error asociado y recuperación visible. La regla provisional es un nombre no vacío después de quitar espacios al inicio y al final. |
+| `action-error` | Ficha: acción no completada, elemento conservado y opción para reintentar. Si falla, no se confirma el éxito ni la eliminación. |
+| `unsupported` | Guardado de pieza seleccionada: explicación existente de pieza no compatible; guardado deshabilitado. No se aplica al guardado de toda la escena. |
 
-State axes are inspection controls: save-only states do not invent artificial form failures on a list-only view. Live mutations use finite simulated delays. Inspection changes/remounts can reset example inputs; refresh resets the artifact's fixtures. No real API, cross-browser persistence, auth enforcement or session storage is claimed. Permission enforcement remains server-owned. Offline/stale reads use the recoverable list/save error treatments; no new offline or import route is introduced. There is no import, import-progress or import-error state.
+Los ejes de estado son controles de inspección: los estados exclusivos de guardado no inventan fallos de formulario artificiales en una vista que solo muestra una lista. Las mutaciones simuladas usan demoras finitas. Cambiar la inspección o volver a montar puede restablecer los datos de ejemplo; actualizar la página restablece los fixtures del artefacto. No se afirma que haya una API real, persistencia entre navegadores, aplicación de autenticación ni almacenamiento de sesión. La aplicación de permisos sigue siendo responsabilidad del servidor. Las lecturas sin conexión u obsoletas usan los tratamientos recuperables de error de lista/guardado; no se introduce una nueva ruta sin conexión ni de importación. No hay estado de importación, progreso de importación ni error de importación.
 
-## 9. Responsive behavior
+## 9. Comportamiento adaptable
 
-| Width | Composition |
+| Ancho | Composición |
 |---|---|
-| 1100px+ | Three columns: 280px list, flexible preview, 264px inspector. Shared shell max-width 1520px and 40px outer gutters. One continuous bordered workshop; no nested card grid. |
-| 640–1099px | 24px outer gutters. List stays 260px on the left, preview on the right and inspector below preview; metadata/form controls may use two columns. Header tools wrap. |
-| 320–639px | 20px outer gutters. Header wraps as in siblings; list → preview → inspector in reading order. Area navigation fits one row; source controls remain visible. Save entry scrolls/focuses the form. Controls and text wrap without horizontal page scroll. |
+| 1100px+ | Tres columnas: lista de 280px, vista previa flexible e inspector de 264px. Ancho máximo compartido de la estructura de 1520px y márgenes exteriores de 40px. Un solo taller con bordes continuos; sin cuadrícula de tarjetas anidadas. |
+| 640–1099px | Márgenes exteriores de 24px. La lista permanece a la izquierda con 260px, la vista previa queda a la derecha y el inspector debajo de esta; los controles de metadatos/formulario pueden usar dos columnas. Las herramientas del encabezado pasan a otra línea si hace falta. |
+| 320–639px | Márgenes exteriores de 20px. El encabezado se adapta como en las vistas hermanas; lista → vista previa → inspector en orden de lectura. La navegación de áreas cabe en una sola fila; los controles de fuente siguen visibles. El acceso para guardar desplaza la vista y enfoca el formulario. Los controles y el texto se ajustan sin desplazamiento horizontal de la página. |
 
-The preview resizes as an illustration rather than shrinking text. No fixed-height text panel clips copy. Search and selects fit their column; dialogs use viewport-bounded width/height and scroll internally. Both themes and both languages share the same breakpoints.
+La vista previa cambia de tamaño como ilustración en vez de reducir el texto. Ningún panel de texto de altura fija recorta contenido. La búsqueda y los selectores caben en su columna; los diálogos limitan su ancho/alto al área visible y permiten desplazarse internamente. Ambos temas e idiomas comparten los mismos puntos de quiebre.
 
-## 10. Accessibility and interaction/motion detail
+## 10. Accesibilidad y detalles de interacción/movimiento
 
-Targets: WCAG 2.2 AA, 4.5:1 text, 3:1 meaningful control edges/focus, minimum 44px controls, associated labels/errors, semantic navigation and list-selection buttons. Selection uses aria-pressed/current as well as colour. Loading uses busy/status; errors use alert; confirmations use status. Dialog/AlertDialog use the actual installed focus-containment primitives. The small scene SVG is illustrative and aria-hidden; nearby visible text identifies the preview. Production screen-reader task testing, 200–400% zoom and cross-browser validation remain acceptance targets, not claims from this static artifact.
+Objetivos: WCAG 2.2 AA, contraste de texto de 4.5:1, bordes de controles/enfoque significativos de 3:1, controles de mínimo 44px, etiquetas/errores asociados, navegación semántica y botones para seleccionar elementos de la lista. La selección usa aria-pressed/current además del color. La carga usa busy/status; los errores usan alert; las confirmaciones usan status. Dialog/AlertDialog usan las primitivas de contención del enfoque realmente instaladas. El SVG pequeño de la escena es ilustrativo y está oculto a tecnologías de asistencia; el texto visible cercano identifica la vista previa. Las pruebas de tareas con lectores de pantalla en producción, el zoom del 200–400% y la validación entre navegadores siguen siendo objetivos de aceptación, no afirmaciones respaldadas por este artefacto estático.
 
-The direction's memorable detail is spatial docking: the collection enters from its own side, the inspector from the opposite side and only the scene object makes a short perspective turn. Text stays visible throughout. Item entrances stagger, and the local area marker slides using the kit's profile spring. Button press/hover uses the inherited tactile controls. This motion stays inside the existing Taller; it is not a new brand animation.
+El detalle distintivo de esta dirección es el acoplamiento espacial: la colección entra desde su propio lado, el inspector desde el lado opuesto y solo el objeto de la escena gira brevemente en perspectiva. El texto permanece visible en todo momento. Las entradas de elementos se escalonan y el marcador del área local se desliza con el resorte del perfil de la biblioteca. Al presionar o pasar el puntero por los botones se usan los controles táctiles heredados. Este movimiento permanece dentro del Taller existente; no es una nueva animación de marca.
 
-CSS timing/easing and evidence selectors are in the companion JSON. Expressive travel 640ms/65ms stagger; natural 360/35ms; subtle 160/15ms; repeated controls 180/150/100ms. `useMotionProfile` supplies the actual spring/reduced state. Hidden-tab/offscreen work pauses. Reduced-motion preference, Quieto and `?still=1` remove transforms/transitions and show the same final content immediately. No infinite decorative loop exists; pending spinners also stop under reduction.
+Los tiempos/curvas de CSS y los selectores de evidencia están en el JSON complementario. Desplazamiento expresivo: 640ms/escalonamiento de 65ms; natural: 360/35ms; sutil: 160/15ms; controles repetidos: 180/150/100ms. `useMotionProfile` proporciona el estado real del resorte/reducción. El trabajo en pestañas ocultas o fuera de pantalla se pausa. La preferencia de movimiento reducido, Quieto y `?still=1` eliminan las transformaciones/transiciones y muestran inmediatamente el mismo contenido final. No hay bucles decorativos infinitos; los indicadores giratorios pendientes también se detienen con la reducción activada.
 
-## 11. Observable acceptance and verification
+## 11. Aceptación observable y verificación
 
-| ID | Breakpoint | State | Observable expectation |
+| ID | Punto de quiebre | Estado | Resultado observable esperado |
 |---|---|---|---|
-| B-AC-01 | 1100px+ | normal | Library, central preview and right ficha occupy three distinct columns inside the inherited Taller shell. |
-| B-AC-02 | 320–639px | normal | The three areas stack in DOM order with no horizontal page scroll and a single-row area navigator. |
-| B-AC-03 | 320px+ | save-scene/save-piece | Name and occasion are labelled; current save target is explicitly scene or piece. |
-| B-AC-04 | 320px+ | saving | Pending copy is visible; the new record does not receive a saved result before confirmation. |
-| B-AC-05 | 320px+ | saved | Confirmed account-save text and library-return action appear. |
-| B-AC-06 | 320px+ | save-failed | Error, retained name/occasion and retry action appear together. |
-| B-AC-07 | 320px+ | empty | Empty account list has an owner save entry; browser-local records remain in a separate source. |
-| B-AC-08 | 320px+ | loading | Skeleton records replace account names/thumbnails; preview and inspector expose no stale record actions. |
-| B-AC-09 | 320px+ | staff | Foreign owner and read-only label are visible; rename/edit/remove buttons are absent. |
-| B-AC-10 | 320px+ | placed | Placement reports a copy in the current user's own project; the original remains listed. |
-| B-AC-11 | 320px+ | account-switch | Previous server names, thumbnails, detail and preview are absent before next-account results. |
-| B-AC-12 | 320px+ | browser group | “En este navegador” identifies local data and has no import action/state. |
-| B-AC-13 | 320px+ | removal | AlertDialog cancellation leaves the selected item and returns focus after close. |
-| B-AC-14 | 320px+ | validation | Empty name input exposes an associated visible error and can receive keyboard focus. |
-| B-AC-15 | 320px+ | light/dark, ES/EN | Project tokens and Geist remain unchanged; controls/copy remain inside their columns. |
-| B-AC-16 | 320px+ | reduced/still | Content and outcomes are unchanged with zero running entrance animations. |
+| B-AC-01 | 1100px+ | normal | La biblioteca, la vista previa central y la ficha derecha ocupan tres columnas distintas dentro de la estructura heredada del Taller. |
+| B-AC-02 | 320–639px | normal | Las tres áreas se apilan en el orden del DOM, sin desplazamiento horizontal de la página y con el navegador de áreas en una sola fila. |
+| B-AC-03 | 320px+ | save-scene/save-piece | El nombre y la ocasión están etiquetados; el destino del guardado actual se identifica explícitamente como escena o pieza. |
+| B-AC-04 | 320px+ | saving | El texto de espera está visible; el nuevo registro no recibe un resultado de guardado antes de la confirmación. |
+| B-AC-05 | 320px+ | saved | Aparecen el texto que confirma el guardado en la cuenta y la acción para volver a la biblioteca. |
+| B-AC-06 | 320px+ | save-failed | El error, el nombre/ocasión conservados y la acción para reintentar aparecen juntos. |
+| B-AC-07 | 320px+ | empty | La lista vacía de la cuenta tiene un acceso para que el propietario guarde; los registros locales del navegador permanecen en una fuente separada. |
+| B-AC-08 | 320px+ | loading | Los esqueletos reemplazan los nombres/miniaturas de la cuenta; la vista previa y el inspector no exponen acciones de registros obsoletos. |
+| B-AC-09 | 320px+ | staff | El propietario ajeno y la etiqueta de solo lectura están visibles; no aparecen botones para renombrar/editar/quitar. |
+| B-AC-10 | 320px+ | placed | La colocación informa que se creó una copia en el proyecto propio del usuario actual; el original sigue en la lista. |
+| B-AC-11 | 320px+ | account-switch | Los nombres, miniaturas, detalles y la vista previa anteriores del servidor no aparecen antes de los resultados de la siguiente cuenta. |
+| B-AC-12 | 320px+ | browser group | “En este navegador” identifica los datos locales y no tiene acción/estado de importación. |
+| B-AC-13 | 320px+ | removal | La cancelación de AlertDialog conserva el elemento seleccionado y devuelve el enfoque al cerrarse. |
+| B-AC-14 | 320px+ | validation | El campo de nombre vacío muestra un error visible asociado y puede recibir el enfoque del teclado. |
+| B-AC-15 | 320px+ | light/dark, ES/EN | Los tokens del proyecto y Geist permanecen sin cambios; los controles/textos siguen dentro de sus columnas. |
+| B-AC-16 | 320px+ | reduced/still | El contenido y los resultados no cambian y no hay animaciones de entrada en curso. |
 
-Offline builder: `python3 /home/david/dev/metodologia/skill/scripts/bitacora.py components mockup build <design>/decoraciones@v1.r3.dir-b.tsx --out <design>/decoraciones@v1.r3.dir-b.html` → 651 KB, 2135 source files, exit 0, offline. The real builder is available; no HTML fallback.
+Generador sin conexión: `python3 /home/david/dev/metodologia/skill/scripts/bitacora.py components mockup build <design>/decoraciones@v1.r3.dir-b.tsx --out <design>/decoraciones@v1.r3.dir-b.html` → 651 KB, 2135 archivos fuente, código de salida 0, sin conexión. El generador real está disponible; no hay una alternativa en HTML.
 
-Contrast: `python3 <kit>/kit/contrast.py <design>/decoraciones@v1.r3.dir-b.html` → **158 pairs checked in light and dark, all pass**, exit 0.
+Contraste: `python3 <kit>/kit/contrast.py <design>/decoraciones@v1.r3.dir-b.html` → **158 pares comprobados en tema claro y oscuro, todos aprobados**, código de salida 0.
 
-Final rendered audit: `UV_OFFLINE=1 uv run --offline --with playwright python <kit>/kit/audit_mockup.py <design>/decoraciones@v1.r3.dir-b.html` → **240 renders (240 combinations planned), 9,804 text measurements, 1,564 focus stops**, exit 0. All declared view/state/theme combinations plus every dialog scene on each view's base state were rendered at 1280/390px, without sampling. Motion/reduced-motion probes also ran.
+Auditoría final renderizada: `UV_OFFLINE=1 uv run --offline --with playwright python <kit>/kit/audit_mockup.py <design>/decoraciones@v1.r3.dir-b.html` → **240 renderizados (240 combinaciones planificadas), 9,804 mediciones de texto, 1,564 paradas de enfoque**, código de salida 0. Todas las combinaciones declaradas de vista/estado/tema y cada escena de diálogo en el estado base de cada vista se renderizaron a 1280/390px, sin muestreo. También se ejecutaron pruebas de movimiento/movimiento reducido.
 
-**RESULT: PASS — no contrast, non-text, focus, alignment, padding or overflow problems**
+**RESULTADO: APROBADO — sin problemas de contraste, elementos no textuales, enfoque, alineación, relleno ni desbordamiento**
 
-Playwright interaction evidence: confirmed scene/piece saves, no early saved label, retained retry inputs, staff mutation-control absence and owned copy, local group without import, account-switch data clearing, confirmed rename/focus return, removal cancellation/local-only removal, English/dark reflow at 320/390/760/1280px, phone form focus, actual running choreography and zero running animations under `?still=1`. No browser error or HTTP request was observed. A final check also confirmed every axis-evidence selector exists in the rendered DOM and that save-target navigation/item selection is disabled until confirmation. A focus assertion was initially made before asynchronous close/focus restoration completed; waiting for the actual completed focus state passed, with no source change for that timing correction.
+Evidencia de interacción con Playwright: guardado confirmado de escena/pieza, ausencia de etiqueta de guardado prematura, campos de reintento conservados, ausencia de controles de mutación para personal y copia propia, grupo local sin importación, borrado de datos al cambiar de cuenta, renombrado confirmado/restauración del enfoque, cancelación de eliminación/eliminación solo local, redistribución en inglés/tema oscuro a 320/390/760/1280px, enfoque del formulario en teléfono, coreografía en ejecución real y cero animaciones en curso con `?still=1`. No se observaron errores del navegador ni solicitudes HTTP. Una comprobación final también confirmó que todos los selectores de evidencia de ejes existen en el DOM renderizado y que la navegación al destino del guardado/selección de elementos permanece deshabilitada hasta la confirmación. Una aserción de enfoque se hizo inicialmente antes de que terminara la operación asíncrona de cierre/restauración del enfoque; al esperar el estado de enfoque realmente completado, pasó sin cambios en el código fuente para corregir esa temporización.
 
-Both candidate thumbnails and full mockup screenshots were inspected in memory. Desktop light library, desktop dark staff, phone dark library and phone light piece-save preserve the product shell, the three areas and readable controls. The phone navigator was refined to stay on one row, and save entry now focuses the form instead of leaving it below the list. No screenshot file or separate preview was written.
+Se inspeccionaron en memoria ambas miniaturas candidatas y las capturas completas del mockup. La biblioteca de escritorio en tema claro, la vista de personal de escritorio en tema oscuro, la biblioteca de teléfono en tema oscuro y el guardado de pieza de teléfono en tema claro conservan la estructura del producto, las tres áreas y los controles legibles. El navegador del teléfono se ajustó para permanecer en una fila y el acceso para guardar ahora enfoca el formulario en vez de dejarlo debajo de la lista. No se escribió ningún archivo de captura ni vista previa separada.
 
-Automated measurements supplement design review: they do not prove service persistence, authorization, real scene geometry, thumbnail production or account-deletion enforcement. Pairwise comparison with the other two exploration directions remains with the owner/Planner comparison workflow.
+Las mediciones automatizadas complementan la revisión de diseño: no demuestran persistencia del servicio, autorización, geometría real de la escena, generación de miniaturas ni aplicación de la eliminación de cuentas. La comparación por pares con las otras dos direcciones de exploración queda pendiente en el flujo de comparación del propietario/Planificador.
 
-## 12. Open questions and assumptions
+## 12. Preguntas abiertas y supuestos
 
-Q: Owner/Planner — From which existing entry should Empleado interno and Administrador open another account's decoration library, and should the provisional owner selector remain inside the Taller library?
-Q: Owner/Planner — Does “Editar” update only the decoration's name/occasion, or must the owner also replace its saved composition? This candidate demonstrates metadata only; content-edit behavior must be settled before finalization.
+P: Propietario/Planificador — ¿Desde qué acceso existente deben Empleado interno y Administrador abrir la biblioteca de decoraciones de otra cuenta, y debe permanecer el selector provisional de propietario dentro de la biblioteca del Taller?
+P: Propietario/Planificador — ¿“Editar” actualiza solo el nombre/ocasión de la decoración o también debe permitir reemplazar su composición guardada? Esta propuesta muestra solo metadatos; el comportamiento de edición de contenido debe definirse antes de la finalización.
 
-Confirmed: no browser-local import; local source remains independent; new saves belong to the signed-in account; saved status follows server confirmation; foreign staff access is read-only; placement produces an owned copy; only the owner mutates/deletes; Taller access is required. Assumptions awaiting finalization: keep existing owner/local removal, use a non-empty trimmed save name, preserve existing occasion taxonomy, and show only neutral example data in the mockup.
+Confirmado: no hay importación de datos locales del navegador; la fuente local sigue siendo independiente; los nuevos guardados pertenecen a la cuenta con sesión iniciada; el estado de guardado depende de la confirmación del servidor; el acceso de personal a contenido ajeno es de solo lectura; la colocación crea una copia propia; solo el propietario puede modificar/eliminar; se requiere acceso al Taller. Supuestos pendientes de finalizar: mantener la eliminación existente para el propietario/datos locales, usar un nombre de guardado no vacío tras quitar los espacios iniciales y finales, conservar la taxonomía de ocasiones existente y mostrar únicamente datos de ejemplo neutros en el mockup.
 
-CONCERNS: owner selection and plan/contract approval remain outstanding. The two questions above are intentionally recorded rather than blocking exploration. Static fixtures are not persistence/auth evidence. Metadata editing, staff entry and production account isolation require their final contract and service implementation. No engineering-only task or extra production path is designed here.
+INQUIETUDES: la selección del propietario y la aprobación del plan/contrato siguen pendientes. Las dos preguntas anteriores se registran intencionalmente y no bloquean la exploración. Los fixtures estáticos no demuestran persistencia/autenticación. La edición de metadatos, el acceso de personal y el aislamiento de cuentas en producción requieren su contrato definitivo y la implementación del servicio. Aquí no se diseña ninguna tarea exclusivamente de ingeniería ni una ruta adicional de producción.

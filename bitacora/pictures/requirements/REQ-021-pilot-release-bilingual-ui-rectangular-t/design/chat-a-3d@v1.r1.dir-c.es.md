@@ -14,9 +14,9 @@ date: 2026-10-29
 
 ## 1. Identidad y alcance
 
-Exploración **draft**, sin aprobación. Este archivo es una nota de dirección para `chat-a-3d@v1`, no el contrato canónico ni una autorización de implementación. Fuente de comportamiento: `chat-a-3d@v1.r1.behavior.md`, R13 / SP-12. Contexto leído: SPEC, PLAN.md y bloque SP-12 de PLAN.json. No se modificaron planes, contratos compartidos ni repositorios.
+Exploración **borrador**, sin aprobación. Este archivo es una nota de dirección para `chat-a-3d@v1`, no el contrato canónico ni una autorización de implementación. Fuente de comportamiento: `chat-a-3d@v1.r1.behavior.md`, R13 / SP-12. Contexto leído: SPEC, PLAN.md y bloque SP-12 de PLAN.json. No se modificaron planes, contratos compartidos ni repositorios.
 
-La exploración completa está en `chat-a-3d@v1.r1.dir-c.html`, construida desde el TSX homónimo mediante el builder real offline. El inspector conserva Mockup y selectores nativos Vista/Estado/Diálogo/Tema/Movimiento. No se instaló nada ni se descargaron recursos. React, fuentes, CSS, JS, iconos y dibujo SVG están incluidos.
+La exploración completa está en `chat-a-3d@v1.r1.dir-c.html`, construida desde el TSX homónimo mediante el builder real sin conexión. El inspector conserva Mockup y los selectores nativos Vista/Estado/Diálogo/Tema/Movimiento. No se instaló nada ni se descargaron recursos. React, fuentes, CSS, JS, iconos y dibujo SVG están incluidos.
 
 ## 2. Enfoque y usuarios
 
@@ -35,45 +35,45 @@ Se dibujaron y renderizaron primero:
 
 | Eje | Expresión visible |
 |---|---|
-| concept | Edición en contexto: las recomendaciones forman parte del mensaje; ampliar una escena y ajustar la necesidad ocurre en el mismo lugar. |
-| layout | Columna de conversación de 880px con tarjetas en bandas apiladas; miniatura de 168px junto a nombre y cantidad; expansión debajo de su propia tarjeta. Shell ancho compartido. |
-| navigation | Navegación horizontal heredada; Ver escena/Ocultar escena abre una sola vista en el mensaje; Ajustar revela el campo local; Abrir en el Taller lleva al deep link autorizado. |
-| typography | Geist y Geist Mono locales del producto: título 24px, nombres 18px/16px en móvil, cantidad 18px, cuerpo 15px y metadatos 12–13px. |
-| density | Bandas cerradas compactas de 176px aprox. en escritorio; una sola escena expandida, sin panel lateral permanente. Insets 24px escritorio y 20px teléfono. |
-| components | Button, Input, Skeleton y AlertDialog reales; enlaces nativos para abrir, disclosure de cuenta heredado y composición propia de tarjeta/edición en sitio. |
-| colour | Tokens Pictures exactos de globals.css y los alias accesibles de hermanos; acento en apertura y envío, navegación neutra, visor con taller-visor. Dos temas sin paleta nueva. |
-| motion | Asentamiento táctil .975→1.006→1 en 540ms con 65ms de secuencia; expansión vertical .94→1.012→1; presión .965, hover 1.025 y spring del perfil. Reducción inmediata y pausa de animación CSS en pestaña oculta. |
+| concepto | Edición en contexto: las recomendaciones forman parte del mensaje; ampliar una escena y ajustar la necesidad ocurre en el mismo lugar. |
+| diseño | Columna de conversación de 880px con tarjetas en bandas apiladas; miniatura de 168px junto a nombre y cantidad; expansión debajo de su propia tarjeta. Shell ancho compartido. |
+| navegación | Navegación horizontal heredada; Ver escena/Ocultar escena abre una sola vista en el mensaje; Ajustar revela el campo local; Abrir en el Taller lleva al enlace directo autorizado. |
+| tipografía | Geist y Geist Mono locales del producto: título 24px, nombres 18px/16px en móvil, cantidad 18px, cuerpo 15px y metadatos 12–13px. |
+| densidad | Bandas cerradas compactas de 176px aprox. en escritorio; una sola escena expandida, sin panel lateral permanente. Márgenes internos de 24px en escritorio y 20px en teléfono. |
+| componentes | Button, Input, Skeleton y AlertDialog reales; enlaces nativos para abrir, panel desplegable de cuenta heredado y composición propia de tarjeta/edición en sitio. |
+| color | Tokens Pictures exactos de globals.css y los alias accesibles de los proyectos hermanos; acento en apertura y envío, navegación neutra, visor con taller-visor. Dos temas sin paleta nueva. |
+| movimiento | Asentamiento táctil .975→1.006→1 en 540ms con 65ms de secuencia; expansión vertical .94→1.012→1; presión .965, hover 1.025 y spring del perfil. Reducción inmediata y pausa de animación CSS en pestaña oculta. |
 
 ## 4. Superficie existente y sistema fijo
 
 Se inspeccionaron en sólo lectura ambos repositorios y, específicamente, `src/app/globals.css`, `/asistente/page.tsx`, `VistaGuiada.tsx`, `Burbujas.tsx`, `Compositor.tsx`, `CabeceraApp.tsx`, `IdeasDelAsistente.tsx` y las fuentes de galería/motor. `/asistente` usa `VistaGuiada`; `asesor/ChatView.tsx` pertenece a otra superficie y no se traslada su identidad.
 
-Se leyeron los tres contratos/HTML hermanos: cuentas-admin@v1, planes@v1 y proyectos@v1. La cabecera Pictures/Sempertex con anillo y punto, controles de idioma/cuenta, navegación horizontal neutra, footer y vocabulario de componentes proceden de esos hermanos. El código fuente `proyectos@v1.r12.dir-c.tsx` permite conservar su mapeo de tokens y shell. Las rutas Herramientas/Chat normal se componen con ese patrón; la disponibilidad final de cada ruta la gobierna SP-7. Este subplan no diseña la calculadora, el contador, la galería ni el guardado.
+Se leyeron los tres contratos/HTML hermanos: cuentas-admin@v1, planes@v1 y proyectos@v1. La cabecera Pictures/Sempertex con anillo y punto, controles de idioma/cuenta, navegación horizontal neutra, pie de página y vocabulario de componentes proceden de esos hermanos. El código fuente `proyectos@v1.r12.dir-c.tsx` permite conservar su mapeo de tokens y shell. Las rutas Herramientas/Chat normal se componen con ese patrón; la disponibilidad final de cada ruta la gobierna SP-7. Este subplan no diseña la calculadora, el contador, la galería ni el guardado.
 
 | Token Pictures | Rol kit / uso | Claro / oscuro |
 |---|---|---|
-| `--fondo` | background | #faf9fc / #0b0c10 |
-| `--superficie` | card, popover | #ffffff / #16181f |
+| `--fondo` | fondo | #faf9fc / #0b0c10 |
+| `--superficie` | tarjeta, menú emergente | #ffffff / #16181f |
 | `--superficie-suave` | miniatura neutra | #faf8fd / #1c1e26 |
-| `--superficie-2` | secondary, muted, accent | #efe9f8 / #242733 |
-| `--texto` | foreground | #1c1425 / #f4f5f7 |
-| `--texto-suave` | muted-foreground | #6b6178 / #9aa1ad |
-| `--texto-tenue` | input, borde de control accesible heredado | #766c85 / #8a91a0 |
-| `--acento` / `--sobre-acento` | primary / primary-foreground | #6d3fe0 / #ffffff; oscuro #9479ff / #120b24 |
-| `--acento-hover` | primary-hover | #5530b8 / #a58dff |
+| `--superficie-2` | secundario, atenuado, acento | #efe9f8 / #242733 |
+| `--texto` | primer plano | #1c1425 / #f4f5f7 |
+| `--texto-suave` | primer plano atenuado | #6b6178 / #9aa1ad |
+| `--texto-tenue` | campo de entrada, borde de control accesible heredado | #766c85 / #8a91a0 |
+| `--acento` / `--sobre-acento` | principal / primer plano principal | #6d3fe0 / #ffffff; oscuro #9479ff / #120b24 |
+| `--acento-hover` | principal al pasar el cursor | #5530b8 / #a58dff |
 | `--borde` / `--borde-suave` | tarjeta / divisor | #e3daef / #efe9f8; oscuro #383c48 / #2a2d38 |
-| `--error` | destructive | #b23a45 / #ff979f |
+| `--error` | destructivo | #b23a45 / #ff979f |
 | `--taller-visor` | vista de escena desplegada | #ebe7f1 / #1a1722 |
 
 Geist y Geist Mono se incluyen desde las mismas WOFF2 locales del hermano elegido. Radios heredados: panel 32px, inset 24px, campo 18px y controles pill. No hay paleta ni fuentes nuevas. El SVG es un esquema neutral que usa roles existentes; su geometría y cantidad de círculos no constituyen un render fiel ni el cálculo del motor.
 
-| Componente y estados | Import / procedencia real |
+| Componente y estados | Importación / procedencia real |
 |---|---|
 | `shadcn:button default/outline normal/hover/focus/pressed/disabled` | `@/components/ui/button`, Base UI |
 | `shadcn:input text empty/filled/focus/disabled` | `@/components/ui/input` |
 | `shadcn:skeleton recommendation loading` | `@/components/ui/skeleton` |
 | `shadcn:alert-dialog restart open/closed` | `@/components/ui/alert-dialog`, implementación Animate UI/Base UI instalada |
-| `custom:recommendation-band collapsed/expanded` | article, h3, miniatura y botones semánticos; no se atribuye a otra librería |
+| `custom:recommendation-band collapsed/expanded` | artículo, h3, miniatura y botones semánticos; no se atribuye a otra librería |
 | `custom:open-decoration link permitted/opening` | enlace nativo con destino y nombre accesible específico |
 | `custom:account-menu closed/open` | details/summary compartido, cierre exterior/Escape |
 | `custom:inline-adjust closed/editing/empty/ready` | Input real y acciones Enviar mensaje/Cancelar |
@@ -119,7 +119,7 @@ Los nombres ES vienen literalmente de la galería; los EN son traducciones draft
 | recommendations | Dos recomendaciones completas y ampliables; apertura condicionada a capacidad. |
 | start | Saludo/pregunta existente y campo vacío; enviar desactivado sin texto. |
 | clarify | Primer pedido y pregunta de tamaño aproximado/colores; compositor disponible. |
-| loading | Dos skeletons y Estoy pensando…; se puede escribir y detener la respuesta. |
+| loading | Dos esqueletos y Estoy pensando…; se puede escribir y detener la respuesta. |
 | empty | Sin coincidencias y siguiente paso por conversación; no tarjetas ficticias. |
 | error | No se pudieron cargar las decoraciones; conversación conservada y Reintentar. |
 | partial | Aviso de que no se pudieron cargar todas; una tarjeta válida y Reintentar. No representa un resultado completo de dos o tres recomendaciones. |
@@ -137,7 +137,7 @@ Edición y expansión se alcanzan con sus controles visibles; diálogos con el s
 - 768–1023px: insets de 24px; mismo orden y bandas, sin overflow. Destino Taller pasa el inspector debajo.
 - 360–767px: insets de 20px; header y navegación refluyen, sin scroll horizontal. Miniatura de 100px junto a nombre de 16px; acciones debajo a todo el ancho disponible. La apertura se estira si hace falta. Compositor conserva foto/voz/envío y los reordena en dos filas. Vista ampliada queda bajo su propia tarjeta.
 
-Verificado visualmente a 1280 y 390px en ambos temas; comprobación adicional de reflow EN a 768px. No se añaden carruseles con scroll lateral ni gestos obligatorios.
+Verificado visualmente a 1280 y 390px en ambos temas; comprobación adicional de reflujo EN a 768px. No se añaden carruseles con scroll lateral ni gestos obligatorios.
 
 ## 10. Accesibilidad y movimiento
 
@@ -149,38 +149,38 @@ OS reduced motion, selector Quieto y `?still=1` muestran el estado final sin des
 
 ## 11. Aceptación visual y evidencia
 
-| ID | Breakpoint | Estado | Expectativa observable |
+| ID | Punto de quiebre | Estado | Expectativa observable |
 |---|---|---|---|
-| C-AC-01 | 1280 / 390px | recommendations | Shell Pictures/Sempertex, idioma, cuenta, navegación horizontal y footer conservan tokens/fuentes hermanos. |
-| C-AC-02 | 360–1520px | recommendations | Cada tarjeta muestra miniatura, nombre y cantidad; no se calcula un conteo con texto del modelo. |
+| C-AC-01 | 1280 / 390px | recommendations | El shell Pictures/Sempertex, el idioma, la cuenta, la navegación horizontal y el pie conservan los tokens y las fuentes de Proyectos. |
+| C-AC-02 | 360–1520px | recommendations | Cada tarjeta muestra miniatura, nombre y cantidad; no se calcula un conteo a partir del texto del modelo. |
 | C-AC-03 | 1280 / 390px | viewer | Hay las mismas dos tarjetas, sin apertura ni mención de planes en la conversación. |
-| C-AC-04 | 1280 / 390px | explorer | Abrir en el Taller tiene href /3d?decoracion=<id> y nombre accesible que identifica la decoración. |
-| C-AC-05 | 1280 / 390px | expanded | Sólo una escena ampliada aparece debajo de su tarjeta, sin panel nuevo ni navegación. |
-| C-AC-06 | 1280 / 390px | editing | Ajustar revela el Input local y Enviar mensaje/Cancelar; vacío desactiva enviar. |
-| C-AC-07 | 1280 / 390px | loading | Skeletons sustituyen las tarjetas; el campo sigue disponible y hay Detener respuesta. |
-| C-AC-08 | 1280 / 390px | empty/error | La conversación permanece, sin tarjetas de relleno; recuperación visible donde corresponde. |
-| C-AC-09 | 1280 / 390px | preview-error | La miniatura fallida no sigue representándose como disponible; nombre/conteo conocidos permanecen. |
-| C-AC-10 | 1280 / 390px | opened | Un nuevo proyecto indica Sin guardar y la decoración elegida; no indica guardado ni modifica un proyecto anterior. |
-| C-AC-11 | 390 / 768 / 1280px | EN light/dark | No hay scroll horizontal; nombres y controles se reacomodan sin truncar el texto de acción. |
+| C-AC-04 | 1280 / 390px | explorer | Abrir en el Taller tiene href /3d?decoracion=<id> y un nombre accesible que identifica la decoración. |
+| C-AC-05 | 1280 / 390px | expanded | Sólo aparece una escena ampliada debajo de su tarjeta, sin panel nuevo ni navegación. |
+| C-AC-06 | 1280 / 390px | editing | Ajustar muestra el campo local y Enviar mensaje/Cancelar; si está vacío, enviar queda desactivado. |
+| C-AC-07 | 1280 / 390px | loading | Los esqueletos sustituyen las tarjetas; el campo sigue disponible y aparece Detener respuesta. |
+| C-AC-08 | 1280 / 390px | empty/error | La conversación permanece, sin tarjetas de relleno; la opción de recuperación aparece donde corresponde. |
+| C-AC-09 | 1280 / 390px | preview-error | La miniatura fallida deja de mostrarse como disponible; el nombre y el conteo conocidos permanecen. |
+| C-AC-10 | 1280 / 390px | opened | Un proyecto nuevo indica Sin guardar y la decoración elegida; no indica que se haya guardado ni modifica un proyecto anterior. |
+| C-AC-11 | 390 / 768 / 1280px | EN light/dark | No hay desplazamiento horizontal; los nombres y controles se reacomodan sin truncar el texto de acción. |
 | C-AC-12 | todos | reduced/still | Se ven los mismos contenidos y funciones sin animaciones activas. |
-| C-AC-13 | 1280 / 390px | restart | Cancelar preserva la conversación; confirmar vuelve a inicio; foco se devuelve al origen adecuado. |
+| C-AC-13 | 1280 / 390px | restart | Cancelar preserva la conversación; confirmar vuelve al inicio; el foco regresa al origen adecuado. |
 
-Builder real offline: **PASS**, 632KB, 2132 source files. `contrast.py`: **158 pairs checked in light and dark, all pass**. Playwright audit final: **96 renders / 96 combinations planned**, 2140 medidas de texto y 442 paradas de foco.
+Constructor real sin conexión: **PASS**, 632KB, 2132 archivos fuente. `contrast.py`: **158 pares comprobados en claro y oscuro, todos pasan**. Auditoría final de Playwright: **96 renderizados / 96 combinaciones planificadas**, 2140 medidas de texto y 442 detenciones del foco.
 
-**RESULT: FAIL — alignment 4**
+**RESULTADO: FAIL — alineación 4**
 
-Los cuatro hallazgos corresponden exclusivamente al H1, Empezar de nuevo y las dos leyendas del footer, anclados al shell heredado (x=40 / extremo derecho) mientras la conversación mide x=200–1080 en 1280px. El heurístico global de columna centrada en `audit_probes.js` líneas 154–164 trata esos bloques del shell como contenido desalineado de la conversación. Inspección visual: son los mismos ejes del header/footer de proyectos@v1; se preservan por el mandato de no rediseñar shell. Esto es una interpretación documentada del Designer, no una excepción automática ni un PASS. No hay hallazgos finales de contraste, foco, bordes, padding, overflow, motion, network ni layout shift en esta ejecución. El borde propio del Input del compositor se corrigió tras el primer audit (que marcaba 1:1). No se alteró el auditor ni se ocultaron elementos para aprobarlo.
+Los cuatro hallazgos corresponden exclusivamente al H1, Empezar de nuevo y las dos leyendas del pie, anclados al shell heredado (x=40 / extremo derecho), mientras la conversación ocupa x=200–1080 en 1280px. La heurística global de columna centrada en `audit_probes.js` líneas 154–164 trata esos bloques del shell como contenido desalineado de la conversación. Inspección visual: son los mismos ejes del encabezado y pie de proyectos@v1; se conservan por el mandato de no rediseñar el shell. Esta es una interpretación documentada del Designer, no una excepción automática ni un PASS. En esta ejecución no hay hallazgos finales de contraste, foco, bordes, relleno, desbordamiento, movimiento, red ni cambios de diseño. El borde propio del campo del compositor se corrigió tras la primera auditoría (que marcaba 1:1). No se alteró el auditor ni se ocultaron elementos para aprobarlo.
 
-Capturas examinadas en memoria, sin crear archivos fuera del alcance: candidatas a 1280px; normal a 1280 claro/390 oscuro; expansión a 1280 oscuro en EN y edición a 390 claro en EN. Comprobaciones funcionales finales: PASS para tarjetas/conteos, ampliación única, ajuste local, enlaces por capacidad, proyecto nuevo sin guardar, omisión de copy de plan, EN a 390/768/1280 en ambos temas, miniatura fallida, cancelación de reinicio, ausencia de animación activa tras asentar reducción, ausencia de red/errores de consola y presencia real de card-seat en modo expresivo. Se usaron selectores de formulario específicos para desambiguar dos controles Enviar mensaje y se esperó al cierre real del diálogo. No prueban API, IA, ranking ni persistencia.
+Capturas examinadas en memoria, sin crear archivos fuera del alcance: candidatas a 1280px; normal a 1280 claro/390 oscuro; expansión a 1280 oscuro en EN y edición a 390 claro en EN. Comprobaciones funcionales finales: PASS para tarjetas y conteos, ampliación única, ajuste local, enlaces por capacidad, proyecto nuevo sin guardar, omisión de texto sobre planes, EN a 390/768/1280 en ambos temas, miniatura fallida, cancelación del reinicio, ausencia de animación activa una vez aplicada la reducción, ausencia de red/errores de consola y presencia real de card-seat en modo expresivo. Se usaron selectores específicos de formulario para distinguir dos controles Enviar mensaje y se esperó al cierre efectivo del diálogo. No comprueban API, IA, clasificación ni persistencia.
 
 ## 12. Preguntas, supuestos e impacto
 
-**Q1 — David:** ¿Confirmamos Ajustar como edición en contexto del último pedido con nuevo envío a recomendaciones, o la única corrección debe hacerse con otro mensaje en el compositor? La propuesta visual está implementada sólo como fixture y requiere decidir semántica de historial antes de finalizar.
+**Q1 — David:** ¿Confirmamos Ajustar como edición en contexto del último pedido con un nuevo envío a recomendaciones, o la única corrección debe hacerse con otro mensaje en el compositor? La propuesta visual está implementada sólo como fixture y requiere decidir la semántica del historial antes de finalizar.
 
-**Q2 — David / catálogo SP-7 / textos SP-9:** ¿El índice de galería entregará directamente el nombre ES/EN y el ID final para el enlace? Los nombres ES y las cantidades vienen de fuentes locales reales; los nombres EN son traducción draft y los IDs `asistente:` corresponden a la biblioteca actual, pendientes de confirmar contra galeria-index@1.
+**Q2 — David / catálogo SP-7 / textos SP-9:** ¿El índice de galería entregará directamente el nombre ES/EN y el ID final para el enlace? Los nombres ES y las cantidades vienen de fuentes locales reales; los nombres EN son traducciones preliminares y los IDs `asistente:` corresponden a la biblioteca actual, pendientes de confirmar contra galeria-index@1.
 
-**Q3 — David:** ¿Aceptamos que el título y el footer conserven el ancho heredado del shell mientras el chat queda en una columna de 880px? El audit informa cuatro desalineaciones globales por esa composición; se necesita resolver su criterio antes de declarar aceptación visual completa.
+**Q3 — David:** ¿Aceptamos que el título y el pie conserven el ancho heredado del shell mientras el chat queda en una columna de 880px? La auditoría informa cuatro desalineaciones globales por esa composición; se necesita resolver el criterio antes de declarar la aceptación visual completa.
 
-Supuestos explícitos: el saludo y los controles foto/voz existentes se preservan; el resto de rutas depende de capacidades según SP-7; un resultado parcial de infraestructura puede mostrar una tarjeta válida con recuperación, pero no reemplaza el objetivo de dos o tres. El mockup usa una pareja existente de geometría igual y no valida su ranking. El guardado real, proyectos y el resultado de abrir una decoración no crean una segunda especificación de SP-4.
+Supuestos explícitos: se conservan el saludo y los controles de foto/voz existentes; el resto de las rutas depende de capacidades según SP-7; un resultado parcial de infraestructura puede mostrar una tarjeta válida con una opción de recuperación, pero no reemplaza el objetivo de dos o tres. La maqueta usa un par existente de geometría igual y no valida su clasificación. El guardado real, los proyectos y el resultado de abrir una decoración no crean una segunda especificación de SP-4.
 
-Impacto: sólo SP-12, R13, vistas `/asistente` y handoff `/3d?decoracion=<id>`. Futuros consumidores: T12.1 copia del contrato aprobado, T12.3 tarjetas y T12.5 revisión visual. Compatibilidad: **undetermined**, primera exploración sin contrato previo; la edición en contexto se propone, no se impone. No se cambian los contratos hermanos, changelog compartido, PLAN ni repositorios. El contrato canónico queda pendiente del proceso de selección/finalización y de la aprobación independiente del propietario.
+Impacto: sólo SP-12, R13, vistas `/asistente` y entrega a `/3d?decoracion=<id>`. Futuros consumidores: T12.1, copia del contrato aprobado; T12.3, tarjetas; y T12.5, revisión visual. Compatibilidad: **indeterminada**, primera exploración sin contrato previo; la edición en contexto se propone, no se impone. No se cambian los contratos hermanos, el registro de cambios compartido, PLAN ni los repositorios. El contrato canónico queda pendiente del proceso de selección/finalización y de la aprobación independiente del propietario.

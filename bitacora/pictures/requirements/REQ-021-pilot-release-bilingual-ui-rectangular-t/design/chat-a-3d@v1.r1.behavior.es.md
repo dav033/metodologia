@@ -1,18 +1,18 @@
-# Brief de interfaz — SP-12 · Normal chat recommends ready-made 3D decorations
+# Brief de interfaz — SP-12 · El chat normal recomienda decoraciones 3D listas para usar
 
 Fuente de comportamiento compartida para el Designer. Lo que no está aquí no es alcance de diseño.
 
 ## Resultado esperado
 
-In two or three messages the guided chat defines the need and shows two or three ready-made 3D decorations from the gallery with preview, name and balloon count to every plan; Master Designer and staff can open one in the Taller 3D as a new project, other plans see the recommendation without the button; names and counts come only from the gallery and the engine.
+En dos o tres mensajes, el chat guiado define la necesidad y muestra a cada plan dos o tres decoraciones 3D listas para usar de la galería, con vista previa, nombre y cantidad de globos; Master Designer y el personal pueden abrir una en el Taller 3D como proyecto nuevo, y los demás planes ven la recomendación sin el botón. Los nombres y las cantidades provienen únicamente de la galería y del motor.
 
 ## Requisitos que cubre
 
-- R13: The assisted chat shall be split into a cost calculator, a balloon counter and a normal chat, and the normal chat shall connect to the 3D workshop.
+- R13: El chat asistido debe dividirse en una calculadora de costos, un contador de globos y un chat normal; el chat normal debe conectarse al taller 3D.
 
 ## Criterios de producto
 
-- The chat shows each recommendation as a card with preview, name in the session's language and balloon count; «Abrir en el Taller» appears only for accounts with decoraciones.explorar and opens /3d?decoracion=<id> as a new project, and other accounts see the card without the button and without any mention of a plan.
+- El chat muestra cada recomendación como una tarjeta con vista previa, nombre en el idioma de la sesión y cantidad de globos; «Abrir en el Taller» aparece solo para las cuentas con decoraciones.explorar y abre /3d?decoracion=<id> como proyecto nuevo. Las demás cuentas ven la tarjeta sin el botón y sin menciones a ningún plan.
 
 ## Flujos de usuario
 
@@ -40,13 +40,13 @@ El Planner no nombró las pantallas actuales. No las adivines: localízalas en s
 
 ## Tareas de interfaz
 
-- T12.1 — Copy the owner-approved chat-a-3d@v1 contract into the repository
-  - Objetivo: The repository holds the exact owner-approved chat-a-3d@v1 contract before the recommendation cards are built.
-- T12.3 — Recommendation cards in the guided chat with a plan-gated open button
-  - Objetivo: Every plan sees the recommended decorations as cards, and only accounts with the explorer open them in the Taller.
-- T12.5 — SP-12 visual review against the chat-a-3d@v1 contract
-  - Objetivo: A fresh reviewer compares the rendered recommendation cards with the approved contract and records every mismatch with the task to redo.
+- T12.1 — Copiar al repositorio el contrato chat-a-3d@v1 aprobado por el propietario
+  - Objetivo: El repositorio contiene el contrato chat-a-3d@v1 exacto aprobado por el propietario antes de crear las tarjetas de recomendación.
+- T12.3 — Tarjetas de recomendación en el chat guiado con botón para abrir sujeto al plan
+  - Objetivo: Todos los planes ven las decoraciones recomendadas como tarjetas, y solo las cuentas con el permiso de exploración pueden abrirlas en el Taller.
+- T12.5 — Revisión visual de SP-12 según el contrato chat-a-3d@v1
+  - Objetivo: Un revisor nuevo compara las tarjetas de recomendación renderizadas con el contrato aprobado y registra cada discrepancia con la tarea que debe rehacerse.
 
 ## Omitido a propósito
 
-Campos del subplan que no se pasan al Designer: tasks outside the UI (ui:false, non-design/non-review), verification, expected_paths, shared_resources, classification and estimates, digest, engineering-only acceptance criteria. Tareas omitidas: T12.2, T12.4, T12.6.
+Campos del subplan que no se pasan al Designer: tareas fuera de la interfaz (ui:false, no son de diseño ni revisión), verificación, expected_paths, shared_resources, clasificación y estimaciones, digest, criterios de aceptación exclusivos de ingeniería. Tareas omitidas: T12.2, T12.4, T12.6.
