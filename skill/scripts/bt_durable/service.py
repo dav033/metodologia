@@ -39,12 +39,14 @@ def wire(cfg: EngineConfig, *, repositories_for: Callable[[str], object], driver
     attempts = M3Attempts(root=cfg.state_dir / "attempts-root", repositories_for=repositories_for,
                           plan_for=lambda attempt: steps.plan(attempt.run), driver_for=driver_for,
                           briefs_for=briefs_for)
+    telemetry = JsonlTelemetry(cfg.state_dir / "telemetry.jsonl")
+    attempts.telemetry = telemetry
 
     integrator = _ProjectIntegrator(repositories_for)
     return Ports(plans=plans, router=StaticRouter(routes, capacity), preparer=attempts,
                  runtime=runtime or SupervisorRuntime(cfg.state_dir / "supervisor"), reader=attempts,
                  capturer=attempts, verifier=verifier or operator_verifier(cfg.state_dir / "m6-quality.sqlite3"),
-                 integrator=integrator, telemetry=JsonlTelemetry(cfg.state_dir / "telemetry.jsonl"))
+                 integrator=integrator, telemetry=telemetry)
 
 
 def requirement_dir(run) -> Path:

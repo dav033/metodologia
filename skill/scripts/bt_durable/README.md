@@ -105,6 +105,7 @@ template for proving an upgrade. When no workflow can still be on the old path, 
 | an agent seems stuck | `python -m bt_supervisor show <attempt key>`; `systemctl --user status bt-att-*` |
 | the engine does not start | `journalctl --user -u bt-durable`; the state directory must be private (0700) |
 | metrics | `python -m bt_durable.bench durable <state>/durable/telemetry.jsonl` |
+| an attempt left a source file over 500 lines | telemetry event `file_guard` (written at capture, whatever tool wrote the file); the same findings are `snapshot.oversized` (`new`/`crossed`/`grew`), and `adapters/size_guard.note()` turns them into text for the next note |
 
 ## Verified limitations (not claimed)
 
