@@ -47,8 +47,16 @@ class PlanSchema13Compatibility(unittest.TestCase):
             cls.baseline = importlib.util.module_from_spec(spec)
             sys.modules[spec.name] = cls.baseline
             spec.loader.exec_module(cls.baseline)
-        cls.plans = sorted((REPO / "bitacora").glob("*/requirements/*/PLAN.json"))
-        cls.revisions = sorted((REPO / "bitacora").glob("*/requirements/*/plan-revisions/PLAN.r*.json"))
+        # Plans that declare 1.3.0 postdate the tag, which cannot read them; they are compared with the current planner,
+        # the runtime loader and the typed contract by test_plan_contract_models. Everything older stays pinned here.
+        cls.schema_13 = []
+        cls.plans, cls.revisions = [], []
+        for target, pattern in ((cls.plans, "*/requirements/*/PLAN.json"),
+                                (cls.revisions, "*/requirements/*/plan-revisions/PLAN.r*.json")):
+            for path in sorted((REPO / "bitacora").glob(pattern)):
+                declared = json.loads(path.read_text(encoding="utf-8")).get("schema_version")
+                (cls.schema_13 if cls.current.contract.schema_tuple({"schema_version": declared}) >= (1, 3, 0)
+                 else target).append(path)
 
     def test_plan_files_match_tag_validation_and_canonical_bytes(self):
         self.assertTrue(self.plans, "expected live PLAN.json files")
@@ -76,6 +84,12 @@ class PlanSchema13Compatibility(unittest.TestCase):
                         self.assertFalse({"environment", "requires", "authorization_needed"} & set(verification))
         for manifest in (REPO / "bitacora").glob("*/requirements/*/plan-revisions/MANIFEST.json"):
             self.assertEqual(self.current.verify_store(manifest.parent.parent), [], str(manifest))
+
+    def test_only_plans_that_declare_schema_13_are_left_to_the_current_readers(self):
+        for path in self.schema_13:
+            with self.subTest(path=path.relative_to(REPO)):
+                plan = json.loads(path.read_text(encoding="utf-8"))
+                self.assertEqual(plan.get("schema_version"), self.current.contract.LATEST_SCHEMA_VERSION)
 
     def test_synthetic_legacy_plans_match_tag_with_schema_13_names(self):
         golden = SCRIPTS / ("bt_" + "planner") / "tests" / "golden"
