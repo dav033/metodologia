@@ -1,0 +1,193 @@
+{
+ "title": "SP-9 a SP-13: textos en inglés, resto del idioma, módulos editables, chat→3D y lanzamiento",
+ "coverage": "SP-9, SP-10, SP-11, SP-12, SP-13",
+ "intro": "Últimas decisiones para cerrar el plan. Lo que encontré: el catálogo público son 1.615 productos de Shopify guardados en SQLite (en Vercel se vuelve a sembrar en cada arranque, así que los textos en inglés y sus correcciones deben vivir en Postgres); hay 448 decoraciones hechas (25 Ideas del asistente y 423 Ideas Sempertex). Módulos: hoy ya se edita más que el color (tipo pareja–sexteto, formato, inflado y color por globo); lo que NO se puede editar es la separación y el grosor de columnas, arcos y guirnaldas de cuartetos, el número de globos por cuarteto en esas estructuras, el tamaño por globo dentro de un módulo, ni guardar módulos propios del estudio. Producción: el VPS también corre una copia web (sslip.io) con la contraseña compartida.",
+ "questions": [
+  {
+   "id": "q1",
+   "text": "SP-9: ¿qué textos se traducen al inglés una vez con IA y quedan corregibles por el administrador?",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "Nombre y descripción de los 1.615 productos, los nombres de color y tamaño de sus variantes, y nombre y descripción de las 448 decoraciones hechas; nunca lo que escribe una persona (nombres de proyectos o decoraciones propias)"
+    },
+    {
+     "key": "b",
+     "label": "Solo nombres (sin descripciones)"
+    }
+   ],
+   "recommended": "a",
+   "why": "Es lo que ve una persona en catálogo, lista de compra y galería; lo escrito por cada usuario no se traduce."
+  },
+  {
+   "id": "q2",
+   "text": "SP-9: cuando Shopify cambia el texto en español de un producto, ¿qué pasa con su inglés?",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "Si lo escribió la IA, se regenera en la siguiente pasada; si lo corrigió un administrador, se conserva y queda marcado «la fuente cambió» para revisarlo"
+    },
+    {
+     "key": "b",
+     "label": "Nunca se regenera; solo el administrador lo cambia"
+    }
+   ],
+   "recommended": "a",
+   "why": "Mantiene el inglés al día sin pisar correcciones humanas."
+  },
+  {
+   "id": "q3",
+   "text": "SP-9: la pantalla para corregir textos en inglés, ¿lleva Designer?",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "No: una pestaña «Textos en inglés» en Administración con búsqueda y filtros (pendiente, corregido, la fuente cambió), siguiendo las pestañas que ya existen"
+    },
+    {
+     "key": "b",
+     "label": "Sí, con Designer"
+    }
+   ],
+   "recommended": "a",
+   "why": "Es una herramienta interna de una sola tabla; el patrón de las pestañas de administración basta."
+  },
+  {
+   "id": "q4",
+   "text": "SP-10: ¿qué pantallas pasan al inglés además del Taller y la navegación (SP-8)?",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "Todo lo que ve un usuario externo: portada, chat, contador, calculadora, catálogo, galería, proyectos, decoraciones guardadas y cuenta, más las respuestas de la IA. Las pantallas internas del personal (administración, órdenes, estadísticas, gasto, feedback, laboratorios) quedan en español"
+    },
+    {
+     "key": "b",
+     "label": "Todo, también las pantallas internas del personal"
+    }
+   ],
+   "recommended": "a",
+   "why": "El personal habla español y esas pantallas suman cientos de textos; además el idioma es lo primero en recortarse. b sigue siendo posible después del piloto."
+  },
+  {
+   "id": "q5",
+   "text": "SP-10: si alguien escribe en inglés al chat, ¿cómo busca productos (el buscador está en español)?",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "El modelo entiende el inglés y pasa la búsqueda al catálogo en español; responde en inglés y muestra los nombres de producto en inglés de SP-9"
+    },
+    {
+     "key": "b",
+     "label": "Además, un buscador nuevo sobre los textos en inglés"
+    }
+   ],
+   "recommended": "a",
+   "why": "No requiere un índice nuevo; el modelo ya llama herramientas de búsqueda con sus propias palabras."
+  },
+  {
+   "id": "q6",
+   "text": "SP-11: ¿qué ediciones nuevas de módulos y cuartetos entran? (puedes marcar varias)",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "Separación entre cuartetos y grosor de columnas, arcos y guirnaldas (barato)"
+    },
+    {
+     "key": "b",
+     "label": "Número de globos por «cuarteto» en esas estructuras: trío, quinteto… (medio)"
+    },
+    {
+     "key": "c",
+     "label": "Tamaño distinto por globo dentro de un módulo (medio-caro)"
+    },
+    {
+     "key": "d",
+     "label": "Guardar módulos propios del estudio /3d/modulos para reutilizarlos en el Taller (medio)"
+    }
+   ],
+   "recommended": "a",
+   "why": "a da el mayor cambio visible con poco riesgo; SP-11 es el segundo en la lista de recortes, así que conviene empezar por lo barato. Marca también b, c o d si los necesitas para el piloto (en la nota)."
+  },
+  {
+   "id": "q7",
+   "text": "SP-12: el chat recomienda decoraciones 3D hechas, pero el Taller es solo de Master Designer. Para los demás planes, ¿qué hace?",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "A todos les muestra 2–3 decoraciones recomendadas con imagen, nombre y conteo; solo Master Designer y el personal ven «Abrir en el Taller»"
+    },
+    {
+     "key": "b",
+     "label": "Solo Master Designer y el personal reciben recomendaciones 3D"
+    }
+   ],
+   "recommended": "a",
+   "why": "La recomendación sirve a todos; abrir el Taller sigue respetando el plan, sin anunciar qué plan lo tiene."
+  },
+  {
+   "id": "q8",
+   "text": "SP-13: la copia web del VPS (https://185-147-157-25.sslip.io) usa la contraseña compartida. El día del piloto, ¿qué hacemos?",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "Se apaga la web del VPS (el ai-api sigue ahí); producción es solo demo-decoracion.vercel.app"
+    },
+    {
+     "key": "b",
+     "label": "Se actualiza con la misma versión y las mismas cuentas"
+    }
+   ],
+   "recommended": "a",
+   "why": "Una segunda puerta con la contraseña vieja saltaría las cuentas y los permisos."
+  },
+  {
+   "id": "q9",
+   "text": "SP-13: antes de invitar usuarios reales, ¿qué pasa con los datos de prueba en la base de producción (cuentas, proyectos, decoraciones y gasto de prueba)?",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "Se hace copia de seguridad de la base y se borra todo lo de prueba, dejando solo tu cuenta de administrador"
+    },
+    {
+     "key": "b",
+     "label": "Se conserva todo"
+    }
+   ],
+   "recommended": "a",
+   "why": "El gasto y los proyectos del piloto deben ser solo de personas reales; la copia permite volver atrás."
+  },
+  {
+   "id": "q10",
+   "text": "SP-13: dijiste que las pruebas siguen en local y en los previews de Vercel. Un preview usa hoy la misma base de producción. ¿Qué base usan los previews?",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "Una rama de Neon «preview» solo para previews (la creas en la consola de Neon; te dejo los pasos y el nombre de la variable)"
+    },
+    {
+     "key": "b",
+     "label": "Ninguna: se apagan los previews y todo se prueba en local"
+    },
+    {
+     "key": "c",
+     "label": "La de producción, aceptando mezclar datos"
+    }
+   ],
+   "recommended": "a",
+   "why": "Probar en un preview sin tocar los datos de usuarios reales; b también es seguro pero pierde los previews."
+  }
+ ],
+ "round": 16,
+ "status": "open",
+ "answers": {},
+ "created_at": "2026-10-29T11:32:57Z"
+}

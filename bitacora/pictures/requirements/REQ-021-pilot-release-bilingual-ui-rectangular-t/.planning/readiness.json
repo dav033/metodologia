@@ -1,61 +1,49 @@
 {
- "digest": "7637ba2ba9c0e8d8b21d6c08e0c7526f1f8412e177c4e6d4f4f5ece8d1e98f87",
+ "digest": "58864e8729c3e9ec86e68977326aba6bec2879aac40b9c721af0ea000f05a15f",
  "rows": [
   {
    "subplan": "SP-4",
    "tasks": 10,
-   "ok": false,
-   "problem": "PLAN_INVALID: the stage cannot be approved: T3.14.ui: PLAN.md says False, PLAN.json says None",
+   "ok": true,
+   "problem": "",
    "depends_on_unfinished": "",
-   "errors": [
-    "T3.14.ui: PLAN.md says False, PLAN.json says None"
-   ],
-   "new_errors": [
-    "T3.14.ui: PLAN.md says False, PLAN.json says None"
-   ]
+   "errors": [],
+   "new_errors": []
   },
   {
    "subplan": "SP-5",
    "tasks": 6,
-   "ok": false,
-   "problem": "PLAN_INVALID: the stage cannot be approved: T3.14.ui: PLAN.md says False, PLAN.json says None",
+   "ok": true,
+   "problem": "",
    "depends_on_unfinished": "",
-   "errors": [
-    "T3.14.ui: PLAN.md says False, PLAN.json says None"
-   ],
+   "errors": [],
    "new_errors": []
   },
   {
    "subplan": "SP-6",
    "tasks": 7,
-   "ok": false,
-   "problem": "PLAN_INVALID: the stage cannot be approved: T3.14.ui: PLAN.md says False, PLAN.json says None",
+   "ok": true,
+   "problem": "",
    "depends_on_unfinished": "",
-   "errors": [
-    "T3.14.ui: PLAN.md says False, PLAN.json says None"
-   ],
+   "errors": [],
    "new_errors": []
   },
   {
    "subplan": "SP-7",
    "tasks": 11,
-   "ok": false,
-   "problem": "PLAN_INVALID: the stage cannot be approved: T3.14.ui: PLAN.md says False, PLAN.json says None",
+   "ok": true,
+   "problem": "",
    "depends_on_unfinished": "",
-   "errors": [
-    "T3.14.ui: PLAN.md says False, PLAN.json says None"
-   ],
+   "errors": [],
    "new_errors": []
   },
   {
    "subplan": "SP-8",
    "tasks": 8,
-   "ok": false,
-   "problem": "PLAN_INVALID: the stage cannot be approved: T3.14.ui: PLAN.md says False, PLAN.json says None",
+   "ok": true,
+   "problem": "",
    "depends_on_unfinished": "",
-   "errors": [
-    "T3.14.ui: PLAN.md says False, PLAN.json says None"
-   ],
+   "errors": [],
    "new_errors": []
   },
   {

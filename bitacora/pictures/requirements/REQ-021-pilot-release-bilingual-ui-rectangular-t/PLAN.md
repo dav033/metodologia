@@ -613,7 +613,7 @@ Each signed-in user saves and reopens projects and decorations from any browser,
 
   Repair task added by the run's self-repair (legacy runtime) when T3.8 could not pass; completed and inherited by the durable run. Objective, criteria and evidence are in PLAN.json.
 
-- [ ] T3.14 — Repair what blocks T3.8 · repo: pictures · after: T3.5, T3.7, T3.1 · files: .evidence/REQ-021/SP-3.checkpoint.json · resources: taller:scene · covers: R11, R9 · kind: implement · subplan: SP-3 · ui: no
+- [ ] T3.14 — Repair what blocks T3.8 · repo: pictures · after: T3.5, T3.7, T3.1 · files: .evidence/REQ-021/SP-3.checkpoint.json · resources: taller:scene · covers: R11, R9 · kind: implement · subplan: SP-3
 
   Repair task added by the run's self-repair (legacy runtime) when T3.8 could not pass; completed and inherited by the durable run. Objective, criteria and evidence are in PLAN.json.
 

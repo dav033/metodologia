@@ -355,3 +355,6 @@
 {"at": "2026-10-29T06:29:27-05:00", "who": "Planner", "kind": "plan", "sp": "SP-3", "text": "Actualizó SP-3 (tareas)", "diff": "+ tarea: Repair what blocks T3.8"}
 {"at": "2026-10-29T06:30:05-05:00", "who": "Planner", "kind": "doc", "sp": "", "text": "PLAN.md: «M2 — Saved work, Taller essentials, spend per user and the chat tools» cambió", "diff": ""}
 {"at": "2026-10-29T06:30:07-05:00", "who": "Tú → Designer", "kind": "design", "sp": "SP-4", "text": "proyectos@v1: elegida dirección C · Edición en contexto", "diff": ""}
+{"at": "2026-10-29T06:30:14-05:00", "who": "Planner", "kind": "doc", "sp": "", "text": "PLAN.md: «M2 — Saved work, Taller essentials, spend per user and the chat tools» cambió", "diff": ""}
+{"at": "2026-10-29T06:30:43-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 18 secciones traducidas", "diff": ""}
+{"at": "2026-10-29T06:31:43-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 3 secciones traducidas", "diff": ""}

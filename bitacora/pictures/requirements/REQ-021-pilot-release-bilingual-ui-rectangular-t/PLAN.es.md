@@ -3,166 +3,168 @@ req: REQ-021
 status: draft
 created: 2026-10-26
 ---
-# Plan — Pilot release: accounts and access plans, saved work, AI spend, Taller essentials, English, modules and chat
+# Plan — Lanzamiento piloto: cuentas y planes de acceso, trabajo guardado, gasto en IA, elementos esenciales de Taller, inglés, módulos y chat
 
 <!-- bitacora:status:begin -->
-> Bloque generado, no editar a mano. Plan: draft · ejecución: running · hitos 0/5 · tareas 20/90 · generado: 2026-10-28T12:16:28-05:00
+> Bloque generado, no editar a mano. Plan: draft · ejecución: paused · hitos 0/5 · tareas 29/92 · generado: 2026-10-28T17:13:37-05:00
 
-**M1 — Accounts, access plans and the plans section** · dificultad alta · 18/29
+**M1 — Cuentas, planes de acceso y sección de planes** · dificultad alta · 18/29
 
-**SP-1 — Accounts, sessions and server-side permissions**
-
-| Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
-|---|---|---|---|---|---|---|
-| T1.1 | Accounts schema: migration 037 and the isolated test-schema helper | media | completada | gpt-6-luna | codex-1 | 2 |
-| T1.2 | Permission catalogue, the plan catalogue, the six system roles and the route permission map | media | completada | gpt-6-luna | codex-2 | 1 |
-| T1.3 | Account service: invitations, activation, sign-in with lockout, reset links, roles and the one-time commands | alta | completada | gpt-6-luna | codex-luis | 2 |
-| T1.4 | Server sessions and the permission guard in the proxy and the sign-in API, replacing APP_PASSWORD | alta | completada | gpt-6-luna | codex-2 | 1 |
-| T1.5 | Local no-restrictions mode that refuses to start outside next dev on loopback | media | completada | gpt-6-luna | codex-1 | 3 |
-| T1.6 | Apply the permission guard to every API handler and move the existing suites to a shared test session | baja | completada | gpt-6-luna | codex-luis | 1 |
-| T1.7 | End-to-end check of accounts and permissions on a production build, and the SP-1 suites in CI | media | completada | gpt-6-luna | codex-2 | 6 |
-| T1.8 | SP-1 security audit: accounts, sessions, permissions, local mode and the one-time commands | alta | completada | gpt-6.1-sol | codex-luis | 12 |
-| T1.8b | Cross-check audit of T1.8: SP-1 security audit: accounts, sessions, permissions, local mode and the one-time commands | alta | completada | gpt-6.1-sol | codex-luis | 1 |
-| T1.9 | Remediate T1.8 findings F1, F2, F3, F4 | media | completada | gpt-6-luna | codex-2 | 1 |
-| T1.10 | Remediate T1.8 findings F6 | alta | completada | gpt-6-luna | codex-2 | 3 |
-| T1.11 | Remediate T1.8 findings F16, F17 | media | completada | gpt-6-luna | codex-2 | 2 |
-| T1.12 | Remediate T1.8 findings F19, F20 | media | completada | gpt-6-luna | codex-luis | 1 |
-
-**SP-2 — Sign-in, invitation and administration screens**
+**SP-1 — Cuentas, sesiones y permisos del lado del servidor**
 
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|
-| T2.1 | Copy the owner-approved cuentas-admin@v1 contract into the repository | baja | completada | gpt-6.1-sol | codex-2 | 2 |
-| T2.2 | Account APIs: activation, reset, notice acceptance, own password and the administration of accounts and roles | media | completada | gpt-6-luna | codex-1 | 4 |
-| T2.3 | Sign-in, invitation activation, password reset and notice re-acceptance screens | media | completada | gpt-6-luna | codex-1 | 3 |
-| T2.4 | Account menu on every signed-in page and the Mi cuenta page | media | completada | gpt-6-luna | codex-2 | 2 |
-| T2.5 | Administration screens: accounts list, invitations, account actions and the role editor | media | completada | gpt-6-luna | codex-luis | 2 |
-| T2.6 | Browser end-to-end: invite, activate, sign in and change plan on a production build | media | en curso | gpt-6-luna | codex-luis | 18 |
-| T2.7 | SP-2 visual review against the cuentas-admin@v1 contract | media | pendiente | — | — | 0 |
-| T2.8 | SP-2 audit: account screens, administration APIs and the data notice | media | pendiente | — | — | 0 |
+| T1.1 | Esquema de cuentas: migración 037 y helper para esquemas de prueba aislados | media | completada | gpt-6-luna | codex-1 | 2 |
+| T1.2 | Catálogo de permisos, catálogo de planes, los seis roles del sistema y el mapa de permisos de rutas | media | completada | gpt-6-luna | codex-2 | 1 |
+| T1.3 | Servicio de cuentas: invitaciones, activación, inicio de sesión con bloqueo, enlaces de restablecimiento, roles y comandos de un solo uso | alta | completada | gpt-6-luna | codex-luis | 2 |
+| T1.4 | Sesiones del servidor y protección de permisos en el proxy y la API de inicio de sesión, en reemplazo de APP_PASSWORD | alta | completada | gpt-6-luna | codex-2 | 1 |
+| T1.5 | Modo local sin restricciones que se niega a iniciarse fuera de next dev en loopback | media | completada | gpt-6-luna | codex-1 | 3 |
+| T1.6 | Aplicar la protección de permisos a cada controlador de API y trasladar las suites existentes a una sesión de prueba compartida | baja | completada | gpt-6-luna | codex-luis | 1 |
+| T1.7 | Verificación integral de cuentas y permisos en una compilación de producción, y suites de SP-1 en CI | media | completada | gpt-6-luna | codex-2 | 6 |
+| T1.8 | Auditoría de seguridad de SP-1: cuentas, sesiones, permisos, modo local y comandos de un solo uso | alta | completada | gpt-6.1-sol | codex-luis | 12 |
+| T1.8b | Auditoría de verificación cruzada de T1.8: auditoría de seguridad de SP-1: cuentas, sesiones, permisos, modo local y comandos de un solo uso | alta | completada | gpt-6.1-sol | codex-luis | 1 |
+| T1.9 | Corregir los hallazgos F1, F2, F3, F4 de T1.8 | media | completada | gpt-6-luna | codex-2 | 1 |
+| T1.10 | Corregir los hallazgos F6 de T1.8 | alta | completada | gpt-6-luna | codex-2 | 3 |
+| T1.11 | Corregir los hallazgos F16, F17 de T1.8 | media | completada | gpt-6-luna | codex-2 | 2 |
+| T1.12 | Corregir los hallazgos F19, F20 de T1.8 | media | completada | gpt-6-luna | codex-luis | 1 |
 
-**SP-14 — Plans section: the four access plans, public and informative**
+**SP-2 — Pantallas de inicio de sesión, invitación y administración**
 
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|
-| T14.1 | Copy the owner-approved planes@v1 contract into the repository | baja | pendiente | — | — | 0 |
-| T14.2 | Public plans page: the four plans from the plan catalogue, prices by language | media | pendiente | — | — | 0 |
-| T14.3 | Plans links on the sign-in screen and in the account menu | baja | pendiente | — | — | 0 |
-| T14.4 | Browser end-to-end of the plans section on a production build | media | pendiente | — | — | 0 |
-| T14.5 | SP-14 visual review against the planes@v1 contract | media | pendiente | — | — | 0 |
-| T14.6 | SP-14 audit: catalogue use, public route and copy | media | pendiente | — | — | 0 |
+| T2.1 | Copiar al repositorio el contrato cuentas-admin@v1 aprobado por el propietario | baja | completada | gpt-6.1-sol | codex-2 | 2 |
+| T2.2 | APIs de cuentas: activación, restablecimiento, aceptación del aviso, contraseña propia y administración de cuentas y roles | media | completada | gpt-6-luna | codex-1 | 4 |
+| T2.3 | Pantallas de inicio de sesión, activación de invitación, restablecimiento de contraseña y nueva aceptación del aviso | media | completada | gpt-6-luna | codex-1 | 3 |
+| T2.4 | Menú de cuenta en cada página con sesión iniciada y página Mi cuenta | media | completada | gpt-6-luna | codex-2 | 2 |
+| T2.5 | Pantallas de administración: lista de cuentas, invitaciones, acciones de cuenta y editor de roles | media | completada | gpt-6-luna | codex-luis | 2 |
+| T2.6 | Prueba integral en navegador: invitar, activar, iniciar sesión y cambiar de plan en una compilación de producción | media | bloqueada | gpt-6-luna | codex-luis | 24 |
+| T2.7 | Revisión visual de SP-2 según el contrato cuentas-admin@v1 | media | pendiente | — | — | 0 |
+| T2.8 | Auditoría de SP-2: pantallas de cuenta, APIs de administración y aviso de datos | media | pendiente | — | — | 0 |
+
+**SP-14 — Sección de planes: los cuatro planes de acceso, pública e informativa**
+
+| Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
+|---|---|---|---|---|---|---|
+| T14.1 | Copiar al repositorio el contrato planes@v1 aprobado por el propietario | baja | pendiente | — | — | 0 |
+| T14.2 | Página pública de planes: los cuatro planes del catálogo, precios por idioma | media | pendiente | — | — | 0 |
+| T14.3 | Enlaces a los planes en la pantalla de inicio de sesión y en el menú de cuenta | baja | pendiente | — | — | 0 |
+| T14.4 | Prueba integral en navegador de la sección de planes en una compilación de producción | media | pendiente | — | — | 0 |
+| T14.5 | Revisión visual de SP-14 según el contrato planes@v1 | media | pendiente | — | — | 0 |
+| T14.6 | Auditoría de SP-14: uso del catálogo, ruta pública y textos | media | pendiente | — | — | 0 |
 
 **Sin subplan**
 
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|
-| T91 | M1 composition check: first administrator to an Entusiasta user on the integrated tree | media | pendiente | — | — | 0 |
-| T94 | Composition check CG-4: access plans from the plans section to the accounts screen | media | pendiente | — | — | 0 |
+| T91 | Verificación de composición de M1: desde el primer administrador hasta un usuario Entusiasta en el árbol integrado | media | pendiente | — | — | 0 |
+| T94 | Verificación de composición CG-4: planes de acceso desde la sección de planes hasta la pantalla de cuentas | media | pendiente | — | — | 0 |
 
-**M2 — Saved work, Taller essentials, spend per user and the chat tools** · dificultad alta · 2/52
+**M2 — Trabajo guardado, elementos esenciales de Taller, gasto por usuario y herramientas de chat** · dificultad alta · 11/54
 
-**SP-3 — Taller essentials: researched and modelled Backing and table types, type cards and every-type Blender export**
-
-| Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
-|---|---|---|---|---|---|---|
-| T3.2 | Research new Backing structures and table types, write the validated proposal and get the owner's approval | media | completada | gpt-6-luna | codex-luis | 2 |
-| T3.3 | Make the table, piece and Backing registries exhaustive and add the Backing extension points | alta | completada | gpt-6-luna | codex-2 | 1 |
-| T3.4 | Record the owner-approved list of new Backings and table types in the repository | baja | bloqueada | gemini-3.8-flash-low | antigravity | 4 |
-| T3.5 | Model the approved new table types in the parametric table generator | alta | pendiente | — | — | 0 |
-| T3.6 | Model the approved new Backing structures as parametric Taller furniture | alta | pendiente | — | — | 0 |
-| T3.7 | Teach photo reading the approved new Backing structures | media | pendiente | — | — | 0 |
-| T3.8 | Checkpoint: run the registry and modelling suites before Taller UI and export work | baja | pendiente | — | — | 0 |
-| T3.9 | One creation card per table type in Fondos y muebles | media | pendiente | — | — | 0 |
-| T3.10 | Backing group in Fondos y muebles with the seven existing and the new Backing props | baja | pendiente | — | — | 0 |
-| T3.11 | Verify and repair the GLB export of every scene element type | alta | pendiente | — | — | 0 |
-| T3.12 | Implement the Taller browser and Blender verification harness for every element type | alta | pendiente | — | — | 0 |
-| T3.13 | Run the real Taller essentials integration scenario | media | pendiente | — | — | 0 |
-| T3.15 | Audit Taller essentials and export compatibility | media | pendiente | — | — | 0 |
-
-**SP-4 — Saved projects**
+**SP-3 — Elementos esenciales de Taller: Backing y tipos de mesa investigados y modelados, tarjetas por tipo y exportación a Blender de todos los tipos**
 
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|
-| T4.1 | Copy the approved saved-projects design contract | baja | pendiente | — | — | 0 |
-| T4.2 | Implement versioned project storage and scene validation | alta | pendiente | — | — | 0 |
-| T4.3 | Implement project APIs with per-resource authorization | alta | pendiente | — | — | 0 |
-| T4.4 | Implement the project list and conflict-safe Taller saving | alta | pendiente | — | — | 0 |
-| T4.5 | Implement a lossless and idempotent legacy-scene import | alta | pendiente | — | — | 0 |
-| T4.6 | Implement the multi-browser saved-project integration harness | alta | pendiente | — | — | 0 |
-| T4.7 | Run the cross-browser project and import integration scenario | media | pendiente | — | — | 0 |
-| T4.8 | Review the rendered project and import interfaces | media | pendiente | — | — | 0 |
-| T4.9 | Audit project isolation, concurrency and import preservation | media | pendiente | — | — | 0 |
-| T4.31 | Run the project storage and authorization checkpoint | media | pendiente | — | — | 0 |
+| T3.1 | Corregir lo que bloquea T3.8 | alta | completada | gpt-6-luna | codex-2 | 1 |
+| T3.14 | Corregir lo que bloquea T3.8 | baja | completada | gpt-6-luna | codex-2 | 1 |
+| T3.2 | Investigar nuevas estructuras de Backing y tipos de mesa, redactar la propuesta validada y obtener la aprobación del propietario | media | completada | gpt-6-luna | codex-luis | 2 |
+| T3.3 | Hacer exhaustivos los registros de mesas, piezas y Backing, y agregar puntos de extensión para Backing | alta | completada | gpt-6-luna | codex-2 | 1 |
+| T3.4 | Registrar en el repositorio la lista aprobada por el propietario de nuevos Backing y tipos de mesa | baja | completada | gemini-3.8-flash-low | antigravity | 6 |
+| T3.5 | Modelar los nuevos tipos de mesa aprobados en el generador paramétrico de mesas | alta | completada | gpt-6-luna | codex-luis | 1 |
+| T3.6 | Modelar las nuevas estructuras de Backing aprobadas como muebles paramétricos de Taller | alta | completada | gpt-6-luna | codex-luis | 1 |
+| T3.7 | Enseñar a la lectura de fotos las nuevas estructuras de Backing aprobadas | media | completada | gpt-6-luna | codex-luis | 1 |
+| T3.8 | Punto de control: ejecutar las suites de registro y modelado antes del trabajo de UI y exportación de Taller | baja | completada | gpt-6-luna | codex-2 | 5 |
+| T3.9 | Una tarjeta de creación por tipo de mesa en Fondos y muebles | media | completada | gpt-6-luna | codex-2 | 1 |
+| T3.10 | Grupo Backing en Fondos y muebles con los siete accesorios Backing existentes y los nuevos | baja | completada | sonnet | claude-luis | 1 |
+| T3.11 | Verificar y corregir la exportación GLB de cada tipo de elemento de escena | alta | lista | gpt-6-luna | codex-2 | 2 |
+| T3.12 | Implementar el harness de verificación de Taller en navegador y Blender para cada tipo de elemento | alta | pendiente | — | — | 0 |
+| T3.13 | Ejecutar el escenario real de integración de los elementos esenciales de Taller | media | pendiente | — | — | 0 |
+| T3.15 | Auditar los elementos esenciales de Taller y la compatibilidad de exportación | media | pendiente | — | — | 0 |
 
-**SP-5 — Saved decorations**
-
-| Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
-|---|---|---|---|---|---|---|
-| T5.1 | Copy the approved personal-decoration library UI contract | baja | pendiente | — | — | 0 |
-| T5.2 | Add account-owned validated storage and protected personal-decoration API | alta | pendiente | — | — | 0 |
-| T5.3 | Connect Taller save, place and idempotent browser-library import flows | alta | pendiente | — | — | 0 |
-| T5.4 | Verify cross-browser persistence, placement and ownership isolation | alta | pendiente | — | — | 0 |
-| T5.5 | Review the rendered personal-library UI against its contract | media | pendiente | — | — | 0 |
-| T5.6 | Audit personal-decoration ownership and import recovery | media | pendiente | — | — | 0 |
-
-**SP-6 — AI spend per user and session**
+**SP-4 — Proyectos guardados**
 
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|
-| T6.1 | Pin the approved AI-spend UI contract | baja | pendiente | — | — | 0 |
-| T6.2 | Define durable AI usage storage and ai-usage@1 | alta | pendiente | — | — | 0 |
-| T6.3 | Attribute usage at every paid Next and ai-api model call | alta | pendiente | — | — | 0 |
-| T6.4 | Build the staff spend dashboard and server-filtered API | alta | pendiente | — | — | 0 |
-| T6.5 | Run real-entrypoint usage attribution and authorization checks | alta | pendiente | — | — | 0 |
-| T6.6 | Review the rendered spend dashboard against gasto-ia@v1 | media | pendiente | — | — | 0 |
-| T6.7 | Audit AI spend completeness, identity and data minimization | media | pendiente | — | — | 0 |
+| T4.1 | Copiar el contrato de diseño aprobado para proyectos guardados | baja | pendiente | — | — | 0 |
+| T4.2 | Implementar el almacenamiento de proyectos con versiones y la validación de escenas | alta | pendiente | — | — | 0 |
+| T4.3 | Implementar las APIs de proyectos con autorización por recurso | alta | pendiente | — | — | 0 |
+| T4.4 | Implementar la lista de proyectos y el guardado de Taller con protección ante conflictos | alta | pendiente | — | — | 0 |
+| T4.5 | Implementar una importación de escenas heredadas sin pérdida e idempotente | alta | pendiente | — | — | 0 |
+| T4.6 | Implementar el harness de integración de proyectos guardados en varios navegadores | alta | pendiente | — | — | 0 |
+| T4.7 | Ejecutar el escenario de integración entre navegadores de proyectos e importación | media | pendiente | — | — | 0 |
+| T4.8 | Revisar las interfaces renderizadas de proyectos e importación | media | pendiente | — | — | 0 |
+| T4.9 | Auditar el aislamiento de proyectos, la concurrencia y la preservación durante la importación | media | pendiente | — | — | 0 |
+| T4.31 | Ejecutar el punto de control de almacenamiento y autorización de proyectos | media | pendiente | — | — | 0 |
 
-**SP-7 — Assisted chat as three tools and the decorations explorer**
+**SP-5 — Decoraciones guardadas**
 
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|
-| T7.1 | Copy the owner-approved herramientas-chat@v1 contract into the repository | baja | pendiente | — | — | 0 |
-| T7.2 | Tool catalogue, server-side price gating of the guided chat and per-tool spend tags | alta | pendiente | — | — | 0 |
-| T7.3 | Balloon counter API by form, phrase or photo on the existing counting engines | media | pendiente | — | — | 0 |
-| T7.4 | Checkpoint: tool gating, counter API and spend tags on a running server | media | pendiente | — | — | 0 |
-| T7.5 | Tool home page at / and retirement of the classic chat page | media | pendiente | — | — | 0 |
-| T7.6 | Balloon counter page: form, phrase and photo with a price-free result | media | pendiente | — | — | 0 |
-| T7.7 | Cost calculator page from the existing professional quote, fed by the counter or by hand | media | pendiente | — | — | 0 |
-| T7.8 | Ready-made decorations gallery in the Taller with an open-as-new-project link | media | pendiente | — | — | 0 |
-| T7.9 | Browser end-to-end of the three tools and the gallery on a production build | media | pendiente | — | — | 0 |
-| T7.10 | SP-7 visual review against the herramientas-chat@v1 contract | media | pendiente | — | — | 0 |
-| T7.11 | SP-7 audit: tool gating, price leaks, counting sources and spend tags | media | pendiente | — | — | 0 |
+| T5.1 | Copiar el contrato de UI aprobado para la biblioteca de decoración personal | baja | pendiente | — | — | 0 |
+| T5.2 | Agregar almacenamiento validado propiedad de la cuenta y una API protegida de decoración personal | alta | pendiente | — | — | 0 |
+| T5.3 | Conectar los flujos de guardado y colocación en Taller, y la importación idempotente desde la biblioteca del navegador | alta | pendiente | — | — | 0 |
+| T5.4 | Verificar la persistencia entre navegadores, la colocación y el aislamiento de propiedad | alta | pendiente | — | — | 0 |
+| T5.5 | Revisar la UI renderizada de la biblioteca personal según su contrato | media | pendiente | — | — | 0 |
+| T5.6 | Auditar la propiedad de la decoración personal y la recuperación de importaciones | media | pendiente | — | — | 0 |
+
+**SP-6 — Gasto en IA por usuario y sesión**
+
+| Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
+|---|---|---|---|---|---|---|
+| T6.1 | Fijar el contrato de UI aprobado para el gasto en IA | baja | pendiente | — | — | 0 |
+| T6.2 | Definir el almacenamiento duradero del uso de IA y ai-usage@1 | alta | pendiente | — | — | 0 |
+| T6.3 | Atribuir el uso en cada llamada a modelos de Next y ai-api con costo | alta | pendiente | — | — | 0 |
+| T6.4 | Crear el panel de gasto para el personal y una API con filtrado en servidor | alta | pendiente | — | — | 0 |
+| T6.5 | Ejecutar verificaciones reales de atribución de uso y autorización desde el punto de entrada | alta | pendiente | — | — | 0 |
+| T6.6 | Revisar el panel de gasto renderizado según gasto-ia@v1 | media | pendiente | — | — | 0 |
+| T6.7 | Auditar la integridad, identidad y minimización de datos del gasto en IA | media | pendiente | — | — | 0 |
+
+**SP-7 — Chat asistido como tres herramientas y el explorador de decoraciones**
+
+| Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
+|---|---|---|---|---|---|---|
+| T7.1 | Copiar al repositorio el contrato herramientas-chat@v1 aprobado por el propietario | baja | pendiente | — | — | 0 |
+| T7.2 | Catálogo de herramientas, control de precios del chat guiado en el servidor y etiquetas de gasto por herramienta | alta | pendiente | — | — | 0 |
+| T7.3 | API del contador de globos por formulario, frase o foto sobre los motores de conteo existentes | media | pendiente | — | — | 0 |
+| T7.4 | Punto de control: control de herramientas, API del contador y etiquetas de gasto en un servidor en ejecución | media | pendiente | — | — | 0 |
+| T7.5 | Página principal de herramientas en / y retiro de la página de chat clásica | media | pendiente | — | — | 0 |
+| T7.6 | Página del contador de globos: formulario, frase y foto con un resultado sin precios | media | pendiente | — | — | 0 |
+| T7.7 | Página de calculadora de costos basada en la cotización profesional existente, con datos del contador o ingresados manualmente | media | pendiente | — | — | 0 |
+| T7.8 | Galería de decoraciones prediseñadas en el Taller con un enlace para abrirlas como proyecto nuevo | media | pendiente | — | — | 0 |
+| T7.9 | Prueba de extremo a extremo en navegador de las tres herramientas y la galería con una compilación de producción | media | pendiente | — | — | 0 |
+| T7.10 | Revisión visual de SP-7 según el contrato herramientas-chat@v1 | media | pendiente | — | — | 0 |
+| T7.11 | Auditoría de SP-7: control de herramientas, filtraciones de precios, fuentes de conteo y etiquetas de gasto | media | pendiente | — | — | 0 |
 
 **Sin subplan**
 
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|
-| T92 | Verificación de composición CG-2: cuentas, sección de planes y elementos esenciales de Taller | media | pendiente | — | — | 0 |
+| T92 | Verificación de composición CG-2: cuentas, sección de planes y elementos esenciales del Taller | media | pendiente | — | — | 0 |
 | T93 | Verificación de composición CG-3: cuentas y proyectos guardados | media | pendiente | — | — | 0 |
-| T95 | Verificación de composición CG-5: decoraciones guardadas en el candidato integrado | media | pendiente | — | — | 0 |
-| T96 | Verificación de composición CG-6: gasto en IA por cuenta en el candidato integrado | media | pendiente | — | — | 0 |
-| T97 | Verificación de composición CG-7: herramientas de chat y galería en el candidato integrado | media | pendiente | — | — | 0 |
+| T95 | Verificación de composición CG-5: decoraciones guardadas en la versión candidata integrada | media | pendiente | — | — | 0 |
+| T96 | Verificación de composición CG-6: gasto de IA por cuenta en la versión candidata integrada | media | pendiente | — | — | 0 |
+| T97 | Verificación de composición CG-7: herramientas de chat y galería en la versión candidata integrada | media | pendiente | — | — | 0 |
 
-**M3 — Inglés / español** · dificultad media · 0/9
+**M3 — Inglés / Español** · dificultad media · 0/9
 
 **SP-8 — Selector de idioma, Taller 3D y navegación en inglés**
 
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|
-| T8.1 | Mecanismo de idioma: orden de detección, diccionarios bilingües tipados y elección guardada | media | pendiente | — | — | 0 |
+| T8.1 | Mecanismo de idioma: orden de detección, diccionarios bilingües tipados y opción guardada | media | pendiente | — | — | 0 |
 | T8.2 | Selector de idioma e inglés para la navegación, las pantallas de cuenta, la página de planes y el aviso de datos | media | pendiente | — | — | 0 |
 | T8.3 | Control de cobertura que detecta literales en español fuera de los diccionarios de texto | media | pendiente | — | — | 0 |
 | T8.4 | Taller en inglés, parte 1: estructura, biblioteca, paneles para agregar elementos, menús, ayuda y exportación | baja | pendiente | — | — | 0 |
-| T8.5 | Taller en inglés, parte 2: inspector, editores, paneles, lista de compras y ficha de montaje | baja | pendiente | — | — | 0 |
-| T8.6 | Taller en inglés, parte 3: panel de IA y frases visibles para el usuario generadas en lib | media | pendiente | — | — | 0 |
-| T8.7 | Prueba de extremo a extremo en navegador: primera visita en inglés, elección guardada, sin texto restante en español y texto que cabe | media | pendiente | — | — | 0 |
-| T8.8 | Auditoría de SP-8: detección de idioma, elección guardada, cobertura y español sin cambios | media | pendiente | — | — | 0 |
+| T8.5 | Taller en inglés, parte 2: inspector, editores, paneles, lista de compras y hoja de armado | baja | pendiente | — | — | 0 |
+| T8.6 | Taller en inglés, parte 3: panel de IA y frases visibles para el usuario creadas en lib | media | pendiente | — | — | 0 |
+| T8.7 | Prueba de extremo a extremo en navegador: primera visita en inglés, opción guardada, ausencia de texto en español y texto que cabe en pantalla | media | pendiente | — | — | 0 |
+| T8.8 | Auditoría de SP-8: detección de idioma, opción guardada, cobertura y conservación del español | media | pendiente | — | — | 0 |
 
 **Sin subplan**
 
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|
-| T98 | Verificación de composición CG-8: inglés en cuentas, proyectos guardados, herramientas y Taller | media | pendiente | — | — | 0 |
+| T98 | Verificación de composición CG-8: inglés en cuentas, proyectos guardados, herramientas y el Taller | media | pendiente | — | — | 0 |
 
 **M4 — Módulos editables y chat → 3D** · dificultad — · 0/0
 
@@ -607,53 +609,61 @@ Cada usuario que inicia sesión guarda y vuelve a abrir proyectos y decoraciones
   Clasificación: complejidad media; alcance small_change; riesgo medio; acoplamiento medio; confianza media; estimación 90 minutos.
   Especificación: La lectura de fotos ya incluye en su prompt y esquema de lectura todos los objetos FONDOS_CATALOGO (src/lib/globos3d/prompt-lectura-foto.ts) y compila de forma genérica el id de un mueble leído mediante mobiliarioLeido (src/lib/globos3d/compilar-mobiliario.ts), por lo que los nuevos Backings de clase mueble necesitan: sus sinónimos de lectura (sinonimos de la propuesta) en SINONIMOS_DE_FONDO (src/lib/globos3d/fondos-sinonimos.ts) y su familia en FAMILIAS (src/lib/globos3d/fondos-familias.ts) cuando la propuesta los relacione con una familia existente. src/lib/globos3d/compilar-lectura.ts solo cambia si un Backing nuevo necesita una regla de compilación específica, lo cual debe justificar el informe de la tarea. El nuevo scripts/test/test-lectura-backing-nuevos.ts usa lecturas deterministas, sin una llamada a un modelo de pago: el prompt incluye cada id nuevo; una lectura que lo nombre a él o a uno de sus sinónimos compila ese objeto con su tamaño y colores medidos; una caja sin nombre no se convierte en ese objeto. scripts/test/test-compilar-lectura.ts (las fotos de referencia del propietario leídas manualmente) debe permanecer idéntico. Si la aprobación no lista ningún Backing, la prueba verifica que IDS_BACKING contenga solo los siete id existentes y pase la regresión.
 
-  - Aceptación / funcional: La lectura de fotos reconoce cada nuevo Backing aprobado: el prompt de lectura lo enumera, una lectura determinista que lo nombra o usa uno de sus sinónimos se compila en esa pieza con su tamaño medido y colores, y no se inventa como esa pieza una caja que el lector no haya nombrado. Verificación: `npx tsx --conditions=react-server scripts/test/test-lectura-backing-nuevos.ts`
-  - Aceptación / regresión: Las fotos de referencia del propietario se compilan exactamente igual que antes, de modo que las siete piezas Backing existentes y las demás piezas del catálogo conservan su detección en fotos. Verificación: `npx tsx --conditions=react-server scripts/test/test-compilar-lectura.ts`
+  - Aceptación / funcional: La lectura de fotos conoce cada Backing nuevo aprobado: el prompt de lectura lo enumera, una lectura determinista que lo nombra a él o a uno de sus sinónimos se compila en esa prop con su tamaño y colores medidos, y no se inventa como esa prop una caja que el lector no nombró. Verificar: `npx tsx --conditions=react-server scripts/test/test-lectura-backing-nuevos.ts`
+  - Aceptación / regresión: Las fotos de referencia del propietario se compilan exactamente como antes, por lo que las siete props Backing existentes y las demás props del catálogo conservan su detección en fotos. Verificar: `npx tsx --conditions=react-server scripts/test/test-compilar-lectura.ts`
 
-- [ ] T3.8 — Punto de control: ejecutar las suites de registro y modelado antes del trabajo de UI y exportación de Taller · repo: pictures · después de: T3.5, T3.7 · verificar: `npx tsc --noEmit` · archivos: .evidence/REQ-021/SP-3.checkpoint.json · recursos: taller:scene · cubre: R9, R11 · tipo: test · subplan: SP-3 · ui: no
+- [ ] T3.1 — Reparar lo que bloquea T3.8 · repo: pictures · después: T3.5, T3.7 · archivos: src/lib/globos3d/mobiliario-conjunto-tipos.ts, src/lib/globos3d/mobiliario-mesas-param.ts, src/lib/globos3d/mobiliario-conjunto.ts, src/lib/globos3d/herramientas-escena-mesas.ts, src/lib/globos3d/herramientas-escena.ts, src/lib/globos3d/tipos-escena.ts, src/lib/globos3d/fondos-backing.ts, src/lib/globos3d/fondos-escenografia.ts, src/lib/globos3d/backing.ts, scripts/test/test-taller-registros-completos.ts, scripts/test/test-catalogo-dorado.ts, scripts/test/dorado/catalogo-mesas-nuevas.json, scripts/test/dorado/catalogo-backing-nuevos.json, scripts/test/test-mobiliario-libre.ts, scripts/test/test-anadir-repositorios.tsx, src/lib/globos3d/escenografia.ts · recursos: taller:catalogue, taller:furniture-model, taller:scene · cubre: R10, R11, R9 · tipo: implementación · subplan: SP-3 · ui: no
 
-  Clasificación: complejidad baja; alcance small_change; riesgo medio; acoplamiento medio; confianza media; estimación 40 minutos.
-  Especificación: Ejecutar, en un mismo árbol y sin reparaciones, las suites creadas por T3.3, T3.5, T3.6 y T3.7, además de las regresiones existentes, y escribir .evidence/REQ-021/SP-3.checkpoint.json con la identidad del árbol y el estado de salida y resumen de cada comando. Si falla una suite, se devuelve únicamente la tarea cuya suite falló.
+  Tarea de reparación agregada por la autorreparación de la ejecución (runtime heredado) cuando T3.8 no pudo pasar; completada y heredada por la ejecución duradera. El objetivo, los criterios y la evidencia están en PLAN.json.
 
-  - Aceptación / estática: Antes de cualquier trabajo de UI o exportación de Taller, la comprobación de tipos pasa en el árbol del punto de control. Verificación: `npx tsc --noEmit`
-  - Aceptación / funcional: Antes de cualquier trabajo de UI o exportación de Taller, la suite de integridad del registro pasa en el árbol del punto de control. Verificación: `npx tsx --conditions=react-server scripts/test/test-taller-registros-completos.ts`
-  - Aceptación / funcional: Antes de cualquier trabajo de UI o exportación de Taller, la suite de nuevos tipos de mesa pasa en el árbol del punto de control. Verificación: `npx tsx --conditions=react-server scripts/test/test-taller-mesas-nuevas.ts`
-  - Aceptación / funcional: Antes de cualquier trabajo de UI o exportación de Taller, la suite de nuevas piezas Backing pasa en el árbol del punto de control. Verificación: `npx tsx --conditions=react-server scripts/test/test-backing-nuevos.ts`
-  - Aceptación / funcional: Antes de cualquier trabajo de UI o exportación de Taller, la suite de lectura de fotos de los nuevos Backings pasa en el árbol del punto de control. Verificación: `npx tsx --conditions=react-server scripts/test/test-lectura-backing-nuevos.ts`
-  - Aceptación / regresión: Antes de cualquier trabajo de UI o exportación de Taller, la suite existente de sillas por mesa pasa en el árbol del punto de control. Verificación: `npx tsx --conditions=react-server scripts/test/test-sillas-por-mesa.ts`
-  - Aceptación / regresión: Antes de cualquier trabajo de UI o exportación de Taller, la suite de golden del catálogo pasa en el árbol del punto de control. Verificación: `npx tsx --conditions=react-server scripts/test/test-catalogo-dorado.ts`
-  - Aceptación / regresión: Antes de cualquier trabajo de UI o exportación de Taller, las fotos de referencia del propietario se compilan igual que antes en el árbol del punto de control. Verificación: `npx tsx --conditions=react-server scripts/test/test-compilar-lectura.ts`
+- [ ] T3.14 — Reparar lo que bloquea T3.8 · repo: pictures · después: T3.5, T3.7, T3.1 · archivos: .evidence/REQ-021/SP-3.checkpoint.json · recursos: taller:scene · cubre: R11, R9 · tipo: implementación · subplan: SP-3
 
-- [ ] T3.9 — Una tarjeta de creación por tipo de mesa en Fondos y muebles · repo: pictures · después de: T3.8 · verificar: `npx tsx scripts/test/test-taller-mesas-piloto.ts` · archivos: src/components/tres-d/FondosYMuebles.tsx, src/lib/globos3d/mobiliario-conjunto-escena.ts, src/components/tres-d/EditorConjuntoMesa.tsx, src/lib/catalogo/anadir-repositorios.ts, src/components/tres-d/textos-taller-esenciales.ts, scripts/test/test-taller-mesas-piloto.ts, scripts/test/test-anadir-repositorios.tsx, scripts/test/test-anadir-repositorios-ui.ts · recursos: taller:anadir-panel · cubre: R9 · tipo: implement · subplan: SP-3 · ui: no
+  Tarea de reparación agregada por la autorreparación de la ejecución (runtime heredado) cuando T3.8 no pudo pasar; completada y heredada por la ejecución duradera. El objetivo, los criterios y la evidencia están en PLAN.json.
 
-  Clasificación: complejidad media; alcance small_change; riesgo bajo; acoplamiento medio; confianza media; estimación 120 minutos.
-  Especificación: En el grupo existente «Mesas», reutilizar el marcado de tarjeta y la cuadrícula adaptable actuales de Fondos y muebles; no agregar pantallas ni navegación. Reemplazar la única tarjeta «Mesa con sillas a medida» del grupo «Mesas» en src/components/tres-d/FondosYMuebles.tsx por una tarjeta para cada tipo de TIPOS_MESA (los ocho tipos existentes y los nuevos aprobados, en el orden de TIPOS_MESA, después de las mesas fijas del catálogo, que se conservan), cada una con el nombre NOMBRE_MESA[tipo], una miniatura de ese tipo con su tamaño PARTIDA_MESA y el texto de búsqueda NOMBRE_MESA más SINONIMOS_MESA, para que «rectangular» encuentre la tarjeta Rectangular; se elimina TEXTO_CONJUNTO. Al tocar una tarjeta, llamar a agregarConjuntoPorDefecto(escena, maxNodos, tipo) (src/lib/globos3d/mobiliario-conjunto-escena.ts; actualmente siempre crea una mesa redonda con 8 sillas), que agrega ese tipo con su tamaño PARTIDA_MESA y sillasDePartida(tipo) sillas, lo selecciona, abre el editor de mesas existente y muestra la línea de estado existente con el nombre del tipo y SINGULAR_MESA. En src/components/tres-d/EditorConjuntoMesa.tsx, las etiquetas de dimensiones se obtienen de ETIQUETA_MEDIDAS_MESA en lugar de la cadena condicional etiquetaAncho; se conservan los controles, la advertencia de capacidad y deshacer. contarFondosYMuebles y fijasDe (src/lib/catalogo/anadir-repositorios.ts) cuentan las tarjetas por tipo en lugar de la tarjeta única. Todas las cadenas nuevas van en src/components/tres-d/textos-taller-esenciales.ts. El nuevo scripts/test/test-taller-mesas-piloto.ts cubre las tarjetas, la búsqueda, la adición predeterminada por tipo, las etiquetas y los límites del editor para cada tipo, la advertencia de capacidad y deshacer; en scripts/test/test-anadir-repositorios.tsx y scripts/test/test-anadir-repositorios-ui.ts, expresar los conteos de Mobiliario y Todos en función de TIPOS_MESA.length y volver a fijar los hashes DORADO_DE_SIEMPRE cuyo filtro muestra el grupo «Mesas», indicando en el informe de la tarea que el diff de HTML solo reemplaza la tarjeta de mesa.
+- [ ] T3.8 — Punto de control: ejecutar las suites de registros y modelado antes del trabajo de UI y exportación de Taller · repo: pictures · después: T3.5, T3.7, T3.1, T3.14 · verificar: `npx tsc --noEmit` · archivos: .evidence/REQ-021/SP-3.checkpoint.json · recursos: taller:scene · cubre: R9, R11 · tipo: prueba · subplan: SP-3 · ui: no
 
-  - Aceptación / funcional: Fondos y muebles muestra una tarjeta de creación por cada tipo de mesa paramétrica, los ocho tipos existentes y cada tipo nuevo aprobado, y permite encontrar cada uno al buscar por su nombre o sinónimos (incluido rectangular); al tocar una tarjeta, agrega ese tipo con su tamaño predeterminado (rectangular: 240 × 90 × 75 cm), con tantas sillas predeterminadas como quepan, hasta ocho, lo selecciona y abre el editor de mesas existente. Verificación: `npx tsx scripts/test/test-taller-mesas-piloto.ts`
-  - Aceptación / funcional: El editor de mesas existente muestra las etiquetas y los límites de dimensión correctos para cada tipo de mesa, conserva la advertencia de capacidad y la función de deshacer, y mantiene disponibles las piezas de mesa Imperial y otras mesas fijas. Verificación: `npx tsx scripts/test/test-taller-mesas-piloto.ts`
-  - Aceptación / regresión: Los recuentos de tarjetas de los repositorios y el recuento del selector de Mobiliario incluyen exactamente las tarjetas de tipos de mesa en lugar de la antigua tarjeta única «Mesa con sillas a medida». Verificación: `npx tsx scripts/test/test-anadir-repositorios.tsx`
-  - Aceptación / funcional: En anchos de teléfono (390 px), tableta (768 px) y escritorio (1280 px), las tarjetas de tipos de mesa reutilizan el patrón existente de tarjetas y cuadrícula de Fondos y muebles, se mantienen legibles y accesibles, y no agregan pantallas ni navegación. Verificación: `npx tsx scripts/test/test-taller-mesas-piloto.ts`
+  Clasificación: complejidad baja; alcance cambio_pequeño; riesgo medio; acoplamiento medio; confianza media; estimación 40 minutos.
+  Especificación: Ejecutar, en un solo árbol y sin reparaciones, las suites creadas por T3.3, T3.5, T3.6 y T3.7, además de las regresiones existentes, y escribir .evidence/REQ-021/SP-3.checkpoint.json con la identidad del árbol y el estado de salida y el resumen de cada comando. Un fallo devuelve únicamente la tarea cuya suite falló.
 
-- [ ] T3.10 — Grupo Backing en Fondos y muebles con los siete props existentes y los nuevos props de Backing · repo: pictures · después de: T3.9 · verificar: `npx tsx scripts/test/test-backing-piloto.ts` · archivos: src/components/tres-d/FondosYMuebles.tsx, src/components/tres-d/textos-taller-esenciales.ts, scripts/test/test-backing-piloto.ts, scripts/test/test-anadir-repositorios.tsx, scripts/test/test-anadir-repositorios-ui.ts · recursos: taller:anadir-panel · cubre: R11 · tipo: implementación · subplan: SP-3 · interfaz de usuario: no
+  - Aceptación / estática: Antes de cualquier trabajo de UI o exportación de Taller, la verificación de tipos pasa en el árbol del punto de control. Verificar: `npx tsc --noEmit`
+  - Aceptación / funcional: Antes de cualquier trabajo de UI o exportación de Taller, la suite de integridad del registro pasa en el árbol del punto de control. Verificar: `npx tsx --conditions=react-server scripts/test/test-taller-registros-completos.ts`
+  - Aceptación / funcional: Antes de cualquier trabajo de UI o exportación de Taller, la suite de los nuevos tipos de mesa pasa en el árbol del punto de control. Verificar: `npx tsx --conditions=react-server scripts/test/test-taller-mesas-nuevas.ts`
+  - Aceptación / funcional: Antes de cualquier trabajo de UI o exportación de Taller, la suite de las nuevas props Backing pasa en el árbol del punto de control. Verificar: `npx tsx --conditions=react-server scripts/test/test-backing-nuevos.ts`
+  - Aceptación / funcional: Antes de cualquier trabajo de UI o exportación de Taller, la suite de lectura de fotos de los nuevos Backings pasa en el árbol del punto de control. Verificar: `npx tsx --conditions=react-server scripts/test/test-lectura-backing-nuevos.ts`
+  - Aceptación / regresión: Antes de cualquier trabajo de UI o exportación de Taller, la suite existente de sillas por mesa pasa en el árbol del punto de control. Verificar: `npx tsx --conditions=react-server scripts/test/test-sillas-por-mesa.ts`
+  - Aceptación / regresión: Antes de cualquier trabajo de UI o exportación de Taller, la suite de catálogo dorado pasa en el árbol del punto de control. Verificar: `npx tsx --conditions=react-server scripts/test/test-catalogo-dorado.ts`
+  - Aceptación / regresión: Las fotos de referencia del propietario se compilan como antes en el árbol del punto de control. Verificar: `npx tsx --conditions=react-server scripts/test/test-compilar-lectura.ts`
 
-  Clasificación: complejidad baja; alcance cambio pequeño; riesgo medio; acoplamiento medio; confianza media; estimación: 75 minutos.
-  Especificación: En src/components/tres-d/FondosYMuebles.tsx, reutilizar los patrones existentes de grupos y tarjetas de Fondos y muebles; no agregar pantallas ni navegación. Mostrar un grupo «Backing» en Fondos y muebles, dentro de «Todos» y en la vista del repositorio de Escenografía, con cada prop de IDS_BACKING una sola vez (los siete existentes y los nuevos aprobados), mediante grupoVisibleDe (src/lib/globos3d/backing.ts), solo para su presentación: los siete ya no aparecen en «Fondos y tapetes» ni en «Decorado de pie», mientras que la semántica de grupo, clase, ids, repositorio ASIGNACION_FONDOS, escenas guardadas, IA de escenas y lectura de fotos de las entradas permanece igual, y Shopify /catalogo no se modifica. La búsqueda «Backing» encuentra todas las tarjetas Backing (la palabra se agrega al texto de búsqueda de las tarjetas solo en el panel), y los nombres originales siguen coincidiendo. Las tarjetas se agregan con clic, arrastre y teclado, como hasta ahora. Agregar las cadenas nuevas en src/components/tres-d/textos-taller-esenciales.ts. El nuevo scripts/test/test-backing-piloto.ts cubre la pertenencia al grupo, la ausencia en los grupos anteriores, la búsqueda y la acción de agregar; actualizar los recuentos que dependen de los grupos y volver a fijar los hashes afectados de DORADO_DE_SIEMPRE en scripts/test/test-anadir-repositorios.tsx y scripts/test/test-anadir-repositorios-ui.ts; indicar en el informe de la tarea que la diferencia HTML solo reubica las siete tarjetas y agrega las nuevas.
+- [ ] T3.9 — Una tarjeta de creación por tipo de mesa en Fondos y muebles · repo: pictures · después: T3.8 · verificar: `npx tsx scripts/test/test-taller-mesas-piloto.ts` · archivos: src/components/tres-d/FondosYMuebles.tsx, src/lib/globos3d/mobiliario-conjunto-escena.ts, src/components/tres-d/EditorConjuntoMesa.tsx, src/lib/catalogo/anadir-repositorios.ts, src/components/tres-d/textos-taller-esenciales.ts, scripts/test/test-taller-mesas-piloto.ts, scripts/test/test-anadir-repositorios.tsx, scripts/test/test-anadir-repositorios-ui.ts · recursos: taller:anadir-panel · cubre: R9 · tipo: implementación · subplan: SP-3 · ui: no
 
-  - Aceptación / funcional: Fondos y muebles tiene un grupo Backing que incluye panel_redondo, media_luna, arcos_chiara, pedestales, aro_metalico, aro_hexagonal, arco_metalico y cada prop Backing nuevo aprobado, una sola vez cada uno; los siete ya no aparecen en «Fondos y tapetes» ni en «Decorado de pie», y cada tarjeta agrega su prop con clic o arrastre. Verificación: `npx tsx scripts/test/test-backing-piloto.ts`
-  - Aceptación / funcional: La búsqueda «Backing» encuentra todas las tarjetas Backing y los nombres originales siguen encontrando cada prop; los ids, la pertenencia al repositorio, las escenas guardadas, la IA de escenas y la detección en fotos resuelven los mismos ids, y Shopify /catalogo no cambia. Verificación: `npx tsx scripts/test/test-backing-piloto.ts`
-  - Aceptación / regresión: La suite de repositorios del catálogo pasa y todos los props Backing siguen asignados a sus repositorios anteriores. Verificación: `npx tsx --conditions=react-server scripts/test/test-catalogo-repositorios.ts`
-  - Aceptación / funcional: En anchos de teléfono (390 px), tableta (768 px) y escritorio (1280 px), el grupo Backing reutiliza el patrón existente de grupos y tarjetas de Fondos y muebles, se mantiene legible y accesible, y no agrega pantallas ni navegación. Verificación: `npx tsx scripts/test/test-backing-piloto.ts`
+  Clasificación: complejidad media; alcance cambio_pequeño; riesgo bajo; acoplamiento medio; confianza media; estimación 120 minutos.
+  Especificación: En el grupo «Mesas» existente, reutilizar el marcado actual de tarjetas y la cuadrícula adaptable de Fondos y muebles; no agregar pantallas ni navegación. Reemplazar la única tarjeta «Mesa con sillas a medida» del grupo «Mesas» en src/components/tres-d/FondosYMuebles.tsx por una tarjeta por cada tipo TIPOS_MESA (los ocho tipos existentes y los nuevos aprobados, en el orden de TIPOS_MESA, después de las mesas del catálogo fijo, que se mantienen), con el nombre NOMBRE_MESA[tipo], una miniatura de ese tipo con el tamaño PARTIDA_MESA y el texto de búsqueda NOMBRE_MESA más SINONIMOS_MESA, para que «rectangular» encuentre la tarjeta Rectangular; TEXTO_CONJUNTO desaparece. Al tocar una tarjeta, se llama a agregarConjuntoPorDefecto(escena, maxNodos, tipo) (src/lib/globos3d/mobiliario-conjunto-escena.ts; actualmente siempre crea una mesa redonda con 8 sillas), que agrega ese tipo con su tamaño PARTIDA_MESA y sillasDePartida(tipo) sillas, lo selecciona, abre el editor de mesa existente y muestra la línea de estado existente con el nombre del tipo y SINGULAR_MESA. En src/components/tres-d/EditorConjuntoMesa.tsx, las etiquetas de dimensiones se obtienen de ETIQUETA_MEDIDAS_MESA en lugar de la cadena condicional etiquetaAncho; se mantienen los controles, la advertencia de capacidad y la acción de deshacer. contarFondosYMuebles y fijasDe (src/lib/catalogo/anadir-repositorios.ts) cuentan las tarjetas por tipo en lugar de la tarjeta única. Todas las cadenas nuevas van en src/components/tres-d/textos-taller-esenciales.ts. El nuevo scripts/test/test-taller-mesas-piloto.ts cubre las tarjetas, la búsqueda, el agregado predeterminado por tipo, las etiquetas y los límites del editor para cada tipo, la advertencia de capacidad y la acción de deshacer; en scripts/test/test-anadir-repositorios.tsx y scripts/test/test-anadir-repositorios-ui.ts, expresar los conteos de Mobiliario y Todos mediante TIPOS_MESA.length y volver a fijar los hashes de DORADO_DE_SIEMPRE cuyo filtro muestra el grupo «Mesas», indicando en el informe de la tarea que el diff de HTML solo reemplaza la tarjeta de mesa.
 
-- [ ] T3.11 — Verificar y reparar la exportación GLB de cada tipo de elemento de escena · repo: pictures · después de: T3.8 · verificar: `npx tsx scripts/test/test-glb-todos-los-tipos.ts` · archivos: src/components/tres-d/exportar-escena-glb.ts, scripts/test/fixtures/escena-por-tipo.ts, scripts/test/lib/leer-glb.ts, scripts/test/lib/glb-por-tipo.ts, scripts/test/test-glb-todos-los-tipos.ts, scripts/test/glb-defectos-conocidos.json, docs/req021-blender.md · recursos: taller:scene, taller:export · cubre: R10 · tipo: implementación · subplan: SP-3 · interfaz de usuario: no
+  - Aceptación / funcional: Fondos y muebles muestra una tarjeta de creación por cada tipo de mesa paramétrica, los ocho tipos existentes y todos los nuevos aprobados, y cada tarjeta se encuentra buscando su nombre o sus sinónimos (incluido rectangular); al tocar una tarjeta, se agrega ese tipo con su tamaño predeterminado (rectangular 240 × 90 × 75 cm) y tantas sillas predeterminadas como quepan, hasta un máximo de ocho, se selecciona y se abre el editor de mesa existente. Verificar: `npx tsx scripts/test/test-taller-mesas-piloto.ts`
+  - Aceptación / funcional: El editor de mesa existente muestra las etiquetas y los límites de dimensiones correctos para cada tipo de mesa, y conserva la advertencia de capacidad y la acción de deshacer; las mesas fijas Imperial y las demás piezas de mesa fijas siguen disponibles. Verificar: `npx tsx scripts/test/test-taller-mesas-piloto.ts`
+  - Aceptación / regresión: Los conteos de tarjetas del repositorio y el conteo del selector de Mobiliario incluyen exactamente las tarjetas por tipo de mesa en lugar de la antigua tarjeta única «Mesa con sillas a medida». Verificar: `npx tsx scripts/test/test-anadir-repositorios.tsx`
+  - Aceptación / funcional: En anchos de teléfono (390 px), tableta (768 px) y escritorio (1280 px), las tarjetas por tipo de mesa reutilizan el patrón existente de tarjetas y cuadrícula de Fondos y muebles, son legibles y accesibles, y no agregan pantallas ni navegación. Verificar: `npx tsx scripts/test/test-taller-mesas-piloto.ts`
+
+- [ ] T3.10 — Grupo Backing en Fondos y muebles con los siete Backing existentes y las nuevas props Backing · repo: pictures · después: T3.9 · verificar: `npx tsx scripts/test/test-backing-piloto.ts` · archivos: src/components/tres-d/FondosYMuebles.tsx, src/components/tres-d/textos-taller-esenciales.ts, scripts/test/test-backing-piloto.ts, scripts/test/test-anadir-repositorios.tsx, scripts/test/test-anadir-repositorios-ui.ts · recursos: taller:anadir-panel · cubre: R11 · tipo: implementación · subplan: SP-3 · ui: no
+
+  Clasificación: complejidad baja; alcance cambio_pequeño; riesgo medio; acoplamiento medio; confianza media; estimación 75 minutos.
+  Especificación: En src/components/tres-d/FondosYMuebles.tsx, reutilizar los patrones existentes de grupos y tarjetas de Fondos y muebles; no agregar pantallas ni navegación. Mostrar un grupo «Backing», en Fondos y muebles bajo «Todos» y en la vista del repositorio de Escenografía, que enumere cada prop IDS_BACKING una vez (las siete existentes y las nuevas aprobadas) mediante grupoVisibleDe (src/lib/globos3d/backing.ts), solo para la presentación: las siete ya no aparecen en «Fondos y tapetes» ni en «Decorado de pie», mientras que el grupo semántico, la clase, los ids, el repositorio ASIGNACION_FONDOS, las escenas guardadas, la IA de escenas y la lectura de fotos de las entradas permanecen sin cambios, y Shopify /catalogo no se toca. Buscar «Backing» encuentra todas las tarjetas Backing (solo en el panel, la palabra se suma a su texto de búsqueda) y los nombres originales siguen coincidiendo. Las tarjetas se agregan al hacer clic, arrastrar y usar el teclado, como ahora. Las cadenas nuevas van en src/components/tres-d/textos-taller-esenciales.ts. El nuevo scripts/test/test-backing-piloto.ts cubre la pertenencia al grupo, la ausencia de los grupos anteriores, la búsqueda y el agregado; actualizar los conteos que dependen del grupo y volver a fijar los hashes afectados de DORADO_DE_SIEMPRE en scripts/test/test-anadir-repositorios.tsx y scripts/test/test-anadir-repositorios-ui.ts, indicando en el informe de la tarea que el diff de HTML solo reubica las siete tarjetas y agrega las nuevas.
+
+  - Criterio de aceptación / funcional: Fondos y muebles tiene un grupo Backing que muestra panel_redondo, media_luna, arcos_chiara, pedestales, aro_metalico, aro_hexagonal, arco_metalico y cada Backing nuevo aprobado una sola vez; los siete ya no aparecen en «Fondos y tapetes» ni en «Decorado de pie», y cada tarjeta agrega su elemento mediante clic o arrastre. Verificación: `npx tsx scripts/test/test-backing-piloto.ts`
+  - Criterio de aceptación / funcional: La búsqueda de «Backing» encuentra todas las tarjetas Backing y los nombres originales siguen encontrando cada elemento; los ids, la pertenencia al repositorio, las escenas guardadas, la IA de escenas y el descubrimiento por foto resuelven los mismos ids, y Shopify /catalogo no cambia. Verificación: `npx tsx scripts/test/test-backing-piloto.ts`
+  - Criterio de aceptación / regresión: La suite del repositorio del catálogo pasa y cada elemento Backing sigue asignado a su repositorio anterior. Verificación: `npx tsx --conditions=react-server scripts/test/test-catalogo-repositorios.ts`
+  - Criterio de aceptación / funcional: En anchos de teléfono (390 px), tableta (768 px) y escritorio (1280 px), el grupo Backing reutiliza el patrón existente de grupos y tarjetas de Fondos y muebles, sigue siendo legible y accesible, y no agrega pantallas ni navegación. Verificación: `npx tsx scripts/test/test-backing-piloto.ts`
+
+- [ ] T3.11 — Verificar y corregir la exportación GLB de cada tipo de elemento de escena · repositorio: pictures · después de: T3.8 · verificar: `npx tsx scripts/test/test-glb-todos-los-tipos.ts` · archivos: src/components/tres-d/exportar-escena-glb.ts, scripts/test/fixtures/escena-por-tipo.ts, scripts/test/lib/leer-glb.ts, scripts/test/lib/glb-por-tipo.ts, scripts/test/test-glb-todos-los-tipos.ts, scripts/test/glb-defectos-conocidos.json, docs/req021-blender.md · recursos: taller:scene, taller:export · cubre: R10 · tipo: implementar · subplan: SP-3 · ui: no
 
   Clasificación: complejidad alta; alcance full_feature; riesgo medio; acoplamiento medio; confianza baja; estimación 300 minutos.
-  Especificación: Demostrar para cada tipo de elemento que el GLB de Taller conserva la disposición, el tamaño y el color base, enumerando los tipos desde el código para que no se omita ningún tipo nuevo. El nuevo scripts/test/fixtures/escena-por-tipo.ts exporta constructores tipados como Record<TipoPieza, () => Pieza>, además de constructores indexados por TipoMesa, TipoSilla, id de Backing y FormaEscenografia, que proporcionan un nodo de escena mínimo para cada entrada de elementosEnumerables() (src/lib/globos3d/tipos-escena.ts) y una sala. El nuevo scripts/test/lib/leer-glb.ts decodifica un GLB (fragmento JSON, accessors, transformaciones globales de nodos, factores de color base). El nuevo scripts/test/lib/glb-por-tipo.ts, ejecutado en Playwright Chromium y empaquetado con esbuild como hace scripts/test/test-ui-taller-reentrada.ts, construye una escena por elemento con crearEscena(canvas) (src/components/tres-d/escena-globos.ts), mostrarArmada(visor, armarEscena(escena)) (src/components/tres-d/armada-visor.ts, src/lib/globos3d/escena.ts) y el exportador GLB del visor (crearExportadoresEscena en src/components/tres-d/exportadores-escena-globos.ts, la ruta de «Descargar modelo GLB»), y compara los límites y las posiciones globales con una tolerancia de 1 mm (el modelo en cm se convierte a metros una sola vez) y los canales de color base con una tolerancia de 1/255 en el mismo espacio de color. El nuevo scripts/test/test-glb-todos-los-tipos.ts lo ejecuta para cada elemento y para una escena completa que los contenga a todos. En src/components/tres-d/exportar-escena-glb.ts, llamar decoracion y sala a los nodos hijos raíz para poder encontrar los nodos por tipo, y reparar cada tipo que falle. Todo tipo que el GLB no pueda conservar fielmente se incluye con la diferencia observada en scripts/test/glb-defectos-conocidos.json ({ tipo, propiedad, esperado, observado, motivo }) y en docs/req021-blender.md, y la prueba lo informa como defecto conocido, nunca como aprobado. Sin llamadas de red; el menú de exportación no cambia.
+  Especificación: Demostrar por tipo de elemento que el GLB del Taller conserva la distribución, el tamaño y el color base, enumerando los tipos desde el código para que no se omita ningún tipo nuevo. El nuevo archivo scripts/test/fixtures/escena-por-tipo.ts exporta constructores tipados como Record<TipoPieza, () => Pieza> y constructores indexados por TipoMesa, TipoSilla, id de Backing y FormaEscenografia, con un nodo de escena mínimo para cada entrada de elementosEnumerables() (src/lib/globos3d/tipos-escena.ts) y una sala. El nuevo archivo scripts/test/lib/leer-glb.ts decodifica un GLB (fragmento JSON, accesores, transformaciones globales de nodos, factores de color base). El nuevo archivo scripts/test/lib/glb-por-tipo.ts, ejecutado en Playwright Chromium y empaquetado con esbuild como scripts/test/test-ui-taller-reentrada.ts, crea una escena por elemento con crearEscena(canvas) (src/components/tres-d/escena-globos.ts), mostrarArmada(visor, armarEscena(escena)) (src/components/tres-d/armada-visor.ts, src/lib/globos3d/escena.ts) y el exportador GLB del visor (crearExportadoresEscena en src/components/tres-d/exportadores-escena-globos.ts, la ruta de «Descargar modelo GLB»), y compara los límites y las posiciones globales con una tolerancia de 1 mm (los cm del modelo se convierten una sola vez a metros) y los canales de color base con una tolerancia de 1/255 en el mismo espacio de color. El nuevo archivo scripts/test/test-glb-todos-los-tipos.ts lo ejecuta para cada elemento y para una escena completa que los contiene a todos. En src/components/tres-d/exportar-escena-glb.ts, asigna a los elementos secundarios de la raíz los nombres decoracion y sala para que puedan encontrarse los nodos por tipo, y corrige cada tipo que falle. Todo tipo que el GLB no pueda conservar fielmente se incluye con la diferencia observada en scripts/test/glb-defectos-conocidos.json ({ tipo, propiedad, esperado, observado, motivo }) y en docs/req021-blender.md; la prueba lo informa como defecto conocido, nunca como aprobada. No realiza llamadas de red; la interfaz del menú de exportación no cambia.
 
-  - Aceptación / funcional: Cada tipo de elemento enumerado por elementosEnumerables(), es decir, los 17 tipos de pieza (columna, arco, pared_malla, pared_trenzas, organico, decoracion, arco_organico, guirnalda, escenografia, globo, forma, letras, metalizado, mural, techo, arbol_globos y modulo), cada tipo de mesa, cada tipo de silla, cada pieza Backing, cada forma de escenografía, incluidas las nuevas, y la sala se exportan de forma individual y dentro de una escena completa a un GLB cuyos nodos decodificados conservan las posiciones y los límites globales con una tolerancia de 1 mm en metros, y los canales de color base con una tolerancia de 1/255, sin llamadas de red. Verificación: `npx tsx scripts/test/test-glb-todos-los-tipos.ts`
-  - Aceptación / funcional: Todo tipo de elemento que no se exporte fielmente se repara o se incluye por tipo con la diferencia observada en scripts/test/glb-defectos-conocidos.json y en la evidencia de exportación; nunca se informa como aprobado. Verificación: `npx tsx scripts/test/test-glb-todos-los-tipos.ts`
-  - Aceptación / regresión: El menú de exportación de Taller conserva las acciones de PNG y GLB, así como sus estados de preparación, inicio y error; la exportación deja intacta la escena del editor. Verificación: `npx tsx --conditions=react-server scripts/test/test-exportadores-escena-taller.ts`
+  - Criterio de aceptación / funcional: Cada tipo de elemento enumerado por elementosEnumerables(), es decir, los 17 tipos de pieza (columna, arco, pared_malla, pared_trenzas, organico, decoracion, arco_organico, guirnalda, escenografia, globo, forma, letras, metalizado, mural, techo, arbol_globos y modulo), cada tipo de mesa, cada tipo de silla, cada elemento Backing, cada forma de escenografía, incluidas las nuevas, y la sala se exportan por separado y dentro de una escena completa a un GLB cuyos nodos decodificados conservan las posiciones globales y los límites con una tolerancia de 1 mm en metros, y los canales de color base con una tolerancia de 1/255, sin llamadas de red. Verificación: `npx tsx scripts/test/test-glb-todos-los-tipos.ts`
+  - Criterio de aceptación / funcional: Cada tipo de elemento que no se exporte fielmente se corrige o se registra por tipo, junto con la diferencia observada, en scripts/test/glb-defectos-conocidos.json y en la evidencia de exportación; nunca se informa como aprobado. Verificación: `npx tsx scripts/test/test-glb-todos-los-tipos.ts`
+  - Criterio de aceptación / regresión: El menú de exportación del Taller conserva sus acciones de PNG y GLB, así como sus estados de preparación, inicio y error; la exportación no modifica la escena del editor. Verificación: `npx tsx --conditions=react-server scripts/test/test-exportadores-escena-taller.ts`
 
-- [ ] T3.12 — Implementar el arnés de verificación de Taller en navegador y Blender para cada tipo de elemento · repo: pictures · después de: T3.10, T3.11 · verificar: `npm run taller:test-harness-esenciales` · archivos: scripts/taller/preparar-blender.ts, scripts/test/blender/verificar_glb.py, scripts/test/blender/comparar_glb.py, scripts/test/blender/test_comparar_glb.py, scripts/test/test-harness-taller-esenciales.ts, scripts/test/test-integracion-taller-esenciales.ts, docs/req021-blender.md, package.json · recursos: package.json scripts, taller:export · cubre: R9, R10, R11 · tipo: implement · subplan: SP-3 · ui: no
+- [ ] T3.12 — Implementar el arnés de verificación del navegador y Blender del Taller para cada tipo de elemento · repositorio: pictures · después de: T3.10, T3.11 · verificar: `npm run taller:test-harness-esenciales` · archivos: scripts/taller/preparar-blender.ts, scripts/test/blender/verificar_glb.py, scripts/test/blender/comparar_glb.py, scripts/test/blender/test_comparar_glb.py, scripts/test/test-harness-taller-esenciales.ts, scripts/test/test-integracion-taller-esenciales.ts, docs/req021-blender.md, package.json · recursos: scripts de package.json, taller:export · cubre: R9, R10, R11 · tipo: implementar · subplan: SP-3 · ui: no
 
   Clasificación: complejidad alta; alcance full_feature; riesgo medio; acoplamiento medio; confianza baja; estimación 210 minutos.
   Especificación: Las rutas que comienzan con blender/ o test- están dentro de scripts/test/. El nuevo scripts/taller/preparar-blender.ts es el paso explícito de configuración: descarga el archivo oficial portátil más reciente de Blender LTS para Linux desde una URL y con un SHA-256 fijados en el script (verificados con la suma de comprobación publicada cuando se ejecuta esta tarea), verifica el hash, lo descomprime en ~/.local/opt/blender/<version>, apunta ~/.local/opt/blender/current a esa ubicación, imprime la versión y el ejecutable, nunca modifica pacman y ninguna prueba lo ejecuta implícitamente. El nuevo blender/verificar_glb.py se ejecuta con blender --background --python: importa un GLB con el importador glTF incluido y escribe JSON con el nombre, los límites en coordenadas del mundo en metros y el color base de cada objeto. El nuevo blender/comparar_glb.py compara ese JSON con las expectativas de los fixtures por tipo de elemento (1 mm, 1/255); blender/test_comparar_glb.py lo prueba unitariamente (python3 unittest, sin Blender). El nuevo test-harness-taller-esenciales.ts prueba el harness sin Blender ni servidor: si falta BLENDER_EXECUTABLE o ~/.local/opt/blender/current, informa el estado blocked, nunca pass; preparar-blender rechaza un archivo cuyo hash no coincide; los errores de comparación indican el tipo de elemento y la propiedad; los escritores de evidencias producen la estructura esperada. El nuevo test-integracion-taller-esenciales.ts: con el esquema aislado de SP-1 y la sesión master-designer@ con datos iniciales, ejecuta next build y next start en loopback; Chromium agrega una mesa desde cada tarjeta de tipo de mesa y cada tarjeta de Backing, carga el fixture de todos los elementos de T3.11, descarga el GLB real desde «Descargar modelo GLB», lo importa con un tiempo de espera acotado y escribe .evidence/REQ-021/SP-3.integration.json (árbol, versión de Blender, resultado por tipo, defectos conocidos y motivos de bloqueo). Con --composicion, ejecuta el flujo de CG-2 en el candidato integrado (master-designer@ completa una mesa, un Backing y la descarga del GLB; entusiasta@ recibe la página de acceso denegado en /3d y un 403 en sus API) y escribe .evidence/REQ-021/CG-2.integration.json. Documenta la configuración y sus límites en docs/req021-blender.md. Registra en package.json: taller:preparar-blender, taller:test-harness-esenciales, taller:test-integracion-esenciales, taller:test-composicion-esenciales (modo --composicion), taller:test-registros-completos, taller:test-mesas-nuevas, taller:test-backing-nuevos, taller:test-lectura-backing-nuevos, taller:test-mesas-piloto, taller:test-backing-piloto y taller:test-glb-todos-los-tipos.
