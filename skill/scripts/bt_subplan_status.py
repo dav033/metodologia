@@ -162,7 +162,11 @@ def status(ctx: dict, s: dict, shared: dict) -> dict:
     staged = sid in shared["held"] or (flow is None and any(t.get("attempts") for t in own))
     executing = staged                                        # before that, waiting on other work is not news
     if flow is not None and state == "confirmed" and not staged and s["tasks"]:
-        you.append({"kind": "run", "text": "Mandarlo a ejecutar: aprobarlo como etapa", "action": "run", "view": ""})
+        if shared["durable"]:
+            blockers.append({"who": "Ejecución", "text": "Ejecutarlo: el runtime durable que corre este plan todavía no "
+                                                         "suma etapas nuevas a un run en marcha"})
+        else:
+            you.append({"kind": "run", "text": "Mandarlo a ejecutar: aprobarlo como etapa", "action": "run", "view": ""})
     waits: dict[str, list[str]] = {}
     for t in own:
         attempt = t.get("attempt") or {}
@@ -243,6 +247,7 @@ def statuses(ctx: dict) -> dict[str, dict]:
     ver = verification.state(rdir) if verification.applies(rdir) else {"subplans": []}
     shared = {"rounds": _rounds(rdir), "inputs": inputs, "run": run, "tasks": _tasks_by_id(run), "gates": _gates(rdir),
               "decisions": decisions, "decided": {d.get("task") for d in decisions}, "held": _held(ctx),
+              "durable": __import__("bt_stages").durable_owner(rdir),
               "verified": {r["id"]: r for r in ver["subplans"]}, "events": activity.events(rdir, 300)}
     ctx["subplan_status"] = {s["id"]: status(ctx, s, shared) for s in ctx["subplans"]}
     return ctx["subplan_status"]

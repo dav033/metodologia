@@ -87,6 +87,21 @@ class Eligibility(unittest.TestCase):
         self.assertEqual(ctx.exception.code, "STAGE_SUBPLAN_UNCONFIRMED")
         self.assertFalse((self.rdir / "plan-revisions").exists())
 
+    def test_a_plan_run_by_the_durable_runtime_is_refused_before_anything_is_frozen(self):
+        self.spec("location given")
+        self.write_plan(pf.PLAN)
+        flow.start(self.rdir)
+        flow.confirm_outline("demo", self.rdir)
+        flow.confirm("demo", self.rdir, "SP-1")
+        (self.rdir / "RUN.owner.json").write_text(json.dumps({"run_id": "demo:REQ-001:r1", "backend": "dbos"}),
+                                                  encoding="utf-8")
+        with self.assertRaises(bt_stages.StageError) as ctx:
+            bt_stages.run("demo", self.rdir, ["SP-1"], start=lambda *a: self.fail("nothing may start"))
+        self.assertEqual(ctx.exception.code, "DURABLE_OWNER")
+        self.assertFalse((self.rdir / "plan-revisions").exists())
+        with self.assertRaises(bt_stages.StageError):
+            bt_stages.start_or_join("demo", self.rdir, start=lambda *a: self.fail("nothing may start"))
+
 
 class StartOrJoin(unittest.TestCase):
     def setUp(self):

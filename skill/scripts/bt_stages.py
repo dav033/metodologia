@@ -30,6 +30,19 @@ class StageError(Exception):
         self.code, self.message = code, message
 
 
+DURABLE_REFUSAL = ("Este plan corre en el runtime durable, que todavía no suma etapas nuevas a un run en marcha: "
+                   "no se aprobó ninguna etapa. Las tareas de este subplan quedan para cuando exista esa unión.")
+
+
+def durable_owner(rdir: Path) -> bool:
+    """The run belongs to the durable runtime (`RUN.owner.json` backend dbos), which cannot join a later stage yet."""
+    import bt_run_owner
+    try:
+        return bt_run_owner.backend(rdir) == "dbos"
+    except bt_run_owner.OwnerConflict:
+        return False
+
+
 def _req(rdir: Path) -> str:
     return "-".join(Path(rdir).name.split("-")[:2])
 
@@ -187,6 +200,8 @@ def start_or_join(project: str, rdir: Path, *, start: Callable[[str, str, Path],
     import bt_scheduler_run
 
     req = _req(rdir)
+    if durable_owner(rdir):
+        raise StageError("DURABLE_OWNER", DURABLE_REFUSAL)
     start = start or _start_owner
     authority = sa.authority(rdir)
     if authority == "legacy":
@@ -215,6 +230,8 @@ def start_or_join(project: str, rdir: Path, *, start: Callable[[str, str, Path],
 def run(project: str, rdir: Path, add: list[str], *, by: str = "owner", via: str = "web",
         start: Callable[[str, str, Path], bool] | None = None) -> str:
     """«Ejecutar subplan»: approve the stage with `add`, then have the Scheduler run it. Raises StageError."""
+    if durable_owner(rdir):          # refused before anything is frozen: the legacy Scheduler may not take a durable run
+        raise StageError("DURABLE_OWNER", DURABLE_REFUSAL)
     entry = freeze(project, rdir, add)
     message = start_or_join(project, rdir, start=start)
     stage = entry.get("stage") or {}
