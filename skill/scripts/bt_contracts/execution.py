@@ -239,6 +239,9 @@ class LegacyTask(Contract):
     manifest_path: Path
     worktree: Path | None = None
     provenance: str = Field(default="", max_length=500)
+    # a later stage of a durable run (bt_durable.stage_join): the lines were copied with this snapshot in them, so the
+    # task counts as inherited without an integration step (absent in every input recorded before, hence False)
+    integrated: bool = False
 
 
 class LegacyProgress(Contract):

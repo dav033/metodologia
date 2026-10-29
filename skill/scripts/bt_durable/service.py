@@ -176,8 +176,29 @@ def serve(cfg: EngineConfig, ports: Ports, *, reap_seconds: float = 30.0, projec
                     reap_once()
                 except Exception as error:  # noqa: BLE001
                     LOG.warning("reaper pass failed: %s", error)
+                try:
+                    _drain_joins(cfg, ports)
+                except Exception as error:  # noqa: BLE001 - a join is tried again on the next pass
+                    LOG.warning("stage join pass failed: %s", error)
     finally:
         engine.stop()
+
+
+def _drain_joins(cfg: EngineConfig, ports: Ports) -> None:
+    """Complete the stage joins that waited for a quiet run (bt_durable.stage_join, `RUN.join.json`)."""
+    import bt_core
+
+    from . import stage_join
+    if not any(Path(bt_core.ROOT).glob(f"*/requirements/*/{stage_join.PENDING}")):
+        return
+    from .client import Client
+    client = Client(cfg.system_database_url)
+    try:
+        for outcome in stage_join.drain(Path(bt_core.ROOT), client, state_dir=cfg.state_dir,
+                                        repositories_for=ports.integrator.repositories_for, emit=ports.telemetry.emit):
+            LOG.info("stage join: %s", outcome)
+    finally:
+        client.close()
 
 
 __all__ = ["Path", "reap_once", "serve", "wire"]

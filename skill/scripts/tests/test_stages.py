@@ -87,21 +87,6 @@ class Eligibility(unittest.TestCase):
         self.assertEqual(ctx.exception.code, "STAGE_SUBPLAN_UNCONFIRMED")
         self.assertFalse((self.rdir / "plan-revisions").exists())
 
-    def test_a_plan_run_by_the_durable_runtime_is_refused_before_anything_is_frozen(self):
-        self.spec("location given")
-        self.write_plan(pf.PLAN)
-        flow.start(self.rdir)
-        flow.confirm_outline("demo", self.rdir)
-        flow.confirm("demo", self.rdir, "SP-1")
-        (self.rdir / "RUN.owner.json").write_text(json.dumps({"run_id": "demo:REQ-001:r1", "backend": "dbos"}),
-                                                  encoding="utf-8")
-        with self.assertRaises(bt_stages.StageError) as ctx:
-            bt_stages.run("demo", self.rdir, ["SP-1"], start=lambda *a: self.fail("nothing may start"))
-        self.assertEqual(ctx.exception.code, "DURABLE_OWNER")
-        self.assertFalse((self.rdir / "plan-revisions").exists())
-        with self.assertRaises(bt_stages.StageError):
-            bt_stages.start_or_join("demo", self.rdir, start=lambda *a: self.fail("nothing may start"))
-
 
 class StartOrJoin(unittest.TestCase):
     def setUp(self):
@@ -118,6 +103,26 @@ class StartOrJoin(unittest.TestCase):
     def start(self, project, req, rdir):
         self.started.append(req)
         return True
+
+    def test_a_durable_run_continues_in_the_stage_and_the_legacy_scheduler_never_starts(self):
+        """D-149 (pictures REQ-021): the legacy Scheduler refuses a durable run, so a stage joins it with `bt-durable
+        join`; before, the stage was frozen, nothing ran and the page said the Scheduler had started."""
+        (self.rdir / "RUN.owner.json").write_text(json.dumps({"run_id": "proj:REQ-900:r1", "backend": "dbos"}),
+                                                  encoding="utf-8")
+        asked = []
+
+        def join(outcome):
+            return lambda: asked.append(1) or outcome
+        never = lambda *a: self.fail("the legacy Scheduler may not start a durable run")
+        joined = bt_stages.start_or_join("proj", self.rdir, start=never, join=join(
+            {"status": "joined", "to": "proj:REQ-900:r2", "counts": {"inherit": 43, "reconcile": 1, "redo": 11}}))
+        self.assertIn("43 tareas aceptadas se conservan sin repetirse, 1 se reanudan", joined)
+        waiting = bt_stages.start_or_join("proj", self.rdir, start=never, join=join({"status": "waiting", "live": ["T4"]}))
+        self.assertIn("en pausa hasta que terminen los intentos en curso (T4)", waiting)
+        with self.assertRaises(bt_stages.StageError) as ctx:
+            bt_stages.start_or_join("proj", self.rdir, start=never, join=join(
+                {"status": "refused", "code": "JOIN_NEEDS_CONFIRM", "message": "T1 changed"}))
+        self.assertEqual((ctx.exception.code, len(asked), self.started), ("JOIN_NEEDS_CONFIRM", 3, []))
 
     def test_a_requirement_without_a_run_starts_one(self):
         with patch("bt_scheduler_adapter.authority", return_value="none"):
