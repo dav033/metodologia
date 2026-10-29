@@ -127,8 +127,10 @@ def outcome_of(result: dict, store) -> VerifyOutcome:
     ref = str(result.get("evidence_manifest") or "")
     issues = tuple(dict.fromkeys(str(item.get("code")) for item in result.get("issues") or ()
                                  if isinstance(item, dict) and item.get("code")))
-    manual = tuple(str(c.get("purpose") or c.get("command") or c.get("id")) for c in checks
-                   if c.get("type") == "manual" and c.get("status") != "pass")
+    # the result's criteria name what is still unproven ({criterion, status, evidence}); when the only doubt is manual
+    # evidence (CRITERION_MANUAL), those are exactly the manual checks a receipt must cover
+    manual = tuple(str(c.get("criterion")) for c in result.get("criteria") or ()
+                   if isinstance(c, dict) and c.get("status") != "pass") if "CRITERION_MANUAL" in issues else ()
     return VerifyOutcome(status=VerifyStatus(status), reason_code=reason[:80], result_ref=ref[:200],
                          failing_checks=failing[:50], passing_checks=passing[:50], digest=digest[:12000],
                          issue_codes=issues[:20], manual_checks=manual[:20])

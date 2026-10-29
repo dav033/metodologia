@@ -6,6 +6,7 @@ SP-2 run by G1, and T9 after the gate. Each fake agent leaves `<task>.task`, and
 the tree it was given, so the test reads which line or candidate every task started from."""
 from __future__ import annotations
 
+import subprocess
 import sys
 import unittest
 from pathlib import Path
@@ -76,6 +77,47 @@ class DurableSubplans(EngineCase):
         g1_settled = self._settled_at("G1")
         self.assertGreater(launches["T9"]["at"], g1_settled)
         self.assertEqual(status["summary"]["gates"]["composed"], {"CG-1": "C1"})
+
+    def test_migrated_progress_keeps_the_line_of_each_subplan(self):
+        """A run continued from earlier progress (the migration bridge's LegacyProgress, here made by a first run of the
+        same plan's first half) rebuilds every subplan line from the inherited snapshots without running them again."""
+        import json
+
+        from bt_contracts.execution import LegacyProgress, LegacyTask
+        first_tasks = [t for t in plan_tasks() if t["id"] in ("T1", "T3", "T1A")]
+        first = RunRef.model_validate(self.lab.freeze(
+            first_tasks, schema="1.3.0", revision=1,
+            subplans=[subplan("SP-1", "T1", "T1A"), subplan("SP-3", "T3", "T3")]))
+        self.start_engine()
+        self.client.start(first, SERIAL)
+        self.assertEqual(self.settled(first, timeout=300)["summary"]["status"], "completed")
+        inherited = []
+        for task_id in ("T1", "T3", "T1A"):
+            manifest = next(self.lab.state.glob(f"attempts-root/attempts/*r1-{task_id}-a1-*/handoff/manifest.json"))
+            data = json.loads(manifest.read_text())
+            inherited.append(LegacyTask(task_id=task_id, verdict="inherit", snapshot_sha=data["snapshot_sha"],
+                                        base_sha=data["base_sha"], repository=Path(data["repository"]),
+                                        attempt_dir=manifest.parent.parent, manifest_path=manifest,
+                                        provenance=f"legacy first-run-{task_id}"))
+        second = RunRef.model_validate(self.lab.freeze(
+            plan_tasks(), schema="1.3.0", revision=2,
+            subplans=[subplan("SP-1", "T1", "T1A"), subplan("SP-2", "T2", "T2A"), subplan("SP-3", "T3", "T3A")],
+            composition_gates=[gate("CG-1", ["SP-1", "SP-2"], "G1")]))
+        self.client.start(second, SERIAL, LegacyProgress(tasks=tuple(inherited)))
+        status = self.settled(second, timeout=300)
+        self.assertEqual(status["summary"]["status"], "completed", status)
+        for task_id in ("T1", "T3", "T1A"):
+            self.assertEqual(status["summary"]["tasks"][task_id], "inherited")
+        second_launches = [item["task"] for item in self.lab.launches()[3:]]
+        self.assertEqual(sorted(second_launches), ["G1", "T2", "T2A", "T3A", "T9"])    # inherited work never re-ran
+        prefix = "refs/bt/subplan/proj/REQ-900/r2/app"
+        self.assertEqual(self.files(f"{prefix}/SP-1"), {"T1.task", "T1A.task"})
+        self.assertEqual(self.files(f"{prefix}/SP-2"), {"T1.task", "T2.task", "T2A.task"})
+        self.assertEqual(self.files(f"{prefix}/SP-3"), {"T3.task", "T3A.task"})
+        for task_id, item in zip(("T1", "T3", "T1A"), inherited, strict=True):   # each inherited snapshot is in its lines
+            for line in {"T1": ("SP-1", "SP-2"), "T3": ("SP-3",), "T1A": ("SP-1",)}[task_id]:
+                subprocess.run(["git", "-C", str(self.lab.repo), "merge-base", "--is-ancestor", item.snapshot_sha,
+                                f"{prefix}/{line}"], check=True)
 
     def _settled_at(self, task_id: str) -> float:
         import json
