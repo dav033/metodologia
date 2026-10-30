@@ -72,6 +72,14 @@ Planner) and integrate it; then `uv run --project ~/dev/metodologia bt-durable r
 reopens the ended run (`bt:<run>@N`) and composes the gate again (`bt-run-recompose-gate`). A gate rejection is never
 the owner's stop; a task the owner stopped himself (`by: owner`) is not yours to restart.
 
+### Known case: a task the run holds blocked while it goes on
+
+Your trigger is `blocked`: the run holds a task `blocked` with no decision behind it while other tasks keep running
+(pictures REQ-021 r27 T2.7, 2026-10-30: an audit whose blocking findings no remediation round cleared). The brief has
+the run's reason. Fix its origin (a finding with no owner, a repair that cannot pass, the audit gate itself, or the plan
+through the Planner), then `uv run --project ~/dev/metodologia bt-durable retry-task <project> <REQ> <task> --note "..."
+--by solver`: a new round (an audit gets one more remediation round).
+
 ## Integrating a metodologia fix
 
 1. In your worktree: a regression test that reproduces the block (red without your fix), the fix, the module's tests.
