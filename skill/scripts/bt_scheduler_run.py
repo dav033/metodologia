@@ -462,9 +462,10 @@ def run(project: str, req: str, rdir: Path, *, resume: bool, no_autostart: bool 
                     return 0
                 terminal_run = (snap.status in {"completed", "cancelled"} or
                                 (not owner_progress and adapter.is_stalled(scheduler, snap)))
+                settled = True
                 if terminal_run and owner_composition is not None and _owner_pass(owner_composition):
-                    terminal_run = False         # the owner still had work on the state this snapshot shows
-                if terminal_run:
+                    terminal_run = settled = False   # the owner still had work on the state this snapshot shows
+                if settled:                      # a blocked run still waiting (not stalled) is told as before
                     _notify_terminal(rdir, req, snap.status, run_id, _notification_generation(scheduler))
                 if terminal_run and not m4_runtime.has_pending_streams(wiring) \
                         and not m4_runtime.has_pending_incidents(wiring):
