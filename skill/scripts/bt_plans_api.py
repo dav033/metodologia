@@ -70,7 +70,17 @@ def status_of(root: Path, project: str, req: str) -> dict[str, Any]:
     status["open_rounds"] = open_rounds(rdir)
     status["healing"] = healing_state(rdir)
     status["recovery"] = recovery_state(rdir)
+    status["solver"] = solver_state(rdir)
     return status
+
+
+def solver_state(rdir: Path) -> dict[str, Any] | None:
+    """The run's Solucionador (REQ-031) for its page; None when it never ran for this requirement."""
+    try:
+        import bt_durable_panel
+        return bt_durable_panel.solver_state(rdir)
+    except Exception:  # noqa: BLE001 - the plan page renders even when the record cannot be read
+        return None
 
 
 def recovery_state(rdir: Path) -> dict[str, Any] | None:

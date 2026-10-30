@@ -146,7 +146,11 @@ model to diagnose each new request (`bt_block_agent`, config `diagnosis.profile|
 in /flow and the plan page, with the recommended option first and a «Pedir diagnóstico al agente» button. A retry's prompt also lists the task's earlier attempts and how each failed (D-099, `bt_attempt_history`, `RUN.notes/<task>.history.jsonl`) and warns when the last ones failed the same way. **Self-healing (REQ-030).** Most stops no longer wait for a person: the watchdog's `heal` places each open stop in a closed
 taxonomy (plan defect, integration defect, regression, environment, criterion without a mapped check, quota, transient) from the
 last real error and applies the smallest safe repair of its class, bounded and recorded (`RUN.healing.json`, `RUN.interventions.jsonl`;
-`modules.md` §self-healing). `scheduler-op REQ-NNN heal status|stop|start|run|revert CASE` is the owner's control: `stop` switches it
+`modules.md` §self-healing). On a durable run the ladder goes one rung further: what healing leaves for a person, a failure
+that comes back, a task that does not move and a run in ERROR start the **Solucionador** (REQ-031, `modules.md` §Solver): a
+full-access Claude Opus session that fixes the block at its origin (metodologia through `scripts/bt_integrate.py`, the plan
+through the run's Planner, the environment), answers the decision and leaves a test and a D-NNN; the owner gets one precise
+question only when the fix is irreversible, external or security-sensitive. `scheduler-op REQ-NNN heal status|stop|start|run|revert CASE` is the owner's control: `stop` switches it
 off for that run at once, `revert` undoes a plan revision it made. A manual check is settled with `scheduler-op REQ-NNN attest TASK
 --reason "what you did and saw"` (a sealed receipt the verifier accepts; the task's open review is requeued). `rework` and
 `revise` that would throw away more accepted tasks than `gates.rework_confirm_over` (3) refuse with the count and the estimated

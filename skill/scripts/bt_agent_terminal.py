@@ -32,11 +32,12 @@ def _tmux_path() -> str | None:
     return shutil.which("tmux", path=os.environ.get("PATH", "") + os.pathsep + extra)
 
 
-def _run(*args: str, timeout: int = 15) -> subprocess.CompletedProcess:
+def _run(*args: str, timeout: int = 15, prefix: tuple[str, ...] = ()) -> subprocess.CompletedProcess:
     exe = _tmux_path()
     if exe is None:
         raise RuntimeError("tmux no está instalado.")
-    return subprocess.run([exe, "-L", socket(), *args], capture_output=True, text=True, timeout=timeout, check=False)
+    return subprocess.run([*prefix, exe, "-L", socket(), *args], capture_output=True, text=True, timeout=timeout,
+                          check=False)
 
 
 def name_for(project: str, req: str, role: str) -> str:
@@ -50,8 +51,12 @@ def exists(name: str) -> bool:
         return False
 
 
-def start(name: str, cwd: Path, command: str, env: dict[str, str] | None = None) -> None:
-    """Run `command` (a shell line) in a new detached session; the shell stays open when the agent exits."""
+def start(name: str, cwd: Path, command: str, env: dict[str, str] | None = None, *, scope: str = "") -> None:
+    """Run `command` (a shell line) in a new detached session; the shell stays open when the agent exits.
+
+    `scope`: a systemd scope unit name to start it in. A tmux server started from a service lives in that service's
+    cgroup and dies with it: the Solucionador is launched by bt-durable.service and restarts that very unit when it
+    integrates a fix (REQ-031). Without systemd-run, or when the scope cannot be created, it starts as before."""
     if not NAME_OK.fullmatch(name):
         raise ValueError("nombre de sesión no válido")
     if exists(name):
@@ -59,7 +64,13 @@ def start(name: str, cwd: Path, command: str, env: dict[str, str] | None = None)
     args = ["new-session", "-d", "-s", name, "-c", str(cwd), "-x", "200", "-y", "50"]
     for key, value in (env or {}).items():
         args += ["-e", f"{key}={value}"]
-    done = _run(*args, f"bash -lc {shlex.quote(command + '; exec bash')}")
+    line = f"bash -lc {shlex.quote(command + '; exec bash')}"
+    runner = shutil.which("systemd-run") if scope else None
+    done = None
+    if runner:
+        done = _run(*args, line, prefix=(runner, "--user", "--scope", "--quiet", "--collect", f"--unit={scope}"))
+    if done is None or (done.returncode != 0 and not exists(name)):
+        done = _run(*args, line)
     if done.returncode != 0:
         raise RuntimeError("No pude abrir la sesión: " + (done.stderr or "").strip()[:200])
 
@@ -173,8 +184,15 @@ def planner_route(project: str, avoid: str = "") -> dict[str, str]:
     first Codex route of that ranking (the owner's codex homes never ask: a new conversation from `planning resume` and
     the saved notes); else ~/.claude-work as before. A Planner moved to an account that asks the owner first waited there
     with every notice lost (claude-luis, 2026-10-29)."""
-    if override := os.environ.get("BITACORA_PLANNER_CLAUDE_CONFIG_DIR"):
-        return {"provider": "claude", "home": override, "model": "opus", "effort": "high"}
+    return role_route(project, "planner", avoid, override="BITACORA_PLANNER_CLAUDE_CONFIG_DIR")
+
+
+def role_route(project: str, role: str, avoid: str = "", *, override: str = "") -> dict[str, str]:
+    """`planner_route` for any long-lived full-access session of a role (the Planner, the Solucionador of REQ-031):
+    Claude Opus at high effort on the first unattended account the router ranks for `role`, else that ranking's first
+    Codex route, else ~/.claude-work. `override` names an environment variable that pins the Claude account."""
+    if override and (pinned := os.environ.get(override)):
+        return {"provider": "claude", "home": pinned, "model": "opus", "effort": "high"}
     codex: dict[str, str] | None = None
     try:
         import bt_agents
@@ -182,7 +200,7 @@ def planner_route(project: str, avoid: str = "") -> dict[str, str]:
         profiles = bt_profiles.load()
         pool = bt_agents.pool_for(project, bt_agents._config("routing.pool", []) or None)
         routes, _ = bt_agents.candidates(project, pool, bt_agents.start_tier(None, "plan"), "plan", allow_explore=False,
-                                         role="planner")
+                                         role=role)
         for route in routes:
             env = (profiles.get(route.get("profile")) or {}).get("env") or {}
             if route.get("agent") == "claude":
@@ -341,3 +359,30 @@ def restart_planner(root: Path, project: str, rdir: Path) -> tuple[bool, str]:
         return False, "No sé qué conversación llevaba este Planner, así que no lo reinicio: ábrelo desde cero o dime cuál es."
     kill(name)
     return start_planner(root, project, rdir)
+
+
+def main(argv: list[str] | None = None) -> int:
+    """`bt_agent_terminal.py tell-planner <project> <REQ> <text>`: what the Solucionador (REQ-031) uses to send a plan
+    change request to the run's Planner; a Planner that is not running is started with the request as its first notice
+    (on an account with quota, like any Planner start)."""
+    import sys
+    args = sys.argv[1:] if argv is None else argv
+    if len(args) != 4 or args[0] != "tell-planner":
+        print("usage: bt_agent_terminal.py tell-planner <project> <REQ> <text>", file=sys.stderr)
+        return 2
+    project, req, text = args[1:]
+    if notify_planner(project, req, text):
+        print("Enviado al Planner.")
+        return 0
+    from bt_core import ROOT
+    rdir = next(iter(sorted((Path(ROOT) / project / "requirements").glob(f"{req}-*"))), None)
+    if rdir is None or exists(name_for(project, req, "planner")):
+        print(f"No pude escribirle al Planner de {project} {req}: mira su ventana en el panel del plan.", file=sys.stderr)
+        return 1
+    ok, message = start_planner(Path(ROOT), project, rdir, message="[Automatic notice, not typed by the owner] " + text)
+    print(message, file=sys.stdout if ok else sys.stderr)
+    return 0 if ok else 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

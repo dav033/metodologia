@@ -9,6 +9,10 @@ choice, `retry` or `retry_with_note` only, is sent as the answer to that exact r
 task, within `healing.max_per_task` and `healing.max_actions`. A diagnosis that blames the plan goes to the run's
 Planner with its evidence, and the decision stays for a person: changing the plan is not a model's call. Everything
 happens outside the workflows: the order of steps in bt.run/bt.task is unchanged.
+
+Every decision healing leaves for a person (limit reached, diagnosis failed, unsure or unoffered choice, the plan
+blamed, no retry offered) and every failure signature that comes back after its retry is handed once to `escalate`:
+the Solucionador (`bt_durable.solver`, REQ-031), the next rung.
 """
 from __future__ import annotations
 
@@ -105,13 +109,16 @@ def evidence(run: RunRef, rdir: Path, task_id: str, decision: dict, round_no: in
 
 
 def heal(root: Path, client, *, diagnose: Callable | None = None, notify: Callable | None = None,
-         start: Callable[[Callable[[], object]], None] | None = None) -> list[str]:
-    """One maintenance pass over every durable run's open decisions. Returns what it did (for the engine log)."""
+         start: Callable[[Callable[[], object]], None] | None = None,
+         escalate: Callable[[dict], object] | None = None) -> list[str]:
+    """One maintenance pass over every durable run's open decisions. Returns what it did (for the engine log).
+    `escalate(trigger)` receives, once per decision round, what this pass leaves for a person (`solver.trigger`)."""
     if not enabled():
         return []
     import bt_block_agent
     diagnose = diagnose or bt_block_agent.diagnose
     start = start or (lambda job: threading.Thread(target=job, daemon=True, name="bt-healing").start())
+    escalate = escalate or (lambda trigger: None)
     if notify is None:
         import bt_agent_terminal
         notify = bt_agent_terminal.notify_planner
@@ -127,28 +134,42 @@ def heal(root: Path, client, *, diagnose: Callable | None = None, notify: Callab
         for task_id, item in sorted((status.get("tasks") or {}).items()):
             decision = (item or {}).get("decision")
             if isinstance(decision, dict) and decision.get("request_id"):
-                said += _one(run, rdir, state, task_id, item, decision, client, diagnose, notify, start)
+                said += _one(run, rdir, state, task_id, item, decision, client, diagnose, notify, start, escalate)
         if json.dumps(state, sort_keys=True) != before:
             save(rdir, state)
     return said
 
 
-def _one(run, rdir, state, task_id, item, decision, client, diagnose, notify, start) -> list[str]:
+def _left(run, task_id, decision, round_no, key, kind, reason) -> dict:
+    return {"kind": kind, "key": key, "run_id": run.run_id, "task_id": task_id,
+            "request_id": decision["request_id"], "round": round_no, "reason": reason[:400]}
+
+
+def _one(run, rdir, state, task_id, item, decision, client, diagnose, notify, start, escalate) -> list[str]:
     import bt_block_agent
     import bt_planning_activity as activity
     offered = [o for o in decision.get("options") or () if o in OPTIONS]
-    if not set(MODEL_OPTIONS) & set(offered):
-        return []
     round_no = round_of(item)
     key = f"{run.run_id}:{task_id}:{decision['request_id']}@k{round_no}"
+    if key in state.setdefault("seen", []):
+        return []
+    if not set(MODEL_OPTIONS) & set(offered):
+        state["seen"].append(key)
+        escalate(_left(run, task_id, decision, round_no, key, "decision",
+                       f"no retry is offered ({', '.join(offered) or 'no option'}): {decision.get('reason') or ''}"))
+        return [f"{key}: no retry offered, left to the owner"]
     signature = str((decision.get("failure") or {}).get("signature") or decision.get("reason") or "")
     entry = state.setdefault("tasks", {}).setdefault(task_id, {"signatures": {}})
-    if key in state.setdefault("seen", []) or signature in entry["signatures"]:
-        return []
+    if signature in entry["signatures"]:
+        state["seen"].append(key)
+        escalate(_left(run, task_id, decision, round_no, key, "repeat",
+                       f"the failure healing already answered came back ({signature[:80]}): {decision.get('reason') or ''}"))
+        return [f"{key}: the same failure again, left to the owner"]
     if len(entry["signatures"]) >= _limit("max_per_task", 2) or int(state.get("actions", 0)) >= _limit("max_actions", 40):
         state["seen"].append(key)
         activity.record(rdir, "Autocuración", f"{task_id}: {decision['request_id']} queda para ti (límite de "
                         "reparaciones automáticas alcanzado)", kind="flow")
+        escalate(_left(run, task_id, decision, round_no, key, "decision", "healing's repair limit is reached"))
         return [f"{key}: limit reached"]
     found = bt_block_agent.cached(rdir, key)
     if found is None:
@@ -173,6 +194,8 @@ def _one(run, rdir, state, task_id, item, decision, client, diagnose, notify, st
     if found.get("state") != "done":
         activity.record(rdir, "Autocuración", f"{task_id}: no se pudo diagnosticar {decision['request_id']} "
                         f"({str(found.get('error') or '')[:120]}); queda para ti", kind="flow")
+        escalate(_left(run, task_id, decision, round_no, key, "decision",
+                       f"the diagnosis failed: {str(found.get('error') or '')[:200]}"))
         return [f"{key}: diagnosis failed"]
     headline = str(found.get("headline") or "")[:160]
     if found.get("kind") == "plan":
@@ -184,12 +207,17 @@ def _one(run, rdir, state, task_id, item, decision, client, diagnose, notify, st
         entry["signatures"][signature] = {"at": time.strftime("%Y-%m-%dT%H:%M:%S"), "planner": key}
         activity.record(rdir, "Autocuración", f"{task_id}: el diagnóstico culpa al plan ({headline}); se lo pasé al "
                         f"Planner y {decision['request_id']} queda para ti", kind="flow")
+        escalate(_left(run, task_id, decision, round_no, key, "decision",
+                       f"the diagnosis blames the plan and healing told the Planner: {headline}"))
         return [f"{key}: sent to the Planner"]
     option, note = found.get("option"), str(found.get("note") or "").strip()
     if option not in MODEL_OPTIONS or option not in offered or found.get("confidence") == "baja":
         activity.record(rdir, "Autocuración", f"{task_id}: el diagnóstico no basta para decidir solo "
                         f"({option or '-'}, confianza {found.get('confidence') or '?'}); {decision['request_id']} queda "
                         "para ti", kind="flow")
+        escalate(_left(run, task_id, decision, round_no, key, "decision",
+                       f"the diagnosis is not enough to answer alone (option {option or '-'}, confidence "
+                       f"{found.get('confidence') or '?'}): {headline}"))
         return [f"{key}: left to the owner"]
     if option == "retry_with_note" and len(note) < MIN_NOTE:
         option, note = "retry", ""

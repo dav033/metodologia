@@ -365,7 +365,8 @@ the verified snapshot after M6 says PASS and judges it with `bt_audit_gate.evalu
   of a durable run, under the same switches and limits (`healing.enabled`, `healing.model_diagnosis`, `diagnosis.auto`,
   `healing.max_per_task`, `healing.max_actions`); the diagnosis runs in a background thread and the answer goes to that exact
   round, by `healing`, state in `RUN.durable-healing.json`. A diagnosis of kind `plan` is sent to the run's Planner with its
-  steps and the decision stays for the owner. Outside the workflows: no step of bt.run/bt.task changes;
+  steps and the decision stays for the owner. Outside the workflows: no step of bt.run/bt.task changes. What it leaves for
+  a person, and a signature that comes back after its retry, goes to the Solucionador (§Solver, REQ-031);
   `gates.attestation_bind_attempt` (default on, REQ-029 A11): a manual-check receipt (`scheduler-op REQ attest`) covers only the attempt
   being verified, so a redone task has to be attested again; attesting needs a verification waiting for evidence;
 - **structural recovery** (REQ-029, `bt_recovery_*`, `bt_scheduler_recovery_lifecycle`): for a conflict or an audit the ordinary budgets
@@ -447,6 +448,58 @@ existing `m6://result/<sha256>` evidence reference. `NEEDS_REVIEW` creates a dur
 - Package: `bt_scheduler_quality` and its JSON fixtures/contracts are declared in `pyproject.toml`; the methodology
   adapter and runtime composition are shipped as modules. M6 is mandatory for the supported Scheduler owner commands;
   the low-level composition seam stays opt-in.
+
+## Solver (the Solucionador, `bt_durable/solver.py`, REQ-031)
+
+The rung after the durable healing: a full-access agent session that fixes a blocked run at its origin, as an operator
+did by hand on 2026-10-29 (D-165, D-169, D-171 were each found and fixed that way). The ladder of a durable run's block:
+known rules (`bt_block_diagnosis`) → the read-only diagnosis (`bt_block_agent`) → healing's `retry`/`retry_with_note`
+once per signature (D-167) → the Solucionador → the owner, only for what needs his hand.
+
+- **Where it runs.** In the engine's maintenance pass, right after healing (`service._heal_decisions`, every 30 s), never
+  inside a workflow: bt.run/bt.task keep their sequence. Both rungs read each run's status once per pass (`_PassStatus`).
+  It runs only while healing runs (`healing.enabled`, `healing.model_diagnosis`, `diagnosis.auto`) and `solver.enabled`.
+- **Triggers**, each launched at most once per key: a decision healing left for the owner (`healing.heal(escalate=...)`:
+  limit reached, diagnosis failed, unsure or unoffered choice, plan blamed, no retry offered); a failure signature that
+  came back after healing's retry (`repeat`); a PENDING task whose state did not move for `solver.stuck_minutes` (45)
+  beyond its known waits (`stuck`: a running agent gets `scheduler.attempt_timeout_minutes` more, a quota or recovery
+  wait counts from its `until`, a pause or an open decision never); the run workflow in ERROR (`error`); a composition
+  resolution request (`<state>/durable/composition/resolutions/<key>.json` without `<key>.resolved`) older than
+  `solver.resolution_after_seconds` (120), given to the run whose open decision names its path or commits, else the one
+  run with an open INTEGRATION_CONFLICT decision (`resolution`, `bt_durable/resolutions.py`: its brief carries the
+  request, the diff3 and the blob ids; the session writes the union of both sides to `.resolved` and answers `retry` or
+  `reverify`). A trigger whose decision moved on (or whose resolution was written) before its turn is dropped (`stale`).
+- **Limits.** One session per run; `solver.max_concurrent` (1) on the machine; `solver.max_per_task` (3) sessions per
+  task (then `limit`: the owner is told); `solver.max_minutes` (120) without `result.json` → killed, `gave_up`, the owner
+  is told. A trigger that finds its run's session at work goes to that session's `inbox.jsonl` and is typed into it;
+  one it did not list as handled starts the next session.
+- **The session.** tmux `bit-<project>-<REQ>-solver` (socket `bitacora`); Claude Opus high with
+  `--dangerously-skip-permissions` on the account `bt_agent_terminal.role_route(project, "solver")` picks (unattended,
+  with quota; role `solver` ranks Opus first while it has quota), Codex `--dangerously-bypass-approvals-and-sandbox`
+  otherwise; moved to another account (conversation copied, `--resume`) when the screen shows a spent quota or an
+  owner-only prompt, at most twice. Its working folder is `~/.local/share/bitacora-solver/<project>/<id>/` (outside every
+  repository); `BITACORA_SOLVER=<id>` in its environment.
+- **Brief and contract.** `<rdir>/RUN.solver/<id>/`: `BRIEF.md` (triggers, the decision's evidence, attempt history,
+  diagnosis, run status, SPEC/PLAN/frozen plan, both `DECISIONS.md`, recent day logs, journal, answer, Planner and
+  integration commands), `triggers.json`, `status.json`, `inbox.jsonl`, `PROMPT.md` (`agents/solver.md` + the brief's
+  path). It ends by writing `REPORT.md` and `result.json` (`fixed|answered|asked_owner|gave_up`, summary, handled
+  trigger keys, question). State and history: `RUN.solver/state.json`; the run page and a subplan's «Ejecución» tab show
+  it (`bt_durable_panel.solver_state`, `bt_page_solver`); every step is an activity line «Solucionador» and an engine
+  journal line `solver: …`.
+- **Rules it follows** (`agents/solver.md`): fix at the origin; metodologia only in its own worktree and only integrated
+  through `scripts/bt_integrate.py` — never through metodologia's own scheduler, handoff or launch; plan defects to the
+  run's Planner (`bt_agent_terminal.py tell-planner`), never a weakened check or an owner gate approved; answers the
+  decision once, to its round, `--by solver`, only if still open; stops with one precise owner question for anything
+  irreversible, external or security-sensitive; leaves a regression test and a D-NNN.
+- **Integration** (`bt_integrate.py`, `bt_regress.py`): under a machine-wide flock (`<state>/integrate.lock`): preflight
+  (live checkout on main, branch committed, no `bitacora/` path, main's code already in the branch) → full regression
+  (only `integrate.allowed_failures` may fail; any other failure is rerun alone once) → DBOS backup when runtime code
+  changed and the release-log entry → `merge --no-ff` in a deploy worktree → `merge --ff-only` in `~/dev/metodologia`
+  (the only write it ever gets) → push → restart `bt-durable.service` and `bitacora-web.service` as the changed paths
+  need → smoke (active, web 200, «bt_durable engine started» in the journal); a failed smoke reverts the merge the same
+  way. Exit codes: 0 integrated, 1 refused, 2 fast-forward refused, 3 reverted, 4 revert failed, 75 lock busy.
+- **Not claimed.** A session runs at most once per trigger as far as the state file shows: a crash between the launch
+  and the state write leaves a tmux session the next pass finds and refuses to duplicate, without adopting it.
 
 ## Knowledge stores (`bt_knowledge`, F3)
 

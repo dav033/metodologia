@@ -11,6 +11,7 @@ from urllib.parse import quote
 
 import bt_page_attempts as attempts_
 import bt_page_diagnosis as dx
+from bt_page_solver import card as solver_card
 from bt_pages import inline, layout
 
 LEVELS = ("low", "medium", "high", "extreme")
@@ -360,7 +361,7 @@ def detail_page(s: dict, token: str, msg: str = "") -> str:
     body = (f'<div class="pl"><a class="back" href="/plans">← Planes</a> <span class="live-dot" id="live-dot"></span>{_flash(msg)}'
             f'<div id="live" data-api="/api/plans/{quote(project)}/{quote(req)}?html=1" '
             f'data-events="/events?plan={quote(project)}/{quote(req)}" data-event="plan">{detail_fragment(s)}</div>'
-            f'{_decisions(s, base, token)}{_recovery(s, base, token)}{_healing(s, base, token)}{_run_form(s, base, token)}{_actions(s, base, token)}</div>{CSS}{JS}')
+            f'{_decisions(s, base, token)}{_recovery(s, base, token)}{_healing(s, base, token)}{solver_card(s.get("solver"))}{_run_form(s, base, token)}{_actions(s, base, token)}</div>{CSS}{JS}')
     return layout(f"{req} · Plan", body, [("Planes", "/plans"), (project, f"/p/{quote(project)}")])
 
 RECOVERY_STATE_ES = {"diagnosing": "diagnosticando", "applying": "preparando correcciones", "executing": "ejecutando",

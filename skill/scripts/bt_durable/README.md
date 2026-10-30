@@ -148,6 +148,15 @@ uv run bt-durable join pictures REQ-021              # joined | waiting | refuse
 - No running workflow changes its step sequence: only a new run's input can carry `integrated` or `paused`, so no patch
   is needed.
 
+## Healing and the Solucionador (D-167, REQ-031)
+
+The maintenance pass answers an open decision with the diagnosing model's `retry`/`retry_with_note` once per failure
+signature (`healing.py`). What it leaves for a person, a signature that comes back, a task that does not move and a run
+workflow in ERROR start the Solucionador (`solver.py`): one full-access Claude Opus session per run in tmux
+(`tmux -L bitacora attach -t bit-<project>-<REQ>-solver`), with its brief in `<rdir>/RUN.solver/<id>/`, which integrates
+metodologia fixes only through `skill/scripts/bt_integrate.py`. Switch: `bitacora.py config set solver.enabled false`.
+Details: `references/modules.md` §Solver.
+
 ## Recovery and rollback
 
 - Engine crash/kill: systemd restarts it; DBOS recovers this executor's PENDING workflows. An agent that kept running

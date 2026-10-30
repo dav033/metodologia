@@ -53,7 +53,7 @@ class DurableHealing(unittest.TestCase):
         (self.rdir / "RUN.durable-run.json").write_text(json.dumps(
             {"project": "proj", "req": "REQ-900", "revision": 1, "plan_id": "REQ-900", "plan_path": str(plan),
              "plan_sha256": "0" * 64}))
-        self.planner = []
+        self.planner, self.escalated = [], []
         self.patches = [patch("bt_config.get", side_effect=lambda key, default=None: FLAGS.get(key, default)),
                         patch("bt_planning_activity.record")]
         for p in self.patches:
@@ -68,7 +68,7 @@ class DurableHealing(unittest.TestCase):
 
     def heal(self, client, diagnose):
         return healing.heal(self.root, client, diagnose=diagnose, start=lambda job: job(),
-                            notify=lambda *args: self.planner.append(args))
+                            notify=lambda *args: self.planner.append(args), escalate=self.escalated.append)
 
     def test_a_diagnosed_note_goes_to_that_round_once_per_signature(self):
         client = Client(decision())
@@ -86,8 +86,11 @@ class DurableHealing(unittest.TestCase):
         self.assertEqual(self.heal(client, diagnose), [])                    # the same request: answered already
         client.item["decision"] = decision(request="T7.4:d2")                # the same failure again: the owner's
         client.item["workflow_id"] = "bt:proj:REQ-900:r1:T7.4:k3"
+        self.assertEqual(self.heal(client, diagnose),                        # ...and the Solucionador's (REQ-031)
+                         ["proj:REQ-900:r1:T7.4:T7.4:d2@k3: the same failure again, left to the owner"])
         self.assertEqual(self.heal(client, diagnose), [])
         self.assertEqual(len(client.answers), 1)
+        self.assertEqual([(e["kind"], e["request_id"], e["round"]) for e in self.escalated], [("repeat", "T7.4:d2", 3)])
 
     def test_a_plan_defect_goes_to_the_planner_and_stays_for_the_owner(self):
         client = Client(decision())
@@ -97,6 +100,8 @@ class DurableHealing(unittest.TestCase):
         self.assertEqual(self.heal(client, diagnose), ["proj:REQ-900:r1:T7.4:T7.4:d1@k2: sent to the Planner"])
         self.assertEqual(client.answers, [])
         self.assertIn("blames the plan: T7.4 no depende de SP-6", self.planner[0][2])
+        self.assertEqual([(e["kind"], e["key"]) for e in self.escalated],
+                         [("decision", "proj:REQ-900:r1:T7.4:T7.4:d1@k2")])
 
     def test_an_unsure_or_unoffered_choice_and_a_disabled_healer_leave_the_decision(self):
         client = Client(decision())
@@ -106,7 +111,10 @@ class DurableHealing(unittest.TestCase):
         self.assertEqual(client.answers, [])
         only = decision(signature="sig-2", request="T7.4:d3")
         only["options"] = ["reverify", "stop"]
+        self.assertEqual(self.heal(Client(only), diagnose),
+                         ["proj:REQ-900:r1:T7.4:T7.4:d3@k2: no retry offered, left to the owner"])
         self.assertEqual(self.heal(Client(only), diagnose), [])
+        self.assertEqual([e["request_id"] for e in self.escalated], ["T7.4:d1", "T7.4:d3"])
         FLAGS["healing.model_diagnosis"] = False
         try:
             self.assertEqual(self.heal(Client(decision(signature="sig-3")), diagnose), [])

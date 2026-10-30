@@ -325,6 +325,9 @@ py-modules = [
   "bt_page_subplan_control",
   "bt_stage_readiness",
   "bt_subplan_status",
+  "bt_integrate",
+  "bt_regress",
+  "bt_page_solver",
 ]
 
 # Templates, assets, policy references and agent definitions travel inside the wheel (REQ-007 R2).

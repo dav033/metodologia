@@ -78,6 +78,16 @@ class RoleRoutingTests(AgentTests):
         chosen = self.route('designer')
         self.assertEqual((chosen['agent'], chosen['model'], chosen['effort']), ('codex', 'gpt-6.1-terra', 'high'))
 
+    def test_the_solver_keeps_opus_while_it_has_quota_and_falls_back_to_codex_sol(self):
+        """REQ-031: the Solucionador is Claude Opus high, ranked like the Designer (owner order while quota allows)."""
+        self.usage('claude', 60)
+        self.usage('codex-named', 5)
+        chosen = self.route('solver')
+        self.assertEqual((chosen['agent'], chosen['model'], chosen['effort']), ('claude', 'opus', 'high'))
+        self.usage('claude', 100)
+        chosen = self.route('solver')
+        self.assertEqual((chosen['agent'], chosen['model'], chosen['effort']), ('codex', 'gpt-6.1-sol', 'high'))
+
     def test_explicit_complexity_changes_explorer_and_reviewer_only_to_approved_models(self):
         normal = self.route('explorer', risk='high')
         complex_route = self.route('explorer', complexity='L')

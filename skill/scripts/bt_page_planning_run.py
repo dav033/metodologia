@@ -12,6 +12,8 @@ import re
 from html import escape as e
 from urllib.parse import quote, urlencode
 
+from bt_page_solver import card as solver_card
+
 TOKEN = re.compile(r'(<input type="hidden" name="token" value="[^"]*">)')
 
 
@@ -159,12 +161,13 @@ def _rework(tasks: list[dict], base: str, token: str, back: str) -> str:
 def _run_tools(ctx: dict, status: dict, base: str, token: str, back: str) -> str:
     """Diagnostic recovery and self-healing of the run (they act on the whole run, not on one subplan)."""
     import bt_page_plans as plans
-    pieces = plans._recovery(status, base, token) + plans._healing(status, base, token)
+    pieces = plans._recovery(status, base, token) + plans._healing(status, base, token) + solver_card(status.get("solver"))
     if not pieces:
         return ""
     recovery = status.get("recovery") or {}
     opens = " open" if recovery.get("preview_digest") and not recovery.get("active") and status.get("decisions") else ""
-    return (f'<details class="dx-more"{opens}><summary>Gestión del run: recuperación diagnóstica y autocuración</summary>'
+    return (f'<details class="dx-more"{opens}><summary>Gestión del run: recuperación diagnóstica, autocuración y '
+            f'Solucionador</summary>'
             f'<p class="muted">Actúan sobre todo el run, no solo sobre este subplan.</p>{_back(pieces, back)}</details>')
 
 

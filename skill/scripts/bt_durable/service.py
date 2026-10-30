@@ -209,18 +209,41 @@ def _drain_joins(cfg: EngineConfig, ports: Ports) -> None:
 
 
 def _heal_decisions(cfg: EngineConfig) -> None:
-    """Answer the open decisions a diagnosing model may answer (bt_durable.healing, D-167)."""
+    """Answer the open decisions a diagnosing model may answer (bt_durable.healing, D-167), then hand what healing left
+    for a person, and runs that are stuck or in error, to the Solucionador (bt_durable.solver, REQ-031)."""
     import bt_core
 
-    from . import healing
+    from . import healing, solver
     if not healing.enabled():
         return
     global _healing_client
     if _healing_client is None:                     # one client for the engine's life: a pass runs every 30 s
         from .client import Client
         _healing_client = Client(cfg.system_database_url)
-    for said in healing.heal(Path(bt_core.ROOT), _healing_client):
-        LOG.info("healing: %s", said)
+    client = _PassStatus(_healing_client)           # both rungs read each run's status once per pass
+    left: list[dict] = []
+    try:
+        for said in healing.heal(Path(bt_core.ROOT), client, escalate=left.append):
+            LOG.info("healing: %s", said)
+    finally:
+        if solver.enabled():
+            for said in solver.Solver(Path(bt_core.ROOT), client, state_dir=cfg.state_dir).run_pass(left):
+                LOG.info("solver: %s", said)
+
+
+class _PassStatus:
+    """The client, with `status(run)` read once per maintenance pass (it reads every task workflow of the run)."""
+
+    def __init__(self, client):
+        self._client, self._status = client, {}
+
+    def status(self, run):
+        if run.run_id not in self._status:
+            self._status[run.run_id] = self._client.status(run)
+        return self._status[run.run_id]
+
+    def __getattr__(self, name):
+        return getattr(self._client, name)
 
 
 _healing_client = None

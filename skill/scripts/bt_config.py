@@ -146,6 +146,19 @@ DEFAULTS: dict = {
     # pictures REQ-021 SP-12, 2026-10-29, two of three Opus Designer explorations stopped at 45 turns with the mockup
     # written and its note and comparison JSON missing ($4 each, nothing usable)
     "delegate": {"max_turns": 120},
+    # integrate (REQ-031, bt_integrate/bt_regress): the regression's known baseline of failing suites; any other failure
+    # is rerun alone once and, if it fails again, no integration happens
+    "integrate": {"allowed_failures": ["test_plan_boundary", "test_real_designer_kit", "test_recovery_views",
+                                       "test_remote_panel"]},
+    # solver (REQ-031, bt_durable/solver): the rung after the durable healing (D-167). A Claude Opus session with full
+    # access that fixes a block at its origin. It runs only while that healing runs too (healing.enabled,
+    # healing.model_diagnosis, diagnosis.auto): it is the next rung, never the first one. One per run, max_concurrent on
+    # the machine, max_per_task sessions per task; a session without result.json after max_minutes is killed; a task
+    # whose state does not move for stuck_minutes (beyond its known waits) is a trigger, and so is a composition
+    # resolution request (<state>/durable/composition/resolutions/<key>.json without .resolved) older than
+    # resolution_after_seconds
+    "solver": {"enabled": True, "max_concurrent": 1, "max_per_task": 3, "max_minutes": 120, "stuck_minutes": 45,
+               "resolution_after_seconds": 120},
 }
 ALLOWED: dict[str, tuple] = {
     "executor.display": ("background", "window"),
