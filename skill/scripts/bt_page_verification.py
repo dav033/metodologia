@@ -225,7 +225,10 @@ def _guide(ctx: dict, row: dict, url: str) -> str:
     if g["dev"]:
         parts.append('<p class="pp-meta">Donde el plan dice <code>npm run dev</code>: no hace falta, «Probar» ya arranca '
                      'los servidores de esta versión.</p>')
-    if g["accounts"]:
+    if g.get("signed"):                                # D-211: the link already opens the version signed in
+        parts.append(f'<p><span class="pp-vlabel">Sesión</span>Los enlaces de arriba abren la versión con la sesión ya '
+                     f'iniciada (por defecto <code>{e(g["signed"])}</code>); para otro rol cambia «Entras como».</p>')
+    elif g["accounts"]:
         who = ", ".join(f"<code>{e(a)}</code>" for a in g["accounts"])
         parts.append(f'<p><span class="pp-vlabel">Cuentas</span>{who}' +
                      (f' — {_text(g["password"])}' if g["password"] else "") + "</p>")

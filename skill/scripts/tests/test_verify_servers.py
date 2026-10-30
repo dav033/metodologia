@@ -352,6 +352,9 @@ class AutoLogin(unittest.TestCase):
         self.assertIn('data-next="/p/proj/req/REQ-021/verify-go?sp=SP-1"', body)
         self.assertIn('data-poll="/p/proj/req/REQ-021/verify-run"', body)
         self.assertIn('data-next=""', evil)
+        with patch.object(servers, "status", return_value=now), patch.object(servers, "recipe", return_value=self.LOGIN):
+            plain = wait.page(Path("/r"), "proj", "REQ-021", Path("/r/x"), "SP-1", "tok", "/admin")
+        self.assertIn('data-next="/p/proj/req/REQ-021/verify-go?sp=SP-1&amp;path=%2Fadmin&amp;t=tok"', plain)   # D-211
 
 
 class Panel(unittest.TestCase):

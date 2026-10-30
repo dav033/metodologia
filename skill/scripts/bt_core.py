@@ -25,6 +25,7 @@ import os
 import re
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 import bt_workspace as ws
@@ -249,7 +250,52 @@ ID_PATTERNS = {
 }
 
 
-def next_id(pdir: Path, kind: str) -> str:
+RESERVED = ".ids-reserved.json"     # numbers handed out with `id --reserve` before their entry is written (D-209)
+
+
+def next_id(pdir: Path, kind: str, *, reserve: str = "") -> str:
+    """The next free ID of `kind`. With `reserve` (who/what takes it) the number is recorded in `<project>/.ids-reserved
+    .json` under a lock, so a second caller gets the one after it even before the first writes its entry: on
+    2026-10-29/30 five sessions and agents picked the same D-NNN from DECISIONS.md and collided four times (D-209)."""
+    pdir = Path(pdir)
+    if not reserve:
+        return _next_id(pdir, kind)
+    pdir.mkdir(parents=True, exist_ok=True)
+    with open(pdir / f"{RESERVED}.lock", "a+") as lock:
+        try:
+            import fcntl
+            fcntl.flock(lock, fcntl.LOCK_EX)
+        except ImportError:                          # Windows: one machine, one caller at a time is assumed
+            pass
+        found = _next_id(pdir, kind)
+        ledger = _reservations(pdir)
+        ledger.setdefault(found.split("-")[0], []).append(
+            {"id": found, "by": reserve[:200], "at": time.strftime("%Y-%m-%dT%H:%M:%S")})
+        tmp = pdir / f".{RESERVED}.tmp"
+        tmp.write_text(json.dumps(ledger, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
+        tmp.replace(pdir / RESERVED)
+        return found
+
+
+def _reservations(pdir: Path) -> dict:
+    try:
+        data = json.loads((Path(pdir) / RESERVED).read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+    return data if isinstance(data, dict) else {}
+
+
+def _next_id(pdir: Path, kind: str) -> str:
+    found = _next_written_id(pdir, kind)
+    prefix, number = found.rsplit("-", 1)
+    reserved = [int(item["id"].rsplit("-", 1)[1]) for item in _reservations(pdir).get(prefix, [])
+                if isinstance(item, dict) and str(item.get("id", "")).startswith(f"{prefix}-")
+                and str(item["id"]).rsplit("-", 1)[1].isdigit()]
+    width = len(number)
+    return f"{prefix}-{max([int(number) - 1, *reserved]) + 1:0{width}d}"
+
+
+def _next_written_id(pdir: Path, kind: str) -> str:
     from bt_vcs import pull
     pull(ROOT)  # another machine may have taken the next number
     kind = kind.upper()
