@@ -38,12 +38,13 @@ def _text(value: str) -> str:
 
 
 def _form(ctx: dict, action: str, label: str, sp: str, *, cls: str = "", note: bool = False, danger: bool = False,
-          blank: bool = False) -> str:
+          blank: bool = False, path: bool = False) -> str:
     field = ('<textarea name="comments" rows="3" required placeholder="Qué falló o qué esperabas ver"></textarea>' if note else "")
     target = ' target="_blank" rel="noopener"' if blank else ""
+    page = '<input type="hidden" name="path" value="/">' if path else ""     # the page the new tab lands on (D-200)
     return (f'<form method="post" action="{purl(ctx["project"], "req", ctx["rid"], action)}" class="pp-vform{" note" if note else ""}"{target}>'
             f'<input type="hidden" name="token" value="{e(ctx["token"])}"><input type="hidden" name="anchor" value="{e(sp)}">'
-            f'{field}<button type="submit" class="{e(cls)}{" danger" if danger else ""}">{e(label)}</button></form>')
+            f'{page}{field}<button type="submit" class="{e(cls)}{" danger" if danger else ""}">{e(label)}</button></form>')
 
 
 def _running(ctx: dict, row: dict) -> dict:
@@ -89,9 +90,12 @@ _SAID = {"ready": ("ok", "En marcha: responde."), "preparing": ("warn", "Arranca
          "failed": ("bad", "Falló al arrancar."), "stopped": ("none", "Detenida.")}
 
 
-def _servers(ctx: dict, row: dict) -> str:
-    """The version's URL, shown as it is, and «Probar»: a click on either stops everything of this version, starts it
-    clean from its commit in a new tab, and that tab goes to the URL once every server answers."""
+def _servers(ctx: dict, row: dict, paths: list[str]) -> str:
+    """Where to try the version: its URL and the pages its test names, every one a plain link to the real address. A click
+    on a link opens that page; when the version is not running (or failed) the click first stops everything of the
+    version and starts it clean from its commit, and the new tab lands on that same page once every server answers.
+    «Reiniciar desde cero» forces the clean restart. Owner, 2026-10-30: «en vez del botón de probar debe darme el link a
+    la URL donde probarlo y que me abra la URL en el navegador… y las URLs específicas de la solución» (D-200)."""
     import bt_verify_servers as servers
     if servers.recipe(ctx["root"], ctx["project"], ctx["rdir"]) is None:
         return ""
@@ -101,24 +105,29 @@ def _servers(ctx: dict, row: dict) -> str:
     ports = now.get("ports") if now["state"] in ("ready", "preparing") and now.get("ports") else plan["ports"]
     ctx["_url"] = url
     form_id = f"vstart-{row['id']}"
-    start = _form(ctx, "verify-run", "Probar ↗", row["id"], blank=True).replace(
+    start = _form(ctx, "verify-run", "Reiniciar desde cero", row["id"], cls="secondary", blank=True, path=True).replace(
         "<form ", f'<form id="{e(form_id)}" ', 1)
     stop = _form(ctx, "verify-stop", "Detener servidores", row["id"], cls="secondary") if now["state"] in ("ready", "preparing") else ""
     cls, said = _SAID.get(now["state"], _SAID["stopped"])
     if now["state"] == "failed" and now.get("step"):
         said += " " + now["step"]
+    origin = (re.match(r"https?://[^/]+", url or "") or [""])[0]
+    pages = ["/"] + [p for p in paths if p != "/"]
+    links = "".join(f'<li><a class="pp-vurl" href="{e(origin + p)}" target="_blank" rel="noopener" data-vstart="{e(form_id)}"'
+                    f' data-path="{e(p)}">{e(origin + p)}</a></li>' for p in pages) if origin else ""
     session = servers.session_name(ctx["project"], ctx["rdir"], row["id"], row["version"])
     port_list = ", ".join(f"{n} {p}" for n, p in (ports or {}).items())
     web = (re.search(r":(\d+)", url or "") or [None, ""])[1]
     remote = (f'<details class="pp-vremote"><summary>¿Desde otro computador?</summary><p class="pp-meta">Abre un túnel al '
               f'puerto de la versión y usa la misma dirección: <code>ssh -L {e(web)}:127.0.0.1:{e(web)} usuario@esta-máquina</code>'
               f'</p></details>' if web else "")
-    return (f'<div class="pp-vtry"><span class="pp-vlabel">Dirección de prueba</span><div class="pp-vtry-row">'
-            f'<a class="pp-vurl" href="{e(url)}" target="_blank" rel="noopener" data-vstart="{e(form_id)}">{e(url)}</a>'
-            f'{start}{stop}</div><p class="pp-vstatus {cls}" role="status">{e(said)}</p>'
-            f'<p class="pp-meta">Al pulsar la dirección o «Probar» detengo todo lo de esta versión (sesión <code>{e(session)}</code>'
-            f' y sus procesos; nunca los de otra versión ni otros servicios), la arranco desde cero en el commit '
-            f'<code>{e(str(row["commit"])[:10])}</code> ({e(port_list)}) y abro la dirección cuando responde.</p>{remote}</div>')
+    how = ("Está en marcha: cada enlace se abre directamente." if now["state"] == "ready" else
+           "Al abrir un enlace detengo todo lo de esta versión (sesión <code>" + e(session) + "</code> y sus procesos; nunca los "
+           "de otra versión ni otros servicios), la arranco desde cero en el commit <code>" + e(str(row["commit"])[:10]) +
+           "</code> (" + e(port_list) + ") y la pestaña nueva llega a esa página cuando responde.")
+    return (f'<div class="pp-vtry" data-state="{e(now["state"])}"><span class="pp-vlabel">Dónde probarlo</span>'
+            f'<ul class="pp-vlinks">{links}</ul><p class="pp-vstatus {cls}" role="status">{e(said)}</p>'
+            f'<p class="pp-meta">{how}</p><div class="pp-vtry-row">{start}{stop}</div>{remote}</div>')
 
 
 def _guide(ctx: dict, row: dict, url: str) -> str:
@@ -235,13 +244,14 @@ def panel(ctx: dict, s: dict) -> str:
              if row["state"] == "outdated" else "")
     head = (f'<p class="pp-vintro">{_state_pill(row["state"])} Versión {e(str(row["version"]))} · commit '
             f'<code>{e(str(row["commit"])[:10])}</code>. Es el árbol integrado exactamente al terminar este subplan.</p>{stale}')
-    ctx["_try"] = run = _servers(ctx, row) if ctx.get("root") else ""
+    paths = test_paths(rows)
+    ctx["_try"] = run = _servers(ctx, row, paths) if ctx.get("root") else ""
     guide = _guide(ctx, row, ctx.get("_url", ""))
     if guide and all(r["kind"] == "local" for r in rows):            # the guide says it; the plan's text stays one click away
         where = f'<details class="pp-vplan"><summary>Texto del plan</summary>{where}</details>'
     else:
         where = f"<h3>Dónde probarlo</h3>{where}"
-    return f'<section class="pp-verify">{head}{run}{guide}{_urls(ctx, row, test_paths(rows))}{where}{_actions(ctx, row)}</section>'
+    return f'<section class="pp-verify">{head}{run}{guide}{"" if run else _urls(ctx, row, paths)}{where}{_actions(ctx, row)}</section>'
 
 
 def tab_label(rdir: Path) -> str:

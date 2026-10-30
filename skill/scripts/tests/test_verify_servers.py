@@ -261,12 +261,19 @@ class Panel(unittest.TestCase):
     CTX = {"project": "proj", "rid": "REQ-021", "token": "t", "root": Path("/r"), "rdir": Path("/r/x")}
 
     def test_the_url_is_shown_as_it_is_and_a_click_on_it_restarts_the_version(self):
+        """D-200: links, not a «Probar» button — the version's URL and the pages its test names, each a real link; a click
+        on a stopped version restarts it clean and lands on that page."""
         import bt_page_verification as page
         with patch.object(servers, "recipe", return_value=RECIPE), \
                 patch.object(servers, "planned", return_value={"url": "http://localhost:3002/", "ports": {"web": 3002}}), \
                 patch.object(servers, "status", return_value={"state": "stopped", "url": "", "servers": {}, "log": ""}):
-            html = page._servers(dict(self.CTX), ROW)
+            html = page._servers(dict(self.CTX), ROW, ["/login", "/3d"])
         self.assertIn('<a class="pp-vurl" href="http://localhost:3002/"', html)
+        self.assertIn('href="http://localhost:3002/login" target="_blank" rel="noopener" data-vstart="vstart-SP-1" data-path="/login"', html)
+        self.assertIn('href="http://localhost:3002/3d"', html)
+        self.assertNotIn("Probar ↗", html)                                     # no button in place of the link
+        self.assertIn('data-state="stopped"', html)
+        self.assertIn('name="path" value="/"', html)
         self.assertIn('data-vstart="vstart-SP-1"', html)
         self.assertIn('<form id="vstart-SP-1" method="post" action="/p/proj/req/REQ-021/verify-run"', html)
         self.assertIn('target="_blank"', html)
@@ -274,13 +281,14 @@ class Panel(unittest.TestCase):
         self.assertNotIn("Detener servidores", html)
         self.assertNotIn("data-vport", html)                               # no relay through the panel any more
         with patch.object(servers, "recipe", return_value=None):
-            self.assertEqual(page._servers(dict(self.CTX), ROW), "")
+            self.assertEqual(page._servers(dict(self.CTX), ROW, []), "")
         with patch.object(servers, "recipe", return_value=RECIPE), \
                 patch.object(servers, "planned", return_value={"url": "http://localhost:3002/", "ports": {"web": 3002}}), \
                 patch.object(servers, "status", return_value={"state": "ready", "url": "http://localhost:3002/",
                                                               "ports": {"web": 3002}, "servers": {"web": True}, "log": ""}):
-            html = page._servers(dict(self.CTX), ROW)
+            html = page._servers(dict(self.CTX), ROW, ["/login"])
         self.assertIn("En marcha: responde.", html)
+        self.assertIn('data-state="ready"', html)                               # a running version: the link opens as is
         self.assertIn("Detener servidores", html)
 
     def test_the_waiting_tab_follows_the_restart_and_goes_to_the_url_itself(self):
@@ -288,14 +296,18 @@ class Panel(unittest.TestCase):
         failed = {"state": "failed", "step": "Falló la preparación: npm run rag:migrate", "url": "http://localhost:3002/",
                   "servers": {}, "log": "[FAIL] 039", "ports": {}}
         with patch.object(servers, "status", return_value=failed):
-            body = wait.page(Path("/r"), "proj", "REQ-021", Path("/r/x"), "SP-1", "tok")
+            body = wait.page(Path("/r"), "proj", "REQ-021", Path("/r/x"), "SP-1", "tok", "/login")
+            evil = wait.page(Path("/r"), "proj", "REQ-021", Path("/r/x"), "SP-1", "tok", "//evil.example/x")
+        self.assertIn('data-path="/login"', body)                                 # the tab lands on the clicked page
+        self.assertIn('data-path="/"', evil)                                      # never another host
         self.assertIn('<script src="/static/verify-run.js"></script>', body)       # a file: the panel's CSP refuses inline
         self.assertIn("Falló la preparación: npm run rag:migrate", body)
         self.assertIn("[FAIL] 039", body)
         self.assertIn("Reintentar desde cero", body)
         self.assertIn("http://localhost:3002/", body)
         script = (Path(__file__).resolve().parents[2] / "assets" / "verify-run.js").read_text()
-        self.assertIn("location.replace(s.url)", script)
+        self.assertIn("location.replace(origin + page)", script)
+        self.assertIn('box.dataset.state === "ready"', script)
         self.assertIn('closest("a[data-vstart]")', script)
         self.assertNotIn("localhost:\" + ", script)
 

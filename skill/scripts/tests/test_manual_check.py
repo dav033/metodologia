@@ -61,7 +61,9 @@ class Wiring(unittest.TestCase):
         self.assertIn('<a class="pp-vurl" href="http://localhost:3004/"', html)
         self.assertIn('action="/p/proj/req/REQ-021/verify-run"', html)
         self.assertIn('name="anchor" value="T10.5"', html)
-        self.assertIn("Probar esto ↗", html)
+        self.assertNotIn("Probar esto ↗", html)                                  # D-200: links, not a button
+        self.assertIn('data-vstart="vstart-T10.5" data-path="/"', html)
+        self.assertIn('name="path" value="/"', html)
         self.assertIn('action="/plans/proj/REQ-021/attest"', html)
         self.assertIn('name="request" value="T10.5:d1"', html)                  # the request attest answers, no round
         self.assertIn(">Funciona</button>", html)
