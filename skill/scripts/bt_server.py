@@ -111,7 +111,9 @@ class Handler(PlanningActions, PlanListActions, BaseHTTPRequestHandler):
         if not minted["ok"]:                          # no automatic sign-in: the page as it is, and why
             if q.get("mode") == "cookie":
                 return self.send(json.dumps({"state": "ready", "login": False, "message": minted["message"]}), 200, "application/json")
-            return self.redirect(origin + page)
+            if not minted.get("configured", True):
+                return self.redirect(origin + page)
+            return self.send(bt_page_verify_run.login_failed(project, rid, sid, minted["message"], origin + page))  # D-231
         cookie = f"{minted['cookie']}={minted['token']}; Path=/; HttpOnly; SameSite=Lax; Max-Age=86400"
         if q.get("mode") == "cookie":
             body = json.dumps({"state": "ready", "login": True, "account": minted["account"]}).encode()
