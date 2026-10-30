@@ -65,10 +65,9 @@ def declared(rdir: str | Path | None) -> set[str]:
     variable); empty when there is no frozen revision."""
     if not rdir:
         return set()
-    from bt_planner import revisions as rev
+    import bt_plan_adapter   # the planner is reached only through its adapter (test_plan_boundary)
     try:
-        last = rev.latest(Path(rdir))
-        plan = rev.load_revision(Path(rdir), last["revision"]) if last else {}
+        plan = bt_plan_adapter.latest_plan(Path(rdir)) or {}
     except Exception:  # noqa: BLE001 - an unreadable store adds nothing; the frozen-plan gates report it
         return set()
     return {name for task in plan.get("tasks") or [] if isinstance(task, dict)

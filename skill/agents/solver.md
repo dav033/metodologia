@@ -71,7 +71,9 @@ If the conflict is one a merge rule should have settled, also fix the rule in me
    It runs the full regression (~30 min), backs up the DBOS database when runtime code changed, merges in a deploy
    worktree, fast-forwards the live checkout, pushes, restarts the units and smoke-checks them, all under a machine-wide
    lock. A red regression integrates nothing: fix it or give up and report. Exit 3 means the smoke failed and the merge
-   was reverted; exit 4 means the revert failed too: stop and ask the owner. Never integrate by hand.
+   was reverted; exit 4 means the revert failed too: stop and ask the owner. Never integrate by hand. After a passing
+   smoke it removes your worktree and deletes your branch (`git branch -d`) when the worktree is clean; run it from
+   outside the worktree (from inside, it keeps it and prints the cleanup command), or pass `--keep-worktree`.
 3. Write the decision record yourself in `~/bitacora/metodologia/DECISIONS.md` (the project's `DECISIONS.md` for a
    project defect; the next free D-NNN, the format of the entries above it: Context, Decision, Consequences, Rule, Source, Evidence). Bitácora files are written in place,
    never committed in your branch.

@@ -10,8 +10,6 @@ SP-1: six). Reference: references/subagents.md §The antagonist gate and §The s
 """
 from __future__ import annotations
 
-from bt_planner.quality import security_sensitive
-
 GATE = ("Follow references/engineering.md of the `metodologia` skill and run the antagonist review "
         "(references/subagents.md) before EVERY commit.")
 WITH_AUDIT = ("Follow references/engineering.md of the `metodologia` skill. Run the task's verify, tests and linters "
@@ -34,7 +32,8 @@ def _security_unit(state: dict | None, unit: list[dict] | None) -> bool:
     frozen = (state or {}).get("frozen_plan")
     full = {t["id"]: t for t in frozen.get("tasks", []) if isinstance(t, dict) and isinstance(t.get("id"), str)} \
         if isinstance(frozen, dict) and isinstance(frozen.get("tasks"), list) else {}
-    return any(security_sensitive({**full.get(t.get("id"), {}), **t}) for t in unit or () if isinstance(t, dict))
+    import bt_plan_adapter   # the planner is reached only through its adapter (test_plan_boundary)
+    return any(bt_plan_adapter.security_sensitive({**full.get(t.get("id"), {}), **t}) for t in unit or () if isinstance(t, dict))
 
 
 def milestone_audit_active(state: dict | None, unit: list[dict] | None = None) -> bool:

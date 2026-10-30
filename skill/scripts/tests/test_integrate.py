@@ -14,6 +14,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import bt_integrate as integ
 import bt_regress
 
+ALLOWED = ("test_known_red",)      # a baseline the owner accepted; the default list is empty since 2026-10-29
+
 
 def sh(cwd: Path, *args: str) -> str:
     return subprocess.run(["git", "-C", str(cwd), *args], capture_output=True, text=True, check=True).stdout.strip()
@@ -38,8 +40,8 @@ class Fake(integ.Services):
         self.calls.append(("regress", Path(worktree).name))
         if self.during_regression:
             self.during_regression()
-        lines = ["test_a 0 1 python3", "test_remote_panel 1 1 python3"] + (["test_b 1 1 python3"] if self.red else [])
-        return bt_regress.judge(lines, bt_regress.BASELINE, rerun=lambda name: False)
+        lines = ["test_a 0 1 python3", "test_known_red 1 1 python3"] + (["test_b 1 1 python3"] if self.red else [])
+        return bt_regress.judge(lines, ALLOWED, rerun=lambda name: False)
 
     def backup(self):
         self.calls.append(("backup",))
@@ -76,9 +78,10 @@ class Integrate(unittest.TestCase):
         self.lock = self.base / "state" / "integrate.lock"
 
     def request(self, **extra) -> integ.Request:
-        return integ.Request(branch="fix", worktree=self.wt, title="x is two (D-900)", session="s1", live=self.live,
-                             deploy=self.base / "deploy", scratch=self.base / "scratch", log=self.log, lock=self.lock,
-                             wait_seconds=0, trailers=["Co-Authored-By: Test <t@example.invalid>"], **extra)
+        fields = dict(branch="fix", worktree=self.wt, title="x is two (D-900)", session="s1", live=self.live,
+                      deploy=self.base / "deploy", scratch=self.base / "scratch", log=self.log, lock=self.lock,
+                      wait_seconds=0, trailers=["Co-Authored-By: Test <t@example.invalid>"])
+        return integ.Request(**{**fields, **extra})
 
     def run_it(self, services, **extra) -> integ.Outcome:
         return integ.integrate(self.request(**extra), services, say=lambda text: None)
@@ -99,9 +102,11 @@ class Integrate(unittest.TestCase):
         self.assertEqual(fake.calls[2], ("push", head))
         self.assertEqual([c[1] for c in fake.calls if c[0] == "restart"], [integ.ENGINE_UNIT, integ.WEB_UNIT])
         self.live_bitacora_intact()
+        self.assertFalse(self.wt.exists())                                       # clean and merged: cleaned up
+        self.assertEqual(sh(self.live, "branch", "--list", "fix"), "")
         entry = self.log.read_text()
         for text in (f"previous main: {self.previous}", "/backups/bt_durable-1.dump 10 abc",
-                     "regression: 2 files, only baseline failures (test_remote_panel)", "rollback: git revert the "
+                     "regression: 2 files, only baseline failures (test_known_red)", "rollback: git revert the "
                      "merge of fix on main, restart bt-durable.service and bitacora-web.service", "session s1",
                      "smoke ok"):
             self.assertIn(text, entry)
@@ -135,6 +140,36 @@ class Integrate(unittest.TestCase):
         self.assertIn("result: not integrated", self.log.read_text())
         self.live_bitacora_intact()
 
+    def test_cleanup_keeps_what_it_must(self):
+        outcome = self.run_it(Fake(self), keep_worktree=True)
+        self.assertEqual(outcome.code, 0, outcome.lines)
+        self.assertTrue(self.wt.is_dir())
+        self.assertEqual(sh(self.live, "rev-parse", "fix"), self.tip)
+        self.assertIn("--keep-worktree", outcome.lines[-1])
+
+    def test_cleanup_skips_a_worktree_the_caller_stands_in_or_with_untracked_files(self):
+        outcome = self.run_it(Fake(self), cwd=self.wt / "skill")
+        self.assertTrue(self.wt.is_dir())
+        self.assertIn(f"worktree remove {self.wt.resolve()} && git -C {self.live.resolve()} branch -d fix",
+                      outcome.lines[-1])
+        self.setUp()
+        (self.wt / "notes.txt").write_text("not committed\n", encoding="utf-8")
+        outcome = self.run_it(Fake(self))
+        self.assertEqual(outcome.code, 0, outcome.lines)
+        self.assertTrue((self.wt / "notes.txt").is_file())
+        self.assertEqual(sh(self.live, "rev-parse", "fix"), self.tip)
+        self.assertIn("untracked", outcome.lines[-1])
+
+    def test_cleanup_never_removes_the_deploy_worktree_nor_force_deletes_a_branch(self):
+        lines: list[str] = []
+        integ._clean_up(self.request(deploy=self.wt), lines.append)
+        self.assertTrue(self.wt.is_dir())
+        self.assertIn("never removed", lines[-1])
+        integ._clean_up(self.request(), lines.append)                              # fix is not merged into main here
+        self.assertFalse(self.wt.exists())
+        self.assertEqual(sh(self.live, "rev-parse", "fix"), self.tip)             # -d refused it; nothing forces it
+        self.assertIn("branch fix kept", lines[-1])
+
     def test_a_failed_smoke_reverts_the_merge(self):
         fake = Fake(self, smoke=[["bt-durable.service is failed"], []])
         outcome = self.run_it(fake)
@@ -144,6 +179,7 @@ class Integrate(unittest.TestCase):
         self.assertEqual([c[0] for c in fake.calls].count("restart"), 4)
         self.assertIn("reverted by", self.log.read_text())
         self.live_bitacora_intact()
+        self.assertTrue(self.wt.is_dir())                                         # a reverted branch keeps its worktree
 
     def test_bitacora_commits_on_main_are_fine_but_code_is_not(self):
         def bitacora_commit():
@@ -195,12 +231,12 @@ class Integrate(unittest.TestCase):
 class Regression(unittest.TestCase):
     def test_baseline_allowed_flake_rerun_and_real_failure(self):
         reruns = []
-        result = bt_regress.judge(["test_a 0 3 venv", "test_remote_panel 1 2 python3", "test_platform 1 9 python3",
-                                   "test_new 1 4 python3"], bt_regress.BASELINE,
+        result = bt_regress.judge(["test_a 0 3 venv", "test_known_red 1 2 python3", "test_platform 1 9 python3",
+                                   "test_new 1 4 python3"], ALLOWED,
                                   rerun=lambda name: reruns.append(name) or name == "test_platform")
         self.assertEqual(reruns, ["test_new", "test_platform"])                     # the baseline is never rerun
         self.assertEqual((result.allowed, result.flaky, result.real),
-                         (["test_remote_panel"], ["test_platform"], ["test_new"]))
+                         (["test_known_red"], ["test_platform"], ["test_new"]))
         self.assertFalse(result.ok)
         self.assertIn("1 real failure(s): test_new", result.summary())
 

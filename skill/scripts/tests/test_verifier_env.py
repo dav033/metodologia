@@ -130,8 +130,7 @@ class ForRun(unittest.TestCase):
     def test_declared_reads_the_requires_of_the_latest_frozen_revision(self):
         from unittest.mock import patch
         plan = {"tasks": [{"verification": [{"requires": ["DB_URL", "service:x", "bad name"]}]}, {"verification": []}]}
-        with patch("bt_planner.revisions.latest", return_value={"revision": 1}), \
-                patch("bt_planner.revisions.load_revision", return_value=plan):
+        with patch("bt_plan_adapter.latest_plan", return_value=plan):
             self.assertEqual(venv.declared("/r"), {"DB_URL"})
         self.assertEqual(venv.declared(None), set())
 

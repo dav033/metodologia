@@ -56,10 +56,31 @@ def kill_tree(proc: subprocess.Popen) -> None:
     for _ in range(2):
         try:
             proc.wait(timeout=30)
+            if os.name != "nt":
+                _wait_group_gone(proc.pid)
             return
         except subprocess.TimeoutExpired:
             proc.kill()
     print(f"[run] session process {proc.pid} did not exit after kill; moving on", file=sys.stderr)
+
+
+def _wait_group_gone(pgid: int, timeout: float = 10.0) -> bool:
+    """Wait until no member of the session's process group is left. Reaping the leader is not enough: SIGKILL is
+    delivered asynchronously and the orphaned children are reaped by init, so kill_tree used to return while a member
+    still existed (test_platform under load, 2026-10-29: `killpg(pid, 0)` still succeeded). SIGKILL is resent each
+    round for a member forked while the first one was in flight. False when one outlived `timeout`."""
+    deadline = time.monotonic() + timeout
+    while True:
+        try:
+            os.killpg(pgid, signal.SIGKILL)
+        except ProcessLookupError:
+            return True
+        except PermissionError:      # the group id was reused by a process that is not ours: ours is gone
+            return True
+        if time.monotonic() >= deadline:
+            print(f"[run] process group {pgid} still has members after kill; moving on", file=sys.stderr)
+            return False
+        time.sleep(0.02)
 
 
 def _gone(pid: int) -> bool:

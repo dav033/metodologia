@@ -48,11 +48,16 @@ export function MotionProfile({ profile, reduced, children }: { profile: Profile
 }
 
 /** Entrance props for a `motion.*` element: rises in with the profile's spring, `i` staggers it; under reduced motion it
- *  starts at its end state (Motion's own reduced mode still fades opacity, which the audit counts as motion). */
+ *  starts at its end state (Motion's own reduced mode still fades opacity, which the audit counts as motion).
+ *  The reduced target is written as one-frame keyframes on purpose: Motion only animates a value whose target changed,
+ *  and skipAnimations only applies to animations that start after it is set. With the same scalars, switching to
+ *  reduced mid-entrance left the staggered springs running in Motion's transform compositor, which rebuilt the WAAPI
+ *  animation every time the mockup's settle finished it (test_real_designer_kit, 2026-10-29: three springs still
+ *  running 60 ms after "Quieto"). `[0]` differs from `0`, so each value restarts as an instant jump that stops its spring. */
 export function useReveal() {
   const { reduced, spring, stagger, distance } = useMotionProfile();
   return (i = 0, from: { x?: number; y?: number; scale?: number } = { y: 1 }) =>
-    reduced ? { initial: false as const, animate: { opacity: 1, x: 0, y: 0, scale: 1 } } : {
+    reduced ? { initial: false as const, animate: { opacity: [1], x: [0], y: [0], scale: [1] } } : {
       initial: { opacity: 0, x: (from.x ?? 0) * distance, y: (from.y ?? 0) * distance, scale: from.scale ?? 1 },
       animate: { opacity: 1, x: 0, y: 0, scale: 1 },
       transition: { ...spring, delay: i * stagger },
