@@ -190,7 +190,8 @@ def _attempts(source, run: RunRef) -> dict[str, list[dict]]:
             slot["agent"] = row
         elif row.name == VERIFY:
             slot["verify"].append(row)
-        elif row.name == INTEGRATE:
+        elif row.name == INTEGRATE and ("integrate" not in slot or
+                                       (row.created_at or 0) > (slot["integrate"].created_at or 0)):
             slot["integrate"] = row
     out: dict[str, list[dict]] = {}
     for key, slot in by_key.items():

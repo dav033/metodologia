@@ -43,7 +43,7 @@ from dbos._error import (
 
 from ..control import classify, frontier, policy, subplans
 from ..settings import Settings
-from . import engine, recovery_policy, steps
+from . import engine, integration_policy, recovery_policy, steps
 
 TOPIC_RUN = "run"
 STANDARD, RELAXED = "standard", "relaxed"
@@ -640,7 +640,7 @@ def _evaluate(attempt: AttemptRef, route: Route | None, agent: dict, verify: dic
     failure: FailureReport | None = classify.classify(facts)
     integrated = None
     if failure is None and snapshot is not None and verdict is not None:
-        merged = _enqueue(engine.INTEGRATE, f"bt:{attempt.attempt_key}:integrate", integrate_workflow,
+        merged = _enqueue(engine.INTEGRATE, integration_policy.workflow_id(attempt.attempt_key, profile), integrate_workflow,
                           attempt.run.model_dump(mode="json"), attempt.task_id, agent["snapshot"])
         if merged.get("internal_error"):
             failure = classify.classify(classify.AttemptFacts(internal_error=merged["internal_error"]))
