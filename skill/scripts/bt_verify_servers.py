@@ -267,7 +267,7 @@ def environment(project: str, data: dict, ports: dict[str, int]) -> tuple[dict[s
     return env, sorted(wanted - set(secrets))
 
 
-def _script(paths: dict[str, Path], data: dict, ports: dict[str, int], own: str = "") -> str:
+def _script(paths: dict[str, Path], data: dict, ports: dict[str, int], own: str = "", login: bool = True) -> str:
     logs = paths["logs"]
     q = lambda p: shlex.quote(str(p))  # noqa: E731
     steps = [s for s in data.get("prepare") or [] if isinstance(s, dict) and isinstance(s.get("run"), str)]
@@ -288,7 +288,9 @@ def _script(paths: dict[str, Path], data: dict, ports: dict[str, int], own: str 
     for server in data["servers"]:
         log = q(logs / f"{server['name']}.log")
         lines.append(f"say \"{server['name']} en el puerto {ports[server['name']]}\"")
-        lines.append(f"( {_fill(server['run'], ports, ports[server['name']], {})} ) > {log} 2>&1 &")
+        auth = "" if login else "".join(f"{k}={shlex.quote(str(v))} " for k, v in (server.get("local_auth") or {}).items()
+                                         if re.fullmatch(r"[A-Z][A-Z0-9_]*", str(k)))
+        lines.append(f"( {auth}{_fill(server['run'], ports, ports[server['name']], {})} ) > {log} 2>&1 &")
         lines.append(f"echo $! > {q(logs / (server['name'] + '.pid'))}")
     lines += [f'say "servidores en marcha; registros en {logs}"', "wait"]
     return "\n".join(lines) + "\n"
@@ -332,8 +334,12 @@ def _fail(paths: dict[str, Path], state: dict, message: str) -> dict:
     return {"ok": False, "message": message, "url": state.get("url", "")}
 
 
-def start(root: Path, project: str, rdir: Path, sid: str, run: str = "") -> dict:
-    """Stop everything of the version, then start it clean from its published commit. {ok, message, url}."""
+def start(root: Path, project: str, rdir: Path, sid: str, run: str = "", login: bool = False) -> dict:
+    """Stop everything of the version, then start it clean from its published commit. {ok, message, url}.
+
+    Without `login` a server with `local_auth` in the recipe (pictures: `AUTH_LOCAL_SIN_RESTRICCIONES=1` on the web
+    server, its own development-only local mode) starts with it, so the owner enters already signed in; `login` starts
+    it as in production, for tests of a given account or role (owner, 2026-10-30: «que en local no pida login», D-202)."""
     data, row = recipe(root, project, rdir), _row(rdir, sid, root, project)
     if data is None:
         return {"ok": False, "message": f"El proyecto no tiene receta de servidores de prueba ({project}/{RECIPE}).", "url": ""}
@@ -344,6 +350,7 @@ def start(root: Path, project: str, rdir: Path, sid: str, run: str = "") -> dict
     with _locked(paths["lock"]):
         previous = _load(paths["state"])
         state = {"session": name, "mark": own, "commit": row["commit"], "version": row["version"], "run": run or uuid.uuid4().hex,
+                 "login": bool(login) or not has_local_auth(data),
                  "started_at": time.time(), "phase": "stopping", "ports": previous.get("ports") or {},
                  "url": previous.get("url", "")}
         _save(paths["state"], state)
@@ -372,7 +379,7 @@ def start(root: Path, project: str, rdir: Path, sid: str, run: str = "") -> dict
         paths["env"].touch(mode=0o600, exist_ok=True)
         os.chmod(paths["env"], 0o600)
         paths["env"].write_text("".join(f"{k}={shlex.quote(v)}\n" for k, v in env.items()), encoding="utf-8")
-        paths["script"].write_text(_script(paths, data, ports, own), encoding="utf-8")
+        paths["script"].write_text(_script(paths, data, ports, own, login=state["login"]), encoding="utf-8")
         try:
             terminal.start(name, paths["copy"], f"bash {shlex.quote(str(paths['script']))}")
         except (RuntimeError, ValueError, OSError, subprocess.SubprocessError) as exc:
@@ -382,7 +389,12 @@ def start(root: Path, project: str, rdir: Path, sid: str, run: str = "") -> dict
             "message": f"Arrancando {', '.join(ports)} de {sid} (versión {row['version']}) desde cero.{told}"}
 
 
-def begin(root: Path, project: str, rdir: Path, sid: str) -> dict:
+def has_local_auth(data: dict | None) -> bool:
+    """Does the recipe let a version start already signed in (a server with `local_auth`)?"""
+    return any(isinstance(s, dict) and s.get("local_auth") for s in (data or {}).get("servers") or [])
+
+
+def begin(root: Path, project: str, rdir: Path, sid: str, login: bool = False) -> dict:
     """What «Probar» does: mark the version as restarting right away (the waiting tab never mistakes the old servers for
     the new ones) and run `start` in the background; the tab follows its phases. {ok, message}."""
     if recipe(root, project, rdir) is None:
@@ -392,7 +404,7 @@ def begin(root: Path, project: str, rdir: Path, sid: str) -> dict:
         return {"ok": False, "message": f"{sid} todavía no tiene una versión publicada que probar."}
     paths, run = _files(root, project, rdir, sid, row["version"]), uuid.uuid4().hex
     _save(paths["state"], {**_load(paths["state"]), "phase": "stopping", "run": run, "started_at": time.time(), "error": ""})
-    threading.Thread(target=start, args=(root, project, rdir, sid, run), name=f"probar-{sid}", daemon=True).start()
+    threading.Thread(target=start, args=(root, project, rdir, sid, run, login), name=f"probar-{sid}", daemon=True).start()
     return {"ok": True, "message": f"Reiniciando {sid} desde cero."}
 
 
@@ -451,6 +463,7 @@ def status(root: Path, project: str, rdir: Path, sid: str) -> dict:
         return out
     paths = _files(root, project, rdir, sid, row["version"])
     current, name = _load(paths["state"]), session_name(project, rdir, sid, row["version"])
+    out["login"] = bool(current.get("login", True))
     out.update(url=current.get("url", ""), ports=current.get("ports") or {},
                elapsed=int(time.time() - float(current.get("started_at") or time.time())))
     phase = current.get("phase", "servers" if current else "")
