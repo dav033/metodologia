@@ -37,6 +37,23 @@ class SystemRuns(unittest.TestCase):
         self.assertEqual(self.stop(BITACORA_ATTEMPT="pictures-REQ-021-r24-T93-a3-04b33f7d"), "")
         self.assertEqual(self.stop(BITACORA_TASK="T93"), "")
         self.assertEqual(self.stop(BITACORA_DELEGATION="D-1"), "")
+        self.assertEqual(self.stop(BITACORA_AGENT_ROLE="planner"), "")        # D-237: the Planner committed on main
+
+    def test_a_role_session_cannot_resolve_the_alert_with_a_commit(self):
+        import subprocess
+        env = {**os.environ, "BITACORA_AGENT_ROLE": "planner", "BITACORA_ROOT": str(ROOT)}
+        done = subprocess.run([sys.executable, str(Path(bt_hooks.__file__).with_name("bitacora.py")), "commit",
+                               "fix: remove secret"], env=env, capture_output=True, text=True, check=False)
+        self.assertIn("REFUSED", done.stdout)
+
+    def test_a_role_session_started_by_the_system_carries_its_role(self):
+        import bt_agent_terminal
+        seen = []
+        with patch.object(bt_agent_terminal, "exists", return_value=False), \
+                patch.object(bt_agent_terminal, "_run", side_effect=lambda *a, **k: seen.append(a) or
+                             __import__("subprocess").CompletedProcess(a, 0, "", "")):
+            bt_agent_terminal.start("bit-pictures-REQ-021-planner", Path("/tmp"), "true")
+        self.assertIn("BITACORA_AGENT_ROLE=planner", seen[0])
 
 
 if __name__ == "__main__":
