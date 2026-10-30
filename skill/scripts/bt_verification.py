@@ -59,10 +59,11 @@ def _kind(where: str) -> str:
     return "external"
 
 
-def tests(rdir: Path) -> list[dict]:
-    """Rows of every SPEC.md `## Pruebas` (or `## Testing`) table: subplans ([] = every subplan), kind, where, how, expect."""
+def tests(rdir: Path, name: str = "SPEC.md") -> list[dict]:
+    """Rows of every SPEC.md `## Pruebas` (or `## Testing`) table: subplans ([] = every subplan), kind, where, how, expect.
+    `name` reads another rendering of the SPEC (SPEC.es.md, whose steps the owner reads in Spanish)."""
     try:
-        text = (Path(rdir) / "SPEC.md").read_text(encoding="utf-8")
+        text = (Path(rdir) / name).read_text(encoding="utf-8")
     except (OSError, UnicodeError):
         return []
     out = []
@@ -76,7 +77,7 @@ def tests(rdir: Path) -> list[dict]:
             def index(*names: str, head=head) -> int | None:
                 return next((i for name in names for i, label in enumerate(head) if label.startswith(name)), None)
             cols = {"subplan": index("subplan"), "where": index("where", "dónde", "donde"), "how": index("how", "cómo", "como"),
-                    "expect": index("expect", "qué", "que debes", "esperado")}
+                    "expect": index("expect", "qué", "que debes", "esperado", "resultado")}
             if cols["subplan"] is None or cols["where"] is None:
                 continue
             for line in lines[2:]:

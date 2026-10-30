@@ -113,8 +113,8 @@ class PlanningActions:
             msg, sid = "Subplan no válido.", ""
         elif action in ("verify-run", "verify-stop") and self.client_address[0] not in ("127.0.0.1", "::1"):
             msg = "Los servidores de prueba solo se arrancan desde esta máquina."
-        elif action == "verify-run":                  # «Probar esta versión»: start its servers, the new tab waits for them
-            started = servers.start(ROOT, project, rdir, sid)
+        elif action == "verify-run":                  # «Probar»: restart the version clean; the new tab follows it
+            started = servers.begin(ROOT, project, rdir, sid)
             if started["ok"]:
                 return f"{base}/verify-run?sp={quote(sid)}"
             msg = started["message"]
@@ -129,6 +129,8 @@ class PlanningActions:
             msg = verification.decide(project, rdir, sid, "approved" if action == "verify-approve" else "rejected",
                                       form.get("comments", ""), "owner", "web")
             commit(ROOT, f"{project}: {rid} verification ({action}, web)", push=False)
+        if re.fullmatch(r"T\d+(?:\.\d+)*", sid):       # «Probar esto» on a decision card: back to that card
+            return f"/plans/{quote(project)}/{quote(rid)}?msg={quote(msg)}"
         return f"{base}?tab=plan&mode=subplans&view=verify&sp={quote(sid)}&msg={quote(msg)}"
 
     def tell_planner(self, project: str, rid: str, text: str) -> None:

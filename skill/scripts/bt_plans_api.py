@@ -9,10 +9,12 @@ from __future__ import annotations
 import datetime as dt
 import hashlib
 import json
+import os
 import re
 import select
 import shutil
 import socket
+import subprocess
 import threading
 import time
 from pathlib import Path
@@ -258,6 +260,33 @@ def decide(root: Path, project: str, req: str, request_id: str, option: str, rea
     except scheduler_.core.SchedulerError as exc:
         raise PlanError(str(exc)) from exc
     return f"Decisión {request_id} → {option}: " + "; ".join(lines)
+
+
+def attest(root: Path, project: str, req: str, task: str, request_id: str, evidence: str, by: str = "owner") -> str:
+    """«Funciona» on a manual-evidence decision: the owner's observation becomes the attestation receipt of the task's
+    manual checks (`bt-durable attest`, bound to the decision's attempt), which answers `reverify`: the same snapshot is
+    verified again. Only a decision that is open and waits for manual evidence is answered."""
+    import bt_durable_panel
+    rdir = req_dir(root, project, req)
+    evidence = " ".join((evidence or "").split())
+    if len(evidence) < 10:
+        raise PlanError("Escribe qué comprobaste (al menos una frase).")
+    if not bt_durable_panel.owned(rdir):
+        raise PlanError("Este plan no lo ejecuta el runtime durable: usa sus opciones de siempre.")
+    open_one = next((d for d in bt_durable_panel.decisions(rdir)
+                     if (d.get("manual") or {}).get("task") == task and d["manual"]["request_id"] == request_id), None)
+    if open_one is None:
+        raise PlanError(f"No hay una decisión abierta {request_id} de {task} que pida evidencia manual. Recarga la página.")
+    env = dict(os.environ, BITACORA_ROOT=str(root))
+    try:
+        done = subprocess.run([*bt_durable_panel.cli(), "attest", project, req, task, "--request", request_id,
+                               "--evidence", evidence[:2000], "--by", by], capture_output=True, text=True, env=env,
+                              timeout=bt_durable_panel.CLI_TIMEOUT, check=False)
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        raise PlanError(f"bt-durable no respondió: {exc}") from exc
+    if done.returncode != 0:
+        raise PlanError("No se guardó: " + ((done.stderr or done.stdout).strip().splitlines() or ["sin salida"])[-1][:300])
+    return f"{task}: tu evidencia quedó firmada y el mismo intento se vuelve a verificar."
 
 
 def diagnose(root: Path, project: str, req: str, request_id: str) -> str:

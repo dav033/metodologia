@@ -386,6 +386,24 @@ a.pp-ev:hover { text-decoration: none; background: var(--code); }
 .pp-vrow:hover { text-decoration: none; background: var(--code); }
 .pp-vrow .grow { flex: 1; min-width: 0; }
 
+/* «Probar»: the version's URL as it is, the restart button and the steps to try it (bt_page_verification, bt_page_verify_run) */
+.pp-vtry { display: flex; flex-direction: column; gap: 8px; padding: 16px 18px; border: 1px solid var(--accent); border-radius: 14px; background: var(--accent-soft); }
+.pp-vtry-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.pp-vurl { font-family: var(--mono, "JetBrainsMono Nerd Font", ui-monospace, monospace); font-size: 17px; font-weight: 700; color: var(--accent); overflow-wrap: anywhere; }
+.pp-vtry p { margin: 0; }
+.pp-vstatus { margin: 0; font-size: 13px; font-weight: 700; }
+.pp-vstatus.ok { color: var(--ok); } .pp-vstatus.warn { color: var(--warn); } .pp-vstatus.bad { color: var(--bad); } .pp-vstatus.none { color: var(--muted); }
+.pp-vremote summary, .pp-vplan summary { cursor: pointer; color: var(--muted); font-size: 13px; }
+.pp-vguide { display: flex; flex-direction: column; gap: 10px; }
+.pp-vguide p, .pp-vguide ul { margin: 0; line-height: 1.55; overflow-wrap: anywhere; }
+.pp-vsteps { margin: 0; padding-left: 22px; display: flex; flex-direction: column; gap: 10px; }
+.pp-vsteps li p { margin: 0; line-height: 1.55; overflow-wrap: anywhere; }
+.pp-vexpect { color: var(--muted); font-size: 13.5px; }
+.pp-vexpect strong { color: var(--ok); }
+.pp-vrun { max-width: 760px; display: flex; flex-direction: column; gap: 10px; }
+.pp-vrun-url code { font-size: 16px; }
+.pp-vrun pre { max-height: 360px; overflow: auto; padding: 10px 12px; border-radius: 10px; background: var(--code); font-size: 12px; white-space: pre-wrap; }
+
 /* What the planning agent is doing right now (bt_page_planning_agent) */
 .pp-agent { display: flex; flex-direction: column; gap: 8px; margin: 0 0 12px; padding: 10px 14px; border: 1px solid var(--border, #313244); border-radius: 10px; background: var(--surface, rgba(255,255,255,.03)); }
 .pp-ag-row { display: flex; gap: 10px; align-items: flex-start; }
