@@ -32,12 +32,31 @@ def _tmux_path() -> str | None:
     return shutil.which("tmux", path=os.environ.get("PATH", "") + os.pathsep + extra)
 
 
+# what the bitácora's tmux server must not inherit from the process that happens to start it: bt-durable.service starts
+# it for the Solucionador (REQ-031), and every later session on the socket (Planners, subplan sessions) gets the server's
+# environment — the engine's database URL with its password (BT_DURABLE_DATABASE_URL) and the engine's own `uv run`
+# virtual environment (VIRTUAL_ENV, its bin first on PATH) included (audit of REQ-030, 2026-10-29)
+ENGINE_ONLY_PREFIXES = ("BT_DURABLE_", "DBOS_")
+ENGINE_INTERPRETER_ENV = frozenset({"VIRTUAL_ENV", "VIRTUAL_ENV_PROMPT", "UV_RUN_RECURSION_DEPTH"})
+
+
+def session_environment(environ: dict[str, str] | None = None) -> dict[str, str]:
+    environ = dict(os.environ if environ is None else environ)
+    venv = environ.get("VIRTUAL_ENV", "")
+    out = {k: v for k, v in environ.items()
+           if not k.startswith(ENGINE_ONLY_PREFIXES) and k not in ENGINE_INTERPRETER_ENV}
+    if venv and "PATH" in out:
+        own = str(Path(venv) / "bin")
+        out["PATH"] = os.pathsep.join(p for p in out["PATH"].split(os.pathsep) if p and p.rstrip("/") != own)
+    return out
+
+
 def _run(*args: str, timeout: int = 15, prefix: tuple[str, ...] = ()) -> subprocess.CompletedProcess:
     exe = _tmux_path()
     if exe is None:
         raise RuntimeError("tmux no está instalado.")
     return subprocess.run([*prefix, exe, "-L", socket(), *args], capture_output=True, text=True, timeout=timeout,
-                          check=False)
+                          check=False, env=session_environment())
 
 
 def name_for(project: str, req: str, role: str) -> str:
