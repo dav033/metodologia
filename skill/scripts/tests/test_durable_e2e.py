@@ -42,12 +42,11 @@ class EngineCase(unittest.TestCase):
         self.addCleanup(self._stop_engine, self.engine)
         if self.client is None:
             try:
-                wait_until(lambda: (self.lab.state / "dbos.sqlite3").exists() or self.engine.poll() is not None, 60,
-                           what="DBOS database")
+                wait_until(lambda: self.lab.engine_ready(self.engine) or self.engine.poll() is not None, 120,
+                           what="the engine to start")
             finally:
                 if self.engine.poll() is not None:
                     raise AssertionError("engine exited: " + (self.lab.root / "engine.log").read_text()[-3000:])
-            time.sleep(1.0)
             self.client = Client(self.lab.database_url)
             self.addCleanup(self.client.close)
         return self.engine

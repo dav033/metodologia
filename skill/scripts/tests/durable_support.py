@@ -216,6 +216,19 @@ class Lab:
         return EngineConfig(system_database_url=self.database_url, state_dir=self.state, agent_concurrency=2,
                             verify_concurrency=2)
 
+    @property
+    def marker(self) -> Path:
+        return self.bitacora / ".state" / "durable" / "engine.json"
+
+    def engine_ready(self, engine: subprocess.Popen) -> bool:
+        """The engine wrote its marker (after DBOS launched and its schema was complete). The database file alone
+        appears before the schema migrations end: a client that queried it then met «no such column:
+        workflow_status.queue_partition_key» under load (test_durable_attestations/audits, 2026-10-29)."""
+        try:
+            return json.loads(self.marker.read_text()).get("pid") == engine.pid
+        except (OSError, ValueError):
+            return False
+
     def spawn_engine(self) -> subprocess.Popen:
         log = open(self.root / "engine.log", "ab")  # noqa: SIM115 - handed to the child process, closed with it
         return subprocess.Popen([sys.executable, str(Path(__file__)), "serve", str(self.write_config())],
@@ -266,10 +279,9 @@ def engine_client(case, lab: Lab):
             except subprocess.TimeoutExpired:
                 engine.kill()
     case.addCleanup(stop)
-    wait_until(lambda: (lab.state / "dbos.sqlite3").exists() or engine.poll() is not None, 60, what="DBOS database")
+    wait_until(lambda: lab.engine_ready(engine) or engine.poll() is not None, 120, what="the engine to start")
     if engine.poll() is not None:
         raise AssertionError("engine exited: " + (lab.root / "engine.log").read_text()[-3000:])
-    time.sleep(1.0)
     client = Client(lab.database_url)
     case.addCleanup(client.close)
     return engine, client
@@ -282,7 +294,7 @@ def _serve(config_path: str) -> None:
     lab.routes = data.get("routes") or lab.routes
     from bt_durable.service import serve
     cfg, ports = lab.ports()
-    serve(cfg, ports, reap_seconds=2.0, marker=lab.bitacora / ".state" / "durable" / "engine.json")
+    serve(cfg, ports, reap_seconds=2.0, marker=lab.marker)
 
 
 if __name__ == "__main__":
