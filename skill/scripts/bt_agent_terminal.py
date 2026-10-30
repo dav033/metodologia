@@ -105,7 +105,28 @@ def send(name: str, text: str) -> str:
         return "No pude escribirle al agente."
     time.sleep(0.4)                                   # let the TUI take the text before the Enter that submits it
     _run("send-keys", "-t", f"={name}:", "Enter")
-    return "Enviado."
+    for _ in range(SUBMIT_TRIES):                     # a long text can wait in the composer as a paste (D-199)
+        time.sleep(0.6)
+        if not unsent(screen(name, 12), text):
+            return "Enviado."
+        _run("send-keys", "-t", f"={name}:", "Enter")
+    time.sleep(0.6)
+    return "Enviado." if not unsent(screen(name, 12), text) else "Quedó escrito en el agente sin enviarse."
+
+
+SUBMIT_TRIES = 3
+PASTED = re.compile(r"\[Pasted (?:Content|text)[^\]]*\]", re.IGNORECASE)
+
+
+def unsent(shown: str, text: str) -> bool:
+    """Is the message still in the agent's input box? Codex keeps a long typed text as «[Pasted Content N chars]» and
+    needs another Enter; tell-planner said «Enviado» while pictures REQ-021's Planner never got the 039 defect
+    (2026-10-30 07:40, D-199). Only the last prompt line counts: the input box is at the bottom."""
+    prompts = [line.strip() for line in (shown or "").splitlines() if line.strip().startswith(("›", ">"))]
+    if not prompts:
+        return False
+    content = prompts[-1][1:].strip()                 # the last prompt line is the input box
+    return bool(content) and (bool(PASTED.search(content)) or (text or "").startswith(content[:30]))
 
 
 def screen(name: str, lines: int = 40) -> str:

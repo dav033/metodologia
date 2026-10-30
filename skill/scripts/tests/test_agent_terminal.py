@@ -42,6 +42,23 @@ class RealTmux(unittest.TestCase):
         self.assertFalse(terminal.exists(name))
         self.assertEqual(terminal.send(name, "hi"), "El agente ya no está en marcha.")
 
+    def test_a_message_left_as_a_paste_is_submitted_again(self):
+        """D-199: Codex keeps a long text as «[Pasted Content N chars]» until a second Enter; send said «Enviado» anyway."""
+        name = "bit-test-REQ-1-paste"
+        terminal.start(name, Path.home(), "read -p '› ' x; echo '› [Pasted Content 40 chars]'; read y; echo GOT:$x; echo '› '; sleep 20")
+        for _ in range(20):
+            if "›" in terminal.screen(name):
+                break
+            time.sleep(0.2)
+        self.assertEqual(terminal.send(name, "a long message for the planner"), "Enviado.")
+        self.assertIn("GOT:a long message for the planner", terminal.screen(name))
+
+    def test_unsent_reads_only_the_input_box(self):
+        self.assertTrue(terminal.unsent("• working\n› [Pasted Content 1020 chars]\n  GPT-6.1-Sol low", "x"))
+        self.assertTrue(terminal.unsent("› Plan defect found by the operator (2026", "Plan defect found by the operator (2026-10-30)"))
+        self.assertFalse(terminal.unsent("› Plan defect found\n• Aye, revisaré\n› Ask Codex to do anything", "Plan defect found"))
+        self.assertFalse(terminal.unsent("› [Pasted Content 40 chars]\nGOT:x\n› ", "x"))
+
     def test_names_are_validated_and_empty_messages_refused(self):
         self.assertFalse(terminal.exists("bad name; rm -rf"))
         self.assertEqual(terminal.send("bit-x", "   "), "No hay nada que enviar.")
