@@ -71,6 +71,38 @@ class ManifestMerge(Repo):
         self.assertEqual(self.port.merge_tree(self.base, ours, theirs).conflicts, ("package.json",))
 
 
+class SubsumedHunks(Repo):
+    """pictures REQ-021 r25 (D-172): gate T95 and SP-8's line both changed TABLAS_TRABAJO_CUENTA the same way and SP-8
+    also appended a function right after it; git calls that one hunk a conflict, on every retry."""
+    BASE = "const T = [\"a\"];\n\nexport function f() {}\n"
+    SAME = "const T = [\"a\", \"b\"];\n"
+
+    def test_one_side_is_the_other_plus_additions(self):
+        both = adapter.merge_subsumed(self.BASE, self.SAME + "\nexport function g() {}\n\nexport function f() {}\n",
+                                      self.SAME + "\nexport function f() {}\n")
+        self.assertEqual(both, self.SAME + "\nexport function g() {}\n\nexport function f() {}\n")
+        mirrored = adapter.merge_subsumed(self.BASE, self.SAME + "\nexport function f() {}\n",
+                                          self.SAME + "\nexport function g() {}\n\nexport function f() {}\n")
+        self.assertEqual(mirrored, both)
+
+    def test_a_real_conflict_and_a_resurrection_stay_conflicts(self):
+        self.assertIsNone(adapter.merge_subsumed(self.BASE, "const T = [\"a\", \"b\"];\n\nexport function f() {}\n",
+                                                 "const T = [\"a\", \"c\"];\n\nexport function f() {}\n"))
+        base = "const T = 1;\nconst U = 2;\n"                 # theirs removed U where ours changed T: taking ours would
+        self.assertIsNone(adapter.merge_subsumed(base, "const T = 9;\nconst U = 2;\n", "const T = 9;\n"))  # bring U back
+
+    def test_the_port_settles_it_in_the_tree(self):
+        self.port.resolutions = None
+        start = commit(self.repo, {"list.ts": self.BASE}, "base list")
+        git(self.repo, "checkout", "-q", "-b", "line", start)
+        ours = commit(self.repo, {"list.ts": self.SAME + "\nexport function g() {}\n\nexport function f() {}\n"}, "line")
+        git(self.repo, "checkout", "-q", "-b", "gate", start)
+        theirs = commit(self.repo, {"list.ts": self.SAME + "\nexport function f() {}\n"}, "gate")
+        result = self.port.merge_tree(start, ours, theirs)
+        self.assertEqual(result.conflicts, ())
+        self.assertIn("function g", git(self.repo, "cat-file", "blob", f"{result.tree}:list.ts"))
+
+
 class RecordedResolution(Repo):
     def test_a_conflict_waits_with_its_context_and_a_written_resolution_is_reused(self):
         ours = self.branch("ours", {"list.ts": "export const T = [\"p\", \"a\"];\n"})
@@ -160,6 +192,36 @@ class LineIntegration(Repo):
         merged = json.loads(git(self.repo, "cat-file", "blob", f"{ref}:package.json"))
         self.assertEqual(merged["scripts"], {"a": "x", "d": "w", "e": "v"})
         self.assertFalse(list((self.tmp / "state" / "composition" / "resolutions").glob("*.json")))
+
+
+class GateBase(Repo):
+    """A gate task starts from its candidate caught up with the lines it will be integrated into (D-173): pictures
+    REQ-021 r25 T95 started six attempts from a candidate that missed what T93 and SP-8 had put on those lines since."""
+
+    def gate_base(self, line_files: dict[str, str]):
+        from types import SimpleNamespace
+        from bt_contracts.execution import RunRef
+        from bt_durable.adapters.integration import GitLineIntegrator
+        candidate = self.branch("candidate", {"gate.ts": "1\n"})
+        line_tip = self.branch("sp7", line_files)
+        git(self.repo, "checkout", "-q", "main")
+        run = RunRef(project="proj", req="REQ-900", revision=1, plan_id="REQ-900", plan_path="/nonexistent",
+                     plan_sha256="0" * 64)
+        composer = SimpleNamespace(state_dir=self.tmp / "state", candidate_commit=lambda run, task, gate: candidate)
+        lines = GitLineIntegrator({"app": self.repo}, composer=composer)
+        lines.sync(run, "app", {"SP-7": []})
+        git(self.repo, "update-ref", lines.subplan_ref(run, "app", "SP-7"), line_tip)
+        task = SimpleNamespace(id="T95", repository="app")
+        return lines.base_ref(run, task, home="gate:CG-5", lines=("SP-7", "SP-9")), candidate, line_tip
+
+    def test_the_candidate_takes_the_newer_work_of_its_lines(self):
+        base, candidate, line_tip = self.gate_base({"line.ts": "2\n"})
+        for parent in (candidate, line_tip):
+            self.assertEqual(subprocess.run(["git", "merge-base", "--is-ancestor", parent, base], cwd=self.repo).returncode, 0)
+
+    def test_a_line_that_conflicts_is_left_out(self):
+        base, candidate, _line = self.gate_base({"list.ts": "export const T = [\"z\"];\n", "gate.ts": "9\n"})
+        self.assertEqual(base, candidate)
 
 
 class BlockedNotice(unittest.TestCase):

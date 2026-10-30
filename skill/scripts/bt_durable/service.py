@@ -104,8 +104,8 @@ class _ProjectIntegrator:
             self._lines[project] = line
         return self._lines[project]
 
-    def base_ref(self, run, task, *, home=""):
-        return self._for(run.project).base_ref(run, task, home=home)
+    def base_ref(self, run, task, *, home="", lines=()):
+        return self._for(run.project).base_ref(run, task, home=home, lines=lines)
 
     def integrate(self, run, task, snapshot, *, lines=()):
         return self._for(run.project).integrate(run, task, snapshot, lines=lines)
