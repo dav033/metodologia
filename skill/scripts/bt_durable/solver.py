@@ -310,7 +310,8 @@ class Solver:
                 session["session_id"] = str(uuid.uuid4())
                 command = f"claude --session-id {session['session_id']} {flags} \"$(cat {prompt_file})\""
         try:
-            self.terminal.start(session["name"], Path(session["cwd"]), command, env)
+            self.terminal.start(session["name"], Path(session["cwd"]), command, env,
+                                scope=f"bt-solver-{session['id']}-{uuid.uuid4().hex[:6]}")
         except Exception as error:  # noqa: BLE001 - tmux missing, a name taken: reported, never raised into the pass
             return str(error)[:300] or type(error).__name__
         session.update(provider=route.get("provider") or "claude", model=route.get("model") or "", home=home)

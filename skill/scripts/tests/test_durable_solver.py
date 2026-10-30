@@ -31,11 +31,11 @@ class Terminal:
     def exists(self, name):
         return name in self.live
 
-    def start(self, name, cwd, command, env):
+    def start(self, name, cwd, command, env, scope=""):
         if name in self.live:
             raise RuntimeError("taken")
         self.live.add(name)
-        self.started.append({"name": name, "cwd": cwd, "command": command, "env": env})
+        self.started.append({"name": name, "cwd": cwd, "command": command, "env": env, "scope": scope})
 
     def screen(self, name, lines=40):
         return self.shown
@@ -124,6 +124,7 @@ class SolverTests(unittest.TestCase):
         for flag in ("claude --session-id", "--model opus --effort high", "--dangerously-skip-permissions", "PROMPT.md"):
             self.assertIn(flag, started["command"])
         self.assertEqual(started["env"]["CLAUDE_CONFIG_DIR"], "/acc/luis")
+        self.assertTrue(started["scope"].startswith("bt-solver-"))         # outside bt-durable.service's cgroup
         self.assertNotIn(str(Path.home() / "dev" / "metodologia"), str(started["cwd"]))   # never the live checkout
         session = self.session()
         folder = Path(session["dir"])

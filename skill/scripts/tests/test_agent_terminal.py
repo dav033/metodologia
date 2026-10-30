@@ -69,6 +69,22 @@ class PlannerStart(unittest.TestCase):
                 self.assertEqual((ok, msg), (False, "sin tmux"))
 
 
+class ScopedStart(unittest.TestCase):
+    def test_a_scoped_session_starts_outside_the_callers_service_and_falls_back_without_systemd(self):
+        """REQ-031: a tmux server the engine spawns dies with bt-durable.service, which the Solucionador restarts."""
+        calls = []
+
+        def run(*args, timeout=15, prefix=()):
+            calls.append(prefix)
+            return SimpleNamespace(returncode=1 if prefix else 0, stderr="no user manager", stdout="")
+        with patch.object(terminal, "_run", side_effect=run), patch.object(terminal, "exists", return_value=False), \
+                patch.object(terminal.shutil, "which", return_value="/usr/bin/systemd-run"):
+            terminal.start("bit-p-REQ-1-solver", Path("/tmp"), "true", scope="bt-solver-x")
+        self.assertEqual(calls[0], ("/usr/bin/systemd-run", "--user", "--scope", "--quiet", "--collect",
+                                    "--unit=bt-solver-x"))
+        self.assertEqual(calls[1], ())                       # the scope failed: started as before
+
+
 class WebPieces(unittest.TestCase):
     def ctx(self, tmp):
         return {"project": "pictures", "rid": "REQ-021", "rdir": Path(tmp), "token": "tok", "root": Path(tmp),

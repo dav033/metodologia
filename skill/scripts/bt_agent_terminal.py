@@ -32,11 +32,12 @@ def _tmux_path() -> str | None:
     return shutil.which("tmux", path=os.environ.get("PATH", "") + os.pathsep + extra)
 
 
-def _run(*args: str, timeout: int = 15) -> subprocess.CompletedProcess:
+def _run(*args: str, timeout: int = 15, prefix: tuple[str, ...] = ()) -> subprocess.CompletedProcess:
     exe = _tmux_path()
     if exe is None:
         raise RuntimeError("tmux no está instalado.")
-    return subprocess.run([exe, "-L", socket(), *args], capture_output=True, text=True, timeout=timeout, check=False)
+    return subprocess.run([*prefix, exe, "-L", socket(), *args], capture_output=True, text=True, timeout=timeout,
+                          check=False)
 
 
 def name_for(project: str, req: str, role: str) -> str:
@@ -50,8 +51,12 @@ def exists(name: str) -> bool:
         return False
 
 
-def start(name: str, cwd: Path, command: str, env: dict[str, str] | None = None) -> None:
-    """Run `command` (a shell line) in a new detached session; the shell stays open when the agent exits."""
+def start(name: str, cwd: Path, command: str, env: dict[str, str] | None = None, *, scope: str = "") -> None:
+    """Run `command` (a shell line) in a new detached session; the shell stays open when the agent exits.
+
+    `scope`: a systemd scope unit name to start it in. A tmux server started from a service lives in that service's
+    cgroup and dies with it: the Solucionador is launched by bt-durable.service and restarts that very unit when it
+    integrates a fix (REQ-031). Without systemd-run, or when the scope cannot be created, it starts as before."""
     if not NAME_OK.fullmatch(name):
         raise ValueError("nombre de sesión no válido")
     if exists(name):
@@ -59,7 +64,13 @@ def start(name: str, cwd: Path, command: str, env: dict[str, str] | None = None)
     args = ["new-session", "-d", "-s", name, "-c", str(cwd), "-x", "200", "-y", "50"]
     for key, value in (env or {}).items():
         args += ["-e", f"{key}={value}"]
-    done = _run(*args, f"bash -lc {shlex.quote(command + '; exec bash')}")
+    line = f"bash -lc {shlex.quote(command + '; exec bash')}"
+    runner = shutil.which("systemd-run") if scope else None
+    done = None
+    if runner:
+        done = _run(*args, line, prefix=(runner, "--user", "--scope", "--quiet", "--collect", f"--unit={scope}"))
+    if done is None or (done.returncode != 0 and not exists(name)):
+        done = _run(*args, line)
     if done.returncode != 0:
         raise RuntimeError("No pude abrir la sesión: " + (done.stderr or "").strip()[:200])
 
