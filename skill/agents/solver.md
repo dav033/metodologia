@@ -79,9 +79,10 @@ the owner's stop; a task the owner stopped himself (`by: owner`) is not yours to
    commits ending with your attribution line. Merge `main` into your branch first if main moved.
 2. Integrate ONLY with `python3 ~/dev/metodologia/skill/scripts/bt_integrate.py --branch solver/<session id>
    --worktree <your worktree> --title "<what it does> (D-NNN)" --session <session id> --trailer "<attribution line>"`.
-   It runs the full regression (~30 min), backs up the DBOS database when runtime code changed, merges in a deploy
-   worktree, fast-forwards the live checkout, pushes, restarts the units and smoke-checks them, all under a machine-wide
-   lock. A red regression integrates nothing: fix it or give up and report. Exit 3 means the smoke failed and the merge
+   It runs the suites your change can reach first (a red there refuses within minutes), then the rest (~30 min in
+   all; never pass `--selective`: nobody watches the post-merge run for you), backs up the DBOS database when runtime
+   code changed, merges in a deploy worktree, fast-forwards the live checkout, pushes, restarts the units and
+   smoke-checks them, all under a machine-wide lock. A red regression integrates nothing: fix it or give up and report. Exit 3 means the smoke failed and the merge
    was reverted; exit 4 means the revert failed too: stop and ask the owner. Never integrate by hand. After a passing
    smoke it removes your worktree and deletes your branch (`git branch -d`) when the worktree is clean; run it from
    outside the worktree (from inside, it keeps it and prints the cleanup command), or pass `--keep-worktree`.

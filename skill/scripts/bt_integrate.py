@@ -8,8 +8,13 @@ its abort reset them (D-160's integration). So the live checkout only ever sees 
 Under one machine-wide lock (flock on `<state>/integrate.lock`), in this order:
   1. preflight: the live checkout is on `main`; the branch is committed in its worktree, changes no `bitacora/` path
      and already holds main's code (bitácora commits on main are fine);
-  2. full regression of the branch worktree (`bt_regress`; only `integrate.allowed_failures` may fail, any other
-     failure is rerun alone once); a red regression integrates nothing and the branch stays;
+  2. regression of the branch worktree (`bt_regress`; only `integrate.allowed_failures` may fail, any other failure is
+     rerun alone once); a red regression integrates nothing and the branch stays. By `integrate.regression` (D-NNN):
+     `staged` (default) runs first the suites the changes can reach (`bt_regress_select`) and refuses at once when
+     they are red, then the rest; `selective` (`--selective`) integrates on the selected suites alone and, after a
+     passing smoke, starts the full regression of the merge in the background (`--post-merge`, its own transient
+     unit): a red one is written to the release log, notified and answered with the revert command (`--revert
+     MERGE`), never reverted silently; `full` (`--full`) skips the selection. An untrusted selection runs everything;
   3. when runtime code changed: a DBOS backup (never printing the database URL), and in every case the release-log
      entry (previous main, backup, regression, rollback line);
   4. `git checkout -B deploy-<branch> main` + `git merge --no-ff <branch>` in a separate deploy worktree;
@@ -23,7 +28,9 @@ Under one machine-wide lock (flock on `<state>/integrate.lock`), in this order:
      never removed. By 2026-10-29 integrations had left 14 merged worktrees and 64 merged branches behind.
 
 usage: bt_integrate.py --branch B --worktree WT --title "what it does (D-NNN)" [--session ID] [--dry-run]
-                       [--keep-worktree] ...
+                       [--keep-worktree] [--selective | --full] ...
+       bt_integrate.py --post-merge MERGE --branch B --title T     (what --selective starts in the background)
+       bt_integrate.py --revert MERGE --branch B --title T         (the revert a red post-merge regression proposes)
 Exit codes: 0 integrated, 1 refused before any change, 2 refused at the fast-forward (live unchanged), 3 smoke failed and
 the merge was reverted, 4 the revert failed too (the owner must look), 75 another integration holds the lock.
 """
@@ -52,6 +59,7 @@ PG_CONTAINER = "metodologia-dbos-pg"
 BITACORA = "bitacora/"
 SMOKE_SECONDS = 90
 BUSY = 75
+MODES = ("staged", "selective", "full")
 
 
 class Refused(RuntimeError):
@@ -141,9 +149,32 @@ def lock_file() -> Path:
 class Services:
     """What touches the machine beyond git: the regression, the database backup, the units. Tests pass a fake."""
 
-    def regress(self, worktree: Path, scratch: Path, out: Path):
+    def regress(self, worktree: Path, scratch: Path, out: Path, selection=None, mode: str = "full"):
         import bt_regress
-        return bt_regress.run(worktree, scratch, out)
+        return bt_regress.staged(worktree, scratch, out, selection=selection, mode=mode)
+
+    def select(self, worktree: Path):
+        """The suites the branch's changes can reach (bt_regress_select), diffed against main."""
+        import bt_regress_select
+        return bt_regress_select.select(worktree, base="main")
+
+    def spawn(self, argv: list[str], name: str, log: Path) -> str:
+        """Start `argv` detached from this integration (and from the units it restarts): a transient user unit when
+        systemd is there, else a new session. Returns where it runs."""
+        env = [f"--setenv={k}={os.environ[k]}" for k in ("PATH", "BITACORA_ROOT", "HOME") if os.environ.get(k)]
+        done = subprocess.run(["systemd-run", "--user", f"--unit={name}", "--collect", "--quiet", *env, *argv],
+                              capture_output=True, text=True, check=False) if _which("systemd-run") else None
+        if done is not None and done.returncode == 0:
+            return f"unit {name} (journalctl --user -u {name})"
+        log.parent.mkdir(parents=True, exist_ok=True)
+        with log.open("a", encoding="utf-8") as out:
+            process = subprocess.Popen(argv, stdout=out, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL,
+                                       start_new_session=True)
+        return f"pid {process.pid} (log {log})"
+
+    def notify(self, title: str, message: str) -> None:
+        import bt_notify
+        bt_notify.notify(title, message)
 
     def backup(self) -> str:
         """pg_dump (custom format) of the live DBOS database, or a copy of the SQLite one, 0600 with its SHA-256.
@@ -220,6 +251,11 @@ class Services:
             time.sleep(3)
 
 
+def _which(command: str) -> bool:
+    import shutil
+    return shutil.which(command) is not None
+
+
 # ------------------------------------------------------------------------------------------ the procedure
 @dataclass
 class Request:
@@ -237,6 +273,7 @@ class Request:
     dry_run: bool = False
     keep_worktree: bool = False
     cwd: Path | None = None                      # the caller's working directory (default: this process's)
+    regression: str = ""                         # staged | selective | full; "" = integrate.regression
 
 
 @dataclass
@@ -273,8 +310,8 @@ def preflight(req: Request) -> list[str]:
     return paths
 
 
-def _deploy_merge(req: Request) -> str:
-    """deploy-<branch> = main + merge --no-ff <branch>, in the deploy worktree. Returns the merge commit."""
+def _deploy_worktree(req: Request) -> Path:
+    """The deploy worktree, created when missing; refused when it is not this repository's or holds changes."""
     deploy = Path(req.deploy)
     if not (deploy / ".git").exists():
         deploy.parent.mkdir(parents=True, exist_ok=True)
@@ -285,6 +322,12 @@ def _deploy_merge(req: Request) -> str:
         raise Refused(f"{deploy} is not a worktree of {req.live}")
     if git(deploy, "status", "--porcelain", "--untracked-files=no"):
         raise Refused(f"the deploy worktree {deploy} has uncommitted changes")
+    return deploy
+
+
+def _deploy_merge(req: Request) -> str:
+    """deploy-<branch> = main + merge --no-ff <branch>, in the deploy worktree. Returns the merge commit."""
+    deploy = _deploy_worktree(req)
     git(deploy, "checkout", "-q", "-B", f"deploy-{req.branch}", "main")
     message = "\n\n".join([f"Merge {req.branch}: {req.title}", *(["\n".join(req.trailers)] if req.trailers else [])])
     git(deploy, "merge", "--no-ff", "-q", "-m", message, req.branch)
@@ -331,20 +374,53 @@ def integrate(req: Request, services: Services | None = None, say: Callable[[str
         return Outcome(refused.code, lines)
 
 
+def regression_mode(req: Request) -> str:
+    if req.regression:
+        return req.regression
+    try:
+        import bt_config
+        mode = bt_config.get("integrate.regression", MODES[0])
+    except Exception:  # noqa: BLE001 - outside a bitácora the default holds
+        mode = MODES[0]
+    return mode if mode in MODES else MODES[0]
+
+
+def _selection(req: Request, services: Services, mode: str, note: Callable[[str], None]):
+    """The selection for a staged or selective run, or None (a full run). It never stops an integration: a selection
+    that cannot be made is a full regression."""
+    if mode == "full":
+        note("regression: full (no selection)")
+        return None
+    try:
+        selection = services.select(Path(req.worktree))
+    except Exception as error:  # noqa: BLE001 - the full regression is always safe
+        note(f"selection failed ({error}): full regression")
+        return None
+    for line in selection.describe() if req.dry_run else [selection.headline()]:
+        note(line)
+    if mode == "selective" and not selection.trusted:
+        note("selective requested, but the selection is not trusted: full regression first")
+    return selection
+
+
 def _integrate(req: Request, services: Services, note: Callable[[str], None], lines: list[str]) -> Outcome:
     paths = preflight(req)
     units = units_for(paths)
     note(f"preflight ok: {len(paths)} path(s) changed; restart: {', '.join(units) or 'none'}")
+    mode = regression_mode(req)
+    selection = _selection(req, services, mode, note)
     if req.dry_run:
         return Outcome(0, lines)
+    selective = mode == "selective" and selection is not None and selection.trusted
     start_main = git(req.live, "rev-parse", "main")
     scratch = Path(req.scratch or Path(req.deploy).parent / "regress" /     # fresh roots for every run
                    f"{req.branch.replace('/', '-')}-{dt.datetime.now():%Y%m%d-%H%M%S}")
     results = scratch / "results.txt"
-    regression = services.regress(Path(req.worktree), scratch, results)
+    regression = services.regress(Path(req.worktree), scratch, results, selection=selection, mode=mode)
     note(f"regression: {regression.summary()} ({results})")
     if not regression.ok:
-        raise Refused(f"the regression is red ({', '.join(regression.real)}): nothing was integrated, {req.branch} stays")
+        stage = "the selected suites are" if getattr(regression, "stopped", "") else "the regression is"
+        raise Refused(f"{stage} red ({', '.join(regression.real)}): nothing was integrated, {req.branch} stays")
     moved = code_paths(git(req.live, "diff", "--name-only", start_main, "main").splitlines())
     if moved:
         raise Refused(f"main moved with code while the regression ran ({', '.join(moved[:3])}): merge main into "
@@ -355,7 +431,10 @@ def _integrate(req: Request, services: Services, note: Callable[[str], None], li
         backup = services.backup()
         note(f"backup: {backup.split()[0]}")
     log = req.log or release_log()
-    _append(log, _entry(req, previous, backup, f"{regression.summary()} ({results})", units))
+    summary = f"{regression.summary()} ({results})"
+    if selective:
+        summary += "; the full regression of the merge runs in the background after the smoke"
+    _append(log, _entry(req, previous, backup, summary, units))
     note(f"release log: {log}")
     try:
         merge = _deploy_merge(req)
@@ -372,6 +451,9 @@ def _integrate(req: Request, services: Services, note: Callable[[str], None], li
     problems = _restart(services, units, note)
     if not problems:
         _append(log, f"result: merged {merge[:12]}, restarted {', '.join(units) or 'nothing'}, smoke ok\n")
+        if selective:
+            import bt_integrate_post
+            bt_integrate_post.start(req, merge, log, services, note)
         _clean_up(req, note)
         return Outcome(0, lines, merge)
     note(f"SMOKE FAILED: {'; '.join(problems)}; reverting the merge")
@@ -451,7 +533,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="bt_integrate", description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--branch", required=True)
-    parser.add_argument("--worktree", required=True, type=Path, help="the branch's own worktree (regressed as is)")
+    parser.add_argument("--worktree", type=Path, help="the branch's own worktree (regressed as is)")
     parser.add_argument("--title", required=True, help="what the change does, with its D-NNN")
     parser.add_argument("--session", default="", help="who integrates (session or Solucionador id), for the log")
     parser.add_argument("--live", type=Path, default=LIVE)
@@ -463,12 +545,28 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--dry-run", action="store_true", help="preflight only: what would be restarted")
     parser.add_argument("--keep-worktree", action="store_true",
                         help="keep the branch's worktree and branch after a successful integration")
+    modes = parser.add_mutually_exclusive_group()
+    modes.add_argument("--selective", dest="regression", action="store_const", const="selective",
+                       help="integrate on the selected suites alone; the full regression of the merge runs afterwards")
+    modes.add_argument("--full", dest="regression", action="store_const", const="full",
+                       help="run the full regression without a selection first")
+    modes.add_argument("--staged", dest="regression", action="store_const", const="staged",
+                       help="the selected suites first, then the rest (the default unless integrate.regression says)")
+    actions = parser.add_mutually_exclusive_group()
+    actions.add_argument("--post-merge", metavar="MERGE", help="run the full regression of an integrated merge")
+    actions.add_argument("--revert", metavar="MERGE", help="revert an integrated merge (deploy worktree, ff-only)")
     args = parser.parse_args(argv)
-    outcome = integrate(Request(branch=args.branch, worktree=args.worktree, title=args.title, session=args.session,
-                                live=args.live, deploy=args.deploy, scratch=args.scratch, log=args.release_log,
-                                wait_seconds=args.wait_seconds, trailers=args.trailer, dry_run=args.dry_run,
-                                keep_worktree=args.keep_worktree))
-    return outcome.code
+    req = Request(branch=args.branch, worktree=args.worktree or Path("."), title=args.title, session=args.session,
+                  live=args.live, deploy=args.deploy, scratch=args.scratch, log=args.release_log,
+                  wait_seconds=args.wait_seconds, trailers=args.trailer, dry_run=args.dry_run,
+                  keep_worktree=args.keep_worktree, regression=args.regression or "")
+    if args.post_merge or args.revert:
+        import bt_integrate_post
+        return (bt_integrate_post.post_merge(req, args.post_merge) if args.post_merge
+                else bt_integrate_post.revert(req, args.revert))
+    if args.worktree is None:
+        parser.error("--worktree is required to integrate")
+    return integrate(req).code
 
 
 if __name__ == "__main__":
