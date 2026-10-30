@@ -12,7 +12,9 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import bt_integrate as integ
+import bt_integrate_post as post
 import bt_regress
+import bt_regress_select
 
 ALLOWED = ("test_known_red",)      # a baseline the owner accepted; the default list is empty since 2026-10-29
 
@@ -31,17 +33,34 @@ def commit(cwd: Path, path: str, text: str, message: str) -> str:
 
 
 class Fake(integ.Services):
-    def __init__(self, case, *, red: bool = False, smoke=None, during_regression=None):
+    def __init__(self, case, *, red: bool = False, smoke=None, during_regression=None, selection=None,
+                 stopped: str = ""):
         self.case, self.red, self.calls = case, red, []
         self.smokes = list(smoke or [])
         self.during_regression = during_regression
+        self.selection = selection or bt_regress_select.Selection(changed=["skill/scripts/bt_x.py"], total=3,
+                                                                   suites={"test_a": ["imports bt_x"]})
+        self.stopped, self.modes, self.spawned, self.notes = stopped, [], [], []
 
-    def regress(self, worktree, scratch, out):
+    def regress(self, worktree, scratch, out, selection=None, mode="full"):
         self.calls.append(("regress", Path(worktree).name))
+        self.modes.append((mode, selection))
         if self.during_regression:
             self.during_regression()
         lines = ["test_a 0 1 python3", "test_known_red 1 1 python3"] + (["test_b 1 1 python3"] if self.red else [])
-        return bt_regress.judge(lines, ALLOWED, rerun=lambda name: False)
+        result = bt_regress.judge(lines, ALLOWED, rerun=lambda name: False)
+        result.stopped = self.stopped
+        return result
+
+    def select(self, worktree):
+        return self.selection
+
+    def spawn(self, argv, name, log):
+        self.spawned.append(argv)
+        return f"unit {name}"
+
+    def notify(self, title, message):
+        self.notes.append((title, message))
 
     def backup(self):
         self.calls.append(("backup",))
@@ -219,6 +238,79 @@ class Integrate(unittest.TestCase):
         self.assertEqual(integ.units_for(["skill/scripts/tests/test_x.py", "skill/references/modules.md",
                                           "skill/agents/solver.md"]), [])
 
+    def test_the_selected_suites_run_first_by_default_and_a_red_there_refuses_at_once(self):
+        fake = Fake(self)
+        self.assertEqual(self.run_it(fake).code, 0)
+        self.assertEqual(fake.modes, [("staged", fake.selection)])
+        self.assertEqual(fake.spawned, [])                                         # staged: nothing runs afterwards
+        self.setUp()
+        fake = Fake(self, red=True, stopped="selected")
+        outcome = self.run_it(fake)
+        self.assertEqual(outcome.code, 1)
+        self.assertIn("the selected suites are red (test_b)", outcome.lines[-1])
+        self.assertEqual(sh(self.live, "rev-parse", "HEAD"), self.previous)
+        fake = Fake(self)
+        self.assertEqual(self.run_it(fake, regression="full").code, 0)            # the branch stayed: it integrates
+        self.assertEqual(fake.modes, [("full", None)])
+
+    def test_selective_integrates_on_the_selection_and_starts_the_full_regression_after_the_smoke(self):
+        fake = Fake(self)
+        outcome = self.run_it(fake, regression="selective")
+        self.assertEqual(outcome.code, 0, outcome.lines)
+        self.assertEqual(fake.modes, [("selective", fake.selection)])
+        [argv] = fake.spawned
+        self.assertEqual(argv[argv.index("--post-merge") + 1], outcome.merge)
+        self.assertEqual(argv[argv.index("--release-log") + 1], str(self.log))
+        entry = self.log.read_text()
+        self.assertIn("the full regression of the merge runs in the background", entry)
+        self.assertIn(f"post-merge: full regression of {outcome.merge[:12]} started (unit bt-post-regress-fix-", entry)
+        self.assertLess(entry.index("smoke ok"), entry.index("post-merge:"))
+
+    def test_selective_with_an_untrusted_selection_runs_everything_and_nothing_after(self):
+        untrusted = bt_regress_select.Selection(changed=["uv.lock"], total=3, full="uv.lock changed (dependencies)")
+        fake = Fake(self, selection=untrusted)
+        outcome = self.run_it(fake, regression="selective")
+        self.assertEqual(outcome.code, 0, outcome.lines)
+        self.assertEqual(fake.spawned, [])
+        self.assertIn("not trusted: full regression first", "\n".join(outcome.lines))
+        self.assertNotIn("background", self.log.read_text())
+
+    def test_dry_run_prints_the_selection(self):
+        fake = Fake(self)
+        outcome = self.run_it(fake, dry_run=True)
+        self.assertEqual(outcome.code, 0)
+        self.assertIn("  test_a: imports bt_x", outcome.lines)
+        self.assertEqual(fake.calls, [])
+
+    def test_a_red_post_merge_regression_is_loud_and_reverts_nothing(self):
+        merged = self.run_it(Fake(self), regression="selective", keep_worktree=True)
+        fake = Fake(self, red=True)
+        code = post.post_merge(self.request(), merged.merge, fake, say=lambda text: None)
+        self.assertEqual(code, 1)
+        self.assertEqual(sh(self.live, "rev-parse", "HEAD"), merged.merge)          # main keeps the merge
+        text = self.log.read_text()
+        self.assertIn(f"POST-MERGE FULL REGRESSION RED for {merged.merge[:12]} (fix)", text)
+        self.assertIn(f"--revert {merged.merge} --branch fix", text)
+        [(title, message)] = fake.notes
+        self.assertIn("RED", title)
+        self.assertIn("test_b", message)
+        self.assertEqual(list((self.base / "post").iterdir()) if (self.base / "post").exists() else [], [])
+        self.assertNotIn("post", sh(self.live, "worktree", "list"))
+        green = post.post_merge(self.request(), merged.merge, Fake(self), say=lambda text: None)
+        self.assertEqual(green, 0)
+        self.assertIn(f"post-merge full regression of {merged.merge[:12]} (fix)", self.log.read_text())
+
+    def test_the_proposed_revert_reverts_the_merge_through_the_deploy_worktree(self):
+        merged = self.run_it(Fake(self), regression="selective", keep_worktree=True)
+        fake = Fake(self)
+        self.assertEqual(post.revert(self.request(), self.previous, fake, say=lambda text: None), 1)   # not a merge
+        self.assertEqual(post.revert(self.request(), merged.merge, fake, say=lambda text: None), 0)
+        self.assertEqual(sh(self.live, "show", "HEAD:skill/scripts/bt_x.py"), "x = 1")
+        self.assertEqual(sh(self.live, "rev-parse", "HEAD^"), merged.merge)
+        self.assertEqual([c[0] for c in fake.calls], ["push", "restart", "restart", "smoke"])
+        self.assertIn("reverted by", self.log.read_text())
+        self.live_bitacora_intact()
+
     def test_a_docs_only_change_restarts_and_backs_up_nothing(self):
         sh(self.wt, "reset", "-q", "--hard", "main")
         commit(self.wt, "skill/references/modules.md", "# docs\n", "docs")
@@ -239,6 +331,73 @@ class Regression(unittest.TestCase):
                          (["test_known_red"], ["test_platform"], ["test_new"]))
         self.assertFalse(result.ok)
         self.assertIn("1 real failure(s): test_new", result.summary())
+
+
+class Staged(unittest.TestCase):
+    """bt_regress.staged over a fake suite runner: what runs, in which phase, and what the results file says."""
+
+    def setUp(self):
+        self.base = Path(tempfile.mkdtemp(prefix="bt-staged-"))
+        tests = self.base / "skill" / "scripts" / "tests"
+        tests.mkdir(parents=True)
+        for name in ("test_a", "test_b", "test_c", "test_durable_d"):
+            (tests / f"{name}.py").write_text("", encoding="utf-8")
+        self.ran: list[str] = []
+
+    def suite(self, red=(), flaky=()):
+        def run(worktree, scratch, path, tag=""):
+            self.ran.append(path.stem + tag)
+            return f"{path.stem} {1 if path.stem in red or (path.stem in flaky and not tag) else 0} 2 python3"
+        return run
+
+    def staged(self, mode, selection, red=(), flaky=()):
+        out = self.base / "results.txt"
+        result = bt_regress.staged(self.base, self.base / "scratch", out, selection=selection, mode=mode, allowed=(),
+                                   suite=self.suite(red, flaky))
+        return result, out.read_text()
+
+    def selection(self, **extra):
+        return bt_regress_select.Selection(changed=["skill/scripts/bt_b.py"], total=4,
+                                           suites={"test_b": ["imports bt_b"], "test_durable_d": ["always"]}, **extra)
+
+    def test_staged_runs_the_selection_first_then_the_rest(self):
+        result, text = self.staged("staged", self.selection())
+        self.assertEqual(self.ran[:2], ["test_b", "test_durable_d"])
+        self.assertEqual(sorted(self.ran[2:]), ["test_a", "test_c"])
+        self.assertTrue(result.ok)
+        self.assertEqual(len(result.lines), 4)
+        self.assertIn("[staged: selected 2 in 0m00s, then the rest 2 in 0m00s]", result.summary())
+        self.assertIn("#   test_b: imports bt_b", text)
+
+    def test_a_red_selection_stops_at_its_first_failure(self):
+        result, text = self.staged("staged", self.selection(), red=("test_b",))
+        self.assertEqual(self.ran, ["test_b", "test_b.rerun"])                      # test_durable_d never started
+        self.assertEqual((result.real, result.stopped), (["test_b"], "selected"))
+        self.assertIn("stopped at the selected suites", text)
+
+    def test_a_flake_that_stopped_the_selection_early_runs_what_was_left_with_the_rest(self):
+        result, _ = self.staged("staged", self.selection(), flaky=("test_b",))
+        self.assertTrue(result.ok)
+        self.assertEqual(result.flaky, ["test_b"])
+        self.assertEqual(sorted(line.split()[0] for line in result.lines),
+                         ["test_a", "test_b", "test_c", "test_durable_d"])
+
+    def test_selective_runs_the_selection_alone_and_an_untrusted_one_runs_everything(self):
+        result, _ = self.staged("selective", self.selection())
+        self.assertEqual(self.ran, ["test_b", "test_durable_d"])
+        self.assertIn("[selective: selected 2 in", result.summary())
+        self.ran.clear()
+        result, text = self.staged("selective", self.selection(full="uv.lock changed (dependencies)"))
+        self.assertEqual(self.ran[:2], ["test_b", "test_durable_d"])               # its first phase, then everything
+        self.assertEqual(sorted(self.ran[2:]), ["test_a", "test_c"])
+        self.assertEqual(result.mode, "staged")
+        self.assertIn("[staged: first 2 in 0m00s, then the rest 2 in 0m00s]", result.summary())
+        self.assertIn("NOT trusted, full regression: uv.lock changed", text)
+
+    def test_the_estimate_follows_the_schedule(self):
+        seconds = {"test_a": 10, "test_b": 10, "test_c": 30, "test_durable_d": 100}
+        self.assertEqual(bt_regress.estimate(seconds, seconds, workers=2), 10 + 30 + 100)   # a, c | b
+        self.assertEqual(bt_regress.estimate(seconds, ["test_a", "test_b"], workers=2), 10)
 
 
 if __name__ == "__main__":

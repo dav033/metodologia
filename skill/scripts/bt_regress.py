@@ -10,15 +10,23 @@ baseline is empty since 2026-10-29: its four suites (test_plan_boundary, test_re
 test_remote_panel) and the two load flakes (test_platform, test_supervisor_limits) were fixed at their origin. The
 mechanism stays for a failure the owner accepts for a while; the live config can list it.
 
-usage: python3 bt_regress.py <worktree> <scratch> <results.txt> [only.txt]
+Selection (D-NNN, `bt_regress_select`): with `--mode staged` the suites the branch's changes can reach run first and a
+red there stops at once (the fast red); then the rest run. `--mode selective` runs the selected suites alone. A
+selection that is not trusted runs everything. The results file lists why each suite was selected and how long each
+phase took; `--dry-run` prints the selection, and with `--timings <an earlier results.txt>` its time vs the full one.
+
+usage: python3 bt_regress.py <worktree> <scratch> <results.txt> [only.txt] [--mode full|staged|selective] [--base main]
+       python3 bt_regress.py <worktree> --dry-run [--base main] [--timings results.txt]
 """
 from __future__ import annotations
 
+import argparse
 import concurrent.futures as cf
 import os
 import re
 import subprocess
 import sys
+import threading
 import time
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
@@ -39,6 +47,10 @@ class Result:
     allowed: list[str] = field(default_factory=list)     # failed, but in the known baseline
     flaky: list[str] = field(default_factory=list)       # failed in the full run, passed alone
     real: list[str] = field(default_factory=list)        # failed again alone: the regression is red
+    mode: str = "full"                                   # full | staged | selective, as it actually ran
+    stopped: str = ""                                    # "selected": a staged run stopped red after its first phase
+    phases: list[tuple[str, int, float]] = field(default_factory=list)   # (label, suites, seconds)
+    selection: list[str] = field(default_factory=list)  # bt_regress_select's description, when one was made
 
     @property
     def ok(self) -> bool:
@@ -48,11 +60,26 @@ class Result:
         """The line that goes to the release log: `291 files, only the 4 baseline failures` or what failed."""
         text = f"{len(self.lines)} files"
         if self.real:
-            return f"{text}, {len(self.real)} real failure(s): {', '.join(self.real)}"
-        extra = f" + {', '.join(self.flaky)} (load flake, passes alone)" if self.flaky else ""
-        if self.allowed:
-            return f"{text}, only baseline failures ({', '.join(self.allowed)}){extra}"
-        return f"{text}, no failures{extra}"
+            text = f"{text}, {len(self.real)} real failure(s): {', '.join(self.real)}"
+        else:
+            extra = f" + {', '.join(self.flaky)} (load flake, passes alone)" if self.flaky else ""
+            if self.allowed:
+                text = f"{text}, only baseline failures ({', '.join(self.allowed)}){extra}"
+            else:
+                text = f"{text}, no failures{extra}"
+        return text + self.timing()
+
+    def timing(self) -> str:
+        """` [selected 25 in 2m10s, then 275 in 24m02s]`; empty for a plain full run."""
+        if self.mode == "full" or not self.phases:
+            return ""
+        parts = [f"{label} {count} in {clock(seconds)}" for label, count, seconds in self.phases]
+        tail = "; stopped at the selected suites" if self.stopped else ""
+        return f" [{self.mode}: {', then '.join(parts)}{tail}]"
+
+
+def clock(seconds: float) -> str:
+    return f"{int(seconds) // 60}m{int(seconds) % 60:02d}s"
 
 
 def allowed_failures() -> tuple[str, ...]:
@@ -66,6 +93,7 @@ def allowed_failures() -> tuple[str, ...]:
 
 def run_suite(worktree: Path, scratch: Path, path: Path, tag: str = "") -> str:
     """One suite in its own process and root; returns its result line. `tag` keeps a rerun's logs apart."""
+    worktree, scratch = Path(worktree).resolve(), Path(scratch).resolve()   # the suite runs from tests/: no relative path
     tests = worktree / "skill" / "scripts" / "tests"
     name = path.stem
     new = bool(NEW.search(path.read_text(encoding="utf-8", errors="replace")))
@@ -121,15 +149,41 @@ def judge(lines: list[str], allowed: Iterable[str], rerun: Callable[[str], bool]
 
 def run(worktree: Path, scratch: Path, out: Path | None = None, *, only: Iterable[str] | None = None,
         workers: int = 6, allowed: Iterable[str] | None = None, suite: Callable[..., str] = run_suite) -> Result:
-    worktree, scratch = Path(worktree), Path(scratch)
+    started = time.monotonic()
+    result, rerun_lines = _execute(Path(worktree), Path(scratch), only, workers, allowed, suite)
+    result.phases = [("all", len(result.lines), time.monotonic() - started)]
+    if out is not None:
+        write(out, result, rerun_lines)
+    return result
+
+
+def write(out: Path, result: Result, rerun_lines: list[str]) -> None:
+    Path(out).write_text("\n".join(result.lines) + "\n"
+                         + "".join(f"# rerun alone: {line}\n" for line in rerun_lines)
+                         + "".join(f"# {line}\n" for line in result.selection)
+                         + f"# {result.summary()}\n", encoding="utf-8")
+
+
+def _execute(worktree: Path, scratch: Path, only: Iterable[str] | None, workers: int, allowed: Iterable[str] | None,
+             suite: Callable[..., str], stop_early: bool = False) -> tuple[Result, list[str]]:
+    """Run the suites (light ones in parallel, then the heavy ones one at a time) and judge them. `stop_early`: after
+    the first failing suite no new one starts (the ones running finish); the caller runs what was left."""
     files = suites(worktree, only)
     heavy = [f for f in files if HEAVY.match(f.stem)]
     light = [f for f in files if not HEAVY.match(f.stem)]
-    lines: list[str] = []
+    stop = threading.Event()
+
+    def one(f: Path) -> str:
+        if stop.is_set():
+            return ""
+        line = suite(worktree, scratch, f)
+        if stop_early and line.split()[1] != "0":
+            stop.set()
+        return line
+
     with cf.ThreadPoolExecutor(workers) as pool:
-        lines += list(pool.map(lambda f: suite(worktree, scratch, f), light))
-    for f in heavy:
-        lines.append(suite(worktree, scratch, f))
+        lines = [line for line in pool.map(one, light) if line]
+    lines += [line for line in (one(f) for f in heavy) if line]
     by_name = {f.stem: f for f in files}
     rerun_lines: list[str] = []
 
@@ -138,24 +192,117 @@ def run(worktree: Path, scratch: Path, out: Path | None = None, *, only: Iterabl
         rerun_lines.append(line)
         return line.split()[1] == "0"
 
-    result = judge(lines, allowed_failures() if allowed is None else allowed, rerun)
+    return judge(lines, allowed_failures() if allowed is None else allowed, rerun), rerun_lines
+
+
+def staged(worktree: Path, scratch: Path, out: Path | None = None, *, selection=None, mode: str = "staged",
+           workers: int = 6, allowed: Iterable[str] | None = None, suite: Callable[..., str] = run_suite) -> Result:
+    """The regression by `mode` over a `bt_regress_select.Selection`: `staged` runs the selected suites, stops when
+    they are red (no new suite starts after the first failure), then runs the rest; `selective` runs the selected ones alone; `full` (or no selection) runs
+    everything at once. A selection that is not trusted runs staged whatever the mode: its first phase (the always-run,
+    changed and directly reached suites) first, then everything else."""
+    worktree, scratch = Path(worktree), Path(scratch)
+    described = selection.describe() if selection is not None else []
+    if selection is not None and not selection.trusted:
+        mode = "staged"                                    # everything runs before the merge; the selection goes first
+    if mode == "full" or selection is None or not selection.first:
+        started = time.monotonic()
+        result, reruns = _execute(worktree, scratch, None, workers, allowed, suite)
+        result.selection, result.phases = described, [("all", len(result.lines), time.monotonic() - started)]
+        if out is not None:
+            write(out, result, reruns)
+        return result
+    everything = [f.stem for f in suites(worktree)]
+    head = set(selection.first)
+    chosen = [name for name in everything if name in head]
+    started = time.monotonic()
+    first, reruns = _execute(worktree, scratch, chosen, workers, allowed, suite, stop_early=mode == "staged")
+    first.mode, first.selection = mode, described
+    first.phases = [("selected" if selection.trusted else "first", len(first.lines), time.monotonic() - started)]
+    if not first.ok or mode == "selective":
+        first.stopped = "selected" if not first.ok and mode == "staged" else ""
+        if out is not None:
+            write(out, first, reruns)
+        return first
+    started = time.monotonic()
+    done = {line.split()[0] for line in first.lines}          # a flake stopped the first phase early: the rest
+    rest, more = _execute(worktree, scratch, [n for n in everything if n not in done], workers, allowed, suite)
+    merged = Result(lines=sorted(first.lines + rest.lines), failed=first.failed + rest.failed,
+                    allowed=first.allowed + rest.allowed, flaky=first.flaky + rest.flaky, real=first.real + rest.real,
+                    mode=mode, selection=described,
+                    phases=first.phases + [("the rest", len(rest.lines), time.monotonic() - started)])
     if out is not None:
-        Path(out).write_text("\n".join(result.lines) + "\n"
-                             + "".join(f"# rerun alone: {line}\n" for line in rerun_lines)
-                             + f"# {result.summary()}\n", encoding="utf-8")
-    return result
+        write(out, merged, reruns + more)
+    return merged
+
+
+def durations(results: Path) -> dict[str, int]:
+    """Seconds per suite from an earlier results file (its first-run lines)."""
+    found = {}
+    try:
+        for line in Path(results).read_text(encoding="utf-8").splitlines():
+            fields = line.split()
+            if len(fields) >= 3 and not line.startswith("#") and fields[2].isdigit():
+                found[fields[0]] = int(fields[2])
+    except OSError:
+        pass
+    return found
+
+
+def estimate(seconds: dict[str, int], names: Iterable[str], workers: int = 6) -> int:
+    """Wall-clock seconds of a run of `names` the way `run` schedules it: light suites on `workers` threads in name
+    order, then the heavy ones one at a time. Suites without a timing count as 0."""
+    names = sorted(names)
+    free = [0] * workers
+    for name in (n for n in names if not HEAVY.match(n)):
+        free[free.index(min(free))] += seconds.get(name, 0)
+    return max(free) + sum(seconds.get(n, 0) for n in names if HEAVY.match(n))
+
+
+def dry_run(worktree: Path, base: str = "main", timings: Path | None = None) -> list[str]:
+    """What a selected run would do: the selection, why, and (with an earlier results file) its time vs the full one."""
+    import bt_regress_select
+    selection = bt_regress_select.select(Path(worktree), base=base)
+    lines = selection.describe()
+    seconds = durations(timings) if timings else {}
+    if seconds:
+        everything = [f.stem for f in suites(Path(worktree))]
+        label = "selected" if selection.trusted else "first phase (not trusted: everything runs)"
+        lines.append(f"estimated from {timings}: {label} {clock(estimate(seconds, selection.first))} vs full "
+                     f"{clock(estimate(seconds, everything))}")
+    return lines
 
 
 def main(argv: list[str] | None = None) -> int:
-    args = sys.argv[1:] if argv is None else argv
-    if len(args) not in (3, 4):
-        print(__doc__.strip().splitlines()[-1], file=sys.stderr)
-        return 2
-    only = Path(args[3]).read_text(encoding="utf-8").split() if len(args) == 4 else None
-    result = run(Path(args[0]), Path(args[1]), Path(args[2]), only=only)
+    parser = argparse.ArgumentParser(prog="bt_regress", description=__doc__,
+                                     formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("worktree", type=Path)
+    parser.add_argument("scratch", type=Path, nargs="?")
+    parser.add_argument("results", type=Path, nargs="?")
+    parser.add_argument("only", type=Path, nargs="?", help="a file of suite names: run only those")
+    parser.add_argument("--mode", choices=("full", "staged", "selective"), default="full")
+    parser.add_argument("--base", default="main", help="what the selection diffs the worktree against")
+    parser.add_argument("--dry-run", action="store_true", help="print the selection and run nothing")
+    parser.add_argument("--timings", type=Path, help="an earlier results file, to estimate the times (--dry-run)")
+    args = parser.parse_args(sys.argv[1:] if argv is None else argv)
+    if args.dry_run:
+        print("\n".join(dry_run(args.worktree, args.base, args.timings)))
+        return 0
+    if args.scratch is None or args.results is None:
+        parser.error("scratch and results are required unless --dry-run")
+    if args.only is not None:
+        result = run(args.worktree, args.scratch, args.results,
+                     only=args.only.read_text(encoding="utf-8").split())
+    elif args.mode == "full":
+        result = run(args.worktree, args.scratch, args.results)
+    else:
+        import bt_regress_select
+        selection = bt_regress_select.select(args.worktree, base=args.base)
+        print("\n".join(selection.describe()))
+        result = staged(args.worktree, args.scratch, args.results, selection=selection, mode=args.mode)
     print(result.summary())
     for name in result.real:
-        print(f"FAILED {name} (log: {Path(args[1]) / 'logs' / (name + '.rerun.log')})")
+        print(f"FAILED {name} (log: {args.scratch / 'logs' / (name + '.rerun.log')})")
     return 0 if result.ok else 1
 
 
