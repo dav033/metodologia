@@ -389,6 +389,50 @@ def start(root: Path, project: str, rdir: Path, sid: str, run: str = "", login: 
             "message": f"Arrancando {', '.join(ports)} de {sid} (versión {row['version']}) desde cero.{told}"}
 
 
+def auto_login(data: dict | None) -> dict:
+    """The recipe's `auto_login` ({cookie, accounts, default, mint}) or {} (D-205)."""
+    value = (data or {}).get("auto_login")
+    ok = isinstance(value, dict) and isinstance(value.get("mint"), str) and re.fullmatch(r"[A-Za-z0-9_.-]{1,64}", str(value.get("cookie") or ""))
+    return value if ok else {}
+
+
+TOKEN = re.compile(r"[A-Za-z0-9_\-]{20,200}")
+
+
+def mint_session(root: Path, project: str, rdir: Path, sid: str, account: str = "") -> dict:
+    """A real session of a test account for the running version: the recipe's `mint` command runs in the version's copy
+    with its environment and `BT_LOGIN_ACCOUNT`, and prints the session token. {ok, token, cookie, account, url, message}.
+    Owner, 2026-10-30: «que se inicie sesión automáticamente» — a real account (menus and roles as in production), not
+    the local administrator shortcut; the panel hands the cookie to the browser (localhost cookies hold for every port)."""
+    data, row = recipe(root, project, rdir), _row(rdir, sid, root, project)
+    login = auto_login(data)
+    if not login or row is None:
+        return {"ok": False, "message": "Esta versión no tiene inicio de sesión automático."}
+    accounts = [str(a) for a in login.get("accounts") or [] if isinstance(a, str)]
+    account = account if account in accounts else str(login.get("default") or (accounts[0] if accounts else ""))
+    if not account:
+        return {"ok": False, "message": "La receta no nombra ninguna cuenta de prueba."}
+    paths = _files(root, project, rdir, sid, row["version"])
+    state = _load(paths["state"])
+    if not state.get("url"):
+        return {"ok": False, "message": "La versión no está en marcha."}
+    env = {**os.environ, "BT_LOGIN_ACCOUNT": account}
+    try:
+        for line in paths["env"].read_text(encoding="utf-8").splitlines():
+            key, _, value = line.partition("=")
+            if re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", key):
+                env[key] = shlex.split(value)[0] if value.strip() else ""
+        done = subprocess.run(["bash", "-c", login["mint"]], cwd=paths["copy"], env=env, capture_output=True, text=True,
+                              timeout=60)
+    except (OSError, ValueError, subprocess.SubprocessError) as exc:
+        return {"ok": False, "message": f"No pude iniciar sesión: {exc}"}
+    token = (done.stdout or "").strip()
+    if done.returncode or not TOKEN.fullmatch(token):
+        why = (done.stderr or done.stdout or "").strip().splitlines()[-1:] or ["sin salida"]
+        return {"ok": False, "message": f"No pude iniciar sesión como {account}: {why[0][:200]}"}
+    return {"ok": True, "token": token, "cookie": login["cookie"], "account": account, "url": state["url"], "message": ""}
+
+
 def has_local_auth(data: dict | None) -> bool:
     """Does the recipe let a version start already signed in (a server with `local_auth`)?"""
     return any(isinstance(s, dict) and s.get("local_auth") for s in (data or {}).get("servers") or [])
