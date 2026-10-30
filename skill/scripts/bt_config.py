@@ -154,7 +154,8 @@ DEFAULTS: dict = {
     # full regression of the merge in the background afterwards (a red one is announced with a revert command, never
     # reverted silently); `full` skips the selection. A selection that is not trusted (dependencies, the tests' shared
     # helpers, a file no suite reaches, more than `selective_max_percent` of the suites) always runs everything first.
-    "integrate": {"allowed_failures": [], "regression": "staged", "selective_max_percent": 40},
+    "integrate": {"allowed_failures": [], "regression": "staged", "selective_max_percent": 40,
+                  "drain_minutes": 20},
     # solver (REQ-031, bt_durable/solver): the rung after the durable healing (D-167). A Claude Opus session with full
     # access that fixes a block at its origin. It runs only while that healing runs too (healing.enabled,
     # healing.model_diagnosis, diagnosis.auto): it is the next rung, never the first one. One per run, max_concurrent on
