@@ -43,7 +43,7 @@ from dbos._error import (
 
 from ..control import classify, frontier, policy, subplans
 from ..settings import Settings
-from . import engine, steps
+from . import engine, recovery_policy, steps
 
 TOPIC_RUN = "run"
 STANDARD, RELAXED = "standard", "relaxed"
@@ -505,7 +505,7 @@ def _run_task(run: RunRef, task_id: str, round_no: int, settings: Settings, note
             used = policy.spent([*outcomes, outcome], waits=waits, repairs=repairs, route_changes=route_changes,
                                 started_at=started, now=now)
             others = steps.alternatives(run.model_dump(mode="json"), task_id, [*exclude, _route_key(choice.route)])
-            decision = policy.decide(outcome.failure, used, budget, now=now, other_route=others > 0,
+            decision = recovery_policy.decide(outcome.failure, used, budget, now=now, other_route=others > 0,
                                      reset_epoch=outcome.agent.reset_epoch if outcome.agent else None,
                                      remediated=remediated)
             steps.emit_decision(attempt, decision)

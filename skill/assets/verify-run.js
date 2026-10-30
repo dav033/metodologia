@@ -6,6 +6,29 @@
   "use strict";
   if (window.__btVerifyRun) return;                   // loaded by several cards on one page: one listener
   window.__btVerifyRun = true;
+  // «Entras como»: every link of the block signs in as the chosen test account; remembered per browser (D-205)
+  function account(select) {
+    var box = select.closest(".pp-vtry");
+    if (!box) return;
+    box.querySelectorAll("a[data-go]").forEach(function (a) {
+      var go = a.dataset.go.replace(/([?&])account=[^&]*/, "$1account=" + encodeURIComponent(select.value));
+      if (go.indexOf("account=") < 0) go += "&account=" + encodeURIComponent(select.value);
+      a.dataset.go = go;
+      if (a.classList.contains("pp-vurl")) a.href = go;
+    });
+  }
+  document.querySelectorAll(".pp-vaccount select").forEach(function (select) {
+    try {
+      var kept = localStorage.getItem("bt-verify-account");
+      if (kept && Array.prototype.some.call(select.options, function (o) { return o.value === kept; })) select.value = kept;
+    } catch (e) { /* no storage: the default account */ }
+    account(select);
+    select.addEventListener("change", function () {
+      try { localStorage.setItem("bt-verify-account", select.value); } catch (e) { /* kept for this page only */ }
+      account(select);
+    });
+  });
+
   // «copiar puente»: the SSH bridge command of the version to the clipboard (D-201)
   document.addEventListener("click", function (ev) {
     var b = ev.target && ev.target.closest ? ev.target.closest("button.pp-vcopy") : null;
@@ -26,6 +49,26 @@
     var a = ev.target && ev.target.closest ? ev.target.closest("a.pp-vwin") : null;
     if (!a || ev.button !== 0) return;
     var box = a.closest(".pp-vtry");
+    if (a.dataset.go) {                                  // D-205: session cookie first, then the opener (same browser)
+      ev.preventDefault();
+      var said = box && box.querySelector(".pp-vstatus");
+      (function cookie() {
+        fetch(a.dataset.go + "&mode=cookie", { cache: "no-store", credentials: "same-origin" })
+          .then(function (r) { return r.json(); })
+          .then(function (s) {
+            if (s.state !== "ready") {
+              if (said) { said.textContent = "Arrancando la versión desde cero…"; said.className = "pp-vstatus warn"; }
+              setTimeout(cookie, 3000);
+              return;
+            }
+            if (said) { said.textContent = s.login ? "Sesión iniciada como " + s.account + ": abriendo en tu computador…" :
+                                                   "Abriendo en tu computador…"; said.className = "pp-vstatus ok"; }
+            window.location.href = a.href;
+          })
+          .catch(function () { setTimeout(cookie, 3000); });
+      })();
+      return;
+    }
     if (!box || box.dataset.state === "ready") return;  // running: the opener link works as it is
     var form = document.getElementById(a.dataset.vstart);
     if (!form) return;
@@ -55,6 +98,7 @@
   document.addEventListener("click", function (ev) {
     var a = ev.target && ev.target.closest ? ev.target.closest("a[data-vstart]") : null;
     if (a && a.classList.contains("pp-vwin")) return;    // handled above
+    if (a && a.dataset.go) return;                      // through the panel: it starts the version and signs in (D-205)
     if (!a || ev.button !== 0 || ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.altKey) return;
     var box = a.closest(".pp-vtry");
     if (box && box.dataset.state === "ready") return;  // running: the link opens the page as it is (D-200)
@@ -99,13 +143,14 @@
   }
 
   function tick() {
-    fetch(location.pathname + "?format=json&sp=" + encodeURIComponent(sp), { cache: "no-store" })
+    fetch((run.dataset.poll || location.pathname) + "?format=json&sp=" + encodeURIComponent(sp), { cache: "no-store" })
       .then(function (r) { return r.json(); })
       .then(function (s) {
         show(s);
         if (s.state === "ready" && /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?\//.test(s.url || "")) {
           var origin = s.url.replace(/^(https?:\/\/[^\/]+).*$/, "$1");
           var page = /^\/[A-Za-z0-9_\-.\/\[\]]*$/.test(run.dataset.path || "") ? run.dataset.path : "/";
+          if (/^\/p\//.test(run.dataset.next || "")) { location.replace(run.dataset.next); return; }  // sign in, then land (D-205)
           location.replace(origin + page);
           return;
         }

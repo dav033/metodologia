@@ -296,6 +296,67 @@ class SignedIn(unittest.TestCase):
         self.assertIn('name="login" value="1"', html if False else page._form(dict(ctx), "verify-run", "x", "SP-1", login=True))
 
 
+class AutoLogin(unittest.TestCase):
+    """D-205: «que se inicie sesión automáticamente»: a real session of a test account, handed to the browser."""
+    LOGIN = {**RECIPE, "auto_login": {"cookie": "session", "default": "test+administrador@x.test",
+                                      "accounts": ["test+administrador@x.test", "test+designer@x.test"],
+                                      "mint": 'printf "tok_%s_%s" "${BT_LOGIN_ACCOUNT%%@*}" "$PICTURES_FLAG" | tr "+" "-"'}}
+
+    def setUp(self):
+        self.root = Path(tempfile.mkdtemp())
+        self.rdir = self.root / "proj" / "requirements" / "REQ-021-x"
+        self.rdir.mkdir(parents=True)
+
+    def files(self):
+        base = Path(tempfile.mkdtemp())
+        (base / "copy").mkdir()
+        (base / "env").write_text("PICTURES_FLAG='padded-value-of-the-version'\n")
+        (base / "state").write_text(json.dumps({"url": "http://localhost:3002/"}))
+        return {"copy": base / "copy", "env": base / "env", "state": base / "state"}
+
+    def test_the_session_is_minted_in_the_versions_copy_with_its_environment(self):
+        files = self.files()
+        with patch.object(servers, "recipe", return_value=self.LOGIN), patch.object(servers, "_row", return_value=ROW), \
+                patch.object(servers, "_files", return_value=files):
+            made = servers.mint_session(self.root, "proj", self.rdir, "SP-1", "test+designer@x.test")
+            other = servers.mint_session(self.root, "proj", self.rdir, "SP-1", "intruder@evil.test")
+        self.assertTrue(made["ok"], made)
+        self.assertEqual(made["token"], "tok_test-designer_padded-value-of-the-version")
+        self.assertEqual((made["cookie"], made["account"]), ("session", "test+designer@x.test"))
+        self.assertEqual(other["account"], "test+administrador@x.test")          # only the recipe's accounts
+
+    def test_without_auto_login_or_a_running_version_nothing_is_minted(self):
+        with patch.object(servers, "recipe", return_value=RECIPE), patch.object(servers, "_row", return_value=ROW):
+            self.assertFalse(servers.mint_session(self.root, "proj", self.rdir, "SP-1")["ok"])
+        files = self.files()
+        files["state"].write_text("{}")
+        with patch.object(servers, "recipe", return_value=self.LOGIN), patch.object(servers, "_row", return_value=ROW), \
+                patch.object(servers, "_files", return_value=files):
+            self.assertIn("no está en marcha", servers.mint_session(self.root, "proj", self.rdir, "SP-1")["message"])
+
+    def test_links_go_through_the_panel_and_the_picker_names_the_accounts(self):
+        import bt_page_verification as page
+        ctx = {"project": "proj", "rid": "REQ-021", "token": "tok", "root": Path("/r"), "rdir": Path("/r/x")}
+        now = {"state": "ready", "url": "http://localhost:3002/", "ports": {"web": 3002}, "servers": {"web": True}, "log": ""}
+        with patch.object(servers, "recipe", return_value=self.LOGIN), \
+                patch.object(servers, "planned", return_value={"url": "http://localhost:3002/", "ports": {"web": 3002}}), \
+                patch.object(servers, "status", return_value=now):
+            html = page._servers(dict(ctx), ROW, ["/admin/cuentas"])
+        self.assertIn('href="/p/proj/req/REQ-021/verify-go?sp=SP-1&amp;t=tok&amp;account=test%2Badministrador%40x.test&amp;path=/admin/cuentas"', html)
+        self.assertIn(">http://localhost:3002/admin/cuentas</a>", html)            # the real URL stays visible
+        self.assertIn('<option value="test+designer@x.test">', html)
+        import bt_page_verify_run as wait
+        with patch.object(servers, "status", return_value=now):
+            body = wait.page(Path("/r"), "proj", "REQ-021", Path("/r/x"), "SP-1", "tok", "/", next_url="/p/proj/req/REQ-021/verify-go?sp=SP-1")
+            evil = wait.page(Path("/r"), "proj", "REQ-021", Path("/r/x"), "SP-1", "tok", "/", next_url="https://evil.test/")
+        self.assertIn('data-next="/p/proj/req/REQ-021/verify-go?sp=SP-1"', body)
+        self.assertIn('data-poll="/p/proj/req/REQ-021/verify-run"', body)
+        self.assertIn('data-next=""', evil)
+        with patch.object(servers, "status", return_value=now), patch.object(servers, "recipe", return_value=self.LOGIN):
+            plain = wait.page(Path("/r"), "proj", "REQ-021", Path("/r/x"), "SP-1", "tok", "/admin")
+        self.assertIn('data-next="/p/proj/req/REQ-021/verify-go?sp=SP-1&amp;path=%2Fadmin&amp;t=tok"', plain)   # D-211
+
+
 class Panel(unittest.TestCase):
     CTX = {"project": "proj", "rid": "REQ-021", "token": "t", "root": Path("/r"), "rdir": Path("/r/x")}
 

@@ -129,7 +129,11 @@ def _servers(ctx: dict, row: dict, paths: list[str]) -> str:
     origin = (re.match(r"https?://[^/]+", url or "") or [""])[0]
     pages = ["/"] + [p for p in paths if p != "/"]
     web = (re.search(r":(\d+)", url or "") or [None, ""])[1]
-    links = link_items(origin, web, pages, form_id)
+    login = servers.auto_login(servers.recipe(ctx["root"], ctx["project"], ctx["rdir"]))
+    go = (f'/p/{quote(ctx["project"])}/req/{quote(ctx["rid"])}/verify-go?sp={quote(row["id"])}&t={quote(ctx["token"])}'
+          + (f'&account={quote(str(login.get("default") or ""))}' if login.get("default") else "")) if login else ""
+    links = link_items(origin, web, pages, form_id, go)
+    picker = account_picker(login, row["id"])
     session = servers.session_name(ctx["project"], ctx["rdir"], row["id"], row["version"])
     port_list = ", ".join(f"{n} {p}" for n, p in (ports or {}).items())
     remote = remote_help(web)
@@ -137,7 +141,7 @@ def _servers(ctx: dict, row: dict, paths: list[str]) -> str:
            "Al abrir un enlace detengo todo lo de esta versión (sesión <code>" + e(session) + "</code> y sus procesos; nunca los "
            "de otra versión ni otros servicios), la arranco desde cero en el commit <code>" + e(str(row["commit"])[:10]) +
            "</code> (" + e(port_list) + ") y la pestaña nueva llega a esa página cuando responde.")
-    return (f'<div class="pp-vtry" data-state="{e(now["state"])}"><span class="pp-vlabel">Dónde probarlo</span>'
+    return (f'<div class="pp-vtry" data-state="{e(now["state"])}"><span class="pp-vlabel">Dónde probarlo</span>{picker}'
             f'<ul class="pp-vlinks">{links}</ul><p class="pp-vstatus {cls}" role="status">{e(said)}</p>'
             f'<p class="pp-meta">{how}</p>{signed}<div class="pp-vtry-row">{start}{stop}</div>{remote}</div>')
 
@@ -159,7 +163,7 @@ def opener_url(port: str, page: str) -> str:
     return f"bitacora://open/?port={quote(str(port))}&path={quote(page, safe='/')}"
 
 
-def link_items(origin: str, port: str, pages: list[str], form_id: str) -> str:
+def link_items(origin: str, port: str, pages: list[str], form_id: str, go: str = "") -> str:
     """One row per page: the plain link (this machine, or a computer whose bridge is open), «en mi computador» (the
     opener: bridge and browser on the owner's computer) and the bridge command to copy. Owner, 2026-10-30, working from
     a Windows computer through an SSH tunnel: «al lado de cada link salga el comando para hacer el puente por ssh… y que
@@ -169,13 +173,27 @@ def link_items(origin: str, port: str, pages: list[str], form_id: str) -> str:
     command = tunnel_command(port) if port else ""
     rows = []
     for p in pages:
-        mine = (f' <a class="pp-vwin" href="{e(opener_url(port, p))}" data-vstart="{e(form_id)}" data-path="{e(p)}" '
+        through = f"{go}&path={quote(p, safe='/')}" if go else ""          # D-205: through the panel, signed in
+        signed = f' data-go="{e(through)}"' if through else ""
+        mine = (f' <a class="pp-vwin" href="{e(opener_url(port, p))}" data-vstart="{e(form_id)}" data-path="{e(p)}"{signed} '
                 f'title="Abre el puente SSH (si falta) y la página en el computador que estás usando">en mi computador ↗</a>'
                 f' <button type="button" class="pp-vcopy secondary" data-copy="{e(command)}" title="{e(command)}">copiar puente</button>'
                 if port else "")
-        rows.append(f'<li><a class="pp-vurl" href="{e(origin + p)}" target="_blank" rel="noopener" data-vstart="{e(form_id)}"'
-                    f' data-path="{e(p)}">{e(origin + p)}</a>{mine}</li>')
+        rows.append(f'<li><a class="pp-vurl" href="{e(through or origin + p)}" target="_blank" rel="noopener" '
+                    f'data-vstart="{e(form_id)}" data-path="{e(p)}"{signed}>{e(origin + p)}</a>{mine}</li>')
     return "".join(rows)
+
+
+def account_picker(login: dict, sid: str) -> str:
+    """«Entrar como»: the recipe's test accounts; every link of the block signs in as the chosen one (D-205)."""
+    accounts = [str(a) for a in (login or {}).get("accounts") or [] if isinstance(a, str)]
+    if not accounts:
+        return ""
+    default = str(login.get("default") or accounts[0])
+    options = "".join(f'<option value="{e(a)}"{" selected" if a == default else ""}>{e(a)}</option>' for a in accounts)
+    return (f'<p class="pp-vaccount"><label>Entras ya con sesión iniciada como <select data-sp="{e(sid)}" '
+            f'aria-label="Cuenta con la que entras">{options}</select></label> <span class="pp-meta">(cámbiala para probar '
+            f'otro rol)</span></p>')
 
 
 def remote_help(port: str) -> str:
@@ -207,7 +225,10 @@ def _guide(ctx: dict, row: dict, url: str) -> str:
     if g["dev"]:
         parts.append('<p class="pp-meta">Donde el plan dice <code>npm run dev</code>: no hace falta, «Probar» ya arranca '
                      'los servidores de esta versión.</p>')
-    if g["accounts"]:
+    if g.get("signed"):                                # D-211: the link already opens the version signed in
+        parts.append(f'<p><span class="pp-vlabel">Sesión</span>Los enlaces de arriba abren la versión con la sesión ya '
+                     f'iniciada (por defecto <code>{e(g["signed"])}</code>); para otro rol cambia «Entras como».</p>')
+    elif g["accounts"]:
         who = ", ".join(f"<code>{e(a)}</code>" for a in g["accounts"])
         parts.append(f'<p><span class="pp-vlabel">Cuentas</span>{who}' +
                      (f' — {_text(g["password"])}' if g["password"] else "") + "</p>")

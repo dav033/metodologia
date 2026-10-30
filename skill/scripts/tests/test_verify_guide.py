@@ -104,5 +104,20 @@ class Guide(unittest.TestCase):
         self.assertEqual(self.guide("SP-8"), self.guide("SP-8"))
 
 
+class SignedIn(unittest.TestCase):
+    """D-211: with automatic sign-in the guide never asks for a password or an account the test database lacks."""
+    ACCOUNTS = ["test+administrador@req021.test", "test+designer_plus@req021.test", "test+master_designer@req021.test"]
+
+    def test_a_sign_in_step_names_the_seeded_account_to_pick(self):
+        import bt_verify_guide as guides
+        said = guides.signed_in("Ejecuta `npm run dev`, abre http://localhost:3001/login e inicia sesión como admin@prueba.local.",
+                                self.ACCOUNTS)
+        self.assertEqual(said, "Ejecuta `npm run dev`, abre http://localhost:3001/login (ya entras con sesión iniciada; "
+                               "en «Entras como» elige test+administrador@req021.test).")
+        self.assertEqual(guides.test_account("designer-plus@prueba.local", self.ACCOUNTS), "test+designer_plus@req021.test")
+        self.assertEqual(guides.test_account("master-designer@x", self.ACCOUNTS), "test+master_designer@req021.test")
+        self.assertEqual(guides.test_account("nadie@x.test", self.ACCOUNTS), "nadie@x.test")
+
+
 if __name__ == "__main__":
     unittest.main()
