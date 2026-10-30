@@ -83,6 +83,16 @@ snapshot, and archives the snapshot into an owned temporary directory. The sourc
 artifact are read-only inputs. `PredecessorIntegrator` remains the only merge/conflict implementation; M3 records
 the base it used before execution.
 
+Check commands receive a read-only `/run/bt-m6/snapshot.json` outside the writable workspace (D-205), generated only
+after that validation. Its additive input schema is `m6.snapshot-context/1`: `schema`, `snapshot_sha`, `base_sha`,
+`manifest_sha256`, `content_sha256`, and `files`. The SHA is the captured commit, not an agent worktree's HEAD.
+`files` maps relative POSIX paths to `{kind: "file", sha256: "<file bytes SHA256>"}` or
+`{kind: "symlink", target: "<link target>"}`. `content_sha256` hashes UTF-8 JSON of that map with sorted keys, compact
+separators and unescaped Unicode. Consumers validate the schema and compare their materialized source/harness hashes
+with the envelope; neither caller environment variables nor a repository file supplies this identity. Existing commands
+can ignore it. Standard tree-cache semantics still apply: candidate-bound checks needing fresh execution declare their
+required resources, which disables pass reuse. This input grants no authorization or manual attestation.
+
 Result schema is `m6.verify-result/1.1`; PASS, FAIL, NEEDS_REVIEW and STALE are internal statuses. Version 1.1 adds a
 per-check/result `reason_code` taxonomy and tree plus optional contract, environment and composition bindings. Stored
 version 1 results remain readable; a missing classification reads as `UNCLASSIFIED`. The full shape and

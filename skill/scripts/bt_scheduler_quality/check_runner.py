@@ -7,12 +7,13 @@ import time
 from collections.abc import Callable
 from pathlib import Path
 
-from . import reuse
+from . import reuse, snapshot_context
 from .authority import VerificationAuthority
 from .contracts import VerifyRequest
 from .policy import CheckSpec, QualityPolicy
 from .runner import CommandOutcome, SandboxRunner
 from .sandbox_mounts import attempt_mounts
+from .snapshot import MaterializedSnapshot
 from .store import QualityStore
 
 
@@ -25,10 +26,13 @@ class CheckExecutor:
     def run(self, specs: tuple[CheckSpec, ...], snapshot_root: Path, started: float,
             worktree: Path | None = None, repository: Path | None = None,
             tree: str | None = None, tree_for: Callable[[CheckSpec], str | None] | None = None,
-            order: VerifyRequest | None = None) -> tuple[dict[str, CommandOutcome], list[str]]:
+            order: VerifyRequest | None = None, snapshot: MaterializedSnapshot | None = None
+            ) -> tuple[dict[str, CommandOutcome], list[str]]:
         outcomes: dict[str, CommandOutcome] = {}
         issue_codes: list[str] = []
         mounts = attempt_mounts(self.policy, worktree, repository, snapshot_root)
+        if snapshot is not None:
+            mounts += snapshot_context.mounts(snapshot)
         done: dict[str, CommandOutcome] = {}
         fingerprint = reuse.bound_environment_fingerprint(
             self.policy, order.contract_identities if order else (),
