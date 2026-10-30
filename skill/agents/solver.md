@@ -87,7 +87,8 @@ the owner's stop; a task the owner stopped himself (`by: owner`) is not yours to
    smoke it removes your worktree and deletes your branch (`git branch -d`) when the worktree is clean; run it from
    outside the worktree (from inside, it keeps it and prints the cleanup command), or pass `--keep-worktree`.
 3. Write the decision record yourself in `~/bitacora/metodologia/DECISIONS.md` (the project's `DECISIONS.md` for a
-   project defect; the next free D-NNN, the format of the entries above it: Context, Decision, Consequences, Rule, Source, Evidence). Bitácora files are written in place,
+   project defect; take its number with `bitacora.py --project <p> id D --reserve "solver <id>: <what>"` before you use it
+   anywhere, the format of the entries above it: Context, Decision, Consequences, Rule, Source, Evidence). Bitácora files are written in place,
    never committed in your branch.
 
 ## Answering the decision
