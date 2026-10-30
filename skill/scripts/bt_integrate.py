@@ -331,7 +331,8 @@ def _integrate(req: Request, services: Services, note: Callable[[str], None], li
     if req.dry_run:
         return Outcome(0, lines)
     start_main = git(req.live, "rev-parse", "main")
-    scratch = Path(req.scratch or Path(req.deploy).parent / "regress" / req.branch)
+    scratch = Path(req.scratch or Path(req.deploy).parent / "regress" /     # fresh roots for every run
+                   f"{req.branch.replace('/', '-')}-{dt.datetime.now():%Y%m%d-%H%M%S}")
     results = scratch / "results.txt"
     regression = services.regress(Path(req.worktree), scratch, results)
     note(f"regression: {regression.summary()} ({results})")
@@ -349,11 +350,15 @@ def _integrate(req: Request, services: Services, note: Callable[[str], None], li
     log = req.log or release_log()
     _append(log, _entry(req, previous, backup, f"{regression.summary()} ({results})", units))
     note(f"release log: {log}")
-    merge = _deploy_merge(req)
-    if not _fast_forward(req, f"deploy-{req.branch}"):
-        merge = _deploy_merge(req)                       # a bitácora commit moved main between the merge and here
+    try:
+        merge = _deploy_merge(req)
         if not _fast_forward(req, f"deploy-{req.branch}"):
-            raise Refused("the live checkout refused the fast-forward twice: live main is unchanged", 2)
+            merge = _deploy_merge(req)                   # a bitácora commit moved main between the merge and here
+            if not _fast_forward(req, f"deploy-{req.branch}"):
+                raise Refused("the live checkout refused the fast-forward twice: live main is unchanged", 2)
+    except Refused as refused:
+        _append(log, f"result: not integrated ({refused})\n")
+        raise
     note(f"main is now {merge[:12]} (merge of {req.branch})")
     pushed = services.push(req.live)
     note("pushed origin main" if not pushed else f"WARNING push failed (main is integrated locally): {pushed}")

@@ -132,6 +132,7 @@ class Integrate(unittest.TestCase):
         self.assertEqual(sh(self.live, "rev-parse", "HEAD"), self.previous)
         self.assertEqual((self.live / "skill" / "scripts" / "bt_x.py").read_text(), "x = 'live edit'\n")
         self.assertNotIn("restart", [c[0] for c in fake.calls])
+        self.assertIn("result: not integrated", self.log.read_text())
         self.live_bitacora_intact()
 
     def test_a_failed_smoke_reverts_the_merge(self):
