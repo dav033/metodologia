@@ -93,6 +93,7 @@ def allowed_failures() -> tuple[str, ...]:
 
 def run_suite(worktree: Path, scratch: Path, path: Path, tag: str = "") -> str:
     """One suite in its own process and root; returns its result line. `tag` keeps a rerun's logs apart."""
+    worktree, scratch = Path(worktree).resolve(), Path(scratch).resolve()   # the suite runs from tests/: no relative path
     tests = worktree / "skill" / "scripts" / "tests"
     name = path.stem
     new = bool(NEW.search(path.read_text(encoding="utf-8", errors="replace")))
