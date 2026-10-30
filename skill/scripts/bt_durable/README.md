@@ -185,8 +185,10 @@ uv run bt-durable join pictures REQ-021              # joined | waiting | refuse
 - With live attempts the current run is paused and `RUN.join.json` records the request; the engine's reaper pass
   completes it once they end (a refusal is written into the file).
 - Then the current run's workflows are cancelled (its open owner decisions end with it), `RUN.owner.json` moves by
-  compare-and-swap and the new run starts with the current run's settings; `RUN.durable-run.json` moves last, so an
-  interrupted join is finished by asking again.
+  compare-and-swap and the new run starts with the current run's settings; `RUN.durable-run.json` moves last.
+  `RUN.join.json` is written before the cancel and removed after the pointer moved, so a join cut anywhere in between
+  is finished by the engine's next pass. `RUN.join.lock` serialises the joins of a requirement (the CLI waits, the
+  engine's pass skips a requirement being joined).
 - The owner's pause carries over (`LegacyProgress.paused`): a stage joined to a paused run starts nothing until resumed.
 - No running workflow changes its step sequence: only a new run's input can carry `integrated` or `paused`, so no patch
   is needed.
@@ -207,7 +209,9 @@ Details: `references/modules.md` §Solver.
   again after recovery, as after a kill. A verification an engine stop cut short is queued again once at the next
   start (D-171); a second interruption of the same request is a review for the owner.
 - Engine crash/kill: systemd restarts it; DBOS recovers this executor's PENDING workflows. An agent that kept running
-  in its unit is adopted (the launch step is idempotent per attempt key), never started twice. `bt.run` and `bt.task`
+  in its unit is adopted (the launch step is idempotent per attempt key), never started twice. An observation the user
+  manager does not answer (`unknown`) is looked at again for up to 30 s before the agent workflow acts on it, so a
+  `systemctl` hiccup never terminates a healthy agent (`adapters/runtime.py`). `bt.run` and `bt.task`
   have no `max_recovery_attempts` (DBOS counts every recovery and would dead-letter a run after 100 deploys); the
   agent, verify and integrate children keep DBOS's default.
 - Database outage: DBOS retries its connections; the run continues when the database is back (tested with PostgreSQL).
