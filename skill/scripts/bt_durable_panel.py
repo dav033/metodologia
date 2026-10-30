@@ -11,6 +11,7 @@ reads it back as state, and every command is checked again against DBOS itself b
     decisions(rdir)             -> open owner decisions, in the shape of bt_scheduler_decisions requests
     target_state(rdir, ...)     -> the optimistic-concurrency view the remote command ledger compares
     dispatch(...)               -> pause | resume | retry | answer through `bt-durable remote` (durable DBOS messages)
+    solver_state(rdir)          -> the run's Solucionador (REQ-031): the session at work, the last ones, what waits
 
 Projection vocabulary (`tasks[].state`): pending | queued | waiting_quota | running | verifying | recovering |
 needs_decision | blocked | failed | completed | cancelled. Run `status`: running | paused | completed | blocked |
@@ -27,6 +28,7 @@ import shutil
 import subprocess
 from pathlib import Path
 from typing import Any
+from urllib.parse import quote
 
 SCHEMA = "bt.durable-projection/1"
 AUTHORITY = "dbos"
@@ -304,3 +306,36 @@ def run_cli(args: list[str], payload: dict | None = None, *, root: Path | None =
     if isinstance(result, dict):
         return result
     raise RuntimeError(f"bt-durable falló ({done.returncode}): {(done.stderr or done.stdout)[-300:]}")
+
+
+# ------------------------------------------------------------------------------------------------- solver
+SOLVER_STATE = Path("RUN.solver") / "state.json"         # written by bt_durable.solver in the engine's pass
+
+
+def solver_state(rdir: Path | str, recent: int = 5) -> dict[str, Any] | None:
+    """The run's Solucionador for the panels: the session at work (task, trigger, since, tmux name), the last ended
+    sessions with their outcome, summary, owner question and report link, and how many triggers wait. None when it
+    never ran for this requirement."""
+    rdir = Path(rdir)
+    try:
+        data = json.loads((rdir / SOLVER_STATE).read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, ValueError):
+        return None
+    if not isinstance(data, dict):
+        return None
+    sessions = [s for s in data.get("sessions") or [] if isinstance(s, dict) and s.get("id")]
+    project = rdir.parent.parent.name
+
+    def view(session: dict) -> dict[str, Any]:
+        report = rdir / "RUN.solver" / str(session["id"]) / "REPORT.md"
+        return {key: session.get(key) for key in ("id", "name", "status", "task", "kind", "reason", "started_at",
+                                                    "ended_at", "summary", "question", "provider", "model")} | {
+            "report_url": "/p/" + "/".join(quote(part) for part in (project, "doc", "requirements", rdir.name,
+                                                                     "RUN.solver", str(session["id"]), "REPORT.md"))
+            if report.is_file() else None}
+
+    active = next((view(s) for s in sessions if s.get("id") == data.get("active")), None)
+    ended = [view(s) for s in reversed(sessions) if s.get("id") != data.get("active")][:recent]
+    triggers = [t for t in (data.get("triggers") or {}).values() if isinstance(t, dict)]
+    return {"active": active, "recent": ended, "waiting": sum(t.get("status") in ("pending", "queued") for t in triggers),
+            "left": sum(t.get("status") == "limit" for t in triggers)}
