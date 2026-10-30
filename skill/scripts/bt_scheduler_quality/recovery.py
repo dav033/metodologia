@@ -14,6 +14,43 @@ def retry_interrupted(
     connection: sqlite3.Connection, request_key: str, operator: str, reason: str
 ) -> None:
     """Requeue an interrupted review inside the caller's validated transaction."""
+    result_raw = _interrupted_review(connection, request_key)
+    if connection.execute(
+        "SELECT 1 FROM verification_retries WHERE request_key=?", (request_key,)
+    ).fetchone():
+        raise QualityError("RETRY_EXHAUSTED", "interrupted request already retried once")
+    timestamp = finished_at()
+    connection.execute(
+        "INSERT INTO verification_retries(request_key,operator,reason,created_at,previous_result_json) "
+        "VALUES(?,?,?,?,?)", (request_key, operator, reason, timestamp, result_raw),
+    )
+    _requeue(connection, request_key, timestamp)
+
+
+def requeue_after_clean_stop(connection: sqlite3.Connection, request_key: str, reason: str) -> None:
+    """Requeue a review left only by a DELIBERATE engine stop (the engine recorded it, bt_durable.restarts, D-210),
+    without using the request's one interrupted retry: every deploy restarts the engine, so a long verification can
+    meet several. Each requeue keeps its evidence in `verification_restarts`. A crash still goes through
+    `retry_interrupted` and its once-per-request bound."""
+    result_raw = _interrupted_review(connection, request_key)
+    timestamp = finished_at()
+    connection.execute(
+        "INSERT INTO verification_restarts(request_key,reason,created_at,previous_result_json) VALUES(?,?,?,?)",
+        (request_key, reason, timestamp, result_raw),
+    )
+    _requeue(connection, request_key, timestamp)
+
+
+def _requeue(connection: sqlite3.Connection, request_key: str, timestamp: str) -> None:
+    connection.execute("DELETE FROM reviews WHERE request_key=?", (request_key,))
+    connection.execute(
+        "UPDATE requests SET state='queued',result_json=NULL,result_hash=NULL,updated_at=? "
+        "WHERE idempotency_key=?", (timestamp, request_key),
+    )
+
+
+def _interrupted_review(connection: sqlite3.Connection, request_key: str) -> str:
+    """The stored result of an open review caused solely by an engine interruption (raises otherwise)."""
     row = connection.execute(
         "SELECT r.state,r.result_json,r.result_hash,v.state AS review_state "
         "FROM requests r LEFT JOIN reviews v ON v.request_key=r.idempotency_key "
@@ -30,20 +67,7 @@ def retry_interrupted(
         or any(check.get("issue_code") != "ENGINE_INTERRUPTED"
                for check in result.get("checks", []))):
         raise QualityError("RETRY_INVALID", "review was not caused solely by engine interruption")
-    if connection.execute(
-        "SELECT 1 FROM verification_retries WHERE request_key=?", (request_key,)
-    ).fetchone():
-        raise QualityError("RETRY_EXHAUSTED", "interrupted request already retried once")
-    timestamp = finished_at()
-    connection.execute(
-        "INSERT INTO verification_retries(request_key,operator,reason,created_at,previous_result_json) "
-        "VALUES(?,?,?,?,?)", (request_key, operator, reason, timestamp, result_raw),
-    )
-    connection.execute("DELETE FROM reviews WHERE request_key=?", (request_key,))
-    connection.execute(
-        "UPDATE requests SET state='queued',result_json=NULL,result_hash=NULL,updated_at=? "
-        "WHERE idempotency_key=?", (timestamp, request_key),
-    )
+    return result_raw
 
 
 ATTESTABLE = frozenset({"CRITERION_MANUAL", "CHECK_MANUAL", "CHECK_UNMAPPED"})

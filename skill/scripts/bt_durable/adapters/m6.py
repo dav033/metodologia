@@ -114,19 +114,25 @@ class M6Verifier:
         self.on_verdict = on_verdict
         self._engines: dict[tuple[str, str], QualityEngine] = {}
 
-    def recover_interrupted(self) -> tuple[str, ...]:
+    def recover_interrupted(self, *, clean: bool = False) -> tuple[str, ...]:
         """On engine start, before any verification: a request a stopped engine left `running` is recorded as
         interrupted (ENGINE_INTERRUPTED, no check replayed) and queued again, once per request, as the legacy owner does
         on start. The DBOS verify step that re-runs after the restart then claims it and verifies the same snapshot.
         Without this the re-run step met its own orphaned request (REQUEST_IN_PROGRESS) and the task waited for the owner
         (pictures REQ-021 T95, 2026-10-29 18:44, D-171). Only the engine process may call it: it owns this store.
-        Returns the requests queued again; a second interruption of the same request stays a review for the owner."""
+        Returns the requests queued again; a second interruption of the same request stays a review for the owner.
+        `clean` (the previous engine recorded a deliberate stop, bt_durable.restarts, D-210): queued again without
+        using that one retry — only a crash, an OOM kill or a SIGKILL counts against it."""
         from bt_scheduler_quality.contracts import QualityError
         again = []
         for key in QualityEngine(QualityPolicy(), self.store).recover_interrupted():
             try:
-                self.store.retry_interrupted(key, "engine-restart",
-                                             "verification interrupted by a restart of the durable engine; rerun it")
+                if clean:
+                    self.store.requeue_after_clean_stop(key, "verification interrupted by a deliberate restart of "
+                                                              "the durable engine; rerun it")
+                else:
+                    self.store.retry_interrupted(key, "engine-restart",
+                                                 "verification interrupted by a restart of the durable engine; rerun it")
                 again.append(key)
             except QualityError as error:
                 LOG.warning("interrupted verification %s stays for review: %s", key, error)
