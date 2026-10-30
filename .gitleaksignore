@@ -287,3 +287,5 @@ bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/
 bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/RUN.solver/state.json:generic-api-key:840
 bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/RUN.solver/state.json:generic-api-key:870
 bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/RUN.solver/state.json:generic-api-key:930
+# False positive: SHA256 source-section key in the English-to-Spanish translation cache (bt_translate._sha).
+bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/.translations/cache.json:generic-api-key:342
