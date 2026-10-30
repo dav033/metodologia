@@ -174,7 +174,7 @@ class InstallerPrivateSkillTests(unittest.TestCase):
             self.assertTrue((real_codex / "designer.toml").is_file())
             self.assertIn('model = "gpt-6.1-terra"',
                           (real_codex / "designer.toml").read_text(encoding="utf-8"))
-            self.assertEqual(len(list(real_claude.glob("*.md"))), 8)
+            self.assertEqual(len(list(real_claude.glob("*.md"))), 9)
             self.assertTrue((real_antigravity / "planner" / "agent.md").is_file())
             self.assertFalse((real_antigravity / "designer" / "agent.md").exists())
             invoke("--agent", "designer")

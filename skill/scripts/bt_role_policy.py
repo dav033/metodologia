@@ -6,7 +6,8 @@ Errors, risk, and inferred task difficulty do not change the options.
 """
 from __future__ import annotations
 
-ROLES = ("planner", "reviewer", "designer", "explorer", "implementer", "researcher", "runner", "antagonist")
+ROLES = ("planner", "reviewer", "designer", "explorer", "implementer", "researcher", "runner", "antagonist",
+         "solver")
 
 _KINDS = {"implement": "implementer", "test": "runner", "audit": "reviewer", "research": "researcher",
           "design": "designer"}
@@ -20,6 +21,9 @@ _DEFAULTS = {
     "researcher": (("codex", "gpt-6-luna", "high"), ("claude", "sonnet", "low")),
     "runner": (("codex", "gpt-6-luna", "high"), ("claude", "sonnet", "low")),
     "antagonist": (("claude", "sonnet", "medium"), ("claude", "opus", "high")),
+    # the Solucionador (REQ-031): a full-access session that fixes a blocked run at its origin; owner 2026-10-29: Claude
+    # Opus high, Codex only when no Claude account with quota can run unattended
+    "solver": (("claude", "opus", "high"), ("codex", "gpt-6.1-sol", "high")),
 }
 _HIGH = {
     "planner": tuple(reversed(_DEFAULTS["planner"])),
@@ -35,7 +39,7 @@ _HIGH = {
 
 # Roles whose owner order holds whenever the first choice's account has quota (below HIGH_PRESSURE and not blocked):
 # the router then ranks by preference, not by which subscription has more headroom (D-151).
-ORDERED_ROLES = frozenset({"designer"})
+ORDERED_ROLES = frozenset({"designer", "solver"})
 
 
 def high_complexity(complexity: str | None) -> bool:

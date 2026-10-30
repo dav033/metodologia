@@ -173,8 +173,15 @@ def planner_route(project: str, avoid: str = "") -> dict[str, str]:
     first Codex route of that ranking (the owner's codex homes never ask: a new conversation from `planning resume` and
     the saved notes); else ~/.claude-work as before. A Planner moved to an account that asks the owner first waited there
     with every notice lost (claude-luis, 2026-10-29)."""
-    if override := os.environ.get("BITACORA_PLANNER_CLAUDE_CONFIG_DIR"):
-        return {"provider": "claude", "home": override, "model": "opus", "effort": "high"}
+    return role_route(project, "planner", avoid, override="BITACORA_PLANNER_CLAUDE_CONFIG_DIR")
+
+
+def role_route(project: str, role: str, avoid: str = "", *, override: str = "") -> dict[str, str]:
+    """`planner_route` for any long-lived full-access session of a role (the Planner, the Solucionador of REQ-031):
+    Claude Opus at high effort on the first unattended account the router ranks for `role`, else that ranking's first
+    Codex route, else ~/.claude-work. `override` names an environment variable that pins the Claude account."""
+    if override and (pinned := os.environ.get(override)):
+        return {"provider": "claude", "home": pinned, "model": "opus", "effort": "high"}
     codex: dict[str, str] | None = None
     try:
         import bt_agents
@@ -182,7 +189,7 @@ def planner_route(project: str, avoid: str = "") -> dict[str, str]:
         profiles = bt_profiles.load()
         pool = bt_agents.pool_for(project, bt_agents._config("routing.pool", []) or None)
         routes, _ = bt_agents.candidates(project, pool, bt_agents.start_tier(None, "plan"), "plan", allow_explore=False,
-                                         role="planner")
+                                         role=role)
         for route in routes:
             env = (profiles.get(route.get("profile")) or {}).get("env") or {}
             if route.get("agent") == "claude":
@@ -341,3 +348,30 @@ def restart_planner(root: Path, project: str, rdir: Path) -> tuple[bool, str]:
         return False, "No sé qué conversación llevaba este Planner, así que no lo reinicio: ábrelo desde cero o dime cuál es."
     kill(name)
     return start_planner(root, project, rdir)
+
+
+def main(argv: list[str] | None = None) -> int:
+    """`bt_agent_terminal.py tell-planner <project> <REQ> <text>`: what the Solucionador (REQ-031) uses to send a plan
+    change request to the run's Planner; a Planner that is not running is started with the request as its first notice
+    (on an account with quota, like any Planner start)."""
+    import sys
+    args = sys.argv[1:] if argv is None else argv
+    if len(args) != 4 or args[0] != "tell-planner":
+        print("usage: bt_agent_terminal.py tell-planner <project> <REQ> <text>", file=sys.stderr)
+        return 2
+    project, req, text = args[1:]
+    if notify_planner(project, req, text):
+        print("Enviado al Planner.")
+        return 0
+    from bt_core import ROOT
+    rdir = next(iter(sorted((Path(ROOT) / project / "requirements").glob(f"{req}-*"))), None)
+    if rdir is None or exists(name_for(project, req, "planner")):
+        print(f"No pude escribirle al Planner de {project} {req}: mira su ventana en el panel del plan.", file=sys.stderr)
+        return 1
+    ok, message = start_planner(Path(ROOT), project, rdir, message="[Automatic notice, not typed by the owner] " + text)
+    print(message, file=sys.stdout if ok else sys.stderr)
+    return 0 if ok else 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
