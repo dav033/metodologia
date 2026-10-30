@@ -127,10 +127,28 @@ def _past_unknown(ref: AttemptRef, record: ProcessRecord) -> ProcessRecord:
     return record
 
 
+def _launch_past_manager(ref: AttemptRef, prepared: Prepared, limits: dict) -> ProcessRecord:
+    """The runtime's launch, called again while the user manager does not answer (at most the grace). D-188 gave the
+    launch step's observation that grace, not the launch's own `systemctl show`: a step re-run after an engine
+    restart (the engine exits before DBOS records it, D-181) that met an unanswered manager spent DBOS's 3 tries in
+    seconds, the agent workflow failed, the reaper killed the healthy agent and the task asked the owner about a runtime
+    defect (test_durable_launch_hiccup). The launch is idempotent per attempt key, so asking again adopts."""
+    waited, delay = 0.0, 0.5
+    while True:
+        try:
+            return engine.ports().runtime.launch(ref, prepared, limits)
+        except Exception as error:  # noqa: BLE001 - only an unanswered manager is looked at again
+            if getattr(error, "code", "") != "MANAGER_UNAVAILABLE" or waited >= UNKNOWN_GRACE_SECONDS:
+                raise
+        time.sleep(delay)
+        waited += delay
+        delay = min(delay * 2, 5.0)
+
+
 @DBOS.step(name="bt.launch", retries_allowed=True, max_attempts=3, interval_seconds=2)
 def launch(attempt: dict, prepared: dict, limits: dict) -> dict:
     ref = AttemptRef.model_validate(attempt)
-    record = _port(lambda: engine.ports().runtime.launch(ref, Prepared.model_validate(prepared), limits))
+    record = _port(lambda: _launch_past_manager(ref, Prepared.model_validate(prepared), limits))
     return _past_unknown(ref, record).model_dump(mode="json")
 
 
