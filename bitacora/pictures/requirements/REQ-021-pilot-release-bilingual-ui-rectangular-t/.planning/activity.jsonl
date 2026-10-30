@@ -552,3 +552,6 @@
 {"at": "2026-10-30T14:00:06-05:00", "who": "Solucionador", "kind": "flow", "sp": "", "text": "T2.55: Solucionador · no pudo resolverlo: ninguna cuenta con cuota pudo seguir la sesión", "diff": ""}
 {"at": "2026-10-30T16:30:52-05:00", "who": "Autocuración", "kind": "flow", "sp": "", "text": "T10.45: retry_with_note automático (Integridad): La verificación falla: el hash de SP-10.integration.json no coincide con el snapshot.", "diff": ""}
 {"at": "2026-10-30T16:58:05-05:00", "who": "Autocuración", "kind": "flow", "sp": "", "text": "T10.45: retry_with_note automático (Integridad): El harness de idioma restante falla en la verificación independiente (4 intentos).", "diff": ""}
+{"at": "2026-10-30T17:10:52-05:00", "who": "Tú", "kind": "flow", "sp": "SP-10", "text": "Confirmaste SP-10 en la conversación; sigue SP-11", "diff": ""}
+{"at": "2026-10-30T17:10:53-05:00", "who": "Tú", "kind": "flow", "sp": "SP-11", "text": "Confirmaste SP-11 en la conversación; sigue SP-12", "diff": ""}
+{"at": "2026-10-30T17:10:54-05:00", "who": "Tú", "kind": "flow", "sp": "SP-12", "text": "Confirmaste SP-12 en la conversación; todos listos", "diff": ""}
