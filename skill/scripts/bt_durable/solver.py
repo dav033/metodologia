@@ -12,7 +12,9 @@ Triggers (`Trigger`), each launched at most once per key:
 - `repeat`: the failure signature healing already answered came back in a later round;
 - `stuck`: a PENDING task whose state did not move for `solver.stuck_minutes` beyond its known waits (a running agent
   gets `scheduler.attempt_timeout_minutes` more, a quota wait counts from its `until`, a pause or a decision never);
-- `error`: the run workflow ended in ERROR.
+- `error`: the run workflow ended in ERROR;
+- `resolution`: a composition conflict waits in `<state>/composition/resolutions/<key>.json` without `<key>.resolved`
+  for `solver.resolution_after_seconds` (`bt_durable.resolutions`): no retry can settle it.
 
 One session per run (`bit-<project>-<REQ>-solver` in the bitácora tmux socket), at most `solver.max_concurrent` on the
 machine and `solver.max_per_task` per task; a trigger that finds its run's session busy is queued in that session's
@@ -59,7 +61,8 @@ def enabled() -> bool:
 
 def settings() -> dict[str, int]:
     import bt_config
-    defaults = {"max_concurrent": 1, "max_per_task": 3, "max_minutes": 120, "stuck_minutes": 45}
+    defaults = {"max_concurrent": 1, "max_per_task": 3, "max_minutes": 120, "stuck_minutes": 45,
+                "resolution_after_seconds": 120}
     out = {}
     for name, default in defaults.items():
         value = bt_config.get(f"solver.{name}", default)
@@ -87,6 +90,10 @@ def save(rdir: Path, data: dict) -> None:
 
 def _iso(epoch: float) -> str:
     return time.strftime("%Y-%m-%dT%H:%M:%S", time.localtime(epoch))
+
+
+def round_of(task: dict) -> int | None:
+    return healing.round_of(task)
 
 
 def trigger(kind: str, key: str, run_id: str, *, task_id: str = "", request_id: str = "", round_no: int | None = None,
@@ -148,9 +155,10 @@ class Solver:
 
     def __init__(self, root: Path, client, *, terminal=None, route_for: Callable | None = None,
                  notify: Callable | None = None, record: Callable | None = None, now: Callable[[], float] = time.time,
-                 work: Path | None = None):
+                 work: Path | None = None, state_dir: Path | None = None):
         import bt_agent_terminal
         self.root, self.client, self.now = Path(root), client, now
+        self.resolutions = Path(state_dir or Path(root) / ".state" / "durable") / "composition" / "resolutions"
         self.terminal = terminal or bt_agent_terminal
         self.route_for = route_for or (lambda project, avoid: bt_agent_terminal.role_route(
             project, "solver", avoid, override="BITACORA_SOLVER_CLAUDE_CONFIG_DIR"))
@@ -177,12 +185,19 @@ class Solver:
         for rdir, run in runs:                     # close finished sessions first: they free the machine's slots
             said += self._supervise(run, rdir, states[str(rdir)], cfg)
         active = sum(1 for s in states.values() if s.get("active"))
-        for rdir, run in runs:
-            state = states[str(rdir)]
+        statuses: dict[str, dict] = {}
+        for _, run in runs:
             try:
-                status = self.client.status(run)
+                statuses[run.run_id] = self.client.status(run)
             except Exception as error:  # noqa: BLE001 - a run that cannot be read is tried on the next pass
                 LOG.warning("solver: %s status failed: %s", run.run_id, error)
+        from . import resolutions
+        for item in resolutions.triggers(self.resolutions, statuses, self.now(), cfg["resolution_after_seconds"]):
+            by_run.setdefault(item["run_id"], []).append(item)
+        for rdir, run in runs:
+            state = states[str(rdir)]
+            status = statuses.get(run.run_id)
+            if status is None:
                 continue
             found = by_run.get(run.run_id, []) + error_triggers(run, status) + \
                 stuck_triggers(run, status, state, self.now(), cfg)
@@ -205,7 +220,8 @@ class Solver:
             return []
         triggers[item["key"]] = {**item, "status": "pending", "at": _iso(self.now())}
         what = {"decision": "la autocuración dejó la decisión para ti", "repeat": "el mismo fallo volvió",
-                "stuck": "la tarea no avanza", "error": "el workflow del run terminó en error"}.get(item["kind"], item["kind"])
+                "stuck": "la tarea no avanza", "error": "el workflow del run terminó en error",
+                "resolution": "un conflicto de composición espera una resolución"}.get(item["kind"], item["kind"])
         self.record(rdir, f"{item.get('task_id') or 'run'}: {what}; pasa al Solucionador ({item['reason'][:160]})")
         return [f"{item['key']}: {item['kind']} queued for the Solucionador"]
 
@@ -242,6 +258,8 @@ class Solver:
             return status.get("workflow_status") in ERRORED
         if item["kind"] == "stuck":
             return task.get("workflow_status") == "PENDING"
+        if item["kind"] == "resolution":
+            return not Path((item.get("resolution") or {}).get("resolved") or "/").exists()
         return True
 
     # ---------------------------------------------------------------------------------------------- a session
@@ -266,6 +284,7 @@ class Solver:
         (folder / "status.json").write_text(json.dumps(status, ensure_ascii=False, indent=1, default=str) + "\n",
                                             encoding="utf-8")
         (folder / "inbox.jsonl").touch()
+        from .solver_brief import brief, prompt
         (folder / "BRIEF.md").write_text(brief(run, rdir, session, items, status), encoding="utf-8")
         (folder / "PROMPT.md").write_text(prompt(folder), encoding="utf-8")
         error = self._start(run, session, avoid="")
@@ -421,79 +440,5 @@ def read_result(folder: Path) -> dict | None:
     return data if isinstance(data, dict) and data.get("outcome") in OUTCOMES else None
 
 
-# ---------------------------------------------------------------------------------------------- brief and prompt
-def _recent_logs(project_dir: Path, count: int = 2) -> list[Path]:
-    return sorted(Path(project_dir).glob("20*/W*/20*.md"))[-count:]
-
-
-def brief(run, rdir: Path, session: dict, items: list[dict], status: dict) -> str:
-    """Everything an operator would read first, in the order the prompt asks for it."""
-    import bt_block_agent
-    rdir = Path(rdir)
-    root = rdir.parent.parent.parent                     # <root>/<project>/requirements/<REQ-dir>
-    scripts = Path(__file__).resolve().parent.parent
-    tasks = status.get("tasks") or {}
-    lines = [f"# Solucionador {session['id']} — {run.project} {run.req} (run {run.run_id})", "",
-             f"Started {session['started_at']} by the durable engine's maintenance pass.", "", "## Triggers", ""]
-    lines += [f"- `{i['key']}` — {i['kind']}{' · ' + i['task_id'] if i.get('task_id') else ''}: {i['reason']}"
-              for i in items]
-    for item in items:
-        task = tasks.get(item.get("task_id") or "") or {}
-        decision = task.get("decision") if isinstance(task.get("decision"), dict) else None
-        if not item.get("task_id"):
-            continue
-        lines += ["", f"## {item['task_id']}", "", f"Workflow `{task.get('workflow_id')}` "
-                  f"({task.get('workflow_status')}); state: `{json.dumps(task.get('state'), default=str)}`"]
-        if decision:
-            lines += ["", "```", healing.evidence(run, rdir, item["task_id"], decision, healing.round_of(task)), "```"]
-            found = bt_block_agent.cached(rdir, item["key"]) if item["kind"] in ("decision", "repeat") else None
-            if found:
-                lines += ["", "Diagnosis (bt_block_agent, read-only, may be wrong):", "```json",
-                          json.dumps(found, ensure_ascii=False, indent=1)[:4000], "```"]
-        history = rdir / "RUN.notes" / f"{item['task_id']}.history.jsonl"
-        lines += ["", f"Attempt history: `{history}`" + ("" if history.is_file() else " (none yet)")]
-    open_tasks = [f"- {t}: {(v or {}).get('workflow_status')} {json.dumps((v or {}).get('state'), default=str)[:160]}"
-                  for t, v in sorted(tasks.items()) if (v or {}).get("workflow_status") != "SUCCESS"]
-    summary = status.get("summary") if isinstance(status.get("summary"), dict) else {}
-    lines += ["", "## Run status", "", f"Run workflow `{status.get('workflow_id')}`: {status.get('workflow_status')}; "
-              f"summary status {summary.get('status')}. Full status: `{Path(session['dir']) / 'status.json'}`.", "",
-              *(open_tasks[:40] or ["- every task workflow ended"])]
-    logs = _recent_logs(root / run.project) + _recent_logs(root / "metodologia")
-    lines += ["", "## Files", "",
-              f"- requirement: `{rdir}` (SPEC.md, PLAN.md, PLAN.json, SPEC.es.md)",
-              f"- the frozen plan this run executes: `{run.plan_path}`",
-              f"- project decisions: `{root / run.project / 'DECISIONS.md'}`",
-              f"- metodologia decisions: `{root / 'metodologia' / 'DECISIONS.md'}`",
-              *[f"- day log: `{p}`" for p in logs],
-              f"- diagnoses: `{rdir / 'RUN.diagnoses'}`; healing: `{rdir / healing.STATE}`; activity: "
-              f"`{rdir / '.planning' / 'activity.jsonl'}`; telemetry and attempts: `{root / '.state' / 'durable'}`",
-              "", "## Commands", "",
-              f"- run status: `uv run --project ~/dev/metodologia bt-durable status {run.project} {run.req}`",
-              "- engine journal: `journalctl --user -u bt-durable.service --since -3h --no-pager -o cat`",
-              f"- answer a decision: `uv run --project ~/dev/metodologia bt-durable answer {run.project} {run.req} <task> "
-              "<request>@k<round> <action> --note \"...\" --by solver`",
-              f"- the run's Planner: `python3 {scripts / 'bt_agent_terminal.py'} tell-planner {run.project} {run.req} "
-              "\"<change request>\"`",
-              f"- integrate a metodologia fix: `python3 ~/dev/metodologia/skill/scripts/bt_integrate.py --branch "
-              f"solver/{session['id']} --worktree {session['cwd']}/wt --title \"<what> (D-NNN)\" --session "
-              f"{session['id']} --trailer \"<your attribution line>\"` (`--dry-run` first; `--help` for the steps)",
-              "", "## Your session", "",
-              f"- session folder (REPORT.md, result.json, NOTES.md, inbox.jsonl): `{session['dir']}`",
-              f"- working folder (your worktree goes in `{session['cwd']}/wt`): `{session['cwd']}`",
-              f"- trigger keys for result.json `handled`: {', '.join(i['key'] for i in items)}",
-              "- keep NOTES.md current (what you found, what you changed, what is next): you may be restarted on "
-              "another account and must be able to continue from your files."]
-    return "\n".join(str(line) for line in lines) + "\n"
-
-
-def prompt(folder: Path) -> str:
-    """The versioned role prompt (`agents/solver.md`) plus where this session's brief is."""
-    from bt_resources import resource_root
-    text = (resource_root() / "agents" / "solver.md").read_text(encoding="utf-8")
-    body = text.split("\n---\n", 1)[1].strip() if text.startswith("---\n") else text
-    return (f"{body}\n\n## This session\n\nYour brief: `{Path(folder) / 'BRIEF.md'}`. Read it now, then "
-            "`triggers.json` next to it, and start.\n")
-
-
-__all__ = ["Solver", "enabled", "error_triggers", "load", "prompt", "read_result", "settings", "stuck_triggers",
+__all__ = ["Solver", "enabled", "error_triggers", "load", "read_result", "round_of", "settings", "stuck_triggers",
            "trigger"]

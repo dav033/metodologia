@@ -463,8 +463,12 @@ once per signature (D-167) → the Solucionador → the owner, only for what nee
   limit reached, diagnosis failed, unsure or unoffered choice, plan blamed, no retry offered); a failure signature that
   came back after healing's retry (`repeat`); a PENDING task whose state did not move for `solver.stuck_minutes` (45)
   beyond its known waits (`stuck`: a running agent gets `scheduler.attempt_timeout_minutes` more, a quota or recovery
-  wait counts from its `until`, a pause or an open decision never); the run workflow in ERROR (`error`). A trigger whose
-  decision moved on before its turn is dropped (`stale`).
+  wait counts from its `until`, a pause or an open decision never); the run workflow in ERROR (`error`); a composition
+  resolution request (`<state>/durable/composition/resolutions/<key>.json` without `<key>.resolved`) older than
+  `solver.resolution_after_seconds` (120), given to the run whose open decision names its path or commits, else the one
+  run with an open INTEGRATION_CONFLICT decision (`resolution`, `bt_durable/resolutions.py`: its brief carries the
+  request, the diff3 and the blob ids; the session writes the union of both sides to `.resolved` and answers `retry` or
+  `reverify`). A trigger whose decision moved on (or whose resolution was written) before its turn is dropped (`stale`).
 - **Limits.** One session per run; `solver.max_concurrent` (1) on the machine; `solver.max_per_task` (3) sessions per
   task (then `limit`: the owner is told); `solver.max_minutes` (120) without `result.json` → killed, `gave_up`, the owner
   is told. A trigger that finds its run's session at work goes to that session's `inbox.jsonl` and is typed into it;

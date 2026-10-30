@@ -154,8 +154,11 @@ DEFAULTS: dict = {
     # access that fixes a block at its origin. It runs only while that healing runs too (healing.enabled,
     # healing.model_diagnosis, diagnosis.auto): it is the next rung, never the first one. One per run, max_concurrent on
     # the machine, max_per_task sessions per task; a session without result.json after max_minutes is killed; a task
-    # whose state does not move for stuck_minutes (beyond its known waits) is a trigger
-    "solver": {"enabled": True, "max_concurrent": 1, "max_per_task": 3, "max_minutes": 120, "stuck_minutes": 45},
+    # whose state does not move for stuck_minutes (beyond its known waits) is a trigger, and so is a composition
+    # resolution request (<state>/durable/composition/resolutions/<key>.json without .resolved) older than
+    # resolution_after_seconds
+    "solver": {"enabled": True, "max_concurrent": 1, "max_per_task": 3, "max_minutes": 120, "stuck_minutes": 45,
+               "resolution_after_seconds": 120},
 }
 ALLOWED: dict[str, tuple] = {
     "executor.display": ("background", "window"),

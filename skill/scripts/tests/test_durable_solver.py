@@ -245,6 +245,40 @@ class SolverTests(unittest.TestCase):
         self.assertEqual(self.terminal.started, [])
         self.assertEqual(self.state()["triggers"][moved["key"]]["status"], "stale")
 
+    def test_an_unattended_composition_resolution_request_goes_to_the_run_whose_task_conflicts(self):
+        """2026-10-29 19:55: three requests sat open for up to 3 h while T95 failed INTEGRATION_CONFLICT on every retry."""
+        import os
+        from bt_durable import resolutions
+        folder = self.root / ".state" / "durable" / "composition" / "resolutions"
+        folder.mkdir(parents=True)
+        request = {"path": "src/lib/cuentas/dependientes.ts", "blobs": {"base": "b0", "ours": "b1", "theirs": "b2"},
+                   "commits": {"base": "c" * 40, "ours": "d" * 40, "theirs": "e" * 40}}
+        (folder / "k1.json").write_text(json.dumps(request))
+        (folder / "k1.diff3").write_text("<<<<<<< ours\nA\n||||||| base\n=======\nA\nB\n>>>>>>> theirs\n")
+        self.open_decision("REQ-901")                                        # another run with an unrelated decision
+        run_id = "proj:REQ-900:r1"
+        self.open_decision()
+        failure = self.client.runs[run_id]["tasks"]["T7.4"]["decision"]["failure"]
+        failure["summary"] = "INTEGRATION_CONFLICT: src/lib/cuentas/dependientes.ts (line of SP-8)"
+        self.client.runs["proj:REQ-901:r1"]["tasks"]["T7.4"]["decision"]["failure"]["summary"] = "checks failed"
+        self.solver().run_pass([])
+        self.assertEqual(self.terminal.started, [])                          # younger than resolution_after_seconds
+        old = self.clock[0] - 300
+        os.utime(folder / "k1.json", (old, old))
+        self.solver().run_pass([])
+        self.assertEqual(self.session()["kind"], "resolution")
+        brief = (Path(self.session()["dir"]) / "BRIEF.md").read_text()
+        for text in ("src/lib/cuentas/dependientes.ts", "ours `b1`", str(folder / "k1.resolved"), "||||||| base",
+                     "never drop either side's change", "`retry`"):
+            self.assertIn(text, brief)
+        self.assertEqual(self.state("REQ-901").get("triggers", {}), {})
+        statuses = {"a": {"tasks": {"T1": {"decision": {"failure": {"code": "INTEGRATION_CONFLICT"}}}}},
+                    "b": {"tasks": {"T2": {"decision": {"failure": {"code": "INTEGRATION_CONFLICT"}}}}}}
+        self.assertIsNone(resolutions.target({"path": "x.ts", "commits": {}}, statuses))   # ambiguous: it waits
+        self.assertEqual(resolutions.target({"path": "x.ts", "commits": {}}, {"a": statuses["a"]}), ("a", "T1"))
+        (folder / "k1.resolved").write_text("A\nB\n")
+        self.assertEqual(resolutions.open_requests(folder, self.clock[0], 120), [])
+
     def test_it_is_off_with_its_switch_or_without_the_healing_before_it(self):
         for key in ("solver.enabled", "healing.model_diagnosis"):
             with self.subTest(key=key), patch.dict(FLAGS, {key: False}):

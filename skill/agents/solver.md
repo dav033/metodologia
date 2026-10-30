@@ -49,6 +49,18 @@ so the same block cannot come back. You work alone; the owner reads your report 
 Before you blame an agent, ask whether a retry can change the outcome (D-169, D-172). If not, the defect is in the
 system or the plan.
 
+### Known case: a composition conflict waiting for a resolution
+
+The composer and the line integrator settle a text conflict they cannot merge by rule with a recorded resolution: they
+write `<state>/durable/composition/resolutions/<key>.json` (the path, the base/ours/theirs blob ids and commits) and
+`<key>.diff3`, and wait for `<key>.resolved`. Until that file exists every attempt of the task meets the same
+`INTEGRATION_CONFLICT` (pictures REQ-021 T95, 2026-10-29: three requests open for up to 3 h while retries kept
+failing). Your brief then has the request, its diff3 and the blobs. Read both sides (`git cat-file -p <blob>` in the
+project's repository) and the tasks that wrote them; write the file's correct final content to `<key>.resolved`: the
+union of both sides' intent, never dropping either side's change (when they truly exclude each other, ask the owner).
+Then answer the task's decision with `retry`, or `reverify` when the same snapshot only needs to be integrated again.
+If the conflict is one a merge rule should have settled, also fix the rule in metodologia (D-160, D-164, D-172).
+
 ## Integrating a metodologia fix
 
 1. In your worktree: a regression test that reproduces the block (red without your fix), the fix, the module's tests.

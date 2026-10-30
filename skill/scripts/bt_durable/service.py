@@ -227,7 +227,7 @@ def _heal_decisions(cfg: EngineConfig) -> None:
             LOG.info("healing: %s", said)
     finally:
         if solver.enabled():
-            for said in solver.Solver(Path(bt_core.ROOT), client).run_pass(left):
+            for said in solver.Solver(Path(bt_core.ROOT), client, state_dir=cfg.state_dir).run_pass(left):
                 LOG.info("solver: %s", said)
 
 

@@ -8,7 +8,8 @@ from html import escape as e
 OUTCOME_ES = {"running": "trabajando", "fixed": "arreglado", "answered": "respondida", "asked_owner": "te pregunta",
               "gave_up": "no pudo"}
 KIND_ES = {"decision": "decisión que la autocuración no resolvió", "repeat": "el mismo fallo volvió",
-           "stuck": "tarea sin avance", "error": "run en error"}
+           "stuck": "tarea sin avance", "error": "run en error",
+           "resolution": "conflicto de composición sin resolver"}
 
 
 def card(state: dict | None, socket: str | None = None) -> str:
