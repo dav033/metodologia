@@ -285,7 +285,9 @@ such guard: `_enqueue` turns a child's failure into an `internal_error` fact.
   files is a problem of the audit). Related blocking findings are grouped as `bt_remediation` groups them and each group
   is ONE coordinated repair: a new round of the first task it names, whose brief lists every finding with the probes
   (the named tasks' check commands); then the audit runs again. At most `gates.remediation_rounds` rounds per audit
-  (`retry-task` on a blocked audit grants one more); dependents wait meanwhile. Not ported: the legacy plan revision
+  (`retry-task` on a blocked audit grants one more); dependents wait meanwhile. A blocking finding that names only the
+  audit itself is a gap in the audit's own coverage, not a product defect: it reruns the audit, told what to complete,
+  within the same rounds (D-234). Not ported: the legacy plan revision
   that adds remediation tasks to the frozen plan (the durable repair is a round of an existing task, so its checks are
   that task's own; the other named tasks' probes are in the brief and the re-audit judges them), and the audit evidence
   cross-check of `quality_audit_evidence`. Behind `DBOS.patch("bt-run-audit-remediation")`.
