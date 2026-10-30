@@ -37,7 +37,8 @@ class Inventory(unittest.TestCase):
         pages = ["/", "/metrics", "/metrics/model/a/b", "/live", "/learnings", "/flow", "/flow/review", "/now", "/plans",
                  "/plans/demo/REQ-001", "/events", "/api/now", "/api/flow", "/api/plans", "/static/app.js",
                  "/static/vendor/lib/x.js", "/go/demo/REQ-001", "/p/demo", "/p/demo/doc/SUMMARY.md",
-                 "/p/demo/artifacts/a.png", "/p/demo/view/a.html", "/p/demo/graph", "/p/demo/req/REQ-001"]
+                 "/p/demo/artifacts/a.png", "/p/demo/view/a.html", "/p/demo/graph", "/p/demo/req/REQ-001",
+                 "/components", "/components/kit", "/components/live/button", "/components/ref/button"]
         for path in pages:
             with self.subTest(path=path):
                 self.assertTrue(panel.allowed("GET", path))

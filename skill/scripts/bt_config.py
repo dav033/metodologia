@@ -147,9 +147,9 @@ DEFAULTS: dict = {
     # written and its note and comparison JSON missing ($4 each, nothing usable)
     "delegate": {"max_turns": 120},
     # integrate (REQ-031, bt_integrate/bt_regress): the regression's known baseline of failing suites; any other failure
-    # is rerun alone once and, if it fails again, no integration happens
-    "integrate": {"allowed_failures": ["test_plan_boundary", "test_real_designer_kit", "test_recovery_views",
-                                       "test_remote_panel"]},
+    # is rerun alone once and, if it fails again, no integration happens. Empty since 2026-10-29: the four suites that
+    # failed in every run were fixed at their origin; list a suite here only while a known failure is accepted.
+    "integrate": {"allowed_failures": []},
     # solver (REQ-031, bt_durable/solver): the rung after the durable healing (D-167). A Claude Opus session with full
     # access that fixes a block at its origin. It runs only while that healing runs too (healing.enabled,
     # healing.model_diagnosis, diagnosis.auto): it is the next rung, never the first one. One per run, max_concurrent on

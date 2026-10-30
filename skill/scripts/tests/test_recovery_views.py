@@ -90,10 +90,16 @@ class Views(unittest.TestCase):
             self.assertEqual(undo.call_args.args[:2], ("demo", "REQ-001"))
 
     def test_the_server_route_needs_the_token_like_every_other_post(self):
+        # The /plans/<p>/<r>/<action> routes moved to the PlanListActions mixin on 2026-10-27 (89e2c76ed); do_POST
+        # still owns the token check and must run it before it hands any /plans post to that mixin.
         import bt_server
+        import bt_server_plans
+        routes = Path(bt_server_plans.__file__).read_text()
+        self.assertIn('"heal": lambda p, r: api.heal_control(', routes)
         source = Path(bt_server.__file__).read_text()
-        self.assertIn('"heal": lambda p, r: api.heal_control(', source)
-        self.assertIn('hmac.compare_digest(form.get("token", ""), token())', source)                    # constant-time check before any action
+        check = source.find('hmac.compare_digest(form.get("token", ""), token())')                   # constant-time check
+        self.assertGreater(check, 0)
+        self.assertLess(check, source.index("return self.plans_post(parts, form)"))                   # before any action
 
 
 class RecoveryPanel(Views):

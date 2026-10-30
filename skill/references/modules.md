@@ -493,11 +493,14 @@ once per signature (D-167) → the Solucionador → the owner, only for what nee
   irreversible, external or security-sensitive; leaves a regression test and a D-NNN.
 - **Integration** (`bt_integrate.py`, `bt_regress.py`): under a machine-wide flock (`<state>/integrate.lock`): preflight
   (live checkout on main, branch committed, no `bitacora/` path, main's code already in the branch) → full regression
-  (only `integrate.allowed_failures` may fail; any other failure is rerun alone once) → DBOS backup when runtime code
+  (only `integrate.allowed_failures` may fail, empty by default; any other failure is rerun alone once) → DBOS backup when runtime code
   changed and the release-log entry → `merge --no-ff` in a deploy worktree → `merge --ff-only` in `~/dev/metodologia`
   (the only write it ever gets) → push → restart `bt-durable.service` and `bitacora-web.service` as the changed paths
   need → smoke (active, web 200, «bt_durable engine started» in the journal); a failed smoke reverts the merge the same
-  way. Exit codes: 0 integrated, 1 refused, 2 fast-forward refused, 3 reverted, 4 revert failed, 75 lock busy.
+  way → after a passing smoke, cleanup: a clean branch worktree (no tracked change, no untracked file) is removed
+  (`git worktree remove`) and its branch deleted with `git branch -d` (never -D); `--keep-worktree` skips it, a caller
+  standing inside the worktree keeps it and gets the command, the live checkout and the deploy worktree are never
+  removed. Exit codes: 0 integrated, 1 refused, 2 fast-forward refused, 3 reverted, 4 revert failed, 75 lock busy.
 - **Not claimed.** A session runs at most once per trigger as far as the state file shows: a crash between the launch
   and the state write leaves a tmux session the next pass finds and refuses to duplicate, without adopting it.
 

@@ -197,8 +197,6 @@ class Files(unittest.TestCase):
         keep.assert_called_once_with(self.rdir, ["SP-1"], "auto remediation of T4")
 
     def test_the_apply_writes_the_new_tasks_into_plan_md_so_a_later_stage_can_be_approved(self):
-        from bt_planner import sync
-
         lines = ["# Plan", "", "### M1 — Base"]
         for t in BASE["tasks"]:
             lines.append(f"- [ ] {t['id']} — {t['title']} · repo: app · after: {', '.join(t['after'])} · files: {', '.join(t['expected_paths'])}")
@@ -211,7 +209,7 @@ class Files(unittest.TestCase):
         self.assertLess(text.index("T4.1 —"), text.index("- [ ] T4 —"))                      # before the audit it gates
         self.assertRegex(text, r"- \[ \] T4 — .*after: T3, T4\.1")
         plan_json = json.loads((self.rdir / "PLAN.json").read_text())
-        mentioned = [p for p in sync.consistency(self.rdir, plan_json, plan_id=plan_json["plan_id"]) if p.startswith(("T4.1", "T4."))]
+        mentioned = [p for p in plans.plan_md_consistency(self.rdir, plan_json, plan_id=plan_json["plan_id"]) if p.startswith(("T4.1", "T4."))]
         self.assertEqual([p for p in mentioned if "missing from PLAN.md" in p or ".after" in p], [])
 
     def test_a_planning_flow_that_is_off_or_fails_never_blocks_the_remediation(self):

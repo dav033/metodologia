@@ -587,3 +587,13 @@ def freeze_revision(rdir: Path, plan: dict, source: str) -> dict:
 
 def paths_overlap(a: str, b: str) -> bool:
     return planner_quality.paths_overlap(a, b)
+
+
+def security_sensitive(task: dict | None) -> bool:
+    """A high-risk implementation task whose text names a security surface (the per-task security gate, bt_review_policy)."""
+    return planner_quality.security_sensitive(task)
+
+
+def plan_md_consistency(rdir: Path, plan: dict, plan_id: str | None = None) -> list[str]:
+    """PLAN.md against a PLAN.json by ids, milestones and dependencies: the problems found, [] when they agree."""
+    return planner.sync.consistency(Path(rdir), plan, plan_id)
