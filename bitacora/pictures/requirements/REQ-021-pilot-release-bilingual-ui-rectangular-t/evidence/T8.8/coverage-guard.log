@@ -1,0 +1,20 @@
+
+> demo-decoracion@0.1.0 idioma:test-guardia
+> npm run idioma:test-cobertura-guardia
+
+
+> demo-decoracion@0.1.0 idioma:test-cobertura-guardia
+> tsx --test scripts/idioma/test-cobertura-guardia.ts
+
+✔ reports JSX text and supported literal attributes, including literals in expressions (14.308396ms)
+✔ ignores whitespace, values without letters and dynamic dictionary references (1.060566ms)
+✔ scans requested paths and the CLI exits non-zero while listing findings (848.667771ms)
+✔ CLI succeeds when JSX text comes from a dictionary expression (804.45394ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2564.044444

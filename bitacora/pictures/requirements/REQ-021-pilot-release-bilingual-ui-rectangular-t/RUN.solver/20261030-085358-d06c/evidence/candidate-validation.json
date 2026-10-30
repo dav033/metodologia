@@ -1,0 +1,46 @@
+[
+  {
+    "id": "C7",
+    "commit": "51575ed33ccf6b09d4945f7219ee11afbd06faec",
+    "conflicts": [],
+    "state": "candidate",
+    "blobs": {
+      "src/app/admin/gasto/page.tsx": "5727c71fa02fff8bfdf1c8c5958840f74a0bf749",
+      "src/components/admin/GastoIa.tsx": "9856947de225967b82fb683e650c75bec615d674",
+      "src/lib/ia/nucleo/python-adapter.ts": "a10c17c6cb9d2f08ce6816f8a023c06a6c38fc2d"
+    }
+  },
+  {
+    "id": "C8",
+    "commit": "c0ea8168491e54af166421df5f0318d23bb8a166",
+    "conflicts": [],
+    "state": "candidate",
+    "blobs": {
+      "src/app/admin/gasto/page.tsx": "5727c71fa02fff8bfdf1c8c5958840f74a0bf749",
+      "src/components/admin/GastoIa.tsx": "9856947de225967b82fb683e650c75bec615d674",
+      "src/lib/ia/nucleo/python-adapter.ts": "a10c17c6cb9d2f08ce6816f8a023c06a6c38fc2d"
+    }
+  },
+  {
+    "id": "C9",
+    "commit": "9f986e4e3a339624fa4359d35deac83fe5c4daa9",
+    "conflicts": [],
+    "state": "candidate",
+    "blobs": {
+      "src/app/admin/gasto/page.tsx": "5727c71fa02fff8bfdf1c8c5958840f74a0bf749",
+      "src/components/admin/GastoIa.tsx": "9856947de225967b82fb683e650c75bec615d674",
+      "src/lib/ia/nucleo/python-adapter.ts": "a10c17c6cb9d2f08ce6816f8a023c06a6c38fc2d"
+    }
+  },
+  {
+    "id": "C10",
+    "commit": "4216b76ef60fb46d39b28b71dc43ce6032fb2c51",
+    "conflicts": [],
+    "state": "candidate",
+    "blobs": {
+      "src/app/admin/gasto/page.tsx": "5727c71fa02fff8bfdf1c8c5958840f74a0bf749",
+      "src/components/admin/GastoIa.tsx": "9856947de225967b82fb683e650c75bec615d674",
+      "src/lib/ia/nucleo/python-adapter.ts": "a10c17c6cb9d2f08ce6816f8a023c06a6c38fc2d"
+    }
+  }
+]

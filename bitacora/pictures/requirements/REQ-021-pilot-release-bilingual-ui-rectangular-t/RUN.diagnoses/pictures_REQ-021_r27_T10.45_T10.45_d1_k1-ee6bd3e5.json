@@ -1,0 +1,22 @@
+{
+ "request": "pictures:REQ-021:r27:T10.45:T10.45:d1@k1",
+ "state": "done",
+ "kind": "integrity",
+ "label": "Integridad",
+ "tone": "bad",
+ "headline": "La verificación falla: el hash de SP-10.integration.json no coincide con el snapshot.",
+ "origin": "El fallo está en la comprobación de identidad de la evidencia, no en la traducción de la UI: las mutaciones pasan (\"Remaining-language mutations passed\"), pero en CG-10 falla \"candidate_identity_failure: snapshot source bytes match: .evidence/REQ-021/SP-10.integration.json\", con actual `bcee9ac540edf5a2c880f8afbe72c154ce4e4fb059dc2a522dc16773aac3eb24` y expected `9a380a3286d61149a1d25049872671011c890861ad39a03ecb69e6440364007b`. Eso indica que el archivo de evidencia del sandbox no es el que el snapshot declara, probablemente evidencia antigua o un digest fijado a mano. El `harness_oracle_failure` del intento 1 (guided chat sin respuesta, timeout 20000ms) no reaparece en los intentos 2 y 3; el aviso de hardlink y la salida de build son ruido.",
+ "steps": [
+  "Regenerar `.evidence/REQ-021/SP-10.integration.json` ejecutando `npm run idioma:test-harness-resto` con el snapshot actual, sin editar el hash a mano.",
+  "Revisar en `scripts/test/test-harness-idioma-resto.ts` que el digest esperado se calcula desde la entrada `files` de `/run/bt-m6/snapshot.json` y no desde un valor fijado.",
+  "Volver a ejecutar `npm run idioma:test-harness-resto` y comprobar que `candidate_identity_failure` ya no aparece en CG-10."
+ ],
+ "option": "retry_with_note",
+ "note": "Do not hand-edit the pinned digest 9a380a32... or the evidence file. Regenerate .evidence/REQ-021/SP-10.integration.json and CG-10 evidence in this run. Compute the expected SHA256 of .evidence/REQ-021/SP-10.integration.json from the gitless snapshot envelope /run/bt-m6/snapshot.json (files map, kind:file sha256), keep snapshot_sha/base_sha/manifest_sha256 separate from content_sha256 and the harness digests, and fail with candidate_identity_failure if the bytes differ. Keep the dictionary expectations and the full T10.5 matrix unchanged.",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-30T16:30:36",
+ "seconds": 15.3
+}

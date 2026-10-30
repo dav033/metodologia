@@ -1,0 +1,15 @@
+
+> demo-decoracion@0.1.0 idioma:test
+> node scripts/test/run-idioma.mjs --test-name-pattern=deteccion|paridad|guardar
+
+✔ deteccion: prioriza cuenta, cookie y luego el idioma preferido del navegador, con español por defecto y html lang dinámico (448.255817ms)
+✔ paridad: los diccionarios registrados tienen claves idénticas y ningún valor inglés vacío (94.27992ms)
+✔ guardar: guarda la cookie para visitantes, persiste en la cuenta y rechaza valores fuera de es/en (240.452744ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 11367.984659

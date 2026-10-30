@@ -1,0 +1,22 @@
+{
+ "request": "pictures:REQ-021:r27:T10.45:T10.45:d2@k1",
+ "state": "done",
+ "kind": "integrity",
+ "label": "Integridad",
+ "tone": "bad",
+ "headline": "El harness de idioma restante falla en la verificación independiente (4 intentos).",
+ "origin": "Los fallos no son siempre el mismo. En el intento a1, scripts/test/test-integracion-idioma-resto.ts agotó 20000 ms en page.waitForFunction esperando una respuesta del asistente (harness_oracle_failure: 34 nodos de texto visibles). En el a3 la causa decisiva es candidate_identity_failure: el archivo .evidence/REQ-021/SP-10.integration.json tiene bcee9ac540edf5a2c880f8afbe72c154ce4e4fb059dc2a522dc16773aac3eb24 frente al esperado 9a380a3286d61149a1d25049872671011c890861ad39a03ecb69e6440364007b. La salida del a4 queda cortada antes de cualquier línea decisiva, y la advertencia de hardlink es solo ruido.",
+ "steps": [
+  "Regenerar .evidence/REQ-021/SP-10.integration.json y la evidencia CG-10 desde el snapshot de verificación /run/bt-m6/snapshot.json, usando sus snapshot_sha, base_sha, manifest_sha256 y content_sha256 reales, sin SHA inventados.",
+  "En scripts/test/test-integracion-idioma-resto.ts, sustituir la espera por page.waitForFunction (timeout 20000 ms) por una aserción visible en el DOM sobre la respuesta del asistente, sin cambiar las expectativas del diccionario.",
+  "Ejecutar npm run idioma:test-harness-resto y revisar la salida completa; la advertencia de UV_LINK_MODE=copy no es la causa del fallo."
+ ],
+ "option": "retry_with_note",
+ "note": "Fix two harness defects before rerunning npm run idioma:test-harness-resto. (1) Regenerate .evidence/REQ-021/SP-10.integration.json and the CG-10 evidence from /run/bt-m6/snapshot.json, binding snapshot_sha, base_sha, manifest_sha256 and content_sha256 exactly as the snapshot declares them; the current file digest bcee9ac540edf5a2c880f8afbe72c154ce4e4fb059dc2a522dc16773aac3eb24 must match the expected 9a380a3286d61149a1d25049872671011c890861ad39a03ecb69e6440364007b, and do not invent candidate SHAs. (2) In scripts/test/test-integracion-idioma-resto.ts, replace the page.waitForFunction readiness wait (20000 ms timeout, 34 visible text nodes) with a DOM-visible assertion on the assistant reply in guided chat. Keep all dictionary expectations and the full T10.5 matrix unchanged.",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-30T16:57:54",
+ "seconds": 19.0
+}

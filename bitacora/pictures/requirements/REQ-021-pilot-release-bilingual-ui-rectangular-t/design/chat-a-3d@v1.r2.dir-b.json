@@ -1,0 +1,19 @@
+{
+  "name": "Escena junto al chat",
+  "axes": {
+    "concept": "Inside the herramientas-chat@v1 tool shell, the short guided conversation stays docked beside a spatial scene stage: one enlarged ready-made gallery decoration, a card index of the two or three recommendations below it, and opening that grows the chosen preview into the Taller canvas as a new unsaved project.",
+    "layout": "Masthead + 248px tool sidebar (Chat current) + main column. Main >820px: 300px sticky conversation | flexible stage with enlarged preview, name/count/open row and a 3-column (or 2-column) recommendation card index below. Main 600–820px: 260px conversation | stage with single-column horizontal card rows. Main <600px: conversation, stage and card rows stack. Splits follow the main column via a container query.",
+    "navigation": "Inherited tool sidebar (links with aria-current, phone toggle «Herramientas · Chat» with aria-expanded and Escape). In-page: native preview buttons in the card index select the enlarged scene in place with aria-pressed, «Vista actual» text and a Motion layoutId marker that glides between cards while focus stays on the pressed card; every authorised card and the stage carry «Abrir en el Taller» to /3d?decoracion=<id>; the Taller arrival offers «Volver al chat».",
+    "typography": "Existing embedded Geist Sans: 24px H1 noun (Chat / Taller 3D), 20px enlarged decoration name, 17px panel headings, 14–15px conversation and body, 12–13px metadata; balloon counts in tabular figures; Geist Mono only in the inherited Sempertex wordmark.",
+    "density": "The enlarged scene is the largest object; cards carry thumbnail, full wrapping source name, engine count and one open action; the conversation keeps only the two-to-three-message exchange and its composer. Narrow widths convert cards to horizontal rows instead of shrinking them.",
+    "components": "Real shadcn/Base UI Sidebar (collapsible=none), Button, Input, Skeleton, Dialog (Guardar proyecto) and AlertDialog (¿Empezar de nuevo?, Tienes cambios sin guardar); inherited native language select and account disclosure; custom semantic card-preview buttons and labelled illustrative SVG previews.",
+    "colour": "Pictures globals.css tokens with the siblings' role mapping: fondo/superficie papers, taller-visor preview grounds, superficie-2 current sidebar item, texto-tenue control edges and selected-card marker, acento only on the primary open/save action, focus and illustrative balloons, error for failure notices, exito for «Guardado en tu cuenta». No new values.",
+    "motion": "Spatial docking with cubic-bezier(.16,1,.3,1): conversation travels in from −18px and the stage from +28px; cards seat from +18px / .6deg with a 70ms stagger and slight overshoot; the selected scene re-seats from +24px / scale .975; the selection marker springs between cards (Motion layoutId, stiffness 260); opening runs a FLIP scene transfer that grows the Taller canvas out of the clicked preview's rectangle (680ms expressive / 420 natural / 200 subtle). Sidebar rows keep the sibling's 8px precise cut. OS reduced motion, Quieto and ?still=1 remove all travel; hidden tabs pause."
+  },
+  "evidence": {
+    "layout": [".tool-sidebar", ".workspace", ".conversation", ".scene-stage", ".decoration-index"],
+    "navigation": [".tool-link[aria-current=page]", ".card-preview[aria-pressed=true]", ".preview-label", ".index-marker"],
+    "typography": [".heading h1", ".stage-info h3", ".recommendation-card h3", ".stage-info p"],
+    "motion": [".conversation", ".scene-stage", ".recommendation-card", ".scene-object", ".tool-nav-item"]
+  }
+}

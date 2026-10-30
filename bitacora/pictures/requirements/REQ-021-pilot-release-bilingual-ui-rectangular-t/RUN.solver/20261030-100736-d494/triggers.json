@@ -1,0 +1,13 @@
+[
+ {
+  "kind": "decision",
+  "key": "pictures:REQ-021:r26:T10.45:T10.45:d1@k1",
+  "run_id": "pictures:REQ-021:r26",
+  "task_id": "T10.45",
+  "request_id": "T10.45:d1",
+  "round": 1,
+  "reason": "the diagnosis failed: Expecting property name enclosed in double quotes: line 1 column 2 (char 1)",
+  "status": "pending",
+  "at": "2026-10-30T10:07:36"
+ }
+]

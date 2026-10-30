@@ -1,0 +1,49 @@
+{
+ "about": "How «Probar esta versión» starts a REQ version of pictures (bt_verify_servers). The owner's local .env.local, with the database switched to the REQ-021 test database and the web pointed at the version's own ai-api. ${NAME} comes from the owner's secret files at start; {port:x} is the port actually used. Every link opens the version already signed in as a real test account (auto_login: a session row of the chosen test+<role>@req021.test account in the REQ-021 test database, handed to the browser as the `session` cookie; D-205). The accounts were seeded 2026-10-30 with PICTURES_TEST_PASSWORD from the owner's secrets file.",
+ "env_file": "~/dev/pictures/.env.local",
+ "env": {
+  "DATABASE_URL": "${PICTURES_REQ021_DATABASE_URL}",
+  "PICTURES_REQ021_DATABASE_URL": "${PICTURES_REQ021_DATABASE_URL}",
+  "PYTHON_BACKEND_URL": "http://127.0.0.1:{port:ai-api}"
+ },
+ "prepare": [
+  {
+   "unless": "node_modules",
+   "run": "npm ci --prefer-offline --no-audit --no-fund"
+  },
+  {
+   "run": "npm run build --workspaces --if-present"
+  },
+  {
+   "run": "npm run rag:migrate"
+  }
+ ],
+ "servers": [
+  {
+   "name": "ai-api",
+   "port": 8000,
+   "ready": "/healthz",
+   "run": "APP_ENV=development DATABASE_URL= RERANK_MODEL_WARMUP=false uv run --frozen --directory services/ai-api uvicorn app.main:app --host 127.0.0.1 --port {port}"
+  },
+  {
+   "name": "web",
+   "port": 3000,
+   "ready": "/",
+   "open": "/",
+   "run": "node scripts/next-with-system-ca.cjs dev --port {port}"
+  }
+ ],
+ "auto_login": {
+  "cookie": "session",
+  "default": "test+administrador@req021.test",
+  "accounts": [
+   "test+administrador@req021.test",
+   "test+master_designer@req021.test",
+   "test+designer_plus@req021.test",
+   "test+designer@req021.test",
+   "test+entusiasta@req021.test",
+   "test+empleado_interno@req021.test"
+  ],
+  "mint": "node -e 'const {Pool}=require(\"pg\");const c=require(\"crypto\");(async()=>{const p=new Pool({connectionString:process.env.DATABASE_URL,max:1});try{const a=await p.query(\"SELECT id FROM accounts WHERE lower(email)=lower($1) AND status=$2\",[process.env.BT_LOGIN_ACCOUNT,\"active\"]);if(!a.rowCount){console.error(\"no existe la cuenta de prueba \"+process.env.BT_LOGIN_ACCOUNT+\": siembra las cuentas (npm run cuentas:sembrar-prueba)\");process.exitCode=3;return}let v=\"\";try{v=(require(\"fs\").readFileSync(\"src/lib/cuentas/aviso-datos.ts\",\"utf8\").match(/VERSION_AVISO_DATOS\\s*=\\s*\"([^\"]+)\"/)||[])[1]||\"\"}catch(e){}if(v){await p.query(\"UPDATE accounts SET data_notice_version=$1, data_notice_accepted_at=now() WHERE id=$2\",[v,a.rows[0].id])}const t=c.randomBytes(32).toString(\"base64url\");const now=new Date();await p.query(\"INSERT INTO account_sessions (id,account_id,token_hash,created_at,expires_at) VALUES ($1,$2,$3,$4,$5)\",[c.randomUUID(),a.rows[0].id,c.createHash(\"sha256\").update(t).digest(),now,new Date(now.getTime()+864e5)]);process.stdout.write(t)}finally{await p.end()}})().catch(e=>{console.error(e.message);process.exitCode=1})'"
+ }
+}

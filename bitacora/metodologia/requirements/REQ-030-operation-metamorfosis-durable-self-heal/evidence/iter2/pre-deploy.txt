@@ -73,3 +73,245 @@ previous main: 49fe3450209f28b58e835dbfbaf2a6ad4715b587
 /home/david/bitacora/.state/durable/backups/bt_durable-20261029-134451.dump 9250328 857ae0f26686eff06373707c9f7737ef81697a3fd4aa12bfef963aead9eb5f6a
 regression: 281 files, only the 4 baseline failures (scratchpad regress19.txt)
 rollback: git revert the merge of durable-verification on main, restart bt-durable.service and bitacora-web.service
+
+# integration of D-157 (verifier sandbox runs Python checks with uv and venvs; Codex cache reads really count a tenth), local restart of engine + web, 2026-10-29 14:22, session 7db4552d
+previous main: 968fcb1e600122b62db4544950e210934216c185
+/home/david/bitacora/.state/durable/backups/bt_durable-20261029-142224.dump 9841874 5fca57303ca8c9cf2c8a2beb8dd1c39a111371cea3e7061a878ca7978766aff4
+regression: 282 files, only the 4 baseline failures (scratchpad regress21.txt)
+rollback: git revert the merge of verifier-python-and-budget on main, restart bt-durable.service and bitacora-web.service
+
+# integration of D-159 (audits keep screenshots and logs outside the repository), local restart of engine + web, 2026-10-29 15:14, session 7db4552d
+previous main: b2306574e16b5a004df18a6f4cd2e48a1bda2e56
+/home/david/bitacora/.state/durable/backups/bt_durable-20261029-151400.dump 11192063 8712709d8fcfa1f840db1bc83fdd0bbf510f9ecb36575773fdb5aecdad64c690
+regression: 284 files, only the 4 baseline failures (scratchpad regress23.txt; covers D-158's URL list)
+rollback: git revert the merge of audit-evidence-outside on main, restart bt-durable.service and bitacora-web.service
+
+# integration of D-160 (compositions fold a member's own work, merge package.json by key, reuse resolved conflicts, blocked-run notice), local restart of engine + web, 2026-10-29 15:54, session 7db4552d
+previous main: 815ec6a870107978f1d5c4f3995a65f2f8d578a9
+/home/david/bitacora/.state/durable/backups/bt_durable-20261029-155434.dump 13614316 b528a71510365f152c81387f00736c7e1604ddf5f63f3f5a854ee4fb7030a80a
+regression: 285 files, only the 4 baseline failures (scratchpad regress25.txt; covers the version proxy)
+rollback: git revert the merge of compose-own-work on main, restart bt-durable.service and bitacora-web.service
+merge done in a worktree and fast-forwarded (d059cf2bb): a no-ff merge in the live checkout refused the staged bitácora changes and its abort reset them for ~1 min (restored from the merge's saved state)
+
+# integration of D-163 (refused bitácora commit unstages and alerts) and D-164 (subplan lines settle conflicts like the composer), local restart of engine + web, 2026-10-29 16:50, session 7db4552d
+previous main: 03254b1b684b1d83014339f89c2ac430b1586ebb
+/home/david/bitacora/.state/durable/backups/bt_durable-20261029-165014.dump 15010335 94f82eb9f9c0749f846005865fc38bcf94778c7ba859fd68d108e7ebab66111a
+regression: 287 files, only the 4 baseline failures (scratchpad regress27.txt; stacked D-161..D-164)
+rollback: git revert the merge of commit-fail-alert on main, restart bt-durable.service and bitacora-web.service
+
+# integration of D-167 (durable engine heals its decisions), D-168 (task sessions skip bitácora chores) and D-169 (criss-cross line merge settles against a virtual base), local restart of engine + web, 2026-10-29 18:15, session 30499c90
+previous main: f450c990c02cfaebdf49f55ff52e92b2665add5f (engine process started 16:51 from a88771267; web restarted on f450c990c at 17:40)
+/home/david/bitacora/.state/durable/backups/bt_durable-20261029-181533.dump 16554975 beb0f3ec4a7b5c4127dbf8be9dc73ce5762fea08fc4ee2705c420a5b631f250d
+regression: 289 files, only baseline failures + test_supervisor_limits (load flake, passes alone) (scratchpad r2.txt, r2b.txt)
+rollback: git revert the merge of crisscross-fix on main, restart bt-durable.service and bitacora-web.service
+
+# integration of D-170 (the engine's INFO lines reach its journal), local restart of engine + web, 2026-10-29 18:43, session 30499c90
+previous main: fde19e073626040352c8864f35ae6a5609203009
+/home/david/bitacora/.state/durable/backups/bt_durable-20261029-184318.dump 17004674 6d396332b8db1fbfb6c1a52b0715c2808101a704fb3f59a1c14de4a7be2a884b
+regression: 290 files, only baseline failures (scratchpad r3.txt)
+rollback: git revert the merge of engine-log on main, restart bt-durable.service and bitacora-web.service
+
+# integration of D-171 (a verification cut short by an engine restart runs again once), local restart of engine + web, 2026-10-29 19:12, session 30499c90
+previous main: 8c890826a8b370c4a6ca89ed3e088b6e7eca6813
+/home/david/bitacora/.state/durable/backups/bt_durable-20261029-191206.dump 17459782 0872beaf800c6e44baf789cf3dd3d9feb6be11c6ca709880e8a5a1101e995eb7
+regression: 291 files, only the 4 baseline failures (scratchpad r4.txt)
+rollback: git revert the merge of verify-restart on main, restart bt-durable.service and bitacora-web.service
+
+# integration of D-172 (subsumed hunks settle to the larger side) and D-173 (a gate task starts from its candidate caught up with its lines), local restart of engine + web, 2026-10-29 20:07, session 30499c90 (metodologia-51)
+previous main: 68ea49b207efea901d9b2073e2fe657c731a0c9d
+/home/david/bitacora/.state/durable/backups/bt_durable-20261029-200703.dump 18355140 5fe791fa1fb1326355bec80d967ff0f67cabf9821647ddec80a87096c2a4d5d2
+regression: 291 files, only the 4 baseline failures (scratchpad r6.txt)
+rollback: git revert the merge of gate-base-catchup on main, restart bt-durable.service and bitacora-web.service
+
+# integration of D-174 (a virtual base uses the recorded resolutions; a resolution serves both sides), local restart of engine + web, 2026-10-29 20:34, session 30499c90
+previous main: 32d6d755230de7c76beabf57fd52edb02137fb4a
+/home/david/bitacora/.state/durable/backups/bt_durable-20261029-203411.dump 18626712 e9f39381e607a17071f5144adfe5269f73b171d848c1dcc01025264975348665
+regression: 291 files, only the 4 baseline failures (scratchpad r7.txt)
+rollback: git revert the merge of recorded-symmetric on main, restart bt-durable.service and bitacora-web.service
+
+# integration of the Solucionador and the repo-owned integration (REQ-031, D-175, D-176), local restart of engine + web, 2026-10-29 21:02, session 30499c90
+previous main: 0124edcbda8d0e9c8a7ef35d427c9d560539a607
+/home/david/bitacora/.state/durable/backups/bt_durable-20261029-210159.dump 19086897 45f81a6326921a3d3b14292ec7b18d80bb51872815e5e472d96447a262eb6b42
+regression: 294 files, only baseline failures (test_plan_boundary, test_real_designer_kit, test_recovery_views, test_remote_panel) (/home/david/.local/tmp/claude-1000/-home-david-dev-metodologia/30499c90-a91b-499f-be46-1db08d18eb28/scratchpad/integ-solver/results.txt)
+rollback: git revert the merge of solver on main, restart bt-durable.service and bitacora-web.service
+result: merged 4b17cab6125b, restarted bt-durable.service, bitacora-web.service, smoke ok
+
+# integration of the known-failing suites fixed at their origin; ordered process teardown; integrate cleans its worktree (D-177, D-178, D-179), local restart of engine + web, 2026-10-29 22:34, session 30499c90
+previous main: 4b17cab6125b83294aa7bee2de52810d453c7481
+/home/david/bitacora/.state/durable/backups/bt_durable-20261029-223420.dump 19805788 02cccc288c3f0e7abd4b171dd23476ad657f8f166186e74914dcbb082b151f39
+regression: 294 files, no failures + test_scheduler_owner_e2e_subplans (load flake, passes alone) (/home/david/.local/share/bitacora-integrate/regress/fix-baseline-20261029-215750/results.txt)
+rollback: git revert the merge of fix-baseline on main, restart bt-durable.service and bitacora-web.service
+result: merged d26c0db13139, restarted bt-durable.service, bitacora-web.service, smoke ok
+
+# integration of Bracketed paths read as missing; a member whose line holds an earlier candidate is folded from it (D-186, D-187), local restart of engine + web, 2026-10-30 00:09, session 30499c90 (metodologia-51)
+previous main: d26c0db131390f10729aca35f476d2dd8f0d3fd1
+/home/david/bitacora/.state/durable/backups/bt_durable-20261030-000950.dump 20944622 aa35ecde9594dba17f3ee9d44131fd737c28b8694736f9788d4e03e8363d7aab
+regression: 294 files, no failures (/home/david/.local/share/bitacora-integrate/regress/bracket-paths-20261029-234420/results.txt)
+rollback: git revert the merge of bracket-paths on main, restart bt-durable.service and bitacora-web.service
+result: merged fb86b2a90770, restarted bt-durable.service, bitacora-web.service, smoke ok
+
+# integration of the scheduler owner settles its own work before judging a run terminal (D-180), local restart of engine + web, 2026-10-30 00:40, session 30499c90
+previous main: fb86b2a9077078bd398958f372495c3be821debd
+/home/david/bitacora/.state/durable/backups/bt_durable-20261030-004014.dump 22027114 62307fce9d8cd3835b0b2c56f634b60b1223af9637fe755e006f49709d422baa
+regression: 294 files, no failures + test_durable_e2e (load flake, passes alone) (/home/david/.local/share/bitacora-integrate/regress/owner-race-20261030-001025/results.txt)
+rollback: git revert the merge of owner-race on main, restart bt-durable.service and bitacora-web.service
+result: merged 606d29e2a89f, restarted bt-durable.service, bitacora-web.service, smoke ok
+
+# integration of the Metamorfosis audit: clean engine stop, no recovery limit on long workflows, agents isolated from the engine's env, atomic line pins, durable joins, no kill on a transient observation, the Solucionador watches stalled and ended runs (D-181..D-185, D-188..D-191), local restart of engine + web, 2026-10-30 01:08, session 30499c90
+previous main: 606d29e2a89f3ced602511c7cb3ed12bc442e1db
+/home/david/bitacora/.state/durable/backups/bt_durable-20261030-010853.dump 22696495 b73bbf8abc2b3a6ac0276e7058315b7f9301f8516c8ddc386db6b98835c619d7
+regression: 300 files, no failures (/home/david/.local/share/bitacora-integrate/regress/audit-metamorfosis-20261030-004144/results.txt)
+rollback: git revert the merge of audit-metamorfosis on main, restart bt-durable.service and bitacora-web.service
+result: merged b680fd530614, restarted bt-durable.service, bitacora-web.service, smoke ok
+
+# integration of only the current run's rejected gates are announced (D-192), local restart of engine + web, 2026-10-30 02:41, session 30499c90
+previous main: b680fd5306147f24c5310cdbe492d235f9a0fcac
+/home/david/bitacora/.state/durable/backups/bt_durable-20261030-024152.dump 24500705 0f04d7a6373fc4ecac2088e8664a22348f39d15dae5ce5e4f9493b69322f8e16
+regression: 300 files, no failures (/home/david/.local/share/bitacora-integrate/regress/stale-blocked-notice-20261030-021453/results.txt)
+rollback: git revert the merge of stale-blocked-notice on main, restart bt-durable.service and bitacora-web.service
+result: merged 9f9353547301, restarted bt-durable.service, bitacora-web.service, smoke ok
+
+# integration of a rejected gate's conflict reaches the Solucionador (D-193), local restart of engine + web, 2026-10-30 05:16, session 30499c90
+previous main: 9f9353547301f63043ca43822d31067adc105137
+/home/david/bitacora/.state/durable/backups/bt_durable-20261030-051609.dump 26805903 ddb045c3f7962360a41b33ca598c54c2280e148e3d1fec8eee1976ebbba80154
+regression: 300 files, no failures (/home/david/.local/share/bitacora-integrate/regress/gate-resolutions-20261030-044852/results.txt)
+rollback: git revert the merge of gate-resolutions on main, restart bt-durable.service and bitacora-web.service
+result: merged 63f6f49a0c9b, restarted bt-durable.service, bitacora-web.service, smoke ok
+
+# integration of a Solucionador session's commands are its own (D-194), local restart of engine + web, 2026-10-30 06:03, session 30499c90
+previous main: 63f6f49a0c9b5159081b42cd997aecc502193b1a
+/home/david/bitacora/.state/durable/backups/bt_durable-20261030-060258.dump 27721230 63106cd4fe0170461c2431a5e4c32ec5addfff91dcf1d3e08568c49a78024789
+regression: 300 files, no failures (/home/david/.local/share/bitacora-integrate/regress/solver-provenance-20261030-053533/results.txt)
+rollback: git revert the merge of solver-provenance on main, restart bt-durable.service and bitacora-web.service
+result: merged 7cd54a9235a7, restarted bt-durable.service, bitacora-web.service, smoke ok
+
+# integration of «Probar» shows the version's real URL and a click restarts it clean; manual-evidence decisions are tried and answered from their card (D-195, D-196), local restart of engine + web, 2026-10-30 07:46, session 30499c90
+previous main: 7cd54a9235a7bdf10ca5c227b443b13c0e8d5000
+/home/david/bitacora/.state/durable/backups/bt_durable-20261030-074612.dump 28230694 b553df6146aecdba91766f80c0a52fd260738a0d252fa30b993577d45f3ebe0e
+regression: 302 files, no failures (/home/david/.local/share/bitacora-integrate/regress/probar-direct-20261030-071913/results.txt)
+rollback: git revert the merge of probar-direct on main, restart bt-durable.service and bitacora-web.service
+result: merged 5024aa65928d, restarted bt-durable.service, bitacora-web.service, smoke ok
+
+# integration of the integration regression is staged; impact selection by a static import graph (D-197, D-198), local restart of engine + web, 2026-10-30 08:14, session 30499c90
+previous main: 5024aa65928d48086bb89c4e26d4ec8abc756fce
+/home/david/bitacora/.state/durable/backups/bt_durable-20261030-081452.dump 28920065 e04758a1610a840fa01c7b3d4e419142160e51296adb27b3f2bdaf49b49c7d2d
+regression: 303 files, no failures [staged: first 16 in 1m26s, then the rest 287 in 26m41s] (/home/david/.local/share/bitacora-integrate/regress/selective-regress-20261030-074644/results.txt)
+rollback: git revert the merge of selective-regress on main, restart bt-durable.service and bitacora-web.service
+result: merged b00c2422e951, restarted bt-durable.service, bitacora-web.service, smoke ok
+
+# integration of a message to an agent counts as sent only when it left the input box (D-199), local restart of engine + web, 2026-10-30 08:44, session 30499c90
+previous main: b00c2422e95175ba53151967ca683ae1d98776eb
+/home/david/bitacora/.state/durable/backups/bt_durable-20261030-084412.dump 29631133 bfe0b7a028c12ea3f395ceede1f0a5edb0911571d081cc79c2032015a1191d73
+regression: 303 files, no failures [staged: selected 61 in 3m07s, then the rest 242 in 25m17s] (/home/david/.local/share/bitacora-integrate/regress/send-submit-20261030-081547/results.txt)
+rollback: git revert the merge of send-submit on main, restart bt-durable.service and bitacora-web.service
+result: merged 9713f777c3cb, restarted bt-durable.service, bitacora-web.service, smoke ok
+
+# integration of where to try a version is a list of links to its real pages (D-200), local restart of engine + web, 2026-10-30 09:31, session 30499c90
+previous main: 9713f777c3cb09e3d75f0f75f1f137b5b58f7828
+/home/david/bitacora/.state/durable/backups/bt_durable-20261030-093055.dump 31051625 9123974eb0968d2cb109a733b00a943574f05b7d8e9b74e8555e66e13d992e3c
+regression: 105 files, no failures [selective: selected 105 in 10m46s] (/home/david/.local/share/bitacora-integrate/regress/probar-links-20261030-092009/results.txt); the full regression of the merge runs in the background after the smoke
+rollback: git revert the merge of probar-links on main, restart bt-durable.service and bitacora-web.service
+result: merged fd441722646d, restarted bt-durable.service, bitacora-web.service, smoke ok
+post-merge: full regression of fd441722646d started (unit bt-post-regress-probar-links-20261030-093107 (journalctl --user -u bt-post-regress-probar-links-20261030-093107))
+
+# integration of each version link carries its SSH bridge and opens on the owner's own computer (D-201), local restart of engine + web, 2026-10-30 09:53, session 30499c90
+previous main: fd441722646d0682f4d6e84e77fec98ee32d5063
+/home/david/bitacora/.state/durable/backups/bt_durable-20261030-095311.dump 31718817 960e8e6df56dbae0a9597e4ecc394d5b8756f0277a395f1b20c7839b939568cb
+regression: 105 files, no failures [selective: selected 105 in 10m18s] (/home/david/.local/share/bitacora-integrate/regress/windows-opener-20261030-094253/results.txt); the full regression of the merge runs in the background after the smoke
+rollback: git revert the merge of windows-opener on main, restart bt-durable.service and bitacora-web.service
+result: merged 14dc0ba6762e, restarted bt-durable.service, bitacora-web.service, smoke ok
+post-merge: full regression of 14dc0ba6762e started (unit bt-post-regress-windows-opener-20261030-095322 (journalctl --user -u bt-post-regress-windows-opener-20261030-095322))
+post-merge full regression of fd441722646d (probar-links): 303 files, no failures + test_durable_shutdown (load flake, passes alone) (/home/david/.local/share/bitacora-integrate/regress/post-probar-links-20261030-093107/results.txt): green
+
+# integration of the bridge uses the owner's SSH alias for this machine (D-201), local restart of engine + web, 2026-10-30 10:06, session 30499c90
+previous main: 14dc0ba6762e9322f5a5fc56ed366be3260258ed
+/home/david/bitacora/.state/durable/backups/bt_durable-20261030-100555.dump 31739426 2f98823f50faeedd81da51e01094ab77291260987982102b0a138fed91827e60
+regression: 103 files, no failures [selective: selected 103 in 10m23s] (/home/david/.local/share/bitacora-integrate/regress/tunnel-alias-20261030-095532/results.txt); the full regression of the merge runs in the background after the smoke
+rollback: git revert the merge of tunnel-alias on main, restart bt-durable.service and bitacora-web.service
+result: merged b5485f1e8897, restarted bt-durable.service, bitacora-web.service, smoke ok
+post-merge: full regression of b5485f1e8897 started (unit bt-post-regress-tunnel-alias-20261030-100606 (journalctl --user -u bt-post-regress-tunnel-alias-20261030-100606))
+
+# integration of «Probar» starts a version already signed in; «Reiniciar con login» for accounts and roles (D-202), local restart of engine + web, 2026-10-30 10:21, session 30499c90
+previous main: b5485f1e889741453cb6f46b27886b9142ce505e
+/home/david/bitacora/.state/durable/backups/bt_durable-20261030-102136.dump 31752243 84a2d78e839a6c6542a057423e35324d790b5f4ca9ca3dc476587b16e733d1c4
+regression: 101 files, no failures [selective: selected 101 in 11m00s] (/home/david/.local/share/bitacora-integrate/regress/probar-nologin-20261030-101036/results.txt); the full regression of the merge runs in the background after the smoke
+rollback: git revert the merge of probar-nologin on main, restart bt-durable.service and bitacora-web.service
+result: merged db65777b5b07, restarted bt-durable.service, bitacora-web.service, smoke ok
+post-merge: full regression of db65777b5b07 started (unit bt-post-regress-probar-nologin-20261030-102149 (journalctl --user -u bt-post-regress-probar-nologin-20261030-102149))
+post-merge full regression of 14dc0ba6762e (windows-opener): 303 files, no failures + test_durable_stage_join (load flake, passes alone) (/home/david/.local/share/bitacora-integrate/regress/post-windows-opener-20261030-095322/results.txt): green
+
+# integration of an engine restart waits for running verifications (D-204), local restart of engine + web, 2026-10-30 10:56, session 30499c90
+previous main: db65777b5b07db73b0ac87e8b437ee300dd72672
+/home/david/bitacora/.state/durable/backups/bt_durable-20261030-105617.dump 31786494 58a04dc3215a7c66e276ab7b14acbc4db24d444f4a959918bbbb074f3cc2f7c2
+regression: 303 files, no failures [staged: first 52 in 9m34s, then the rest 251 in 24m23s] (/home/david/.local/share/bitacora-integrate/regress/drain-verify-20261030-102220/results.txt)
+rollback: git revert the merge of drain-verify on main, restart bt-durable.service and bitacora-web.service
+result: merged 7da3c6c9e232, restarted bt-durable.service, bitacora-web.service, smoke ok
+post-merge full regression of db65777b5b07 (probar-nologin): 303 files, no failures + test_designer_kit, test_durable_e2e (load flake, passes alone) (/home/david/.local/share/bitacora-integrate/regress/post-probar-nologin-20261030-102149/results.txt): green
+
+# integration of every version link opens already signed in as a real test account (D-205), local restart of engine + web, 2026-10-30 11:30, session 30499c90
+previous main: 7da3c6c9e2329b9365c4e9231aabaca7ae9bdcd0
+/home/david/bitacora/.state/durable/backups/bt_durable-20261030-113017.dump 32089495 40b27db6dcb5afea50323a2f38004dcaf5a52a27964add6c55897446c6668225
+regression: 105 files, no failures [selective: selected 105 in 11m02s] (/home/david/.local/share/bitacora-integrate/regress/probar-autologin-20261030-111915/results.txt); the full regression of the merge runs in the background after the smoke
+rollback: git revert the merge of probar-autologin on main, restart bt-durable.service and bitacora-web.service
+result: merged 5e6221b0e598, restarted bt-durable.service, bitacora-web.service, smoke ok
+post-merge: full regression of 5e6221b0e598 started (unit bt-post-regress-probar-autologin-20261030-113029 (journalctl --user -u bt-post-regress-probar-autologin-20261030-113029))
+post-merge full regression of b5485f1e8897 (tunnel-alias): 303 files, no failures + test_durable_e2e, test_durable_stage_join (load flake, passes alone) (/home/david/.local/share/bitacora-integrate/regress/post-tunnel-alias-20261030-100606/results.txt): green
+
+# integration of Recover verifier interruptions and expose captured snapshot identity (D-203, D-208), local restart of engine + web, 2026-10-30 11:58, session 20261030-100736-d494
+previous main: 5e6221b0e598171dd33cf564db47bcce0165b13b
+/home/david/bitacora/.state/durable/backups/bt_durable-20261030-115854.dump 32557857 d1a7e5458e0c2750a5fbd4342d901bee56693f877f4b909346227d3526ea0585
+regression: 303 files, no failures [staged: first 26 in 3m05s, then the rest 277 in 24m56s] (/home/david/.local/share/bitacora-integrate/regress/solver-20261030-100736-d494-20261030-113052/results.txt)
+rollback: git revert the merge of solver/20261030-100736-d494 on main, restart bt-durable.service and bitacora-web.service
+result: merged fff622890f28, restarted bt-durable.service, bitacora-web.service, smoke ok
+
+# integration of Every start lands signed in, and the guide speaks of the open session (D-211), local restart of engine + web, 2026-10-30 12:02, session metodologia-90
+previous main: fff622890f28b8093a9a0afda9c4077d056bea1b
+/home/david/bitacora/.state/durable/backups/bt_durable-20261030-120229.dump 32559812 4f04972689d72f6cb2fbfdbea2d47104e2280fcbddb11b5cd6d95c86af4bbb17
+regression: 54 files, no failures [selective: selected 54 in 2m22s] (/home/david/.local/share/bitacora-integrate/regress/autologin-everywhere-20261030-120006/results.txt); the full regression of the merge runs in the background after the smoke
+rollback: git revert the merge of autologin-everywhere on main, restart bt-durable.service and bitacora-web.service
+result: merged ce5c591edca2, restarted bt-durable.service, bitacora-web.service, smoke ok
+post-merge: full regression of ce5c591edca2 started (unit bt-post-regress-autologin-everywhere-20261030-120241 (journalctl --user -u bt-post-regress-autologin-everywhere-20261030-120241))
+post-merge full regression of 5e6221b0e598 (probar-autologin): 303 files, no failures + test_durable_observe_hiccup, test_durable_postgres (load flake, passes alone) (/home/david/.local/share/bitacora-integrate/regress/post-probar-autologin-20261030-113029/results.txt): green
+
+# integration of a decision number is reserved when it is taken (D-209), local restart of engine + web, 2026-10-30 12:32, session 30499c90
+previous main: ce5c591edca2013924dfb6f05194d5b5538ab673
+/home/david/bitacora/.state/durable/backups/bt_durable-20261030-123201.dump 32602972 e6956c2919a4731a7070534d09b9a3c3dd95d82e0e856bb6d3976edf83149ef9
+regression: 303 files, no failures [staged: first 90 in 11m22s, then the rest 213 in 17m43s] (/home/david/.local/share/bitacora-integrate/regress/id-reserve-20261030-120254/results.txt)
+rollback: git revert the merge of id-reserve on main, restart bt-durable.service and bitacora-web.service
+result: merged cdf881a9f394, restarted bt-durable.service, bitacora-web.service, smoke ok
+post-merge full regression of ce5c591edca2 (autologin-everywhere): 303 files, no failures (/home/david/.local/share/bitacora-integrate/regress/post-autologin-everywhere-20261030-120241/results.txt): green
+
+# integration of Reobserve integration on same-snapshot verification (D-221), local restart of engine + web, 2026-10-30 13:58, session 20261030-120814-28ad
+previous main: cdf881a9f3947523b1f525383e64f48566e8fce5
+/home/david/bitacora/.state/durable/backups/bt_durable-20261030-135826.dump 32641668 d9cd47e22bd68fcb4b9b73fec3544fdc5c24854c4075fbe86fc194a1d8fbcc93
+regression: 304 files, no failures [staged: first 29 in 5m27s, then the rest 275 in 22m05s] (/home/david/.local/share/bitacora-integrate/regress/solver-20261030-120814-28ad-20261030-133052/results.txt)
+rollback: git revert the merge of solver/20261030-120814-28ad on main, restart bt-durable.service and bitacora-web.service
+result: merged bc86e978ebb2, restarted bt-durable.service, bitacora-web.service, smoke ok
+
+# integration of A member is accepted on its own subplan line; the Solucionador's watchdog never cuts its own integration (D-213, D-214), local restart of engine + web, 2026-10-30 14:26, session metodologia-90
+previous main: bc86e978ebb20b07944444065dcf220c787f641c
+/home/david/bitacora/.state/durable/backups/bt_durable-20261030-142610.dump 32663512 197990ca8952fb2ea18cdae87f74121dbabfa70b276a33aa76ad7ec83ffbd2df
+regression: 304 files, no failures [staged: first 31 in 4m49s, then the rest 273 in 22m32s] (/home/david/.local/share/bitacora-integrate/regress/audit-metamorfosis-2-20261030-135848/results.txt)
+rollback: git revert the merge of audit-metamorfosis-2 on main, restart bt-durable.service and bitacora-web.service
+result: merged 78a666f54be2, restarted bt-durable.service, bitacora-web.service, smoke ok
+
+# integration of Isolated diagnosing agents; regression venv and signals; recipe-driven auto-login for any project (D-212, D-227, D-229, D-231), local restart of engine + web, 2026-10-30 14:56, session metodologia-90
+previous main: 78a666f54be2d08904241be656123a946e25b723
+/home/david/bitacora/.state/durable/backups/bt_durable-20261030-145630.dump 33415910 08115a6a9ef383ed8e75b398e5ac2e6c02ac4ba1ba6a4bf4e0ecf53b70d6e343
+regression: 305 files, no failures [staged: first 16 in 1m05s, then the rest 289 in 26m38s] (/home/david/.local/share/bitacora-integrate/regress/diagnosis-isolated-20261030-142846/results.txt)
+rollback: git revert the merge of diagnosis-isolated on main, restart bt-durable.service and bitacora-web.service
+result: merged 84150d1bf5bb, restarted bt-durable.service, bitacora-web.service, smoke ok
+
+# integration of restarts cost nothing; a re-run launch adopts; one regression at a time; an integration runs in its own unit; the integrate lock is fair (D-206, D-207, D-210, D-220, D-225, D-230), local restart of engine + web, 2026-10-30 15:30, session 30499c90
+previous main: 84150d1bf5bbae8e394b872f07d01f4648bde5b5
+/home/david/bitacora/.state/durable/backups/bt_durable-20261030-153022.dump 33882720 772047014f0b68a672902fdd91d76919d9da2a6783bbd01b4ace6a11fe7aa09e
+regression: 309 files, no failures [staged: first 16 in 1m33s, then the rest 293 in 32m03s] (/home/david/.local/share/bitacora-integrate/regress/shutdown-race-20261030-145645/results.txt)
+rollback: git revert the merge of shutdown-race on main, restart bt-durable.service and bitacora-web.service
+result: merged f00131c46877, restarted bt-durable.service, bitacora-web.service, smoke ok
+
+# integration of Confirmed medium findings are repaired; an audit's own coverage gap reruns it; a held block reaches the Solucionador (D-233, D-234, D-235), local restart of engine + web, 2026-10-30 16:50, session metodologia-90
+previous main: f00131c4687780fcd707cc82b6982dc61575f855
+/home/david/bitacora/.state/durable/backups/bt_durable-20261030-165019.dump 35080169 380d2b82840398f44957efb865a626029388776e2b88958641b73c221ee11526
+regression: 309 files, no failures [staged: first 16 in 1m31s, then the rest 293 in 32m05s] (/home/david/.local/share/bitacora-integrate/regress/audit-medium-blocks-20261030-161218/results.txt)
+rollback: git revert the merge of audit-medium-blocks on main, restart bt-durable.service and bitacora-web.service
+result: merged db232929a5dc, restarted bt-durable.service, bitacora-web.service, smoke ok

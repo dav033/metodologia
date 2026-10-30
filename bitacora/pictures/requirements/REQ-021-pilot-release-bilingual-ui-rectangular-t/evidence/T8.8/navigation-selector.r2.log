@@ -1,0 +1,31 @@
+
+> demo-decoracion@0.1.0 idioma:test-ui-navegacion
+> tsx scripts/test/test-ui-idioma-navegacion.ts --solo selector
+
+
+> @sempertex/agente-core@0.1.0 build
+> tsc -p tsconfig.build.json
+
+
+> @sempertex/happie-package-ia@0.1.0 build
+> tsc -p tsconfig.build.json
+
+Error: Next dev exited before /login became available.
+▲ Next.js 16.3.0 (Turbopack)
+- Local:         http://127.0.0.1:44267
+- Network:       http://127.0.0.1:44267
+✓ Ready in 387ms
+✓ Running next.config.ts took 39ms
+⨯ Another next dev server is already running.
+
+- Local:        http://127.0.0.1:33287
+- PID:          404279
+- Dir:          /home/david/dev/metodologia/bitacora/.state/durable/attempts-root/ws/pictures/worktrees/pictures-REQ-021-r25-T8-8-a201-d167cfa4-b80bd16e327c1a37
+- Log:          .next/dev/logs/next-development.log
+
+You can access the existing server at http://127.0.0.1:33287,
+or run kill 404279 to stop it and start a new one.
+[?25h
+
+    at start (/home/david/dev/metodologia/bitacora/.state/durable/attempts-root/ws/pictures/worktrees/pictures-REQ-021-r25-T8-8-a201-d167cfa4-b80bd16e327c1a37/scripts/test/test-ui-idioma-navegacion.ts:52:41)
+    at async main (/home/david/dev/metodologia/bitacora/.state/durable/attempts-root/ws/pictures/worktrees/pictures-REQ-021-r25-T8-8-a201-d167cfa4-b80bd16e327c1a37/scripts/test/test-ui-idioma-navegacion.ts:175:5)

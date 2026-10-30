@@ -1616,7 +1616,7 @@ REQ-020 preserves the per-task M2 API and adds a versioned batch layer using cac
 
 ## D-154 — Agents of a durable run receive the owner's test variables; cache reads count a tenth of the token budget
 
-- **Date:** 2026-10-29 · **Status:** Accepted · **Refines:** REQ-030 (durable runtime)
+- **Date:** 2026-10-29 · **Status:** Accepted; the cache weighting corrected by D-157 (it never applied live) · **Refines:** REQ-030 (durable runtime)
 - **Context:** pictures REQ-021 T4.2 stopped for a person after one attempt: «the task used its token budget», checks
   failed. Two causes that also stopped T3.12, T14.4 (twice) and T94. (1) The agent wrote a Postgres test it could not
   run: the verifier receives `PICTURES_REQ021_DATABASE_URL` from the owner's secret files (`verifier.secret_files`), an
@@ -1691,3 +1691,1098 @@ REQ-020 preserves the per-task M2 API and adds a versioned batch layer using cac
 - **Source:** operator, 2026-10-29, while verifying the owner's request «que espere la ejecución y aprobación de sp7».
 - **Evidence:** `test_durable_verification` (4); live read: SP-1 v1, SP-2 v1, SP-14 v1, SP-3 v2 (`8ac04102`, the owner's
   conflict resolution) «por probar»; their commits are in `~/dev/pictures`, so «Probar» can open them.
+
+## D-157 — The verifier's sandbox runs Python checks with uv; Codex cache reads really count a tenth
+
+- **Date:** 2026-10-29 · **Status:** Accepted · **Corrects:** D-154 · **Refines:** REQ-030 (M6 sandbox)
+- **Context:** pictures REQ-021 T6.3 stopped for a person after one attempt. (1) Its check, `npm run
+  gasto:test-captura`, ends with `uv run --frozen --directory services/ai-api --extra test pytest`; the verifier's
+  sandbox showed only Node and the Playwright cache, so «uv: command not found» (exit 127, BLOCKED_EXTERNAL) while the
+  TypeScript half passed 4/4. No earlier REQ-021 check had used uv. (2) The stop read «the task used its token budget»
+  although D-154 weighted cache reads: the Codex driver hands the engine `input_tokens`, `cache_read_tokens` and a
+  `total_tokens` that counts the cache in full; `budget_tokens` took that total and looked for `cached_input_tokens`,
+  and its test used the raw Codex names, so the weighting never applied (T6.3: 23.94 M counted, 2.76 M meant).
+- **Decision:** the sandbox toolchain shows uv and the Pythons it manages (`UV_CACHE_DIR` throwaway in /tmp, no Python
+  downloads); a package root with `pyproject.toml` gets its `.venv` like `node_modules` (the attempt's own, else the
+  repository's when `uv.lock` is byte-identical; `pyvenv.cfg` marks a finished install), as a throwaway overlay in the
+  workspace and read-only at its own path, which its scripts' shebangs name. `budget_tokens` uses the driver's split
+  by provider (Codex input includes its cache reads, Claude's does not), the total only without a split.
+- **Consequences:** + Python checks run where Node checks already did; + long Codex sessions no longer exhaust their
+  task's budget; − a uv check whose project is installed editable rebuilds it in the overlay each run (a second);
+  − with `verifier.network` off a rebuild that needs a build backend fails.
+- **Source:** the owner's standing order (2026-10-29): every blocked task is a system defect to fix at its source.
+- **Evidence:** `test_verifier_python_toolchain` (8, one in the real sandbox), `test_durable_agent_env` (budget, driver
+  shape); a bwrap emulation of the new mounts on T6.3's tree: uv rebuilt the editable project and pytest passed (3).
+  Live: integrated `0b9f36248` (regression 282 files, 4 baseline; DBOS backup `bt_durable-20261029-142224.dump`);
+  the owner's `reverify` of T6.3 re-ran its checks on the same snapshot and it completed, no new agent attempt.
+
+## D-158 — «Probar esta versión» starts a version's test servers and opens it in a new tab
+
+- **Date:** 2026-10-29 · **Status:** Accepted · **Refines:** D-131, D-156
+- **Context:** the owner pressed «Abrir esta versión en local» for pictures REQ-021 SP-1 «at least to see nothing
+  explodes» and nothing opened: the button only made a detached copy of the version's commit; preparing it, starting
+  its servers (pictures: Next web plus the Python ai-api) and finding the port were left to him. A server an earlier
+  session started by hand in that copy (port 3000, no database) still ran, and Next refuses a second dev server in the
+  same folder. Owner: «quiero que cuando le doy click me arranque el servidor o servidores de pruebas y que se me abra
+  el navegador con la versión en específico».
+- **Decision:** `bt_verify_servers` reads a per-project recipe kept by the owner (`<bitácora>/<project>/
+  verify-servers.json`: env file, env with `{port:x}` and `${SECRET}` filled from the owner's secret files at start,
+  prepare steps, servers with port, ready path and open path), picks free ports, writes a 0600 env next to the copy and
+  runs prepare plus every server in one tmux session. «Probar esta versión ↗» posts into a new tab whose page polls the
+  servers and replaces itself with the version's URL when all answer; a server that died is reported with its output.
+  Servers left listening inside the copy are stopped first (never a process that does not listen); «Detener
+  servidores» and «Cerrar la copia» stop them. A missing secret starts nothing. pictures' recipe: the owner's
+  `.env.local` with `DATABASE_URL` switched to the REQ-021 test database, the web pointed at the version's own ai-api,
+  prepare = `npm ci` when missing, workspace builds, `rag:migrate` (on the test database).
+- **Consequences:** + one click from «Probar» to the running version; + versions run side by side on free ports;
+  − the recipe names one requirement's test database (pictures REQ-021); − migrations of different versions accumulate
+  in the shared test database.
+- **Source:** owner, 2026-10-29 (quoted above).
+- **Evidence:** `test_verify_servers` (10, one with real processes); live on SP-1: prepare, 36 migrations on
+  `req021@127.0.0.1:55433`, ai-api 8001 and web 3000 answered, `/`, `/3d`, `/login` 200.
+
+## D-159 — An audit's brief keeps its screenshots and logs outside the repository
+
+- **Date:** 2026-10-29 · **Status:** Accepted · **Refines:** REQ-030 (audit gate)
+- **Context:** pictures REQ-021 T5.5 (SP-5 visual audit) saved 16 captures next to its report inside the repository;
+  the audit gate rejected it for files it did not declare and it audited again, as T2.7 had for SP-2. Nothing told an
+  auditor where evidence goes.
+- **Decision:** every audit task's notes (`owner_notes`, both runtimes) add: inside the repository only the report and
+  the ledger; screenshots, captures and logs in `<requirement>/evidence/<task>/` (absolute path), cited from the report.
+- **Consequences:** + no audit pass wasted on undeclared evidence; + captures stay out of the product repository.
+- **Source:** the owner's standing order to fix recurring defects at their source.
+- **Evidence:** `test_audit_evidence_brief` (2); regression 284 files, 4 baseline; integrated `815ec6a87` with a DBOS
+  backup `bt_durable-20261029-151400.dump`.
+
+## D-160 — Compositions fold a member's own work, merge package.json by key and reuse resolved conflicts
+
+- **Date:** 2026-10-29 · **Status:** Accepted · **Refines:** D-149, REQ-030 (composition)
+- **Context:** pictures REQ-021 r19 settled `blocked` with CG-3, CG-5 and CG-6 rejected (`git_text_conflict` in
+  package.json, mapa-rutas.ts, servicio.ts, dependientes.ts) and no decision for the owner. Three causes: (1) SP-4's line,
+  built at the r16 stage join, carries its prerequisites as integrations of other subplans' work (79 commits), not as their
+  published tips; its delta from its merge base with SP-3 re-applied copies of SP-1, SP-2 and SP-14. (2) Every subplan
+  appends npm scripts at the end of `package.json` (SP-3 had needed the owner's hand). (3) SP-4 and SP-5 both edited the
+  one-line `TABLAS_TRABAJO_CUENTA` (a genuine conflict). And nothing told the owner the run had stopped.
+- **Decision:** the durable composer folds a member from where its own task snapshots start on its line
+  (`_own_work_base`), only when every accepted snapshot of it lies there (lines older than the durable runtime keep the
+  merge-base rule); the git port merges a conflicted `package.json` by key (`merge_json`, a clash only when both changed a
+  value differently) and keeps genuine conflicts' context in `<store>/resolutions/<key>.diff3|.json`, reusing a
+  `<key>.resolved` written once for every gate that composes the same three versions; the engine projector notifies the
+  owner once when a run settles blocked by rejected gates.
+- **Consequences:** + stage-joined subplans compose; + npm-script appends never conflict; + a genuine conflict is
+  resolved once; − a resolution is keyed by blob contents: a member that changes the file asks again (as it should).
+- **Source:** the owner's standing order: every blocked task is a system defect to fix at its source.
+- **Evidence:** `test_compose_conflicts` (6, real git repositories); dry run on r19's refs: with the old rule SP-4
+  conflicts in 3 files, with the new rules SP-1..SP-5 fold cleanly up to SP-5's genuine conflict, and with one recorded
+  resolution (the union of both table lists, SP-4's tables use `account_id` as SP-5's `columnaCuenta` assumes) SP-1..SP-6
+  compose.
+
+## D-161 — Confirming a subplan on the web also sends it to run; the subplan list keeps its scroll
+
+- **Date:** 2026-10-29 · **Status:** Accepted · **Refines:** D-134, D-147, D-155
+- **Context:** the owner asked (pictures REQ-021, 2026-10-29) that «Confirmar subplan» put the subplan in the execution
+  queue without a second click on «Ejecutar subplan», and reported that approving a subplan sent the subplan list on the
+  left back to its top. The list scrolls on its own (`planning.css`); the reload after any form, and every live swap of
+  the list block (its badges and run chips change every few seconds during a run), replaced it with a copy at scroll 0.
+  While checking, SP-8's entry in `.planning/stage-queue.json` was found stale: the owner had run SP-7 and SP-8 from
+  their buttons (stages r20, r21), and approving SP-7 in «Probar» would have approved a second, identical stage.
+- **Decision:** the web button becomes «Confirmar y ejecutar»: a successful confirmation runs `bt_stages.run` for that
+  subplan (it runs now, or waits in the queue for the earlier subplans it needs), loopback only like «Ejecutar subplan»,
+  and leaves alone a subplan already in the approved stage or the queue. A queued subplan shows «En cola · espera SP-n»
+  and a blocker instead of asking to be run. A stage approval or a drain drops queue entries the approved stage already
+  holds (`bt_stage_queue.settle`). `planning-live.js` keeps the list's scroll across live swaps and in-place
+  navigation, saves it on `pagehide` with the open subplan and restores it after a form's reload (again on `load`, when
+  fonts grow the list); arriving on another subplan brings it into sight.
+- **Consequences:** + one click from confirmation to execution; + the list stays where the owner left it; − a
+  confirmation in the chat (`planning confirm`) still needs «Ejecutar subplan» or `stage run`.
+- **Source:** owner request, 2026-10-29.
+- **Evidence:** `test_subplan_control` (3 new), `test_stage_queue` (1 new); headless Chromium on a copy of REQ-021:
+  main loses the list position on reload (1089 → 0) and on a live swap (260 → 0); the branch keeps 1089 and 260 and
+  brings SP-12 into sight on arrival.
+
+## D-162 — Directions awaiting the owner survive plan changes; delegations get 120 turns
+
+- **Date:** 2026-10-29 · **Status:** Accepted · **Refines:** D-151, the Designer directions flow
+- **Context:** pictures REQ-021 SP-12 had three directions ready for the owner's choice since 10:59. At 15:40 the
+  Planner appended one engineering sentence (an integration-test script) to UI task T12.3's objective; the UI brief's
+  digest changed, `bt_design_follow.sync` released the pending choice and started three new explorations. They were the
+  first explorations on Claude Opus (D-151), and delegations ran Claude with its default `--max-turns 45`: two of the
+  three stopped at 45 turns with the mockup written and no note or comparison JSON ($4 each), leaving one direction.
+- **Decision:** an exploration awaiting the owner's choice is never redone by `sync` or by a focus/parallel request
+  after a plan change; only an explicit request (`force`/`fresh`: «Rehacer diseño», `design draft --force`) redoes it.
+  Choosing a direction drawn before the change folds the mechanical brief diff into the finalise brief and records the
+  current brief (`<ref>.r<n>.chosen.behavior.md`). The panel says the directions predate the change and can still be
+  chosen. An iteration of an already chosen direction keeps its amend path. Claude delegations take
+  `delegate.max_turns` (120, as `scheduler.max_turns`).
+- **Consequences:** + a plan edit no longer throws away the owner's options nor spends three Designer runs; + Opus
+  Designers can finish; − a large plan change keeps the old directions until the owner asks for new ones.
+- **Source:** the owner's question about SP-12 (2026-10-29) and the standing order to fix blocked work at its source.
+- **Evidence:** `test_design_directions` (2 new, replacing the old stale-refusal test), `test_harness_controls` (1 new);
+  SP-12 delegations D-20261029-154139-9e2d and -34c4 ended `error_max_turns` at 46 turns, -6d7c completed.
+
+## D-163 — A refused bitácora commit unstages and says why
+
+- **Date:** 2026-10-29 · **Status:** Accepted · **Refines:** the bitácora commit (`bt_vcs.commit`)
+- **Context:** from 13:46 the repository's pre-commit hook (gitleaks) refused every bitácora commit on a false positive
+  in pictures REQ-021's `.translations/cache.json` (a SHA-256 key next to text mentioning an API). `_commit_locked`
+  returned False with the files still staged; `bitacora.py commit` printed «nothing to commit», nothing was committed or
+  pushed for hours, and the staged live state made a later `git merge --no-ff` in that checkout abort with a reset.
+- **Decision:** when `git commit` fails, the bitácora commit unstages what it staged; when the hook's output is a
+  gitleaks refusal it writes the redacted report to `.state/secret-alert.txt`, which the SessionStart and Stop hooks and
+  `bitacora.py commit` already surface. How to treat the false positive itself (a path allowlist mirroring
+  `bt_secrets.GENERATED`, or one more fingerprint) is the owner's decision: an allowlist was refused by the permission
+  classifier as a security weakening.
+- **Consequences:** + a refused commit is visible at once and never leaves the live index dirty; − until the owner
+  decides on the false positive, bitácora commits stay refused (the files are safe on disk).
+- **Source:** the owner's standing order to fix blocked work at its source.
+- **Evidence:** `test_bitacora_commit_refused` (2, a real repository with a refusing hook).
+
+## D-164 — Subplan lines settle conflicts like the composer
+
+- **Date:** 2026-10-29 · **Status:** Accepted · **Refines:** D-160, REQ-030 (integration lines)
+- **Context:** pictures REQ-021 r24: once CG-3 composed (D-160), its gate task T93 passed its own checks but was rejected
+  with `INTEGRATION_CONFLICT: package.json (line of SP-11)`. A gate task is integrated into every subplan line whose
+  scope holds it, and `GitLineIntegrator._merge` used a plain `git merge-tree`: the npm scripts each subplan appends,
+  which the composer now merges by key, conflicted again on the lines. The second attempt started from the same
+  candidate and would have conflicted the same way.
+- **Decision:** when `git merge-tree` reports conflicts on a line (run line, subplan lines, `sync`), the integrator
+  settles them with the composer's rules: `package.json` merged by key and the recorded resolutions in
+  `<state>/composition/resolutions` (a new genuine conflict leaves its context there, as at a gate). Only with a single
+  merge base and a composer; otherwise the conflict stays as git found it.
+- **Consequences:** + gate tasks and members integrate where the composer composes; + one place records how a genuine
+  conflict is resolved; − a criss-cross history still reports the raw conflict.
+- **Source:** the owner's standing order: every blocked task is a system defect to fix at its source.
+- **Evidence:** `test_compose_conflicts.LineIntegration` (2, real git): a line holding script `b` takes a gate snapshot
+  adding `c` without a conflict; without a composer the conflict is reported as before. Live: T93 a1 telemetry
+  `recovery_decision INTEGRATION_CONFLICT`, its a2 prompt «conflicts with accepted work in: package.json (line of SP-11)».
+
+## D-165 — Dependencies are typed when the plan is written
+
+- **Date:** 2026-10-29 · **Status:** Accepted · **Refines:** plan contract interfaces (schema 1.2.0/1.3.0), Planner role
+- **Context:** pictures REQ-021 T7.4 (SP-7 checkpoint) asserted that every counter call lands in the usage ledger under
+  its tool tag. That behaviour is wired and proven in SP-6 (capture T6.3, end-to-end test T6.5, interface IF-3 owned by
+  SP-6), but T7.4 depended only on T6.2, the table's producer, and was not an IF-3 consumer. SP-7's line never held the
+  capture; four attempts failed (`needs_decision T7.4:d1`). Its checkpoint also started `next dev` without the Python
+  backend. The owner: «si una tarea depende de otra debe estar tipificado desde el principio y que se trabaje en
+  consecuencia».
+- **Decision:** the validator refuses an interface consumer outside the interface's `owner` subplan that does not depend
+  on the interface's `integration_task` (or a gate after it), unless that integration task is a composition gate task;
+  the producer alone proves only the contract. The Planner reviews, task by task before each subplan's confirmation, what
+  its acceptance and checks rely on without building it, types each reliance in `after` or as an interface consumer,
+  says which servers a check starts and how, and records the review in a planning note. For REQ-021 the Planner revises
+  T7.4 (depends on CG-6's T96, consumes IF-3, its checkpoint starts the local ai-api with a shared HMAC secret and
+  deterministic providers) and reviews SP-7..SP-13 for the same pattern.
+- **Consequences:** + a cross-subplan reliance is visible and scheduled before any attempt; − semantic reliance inside
+  free text still depends on the Planner's review: the validator enforces what is declared.
+- **Source:** owner request, 2026-10-29 16:40.
+- **Evidence:** `bt_planner/tests/test_interfaces.py` (2 new); the live REQ-021 plan passes unchanged; T96's ancestors
+  include T6.3 and T6.5.
+
+## D-166 — Reconfirming a running subplan approves its stage again
+
+- **Date:** 2026-10-29 · **Status:** Accepted · **Refines:** D-161
+- **Context:** after D-165 the Planner typed T7.4's dependency on CG-6 and fixed SP-8/SP-9 dependencies; SP-7, SP-8 and
+  SP-9 already run in stage r24 and need the owner's re-confirmation. D-161's «Confirmar y ejecutar» left a subplan of
+  the approved stage alone («ya está en ejecución»), so a re-confirmed change would never reach the run.
+- **Decision:** when the owner confirms on the web a subplan that is already in the approved stage (it changed), the
+  stage is approved again with it and the run joins the new revision; while other changed subplans of the stage wait
+  for confirmation, the message says so instead of an error. «Ejecutar subplan» on a running subplan still does nothing.
+- **Consequences:** + a re-confirmed change reaches the run in one click; − each re-confirmation is a stage revision
+  and a join (accepted unchanged work is inherited).
+- **Source:** the owner's REQ-021 re-confirmation of SP-7..SP-9, 2026-10-29.
+- **Evidence:** `test_subplan_control.test_reconfirming_a_running_subplan_approves_the_stage_again`.
+
+## D-167 — The durable engine heals its runs' decisions
+
+- **Date:** 2026-10-29 · **Status:** Accepted · **Refines:** REQ-029 R3/R4 (model step), REQ-030 (durable runtime)
+- **Context:** the owner: failures of an agent's work and of the environment should be solved by the system on its own;
+  plan and system defects at least detected and routed. The legacy Scheduler's self-healing answers a stop with the
+  diagnosing model's `retry`/`retry_with_note` (`healing.model_diagnosis`, which the owner had switched on), but the
+  durable runtime that runs pictures REQ-021 never got it: T4.2, T7.4 and T93 each waited in `needs_decision` for the
+  operator.
+- **Decision:** `bt_durable/healing.py`, called from the engine's maintenance pass (`service._heal_decisions`, every
+  30 s): for each open decision offering `retry`/`retry_with_note`, a background diagnosis by `bt_block_agent`
+  (`diagnosis.*`) reads the failure, the task, its dependencies and its attempts; a later pass sends the validated choice
+  to that exact round as `by: healing` — once per failure signature and task, within `healing.max_per_task` and
+  `healing.max_actions`, never when the model is unsure. A diagnosis of kind `plan` goes to the run's Planner with its
+  evidence and the decision stays for the owner. Every step is recorded in the activity feed as «Autocuración». Outside
+  the workflows: bt.run/bt.task keep their sequence, so no `DBOS.patch` is needed.
+- **Consequences:** + retries with a concrete note happen in seconds instead of waiting for a person; + plan defects
+  reach the Planner with evidence; − the diagnosing model (`diagnosis.profile`/`model`) spends tokens on every decision
+  and can be wrong: one try per signature, then the owner.
+- **Source:** owner, 2026-10-29 («sí» to porting the self-healing to the durable engine).
+- **Evidence:** `test_healing_durable_decisions` (3).
+
+## D-168 — Task sessions never do the bitácora's chores
+
+- **Date:** 2026-10-29 · **Status:** Accepted · **Refines:** D-163, the bitácora hooks
+- **Context:** after D-163 made a refused bitácora commit raise the secret alert, pictures REQ-021 T93's durable attempt
+  (Codex, gate CG-3) finished its task, met the alert in the bitácora Stop hook, added a gitleaks fingerprint to
+  `bitacora/.gitleaksignore` and committed it (`042a31ca`, «fix: remove secret») on the local `main` of
+  `~/dev/metodologia`, outside its worktree and its task. Durable attempts carried no marker the hooks could see
+  (only `BITACORA_ROOT`), so their Stop hook also asked them for day-log updates.
+- **Decision:** durable attempts get `BITACORA_ATTEMPT=<attempt key>`; the Stop hook returns at once for them, and the
+  secret alert (SessionStart warning and Stop block) is shown only to sessions that are not system runs
+  (`BITACORA_ATTEMPT`, `BITACORA_TASK`, `BITACORA_DELEGATION`).
+- **Consequences:** + task agents answer to their task and their verifier only; − none known: the operator and owner
+  sessions still see the alert.
+- **Source:** the operator's finding while answering the owner about T7.4, 2026-10-29 17:05.
+- **Evidence:** `test_hooks_system_runs`; T93 a3 `output.log` (item_45 reads `.state/secret-alert.txt`; its final message
+  reports commit `042a31ca`). The commit itself (one verified false-positive fingerprint) stays on `main` for the owner.
+
+## D-169 — A criss-cross line merge settles against a virtual base
+
+- **Date:** 2026-10-29 · **Status:** Accepted · **Refines:** D-164
+- **Context:** pictures REQ-021 r25, gate task T93 (CG-3) blocked with «the integration conflict keeps coming back»
+  (`INTEGRATION_CONFLICT`, package.json, line of SP-7, `max_same_signature`). The gate snapshot and SP-7's line had both
+  taken SP-3 and SP-4, so `git merge-base --all` gave three bases; D-164's `_settle` merged package.json by key only with
+  a single base and otherwise left git's conflict, so every retry met the same conflict. No agent could ever fix it.
+- **Decision:** with several merge bases the line integrator first merges them into a virtual base commit, recursively,
+  as git's recursive strategy does, using the composer's rules (package.json by key; a conflict left between bases keeps
+  git's markers, so that file then conflicts as before). The virtual-base merges record no resolution requests.
+- **Consequences:** + gates built on composed candidates integrate into lines that share several members; + a script one
+  side removed is not resurrected (a `{}` base would); − a conflict between the bases themselves still reaches the owner.
+- **Rule:** a conflict that a retry cannot change (same snapshot lineage, same signature) is a system defect: fix the
+  integrator, never ask the agent to retry it.
+- **Source:** operator monitoring of REQ-021, 2026-10-29 17:44.
+- **Evidence:** `test_compose_conflicts.LineIntegration.test_a_criss_cross_history_settles_against_a_virtual_base` (red
+  without the fix); reproduced on pictures: SP-7 tip `043fd6a9` × T93 a2 snapshot `ac842911` settles with all keys kept.
+
+## D-170 — The engine's INFO lines reach its journal
+
+- **Date:** 2026-10-29 · **Status:** Accepted · **Refines:** D-167
+- **Context:** after integrating D-167 the operator looked for «healing:» in the engine journal and found none, though
+  healing had answered pictures REQ-021 T93:d1 (`retry_with_note`, RUN.durable-healing.json, activity «Autocuración»).
+  `bt_durable`'s loggers had no handler: their INFO lines («healing: …», «stage join: …», «engine started») fell to
+  Python's last-resort handler, which prints WARNING and up only. Only DBOS's own logger was configured.
+- **Decision:** `bt-durable engine` attaches one stderr handler to the `bt_durable` logger at INFO (DBOS-like format,
+  no propagation), idempotently.
+- **Rule:** what the engine decides on its own (healing, joins, future solver) must be visible in its journal.
+- **Source:** operator verification of the D-167 deploy, 2026-10-29 18:18.
+- **Evidence:** `test_durable_engine_log`; journal of bt-durable.service on 2026-10-29 shows no `bt_durable` INFO line.
+
+## D-171 — A verification cut short by an engine restart runs again once
+
+- **Date:** 2026-10-29 · **Status:** Accepted · **Refines:** REQ-030 (durable M6 port)
+- **Context:** the 18:44 restart that deployed D-170 killed pictures REQ-021 T95's running verification. DBOS re-ran the
+  verify step; M6's request row was still `running`, so `QualityEngine.verify` raised `REQUEST_IN_PROGRESS` and the task
+  opened T95:d1 as a runtime defect for the owner. The legacy owner recovers such rows on start
+  (`recover_interrupted` + `retry_interrupted`, once per request); the durable M6 port never did. Every engine deploy
+  during a verification would block a task.
+- **Decision:** `operator_verifier` (engine start, the store's only user) records each `running` request as interrupted
+  (ENGINE_INTERRUPTED, no check replayed) and queues it again once; `QualityEngine.verify` claims a `queued` request
+  (the claim is atomic). A second interruption of the same request stays a review for the owner.
+- **Rule:** an engine restart must never turn in-flight work into a decision; every durable step that holds external
+  state needs its restart path tested.
+- **Source:** operator monitoring of REQ-021, 2026-10-29 18:45 (T95:d1 answered `reverify` to unblock it at once).
+- **Evidence:** `test_durable_m6_restart` (4; negative control reproduces REQUEST_IN_PROGRESS).
+
+## D-172 — A conflicting hunk that is one side's change plus additions settles to the larger side
+
+- **Date:** 2026-10-29 · **Status:** Accepted · **Refines:** D-160, D-164, D-169
+- **Context:** pictures REQ-021 r25, gate T95 (CG-5) a3 passed verification and then met
+  `src/lib/cuentas/dependientes.ts (line of SP-8)` at integration. Both sides had the same new
+  `TABLAS_TRABAJO_CUENTA` line and SP-8 also appended `anonimizarGastoCuenta` after it; git reports that single hunk as a
+  conflict (git's own `merge-tree` too), the composer wrote a resolution request nobody answers in a durable run, and the
+  task would retry into the same conflict. The merge bases (three) also disagreed on that line, so D-169's virtual base
+  kept markers there.
+- **Decision:** after `package.json` (D-160) and before recorded resolutions, `GitSubprocessPort.merge_tree` settles a
+  text file whose every conflicting hunk (`git merge-file --diff3`, 31-character markers) is one side's lines plus
+  additions in order, taking the larger side there — unless an added non-blank line was in the base of that hunk (that
+  would bring back what the other side removed). Anything else stays a conflict. It serves the composer and the lines.
+- **Consequences:** + "same change, one side added more" no longer blocks gates; − a true semantic clash expressed as
+  pure additions (both sides needed, but in a different order) is not detected by text merging; verification still runs
+  on the merged result.
+- **Rule:** before a conflict reaches an agent or the owner, ask whether a retry can change it; if not, the merge rules
+  are the defect.
+- **Source:** operator monitoring of REQ-021, 2026-10-29 19:25.
+- **Evidence:** `test_compose_conflicts.SubsumedHunks` (3; inputs confirmed to conflict in plain `git merge-file`); the
+  exact blobs of resolution request `3627c792…` settle to SP-8's version.
+
+## D-173 — A gate task starts from its candidate caught up with its lines
+
+- **Date:** 2026-10-29 · **Status:** Accepted · **Refines:** D-164, D-172
+- **Context:** pictures REQ-021 r25, gate T95 (CG-5). Every attempt (a1..a6) started from the same composition
+  candidate, built from the members' *registered versions*; its work is integrated into the members' *current subplan
+  lines*, which other tasks kept moving (T93 put a `NODE_ENV` fix on SP-7's line, T8.1/T8.3/T8.6 moved SP-8's). Attempts
+  a3 and a5 passed verification and then conflicted at integration (`dependientes.ts` with SP-8; then
+  `test-harness-taller-esenciales.ts` with SP-7, the same fix written with the properties in another order). No
+  attempt's base held the SP-7 or SP-8 tips, so retries could not converge.
+- **Decision:** `base_ref` for a `gate:<CG>` home merges into the candidate the tips of the existing subplan lines the
+  task will be integrated into (`subplans.lines_of`), objects only, with the line integrator's merge and the composer's
+  settling rules; a line that conflicts is left out (logged) and its conflict still surfaces at integration. Inside the
+  `bt.base_ref` step: no change in the order of steps.
+- **Consequences:** + the gate agent sees, and resolves in its own work, what the lines gained since composition; its
+  integration then fast-forwards or merges cleanly; − a gate attempt now verifies a slightly larger tree than the
+  candidate (the lines' newer accepted work), which it must be compatible with anyway.
+- **Rule:** a retry must start from a base that contains whatever it will be integrated into; otherwise the retry cannot
+  change the outcome.
+- **Source:** operator monitoring of REQ-021, 2026-10-29 19:40.
+- **Evidence:** `test_compose_conflicts.GateBase` (2; red without the fix); probe on pictures: T95's candidate
+  `5d807d5b` takes SP-6, SP-7 and SP-8 tips without a conflict (SP-3..SP-5 already in).
+
+## D-174 — A virtual base uses the recorded resolutions; a resolution serves both sides
+
+- **Date:** 2026-10-29 · **Status:** Accepted · **Refines:** D-160, D-169, D-172, D-173
+- **Context:** pictures REQ-021 r25 gate T95 (CG-5) failed seven times; healing answered `retry_with_note` each time
+  (19:50: «Conflicto de integración con SP-8 en src/lib/cuentas/dependientes.ts»). D-169's virtual base merged the bases
+  SP-5 × SP-4 without the composer's recorded resolution `2cac2038…` (recorded as SP-4 × SP-5), so it kept git's markers
+  in dependientes.ts and every merge with SP-8's line conflicted. Three resolution requests had sat open for up to 3 h
+  (`3a744e91…` 17:06, `3627c792…` 19:09, `3e63cd40…` 19:36): nobody is told about them.
+- **Decision:** the virtual base applies recorded resolutions and never writes new requests; a recorded resolution also
+  settles the same three versions met with ours and theirs swapped (the final content is the same). The operator wrote
+  the three open resolutions (the known union of dependientes.ts; the harness test's two orderings of the same keys).
+- **Rule:** a conflict request without an owner is a block: REQ-031's Solucionador gets an «open resolution» trigger.
+- **Source:** operator monitoring of REQ-021, 2026-10-29 19:55.
+- **Evidence:** `test_compose_conflicts` (11; the two new tests fail without the fix); probe on pictures: SP-8 tip
+  `91a8e714` × T95 a5 `bc5510ea` / a6 `f5c855f2` integrate without conflict.
+
+## D-175 — The engine starts a Solucionador for blocks the healing cannot resolve
+
+- **Date:** 2026-10-29 · **Status:** Accepted · **Refines:** D-167, D-170, REQ-030 (durable runtime) · **Requirement:** REQ-031
+- **Context:** the owner: every blocked task is a system error. On 2026-10-29 every block of pictures REQ-021 that D-167's
+  healing could not answer waited for an operator session that found the origin by hand (D-165, D-169, D-171, D-174),
+  fixed it, ran the regression, backup, integration and restart, and recorded a rule. Three composition resolution
+  requests also sat open for up to 3 h while T95 failed INTEGRATION_CONFLICT on every retry.
+- **Decision:** `bt_durable/solver.py`, in the engine's maintenance pass right after healing and outside the workflows,
+  starts a full-access session, the Solucionador. Triggers, each once per key: decisions healing left for the owner and
+  signatures that came back after its retry (`heal(escalate=...)`); PENDING tasks with no state change for
+  `solver.stuck_minutes` beyond their known waits; run workflows in ERROR; composition resolution requests without
+  `.resolved` older than `solver.resolution_after_seconds` (`bt_durable/resolutions.py`). One session per run (later
+  triggers go to its inbox), `solver.max_concurrent` on the machine, `solver.max_per_task` per task. Claude Opus high,
+  bypassing permissions, on the unattended account with quota (`role_route(..., "solver")`; Codex otherwise), in tmux
+  `bit-<project>-<REQ>-solver` inside its own systemd scope (so it survives the engine restart it may cause), moved to
+  another account on a spent quota. Brief and prompt: `RUN.solver/<id>/`, `agents/solver.md`; closed by `result.json`
+  (`fixed|answered|asked_owner|gave_up`), its disappearance or the `solver.max_minutes` watchdog (`gave_up`, owner told).
+  It runs only while healing runs. The run panel shows it; its answers carry `by: solver`.
+- **Consequences:** + a block no cheaper rung resolves is worked on within one pass; + one place records what was fixed
+  and why; − an Opus session per hard block spends quota; − one session per run serialises a trigger storm.
+- **Rule:** metodologia is never built or repaired through metodologia's own scheduler, handoff or launch (owner,
+  2026-10-29); the Solucionador fixes it in its own worktree and integrates only through `bt_integrate`. A process the
+  engine starts that must outlive an engine restart runs outside the engine's cgroup.
+- **Source:** owner, 2026-10-29 (REQ-031 interview; «manda a un subagente de opus»); built by an Opus subagent.
+- **Evidence:** `test_durable_solver` (10), `test_healing_durable_decisions` (extended), `test_durable_panel`,
+  `test_agent_terminal.ScopedStart`, `test_role_routing`; branch regression 294 files, only the 4 baseline failures.
+
+## D-176 — Integrating metodologia is a repo-owned script
+
+- **Date:** 2026-10-29 · **Status:** Accepted · **Refines:** the operators' manual procedure (REQ-030 pre-deploy.txt)
+- **Context:** integrations were done by hand from scratchpad scripts (regress.py, dbos_backup.py); a no-ff merge in the
+  live checkout once refused staged bitácora changes and its abort reset them; load flakes (test_platform,
+  test_supervisor_limits) needed a judgment call each time; two operator sessions integrated the same afternoon.
+- **Decision:** `skill/scripts/bt_regress.py` (full regression; baseline in `integrate.allowed_failures`; any other
+  failure rerun alone once) and `skill/scripts/bt_integrate.py` under one machine-wide flock (`<state>/integrate.lock`):
+  preflight (live checkout on main, branch committed, no `bitacora/` paths, main's code already in the branch) →
+  regression → DBOS backup when runtime code changed + release-log entry → `merge --no-ff` in a deploy worktree →
+  `merge --ff-only` in `~/dev/metodologia` + push → restart the units the changed paths need → smoke; a failed smoke
+  reverts the merge the same way. Exit codes: 0 integrated, 1 refused, 2 ff refused, 3 reverted, 4 revert failed, 75 busy.
+- **Consequences:** + one safe procedure for operators and the Solucionador; + integrations never race; − the lock is held
+  through the ~30 min regression.
+- **Rule:** the live checkout only ever sees `merge --ff-only` and `push`; operators integrate through `bt_integrate`.
+- **Source:** REQ-031 T1; operator procedure of 2026-10-29.
+- **Evidence:** `test_integrate` (11, real temporary git repositories); first live use: the Solucionador's own integration.
+
+## D-177 — A known-failing suite is fixed at its origin, never allowlisted
+
+- **Date:** 2026-10-29 · **Status:** Accepted · **Refines:** D-176
+- **Context:** every full regression tolerated four failing suites (`integrate.allowed_failures`), each a real defect:
+  `bt_planner.interfaces.check()` crashed (TypeError) on a malformed schema-1.3 id instead of reporting it; since
+  89e2c76ed `bt_review_policy`/`bt_verifier_env` imported `bt_planner` past its adapter; the real designer kit kept its
+  entrance springs running under reduced motion (`useReveal` gave Motion the same target) and its test checked a shared
+  prebuilt dist from 2026-10-26, not the checkout; `test_recovery_views` read a route that had moved to
+  `bt_server_plans` (the token check is still first); the remote panel never listed the `/components` gallery (404).
+- **Decision:** each fixed where it lives (commits 0bea559a1, 2f5d89c96, 3aa734b08, e574ad3d0, 411d01cdd);
+  `bt_regress.BASELINE = ()` and `integrate.allowed_failures` defaults to `[]` (55e017e1d). A rendered-UI test builds
+  what it checks from the checkout.
+- **Rule:** an entry in the allowlist needs an owner-accepted reason and a date; a red suite is a defect.
+- **Source:** owner's goal, 2026-10-29 21:00 («no te limites a parchear… arreglar el origen»); fixed by an Opus subagent.
+- **Evidence:** branch `fix-baseline` regression 294 files, no failures (two bt_durable load flakes passing alone, sent
+  to the Metamorfosis audit).
+
+## D-178 — Process teardown and observation are ordered
+
+- **Date:** 2026-10-29 · **Status:** Accepted
+- **Context:** `test_platform` and `test_supervisor_limits` failed under load (load «flakes» called judgment calls in
+  D-171..D-176's integrations). Both were product races: `bt_runsession.kill_tree` returned after reaping the leader
+  while SIGKILLed group members still existed; `bt_supervisor/pgroup.observe()` listed live processes before reading
+  `exit.json`, so an attempt the reaper had just ended came back «exited» with a dead pid in `live_pids`.
+- **Decision:** `kill_tree` returns only when `killpg` reports the group gone (≤10 s, resending SIGKILL); `observe()`
+  samples processes after deciding the state, as the systemd backend does (34f3e5d3f, 440c5e168).
+- **Rule:** a load flake is a race to find, never a rerun to accept.
+- **Evidence:** 10× parallel with 32 CPU hogs: baseline 2/10 and 1/10 failed; fixed 0/20 and 0/30.
+
+## D-179 — A successful integration removes its clean worktree
+
+- **Date:** 2026-10-29 · **Status:** Accepted · **Refines:** D-176
+- **Context:** on 2026-10-29 the operator removed 14 clean, merged worktrees and 64 merged branches left by two days of
+  integrations; `~/dev/metodologia-iter2` held 51 lines of Metamorfosis documentation never committed.
+- **Decision:** after a passing smoke `bt_integrate` removes the branch's worktree when `git status --porcelain` is
+  empty and deletes the branch with `git branch -d` (never `-D`); `--keep-worktree` skips it; a caller inside the
+  worktree gets the command instead; the live checkout and the deploy worktree are never removed (d3c3d16f1).
+- **Rule:** a worktree outlives its branch only when it holds uncommitted work, and then it is reported.
+- **Evidence:** `test_integrate` (14).
+
+## D-180 — The scheduler owner settles its own work before it judges a run terminal
+
+- **Date:** 2026-10-29 · **Status:** Accepted · **Refines:** the legacy scheduler owner loop (`bt_scheduler_run.run`)
+- **Context:** `test_scheduler_owner_e2e_subplans` (restart boundaries) failed under load in 54% of runs (13/24). M6
+  verdicts reach M1 from their own threads; a verdict landing between the owner's reconcile pass and the snapshot the
+  loop judges the run by ended the run `blocked` with a subplan accepted but never published, or `completed` with its
+  composition still a candidate — and removed the autostart, so nothing resumed it. A product race, not a test race.
+- **Decision:** the owner pass is one helper (`_owner_pass`); when a snapshot looks terminal the owner runs one more pass
+  on it and the run ends only if that pass makes no progress (a terminal snapshot has no running attempt, so one pass
+  suffices). The terminal notification is suppressed only when that pass found work.
+- **Rejected:** a wait in the test (the product was wrong); taking the snapshot before the pass (moves the window).
+- **Source:** owner's goal 2026-10-29 («arreglar el origen»); found and fixed by an Opus subagent (`4b72b998e`), the
+  notification kept for a waiting blocked run by the operator (`ce50a946c`).
+- **Evidence:** two deterministic tests that hold the T8/T13 verdict inside the owner pass (fail on the old loop);
+  under 12 parallel runs + 32 CPU hogs: before 13/24 failed, after 0/24.
+
+## D-186 — Bracketed paths read as missing when they are missing
+
+- **Date:** 2026-10-29 · **Status:** Accepted · **Refines:** D-160, D-172, D-174
+- **Context:** pictures REQ-021 r25 stalled at 23:05 with nothing running and no decision: gate CG-7 (T97) failed to
+  compose on every turn with `GitCommandError: path 'src/app/proyectos/[id]/page.tsx' does not exist in 217e5e50`. For a
+  missing path with glob characters (Next.js `[id]` routes) `git rev-parse REV:path` exits 0 echoing the argument, so
+  the composer's `_blob_id` took "REV:path" for a blob id and `_diff3`'s `cat-file` raised; `git show REV:path` exits 0
+  printing the commit, so the D-172/D-160 file reads (`_text_at`, `_json_at`, the package.json indent) could read it as
+  file content.
+- **Decision:** `_blob_id` uses `rev-parse --verify --quiet --end-of-options` and accepts only an object id; every file
+  read at a revision uses `cat-file blob REV:path`.
+- **Rule:** git plumbing that resolves `REV:path` must use `--verify`/`cat-file`, never a porcelain or a bare `rev-parse`.
+- **Source:** operator monitoring of REQ-021, 2026-10-29 23:20.
+- **Evidence:** `test_compose_conflicts.BracketedPaths` (2; red without the fix); repro of CG-7 on a mirror of pictures.
+
+## D-187 — A member whose line holds an earlier candidate is folded from it
+
+- **Date:** 2026-10-29 · **Status:** Accepted · **Refines:** D-160, D-164, D-173
+- **Context:** with D-186, CG-7 composed but was rejected: SP-7 conflicted in 13 files. Gate tasks integrate into their
+  members' lines (D-164), so SP-7's line held T93/T95/T96's work and CG-6's candidate C3 itself; `_own_work_base` found
+  SP-7's snapshots on both sides of those gate merges and fell back to the merge base with SP-6's line, so SP-7's delta
+  re-applied SP-3..SP-6 onto a candidate that already had them.
+- **Decision:** before the other rules, a member is folded from the largest earlier non-rejected candidate of the same
+  run whose members were all folded before it and whose commit is an ancestor of the member's tip (a true common base
+  of both sides). `bt_composition.Store.list_candidates` lists a plan's candidates.
+- **Consequences:** + later gates compose from what earlier gates already proved; the CG-7 candidate equals SP-7's line
+  tree; − none known: without such a candidate the previous rules apply unchanged.
+- **Rule:** a fold's base must be a common ancestor of both sides' content; a base that predates content already on
+  both sides re-applies it.
+- **Source:** operator monitoring of REQ-021, 2026-10-29 23:25.
+- **Evidence:** `test_compose_conflicts.PriorCandidate`; repro on a mirror of pictures and a copy of the r25 composition
+  store: CG-7 → C4 `candidate`, no conflict, tree identical to SP-7's line tip.
+
+## D-181 — On SIGTERM the engine exits right after DBOS is destroyed
+
+- **Date:** 2026-10-30 · **Status:** Accepted · **Refines:** REQ-030 (durable runtime), D-171
+- **Context:** every engine restart ended in systemd «State 'stop-sigterm' timed out. Killing» after the stop timeout,
+  with a DBOS «System database accessed before DBOS was launched» traceback. uv forwarded SIGTERM and DBOS shut down,
+  but DBOS 3.3 `_destroy` leaves its non-daemon workflow threads (a run in `DBOS.recv` up to 300 s, an owner decision up
+  to 24 h, long steps) and the interpreter waited for them — while they kept doing external effects.
+- **Decision:** `service.serve` calls `os._exit` right after `engine.stop()` when it owns the signals (exit 1 if the loop
+  failed). Unrecorded steps re-run after recovery: nothing a SIGKILL would not lose.
+- **Evidence:** `test_durable_shutdown` (stop < 15 s, the next engine finishes the run with 1 launch; old code 85 s and the
+  journal's traceback). Commit 8076460a3. Found by the Metamorfosis audit (Opus subagent, owner's goal 2026-10-29).
+
+## D-182 — bt.run and bt.task have no DBOS recovery limit
+
+- **Date:** 2026-10-30 · **Status:** Accepted
+- **Context:** DBOS adds 1 to `recovery_attempts` on every dispatch, recoveries included, and never resets it; past
+  `max_recovery_attempts` (100) a workflow is dead-lettered (MAX_RECOVERY_ATTEMPTS_EXCEEDED). Live: `bt:pictures:
+  REQ-021:r25` was at 7 after one day of deploys.
+- **Decision:** the long-lived `bt.run`/`bt.task` workflows have no limit; agent, verify and integrate children keep it.
+- **Evidence:** `ManyRestarts` (count 150 between engines: dead-lettered before, completed now). Commit 52454bd16.
+
+## D-183 — The engine's interpreter and database variables never reach agents, checks or tmux sessions
+
+- **Date:** 2026-10-30 · **Status:** Accepted · **Refines:** the agent environment rule (366cbf372)
+- **Context:** under `uv run` the engine has `VIRTUAL_ENV` and the venv's `bin` first on PATH; `m3` copied them to every
+  agent, so an agent's `pip install` hit the live engine's venv. A `bitacora` tmux server started by the engine (for the
+  Solucionador) gave every later session its `BT_DURABLE_DATABASE_URL`, password included. REPORT's claim that the
+  database variables never reach an agent had no test.
+- **Decision:** `m3.inherited_env()` drops the venv variables and its `bin`; the M6 sandbox drops the same names;
+  `bt_agent_terminal._run` runs tmux with a cleaned environment. A tmux server already running keeps its old environment
+  until restarted (the live one was checked: it has none of these names).
+- **Evidence:** commits f5ed593a3, 65226b40f, 8719f3a01 with their tests (real tmux on a private socket).
+
+## D-184 — Refs that must exist together are written in one transaction
+
+- **Date:** 2026-10-30 · **Status:** Accepted
+- **Context:** `_run_line` wrote a run line and its `-base` pin with two commands; a crash between them left
+  `LINE_BASE_UNKNOWN` on every later sync until someone pinned it by hand.
+- **Decision:** both refs in one `update-ref --stdin` transaction; a pin left without its line starts the line at it.
+- **Evidence:** `test_durable_line_pin` (a crash after each ref write, real git). Commit 1fe734e54.
+
+## D-185 — A stage join leaves a durable marker before it cancels, and joins are serialised
+
+- **Date:** 2026-10-30 · **Status:** Accepted · **Refines:** D-149
+- **Context:** a join cut between `client.cancel(old)` and `client.start(new)` left the run cancelled; with no live
+  attempts no `RUN.join.json` existed, so the engine's drain pass never finished it, and no trigger noticed.
+- **Decision:** `RUN.join.json` is written (fsynced) before the cancel and removed only after the run pointer moved; the
+  drain finishes a join from it; `RUN.join.lock` serialises CLI joins and the drain (the drain skips a busy one).
+- **Evidence:** an end-to-end join killed after the cancel is finished by the engine. Commit 2746e3a4f.
+
+## D-188 — A transient «unknown» observation never kills a healthy agent
+
+- **Date:** 2026-10-30 · **Status:** Accepted
+- **Context:** `test_durable_postgres` launched the agent twice under load: one unanswered `systemctl --user show` made the
+  supervisor report `unknown`, and the agent workflow treated it as «not running», killed the healthy agent and launched
+  it again — a real double launch, also seen 4/10 in `test_durable_remote`'s archived engine.
+- **Decision:** the `bt.observe`/`bt.launch` steps look again for up to 30 s before acting on `unknown`; the reaper,
+  which must act at once, does not.
+- **Evidence:** `test_durable_observe_hiccup` (a systemctl shim failing one call: old code killed the agent after 7 of
+  100 heartbeats; now 1 launch). Postgres stress 26/26. Commits dd21ab302, 45f51668b, 9786b678f.
+
+## D-189 — One history line per verdict
+
+- **Date:** 2026-10-30 · **Status:** Accepted
+- **Context:** a verify step re-run after a restart appended a second line to `RUN.notes/<task>.history.jsonl`.
+- **Decision:** each line names its verdict (attempt, profile, M6 result ref); a repeat is skipped. Commit 3cf2ad902.
+
+## D-190 — The Solucionador also watches stalled and ended runs
+
+- **Date:** 2026-10-30 · **Status:** Accepted · **Refines:** D-175
+- **Context:** pictures REQ-021 r25 sat PENDING with nothing running and no decision while CG-7 failed to compose, then
+  ended 23:19 «blocked» (CG-7 rejected, COMPOSE_FAILED 3 turns); the Solucionador never started.
+- **Decision:** `stalled` (run PENDING, not paused, no live task, no open decision, summary and gates unchanged for
+  `solver.stuck_minutes`, clock from the last change) and `ended` (run SUCCESS with a rejected gate, or blocked with a
+  task the owner did not stop — owner stops read from the telemetry and RUN.decisions.jsonl), fired at once, once per
+  run workflow and set. The brief carries the gate telemetry and the remedy: fix the origin, then `bt-durable retry-task
+  <project> <REQ> <gate task>` (a known case in `agents/solver.md`).
+- **Evidence:** `test_durable_solver`. Commits a9c42696c, 21f461bf2.
+
+## D-191 — A step that runs out of retries reports its cause
+
+- **Date:** 2026-10-30 · **Status:** Accepted
+- **Context:** CG-7 was rejected as «bt.compose has exceeded its maximum of 3 retries»; the GitCommandError that caused it
+  was lost (live telemetry), so the cause had to be dug out by hand.
+- **Decision:** the rejection text keeps the last error's text (text only; no step-sequence change). Commit 450854f5e.
+- **Also in this branch:** three test races fixed (`test_durable_versioning`, the lab waits for the engine's schema
+  marker, `test_durable_e2e`'s cancel counted other labs' processes); the bt_durable README rescued from an uncommitted
+  worktree and checked against the code. Open: one unexplained double launch of T2 in `test_durable_subplans` (stale
+  lock), not reproduced in 16 stressed runs since D-188. Proposals left: the maintenance loop on the main thread without
+  git timeouts; pin `application_version` before DBOS 3.4; M6 policy cached for the engine's life; CI replay of live
+  histories; an owner retry after an escalation reuses the last automatic retry's base.
+
+## D-192 — Only the current run's rejected gates are announced
+
+- **Date:** 2026-10-30 · **Status:** Accepted · **Refines:** D-160 (blocked-run notice)
+- **Context:** at each engine restart of 2026-10-30 (00:09, 00:41) the owner got «El run se detuvo: la composición de
+  CG-3 (T93), CG-5 (T95), CG-6 (T96) tiene conflictos…» and, once, the same for CG-7, while r25 ran with every gate
+  composed. Every engine start projects each settled run workflow once more; `_announce_blocked` ran for r19's and r24's
+  rejections too, and its one-key marker (`RUN.blocked-notice.json`) flipped between runs, so each was told again.
+- **Decision:** the notice is only for the run the requirement points at (`RUN.durable-run.json`).
+- **Rule:** anything an engine pass tells the owner is about the current run; history is shown, never announced.
+- **Source:** operator watch of REQ-021, 2026-10-30 02:15.
+- **Evidence:** `test_compose_conflicts.BlockedNotice.test_an_earlier_run_of_the_requirement_is_never_announced`
+  (fails without the fix).
+
+## D-193 — A rejected gate's conflict reaches the Solucionador
+
+- **Date:** 2026-10-30 · **Status:** Accepted · **Refines:** D-175, D-190
+- **Context:** 04:38 the composer rejected pictures REQ-021 r25's CG-9 (`git_text_conflict` on
+  `src/components/tres-d/Taller3D.tsx` and `Biblioteca.tsx`, members SP-4/5/7/8/9) and wrote two resolution requests.
+  The run kept running other tasks; the `resolution` trigger only attached a request to a run whose open decision named
+  it (or the one run with an INTEGRATION_CONFLICT decision), and a composer rejection leaves no decision — the
+  Solucionador never started; `ended` (D-190) would fire only when the whole run settled.
+- **Decision:** `resolutions.rejected_paths` reads each gate's last rejected `gate_composed` event (per-member conflict
+  paths) for the gates the run's summary rejects now; a request on one of those paths goes to that run, task = the gate.
+- **Evidence:** `test_durable_solver.test_a_rejected_gates_conflict_goes_to_its_run_without_any_decision`; live probe on
+  r25: exactly the two CG-9 requests, the older unrelated requests ignored.
+
+## D-194 — A Solucionador session's commands are its own
+
+- **Date:** 2026-10-30 · **Status:** Accepted · **Refines:** D-175, D-190
+- **Context:** the first live Solucionador session (`20261030-051648-0278`, 05:16–05:30) resolved CG-9's two conflicts
+  (pictures D-077) and ran `bt-durable retry-task pictures REQ-021 T99`, which was recorded `by: owner`: `retry-task`
+  took no `--by`. The Solucionador's actions and the owner's must stay apart (D-190 reads owner stops from them; the
+  panel and the bitácora attribute decisions).
+- **Decision:** `answer`, `retry-task`, `pause` and `resume` default to `solver` inside a Solucionador session
+  (`BITACORA_SOLVER`, set by `bt_durable.solver`) and to `owner` elsewhere; `retry-task` takes `--by` like `answer`.
+- **Evidence:** `test_durable_solver.test_inside_a_solver_session_its_commands_are_its_own`.
+- **Also seen in that first session:** it ran on Codex gpt-6.1-sol, not Claude Opus — by policy: claude-work at 100% of
+  its week, claude-personal excluded from work projects, claude-luis without `skipDangerousModePermissionPrompt` (only
+  the owner sets it).
+
+## D-195 — «Probar» shows the version's real URL; a click restarts it clean
+
+- **Date:** 2026-10-30 · **Status:** Accepted · **Refines:** D-156, D-158
+- **Context:** the owner, at the machine: «Probar» did not work, and it is critical — if a version cannot be tried,
+  nothing makes sense. Evidence (Opus subagent, real Chromium/Firefox): links went through `p<port>.localhost:8765`
+  (`bt_version_proxy`), which does not carry WebSockets, so Next's live reload failed (501) and the SP-1 page reloaded
+  itself 3 times in 170 s with 35 socket errors (direct URL: once, no errors); a failed preparation looked like
+  «Preparando…» forever (no pid file, pane kept); a click reused an existing session instead of restarting; the steps
+  pointed at `localhost:3000` while the version ran elsewhere; SP-1/SP-2 servers from the day before were still running.
+- **Decision:** the panel shows `http://localhost:<port>/` with «Probar ↗»; a click (new tab) stops everything of that
+  version — processes marked `BITACORA_VERIFY_ID`, descendants of its tmux pane, or listeners working inside its copy;
+  never by port alone, never other versions or unrelated services — refuses a copy that is not exactly the published
+  commit, starts it clean (`.next` and old logs removed, stable ports, a port held by anything else skipped), shows the
+  phase and on failure the step and log tail, and opens the URL when every server answers. «Cómo probarlo» (3–8 steps)
+  is generated from the subplan's `## Pruebas` row (SPEC.es.md), the plan's checks and its acceptance criteria, with the
+  version's own URLs and the accounts named (never secrets). `bt_version_proxy` is removed (remote use: `ssh -L`). A
+  requirement may carry its own `verify-servers.json`.
+- **Evidence:** `test_verify_procs`, `test_verify_guide`, `test_verify_servers` (21); e2e on the live bitácora: SP-1's
+  leftovers replaced and loaded (200); SP-8/SP-9/T10.5 started from their snapshots in a proof root, a second click and
+  a two-tab race leave one tree, SP-9's click leaves SP-8 untouched. Commit 778d2e902.
+- **Found on the way:** pictures REQ-021 lines from CG-3 on carry two `039_*` migrations (SP-4, SP-5); `rag:migrate`
+  refuses them, so SP-7/8/9 and T10.5 cannot be tried until the run fixes it — sent to the run's Planner 07:40.
+
+## D-196 — A manual-evidence decision is tried and answered from its card
+
+- **Date:** 2026-10-30 · **Status:** Accepted · **Refines:** D-195, the durable attest path
+- **Context:** T10.5 asked for manual evidence (English/Spanish AI replies) and offered only «Reintentar»; the owner: it
+  should open a button that sends me to test that something.
+- **Decision:** a `MANUAL_EVIDENCE_REQUIRED`/`CRITERION_MANUAL` decision offering `reverify` carries its task, request and
+  attempt; its card offers «Probar esto ↗» (starts that attempt's snapshot with the same clean machinery), the check as
+  steps (account, what to type in each language, what to see, the configured provider without secrets), «Funciona»
+  (the owner's evidence → `bt-durable attest --by owner` → reverify) and «No funciona» (`retry_with_note`). tmux session
+  names replace `.`/`:` (a dot is a window/pane separator; `T10.5` sessions were never found).
+- **Evidence:** `test_manual_check` (7). Commits b444479e9, a02520a1e.
+
+## D-197 — The integration regression is staged
+
+- **Date:** 2026-10-30 · **Status:** Accepted · **Refines:** D-176, D-177
+- **Context:** every integration cost ~30 min of full regression under the machine-wide lock, even for a 2-file change;
+  the owner asked for a selective regression (2026-10-30).
+- **Decision:** `integrate.regression` = `staged` (default): the suites the change can reach (plus the always-run boundary
+  and contract suites and the changed suites) run first and stop at the first real failure — the fast red — then the
+  rest runs before the merge. `selective` (opt-in, `--selective`) integrates on the selection alone and runs the full
+  regression of the merge afterwards in its own transient unit; a red is written to the release log with the
+  `bt_integrate.py --revert MERGE …` command and notified, never reverted silently. `full` skips the selection. The
+  Solucionador never passes `--selective` (it integrates unattended).
+- **Evidence:** on the 8 integrations since 2026-10-29 21:57: recall 4/4 failed suites (the one real failure, owner-race's
+  boundary test, in the first phase: red at ≤7m45s instead of 27m40s); staged costs ~1 min more than full; selective
+  would have saved ~5.8 min on trusted changes. Branch regression 301 files, no failures. Commits d6124698f, c496bd58b,
+  a9152fd7a, bdfb00051 (a relative-path bug in `bt_regress` found by its own first run). Built by an Opus subagent.
+
+## D-198 — What the impact selection follows, and when it is not trusted
+
+- **Date:** 2026-10-30 · **Status:** Accepted
+- **Decision:** `bt_regress_select` walks a static `ast` graph of the repo (cached by content): module imports
+  transitively; lazy imports, module names in strings (`importlib`, `mock.patch`, `-m`), console scripts and scripts run
+  by file name only from the suite and what it imports directly, and inside one package at any depth; assets, folders
+  and globs named by the suite. Not trusted (everything runs, reached suites first): `pyproject.toml` beyond
+  `py-modules`, `uv.lock`, `.python-version`, the regression's own code, a non-`test_*.py` file under a tests folder, a
+  changed non-doc file no suite reaches, or more than `integrate.selective_max_percent` (40) of the suites.
+- **Rule:** a change the static graph cannot see runs everything.
+- **Evidence:** co-change recall 276/276 over 188 commits (0.984 before the in-package lazy rule); following lazy imports
+  everywhere would select 283/300 suites. Commits d6124698f, 615303d2f.
+
+## D-199 — A message to an agent counts as sent only when it left the input box
+
+- **Date:** 2026-10-30 · **Status:** Accepted · **Refines:** the Planner notice path (`bt_agent_terminal.send`)
+- **Context:** 07:40 the operator sent pictures REQ-021's Planner (Codex) the 039 migration defect with `tell-planner`,
+  which answered «Enviado al Planner»; at 07:46 the Planner's input box still held «[Pasted Content 1020 chars]»: Codex
+  keeps a long typed text as a paste until a second Enter. Every long notice (web actions, healing's plan defects,
+  the Solucionador's `tell-planner`) could be lost the same way.
+- **Decision:** after Enter, `send` reads the input box (the last prompt line); while it still holds the message or a
+  paste placeholder it presses Enter again (3 tries), and otherwise says «Quedó escrito en el agente sin enviarse».
+- **Evidence:** `test_agent_terminal.test_a_message_left_as_a_paste_is_submitted_again` (real tmux) and
+  `test_unsent_reads_only_the_input_box`.
+
+## D-200 — Where to try a version is a list of links to its real pages
+
+- **Date:** 2026-10-30 · **Status:** Accepted · **Refines:** D-195, D-196
+- **Context:** the owner (several times): «en vez del botón de probar debe darme el link a la URL donde probarlo y que me
+  abra la URL en el navegador… tampoco salen las URLs que se deben probar, las específicas de la solución». D-195 kept a
+  «Probar ↗» button next to the root URL; the pages the test names (`/login`, `/3d`) were plain text until the version
+  was running, and the restart tab always landed on `/`.
+- **Decision:** «Dónde probarlo» lists the version's URL and every page its test names, each a plain link to
+  `http://localhost:<port>/<page>` (also while stopped). On a running version a click opens the page as it is; otherwise
+  it stops everything of the version, starts it clean from its commit and the new tab lands on that same page (`path`,
+  validated: same host only). «Reiniciar desde cero» forces the restart; no «Probar» button. The manual-evidence card
+  (T10.5) works the same way with the pages its steps name.
+- **Evidence:** `test_verify_servers.Panel`, `test_manual_check`; real Chromium on a copy of the panel: SP-2 running →
+  the `/login` link opened `http://localhost:3001/login`; SP-2 stopped → the `/3d` link restarted it clean (new pids at
+  09:13:18) and landed on `http://localhost:3001/login?from=%2F3d` (the app's own sign-in redirect).
+
+## D-201 — Each version link carries its SSH bridge and opens on the owner's own computer
+
+- **Date:** 2026-10-30 · **Status:** Accepted · **Refines:** D-200
+- **Context:** «Probar» still «did not work» for the owner: they work from a **Windows** computer reaching this machine
+  through an SSH tunnel to 8765 (AdvIn's reverse tunnel, port 2222), so every `http://localhost:<port>` link pointed at
+  their own computer. Their ask: next to each link, the SSH bridge command, and if possible the click should run it on
+  the computer they are using.
+- **Decision:** next to each page link: «copiar puente» (`ssh -N -L <port>:127.0.0.1:<port> <destination>`, env `BITACORA_TUNNEL_TARGET`,
+  default `laptop`, the owner's SSH alias for this machine; env `BITACORA_TUNNEL_TARGET`) and «en mi computador ↗» (`bitacora://open/?port=&path=`).
+  A browser cannot run commands by itself, so a one-time opener for Windows (`assets/bitacora-opener.ps1`, served at
+  `/static/bitacora-opener.ps1`; per-user `HKCU` protocol, no administrator) asks once for the SSH destination, and on
+  each link starts the bridge in a minimized window when the port is closed, waits for it and opens the page in the
+  default browser. It accepts only a port 1024–65535 and a local path; the SSH destination lives in its own config, never
+  in the link. A stopped version is restarted clean in the background before the opener is called.
+- **Evidence:** `test_verify_servers.Panel.test_each_link_has_its_bridge_and_opens_on_the_owners_computer`; rendered on a
+  copy of the panel. The PowerShell opener was not run on Windows here (no Windows machine); its first real use is the
+  owner's.
+
+## D-202 — «Probar» starts a version already signed in; «Reiniciar con login» for accounts and roles
+
+- **Date:** 2026-10-30 · **Status:** Accepted · **Refines:** D-195, D-200
+- **Context:** the owner: «¿podemos hacer que en local no pida login? que ya esté autenticado desde el principio».
+  pictures already has a development-only local mode (`AUTH_LOCAL_SIN_RESTRICCIONES=1`: loopback peers are the local
+  administrator; refused by `next build`, production and the ai-api). Through the owner's SSH bridge the peer is loopback.
+- **Decision:** a recipe server may declare `local_auth` (env applied only to that server's run line, never to prepare or
+  other servers); «Probar» starts with it by default and records `login: false`; «Reiniciar con login (roles)» starts as
+  in production, for tests of a given account or role, and the panel says which mode is running. pictures' recipe sets it
+  on the web server (backup of the previous recipe in the operator's scratchpad).
+- **Found:** with the mode on, `/3d` and `/admin/cuentas` answer 200 signed in, but pictures' home (`src/app/page.tsx`)
+  reads the session from the cookie only and redirects to `/login` — a product defect sent to REQ-021's Planner.
+- **Evidence:** `test_verify_servers.SignedIn` (3); live: SP-8 restarted with `login: false`, the web process carries
+  the variable and the ai-api does not; `/3d` 200 (Taller), `/admin/cuentas` 200.
+
+
+## D-203 — Repeated verifier interruptions preserve their cause and use bounded snapshot recovery
+
+- **Context:** pictures REQ-021 r26 T10.45:d1@k1 was classified as a missing resource (`BLOCKED_ENV`), but its M6 result contains only `ENGINE_INTERRUPTED`: startup recovery requeued the request at 09:53:19 and a second restart exhausted that request retry at 10:06:03. A coding-agent retry cannot fix an interrupted verifier.
+- **Decision:** classify a pure interruption as verification/ENGINE_INTERRUPTED and use the existing bounded same-snapshot REVERIFY path. Mixed issues, permissions and manual evidence keep their guards. Version-gate the changed task branch with DBOS.patch("bt-task-interrupted-reverify") in the execution recovery-policy module; historical escalation keeps its step sequence. Request-level recovery stays once per key; task repair/time budgets remain enforced.
+- **Consequences:** new task histories can verify the captured snapshot again without a new coding attempt after request recovery is exhausted; existing open decisions still require an explicit solver answer. No acceptance is fabricated, and a repeated failure after the repair budget escalates with its concrete cause. Integration pending validation in solver/20261030-100736-d494 when this entry was written.
+- **Rule:** never infer missing resources solely from M6's aggregate BLOCKED_ENV when its sole concrete issue is ENGINE_INTERRUPTED. Never reverify mixed/authorization/manual issues through this rule; never alter workflow history without a patch.
+- **Source:** Solucionador session 20261030-100736-d494, brief trigger pictures:REQ-021:r26:T10.45:T10.45:d1@k1; M6 request and engine journal read directly.
+- **Evidence:** test_durable_m6_restart.test_exhausted_restart_recovery_uses_bounded_snapshot_reverification reproduces the two-interruption store path red before the fix; seven tests pass after it, including exhausted-budget, mixed-issue and patch false/true checks. test_durable_control: 17 pass; test_durable_restart_verify: 1 real restart test passes. Full integration regression and live outcome will be recorded in REPORT.md.
+
+## D-204 — An engine restart waits for running verifications
+
+- **Date:** 2026-10-30 · **Status:** Accepted · **Refines:** D-171, D-176, D-203
+- **Context:** two deploys 35 min apart (09:31 D-200, 10:06 D-201) cut pictures REQ-021 r26 T10.45's verification twice.
+  D-171 re-runs an interrupted verification once per request, so the second cut left it as a review the classifier
+  read as BLOCKED_ENV, «a declared resource or tool is missing» — nothing was missing; healing's diagnosis failed and
+  the Solucionador was started (10:07). With several integrations an hour, any long verification can meet two restarts.
+- **Decision:** before restarting `bt-durable.service`, `bt_integrate` waits until no M6 request is `running` (read-only
+  sqlite), up to `integrate.drain_minutes` (20), and logs how long it waited and what it restarted over. How a twice-cut
+  verification is classified and re-verified is D-203 (the Solucionador's fix, same incident).
+- **Rule:** a deploy must not turn work in flight into a decision; the once-per-request recovery is for crashes.
+- **Evidence:** `test_integrate.Drain` (2).
+
+
+## D-208 — Gitless verification commands receive a read-only snapshot identity
+
+- **Context:** REQ-021 r26 T10.45 requires evidence bound to the exact candidate, but its harness runs git rev-parse/diff inside M6. SnapshotResolver intentionally materializes no .git; the actual attempt has no Git mounts because its repository is itself a linked worktree. Even when legacy Git mounts exist, HEAD belongs to the agent worktree rather than the captured M3 snapshot. M6 knows the validated snapshot SHA but did not expose it to commands.
+- **Decision:** add the versioned, additive m6.snapshot-context/1 input at fixed sandbox path /run/bt-m6/snapshot.json, mounted read-only outside /workspace. Generate it only after trusted handoff/commit validation and snapshot reconstruction, with exact snapshot/base SHAs, handoff manifest digest, per-file SHA256/link records and their canonical content digest. No caller env variable or repository file supplies this identity. The context module owns serialization; existing commands may ignore it.
+- **Consumers/rollback:** T10.45 harness and later exact-candidate checks may validate this envelope and compare materialized harness/source hashes. Current commands remain unchanged. Removing the additive input makes consumers fail closed; it does not alter result schema, authorization, sandbox permission policy or frozen acceptance. Standard tree-cache semantics remain: a check that needs fresh candidate-bound execution declares its required resources (T10.45 already does), which disables pass reuse.
+- **Consequences:** product tasks can consume trustworthy exact-candidate metadata without exposing a mutable Git repository or inventing a SHA. This input does not grant authorization or attest a manual check. Integration pending the solver regression.
+- **Rule:** candidate SHA comes from the verifier's validated snapshot, never agent HEAD or arbitrary caller-provided values; verify source/harness hashes against the read-only envelope.
+- **Source:** Solucionador 20261030-100736-d494, frozen T10.45 binding criterion and direct inspection of M6 snapshot/check runner and actual _git_mounts result ().
+- **Evidence:** regression and live sandbox proof will be recorded in session REPORT.md.
+
+## D-205 — Every version link opens already signed in as a real test account
+
+- **Date:** 2026-10-30 · **Status:** Accepted · **Refines:** D-200, D-201, D-202
+- **Context:** the owner clarified «que en local no necesite iniciar sesión»: «es que se inicie sesión automáticamente».
+  D-202's local-administrator shortcut skipped the session, so pictures' home and navigation (which read the cookie)
+  still sent them to /login and hid Administración; roles could not be tried.
+- **Decision:** a recipe's `auto_login` (`cookie`, `accounts`, `default`, `mint`): the panel runs `mint` in the
+  version's copy with its environment and `BT_LOGIN_ACCOUNT`, gets a real session token, sets it as the app's cookie
+  (`HttpOnly; SameSite=Lax`, host-only: localhost cookies hold for every port, so the landing uses the panel's own host)
+  and redirects to the page. Links go through `/p/<p>/req/<R>/verify-go` (panel token, this machine only), which also
+  starts a stopped version and comes back to sign in; the real URL stays as the link text. «Entras ya con sesión
+  iniciada como» picks the account (one per role); the Windows opener sets the cookie first. pictures' recipe mints a row
+  in `account_sessions` for `test+<role>@req021.test` and accepts the version's data notice for it; D-202's local mode
+  is off for pictures. The six test accounts were seeded in the REQ-021 test database with a generated password stored in
+  the owner's secrets file (`PICTURES_TEST_PASSWORD`, 600), as the owner chose.
+- **Evidence:** `test_verify_servers.AutoLogin` (3); real Chromium on a copy of the panel: SP-2 stopped → link → restart →
+  signed in as test+administrador → landed in the app with its account menu; `/admin/cuentas` 200 with the cookie.
+
+## D-209 — A decision number is reserved when it is taken
+
+- **Date:** 2026-10-30 · **Status:** Accepted · **Refines:** `bitacora.py id`
+- **Context:** `next_id` computed the next D-NNN from DECISIONS.md alone, so every session or agent that chose a number
+  before writing its entry could pick one already chosen elsewhere: four collisions on 2026-10-29/30 (D-172 twice,
+  D-202 twice, the Solucionador's «D-205» against `metodologia-02`'s), each fixed by renumbering commits and entries.
+- **Decision:** `bitacora.py id D --reserve "<who: what for>"` records the number in `<project>/.ids-reserved.json`
+  under a file lock; every later `id` call, reserving or not, skips reserved numbers even before their entry exists.
+  The documentation and the Solucionador's prompt say to reserve the moment a number is chosen.
+- **Rule:** a number is taken when it is reserved, not when it is written.
+- **Evidence:** `test_ids_high_water` (16 parallel reservations, 16 distinct numbers; a plain read skips reservations).
+  Numbers handed out by hand today before this existed: D-205 (`metodologia-02`), D-206/D-207 (engine races), D-208
+  (Solucionador, verifier snapshot), D-210 (restart-safe engine).
+
+## D-211 — Every start lands signed in, and the guide speaks of the open session
+
+- **Date:** 2026-10-30 · **Status:** Accepted · **Refines:** D-205
+- **Context:** right after D-205 the owner stopped and restarted SP-2 and was asked to sign in; signing in by hand failed.
+  Evidence: no session was minted after 11:30 (the clicks never went through the sign-in: an old panel tab, a typed URL
+  or «Reiniciar desde cero», whose waiting tab landed on the plain URL), and the guide still said «inicia sesión como
+  admin@prueba.local», an account the REQ-021 test database does not have (the seeded ones are `test+<role>@req021.test`).
+- **Decision:** when the recipe signs in automatically, every waiting tab (restart, «Reiniciar desde cero», decision
+  cards) comes back through `/verify-go` before landing; the guide maps the plan's accounts to the seeded ones
+  (`admin@…` → `test+administrador@…`, `designer-plus@…` → `test+designer_plus@…`), says the session is already open,
+  drops the seed/password steps, and the manual-evidence card signs in as the account its check needs.
+- **Rule:** a guide never asks the owner for something the system already did or for data that does not exist.
+- **Evidence:** `test_verify_guide.SignedIn`, `test_verify_servers.AutoLogin` (waiting page default); the SP-2 guide
+  rendered on a copy of the panel.
+
+## D-220 — One full regression at a time; merged deploy branches are removed
+
+- **Date:** 2026-10-30 · **Status:** Accepted · **Refines:** D-176, D-197
+- **Context:** (found by `metodologia-90`) three full regressions ran at once on 2026-10-30 — a post-merge run, another
+  post-merge run and a staged integration — and one took 1 h 40; the shared load produced the «load flake, passes alone»
+  lines every integration then had to judge. Separately, step 4's `deploy-<branch>` branches were never deleted after a
+  passing smoke: 17 merged ones had piled up.
+- **Decision:** `Services.regress` (integrations and post-merge runs alike) holds `<state>/regress-slot.lock`, so one
+  full regression runs at a time (waits up to 2 h). After a successful fast-forward (or revert) the deploy worktree is
+  detached on main and its `deploy-`/`revert-` branch deleted with `-d`.
+- **Rule:** load races are hunted on purpose (stress scripts, the D-210 chaos test), never by accident of scheduling.
+- **Evidence:** `test_integrate.Hygiene` (three regressions in parallel threads never overlap); the success-path test
+  asserts the deploy branch is gone. Commit 7c29360ba.
+
+
+### Integration receipt for D-203 and D-208 · 2026-10-30
+
+Solucionador 20261030-100736-d494 integrated merge fff622890f28b8093a9a0afda9c4077d056bea1b through bt_integrate only: 303 suites, no failures (first26 3m05s, rest277 24m56s), DBOS backup, push, 40-second verifier drain, both unit restarts and passing smoke; integrator exit0 and clean worktree/branch cleanup. Quality module189, focused restart7/control17/real-kill2/context2 checks and pre-integration sdist/wheel build pass; Ruff/whitespace pass. No Python static type checker configured. Full receipt/report is pictures REQ-021 RUN.solver/20261030-100736-d494/REPORT.md. Owner-authorized r27 join superseded the original r26 decision, so no stale answer was sent.
+
+
+## D-221 — Re-verification observes a fresh integration of the same snapshot
+
+- **Date:** 2026-10-30 · **Status:** Accepted · **Refines:** durable owner re-verification, D-174
+- **Context:** pictures REQ-021 r27 T2.55:d2@k1 repeats an SP-14 menu conflict after the exact recorded resolutions exist. The real integrator now merges ca9858ee with e3dfac3e successfully, but `_evaluate` reuses `bt:<attempt>:integrate` and DBOS returns the previously completed conflict result. Repeating an agent cannot repair that cached observation.
+- **Decision:** bind nonstandard verification profiles to distinct integration child workflow IDs, behind `DBOS.patch(bt-task-reverify-reintegrates)`. Preserve the standard identity and old recorded histories; replay of the same profile remains idempotent. A failed verification still cannot reach integration.
+- **Consequences:** each new same-snapshot verification can observe newly recorded resolutions or a changed line without launching an agent. Integration still uses the existing all-lines compare-and-swap and never advances a conflicting line. Integration and live decision handling pending at entry creation; the session report records the final receipt.
+- **Rule:** a cached conflict is evidence about the previous integration observation, not a permanent verdict on an immutable snapshot. Replaying an observation reuses its result; explicitly re-verifying creates a fresh observation.
+- **Source:** Solucionador 20261030-120814-28ad; live r27 T2.55:d2@k1; execution/workflows.py `_owner` and `_evaluate`.
+- **Evidence:** new test_durable_reintegrate reproduces the stale result before the fix (3 tests, 1 failure, exit 1); all three local seam tests pass after it. Five final regression tests pass, including real DBOS restart and exact recorded resolution. A separate old-engine-to-new-engine replay passes with the historical cached integration intact (19.770s). The panel regression verifies both database orderings. Full integration receipt is recorded in the session REPORT.md when complete.
+
+## D-212 — Diagnosing agents run isolated from the user's settings, hooks and memory
+
+- **Date:** 2026-10-30 · **Status:** Accepted · **Refines:** D-168, D-183 (agents never get the operator's environment)
+- **Context:** every healing diagnosis of pictures REQ-021 today failed «la respuesta no trae JSON» (r26 T10.45:d1 10:07,
+  r27 T2.55:d1 12:01, T2.55:d2 12:07), so each decision reached the Solucionador with no diagnosis. Reproduced with the
+  same profile (`claude`, haiku): `claude -p` loaded the user's CLAUDE.md, the metodologia skill and the hooks, began its
+  answer «Aye», took the bitácora's gitleaks notice as its task, and the final message (the one `--output-format text`
+  prints) was that report — 45–88 s, no JSON.
+- **Decision:** `bt_block_agent.argv` (diagnosis, attempt analyst, manual reviewer) runs Claude with the read-only tools
+  only (`Read,Grep,Glob`: the analyst reads its sealed snapshot), `--strict-mcp-config` with an empty MCP config,
+  `--setting-sources ""` and `--disable-slash-commands` — as the translator and the Planner diagnostic already do. A
+  failed parse stores what the agent said instead (240 chars) as evidence.
+- **Rule:** an engine-owned model call never inherits the operator's Claude settings, hooks, memory or MCP servers.
+- **Evidence:** `test_block_diagnosis` (27; argv isolation and the kept answer red on main); live probe of the same
+  request isolated: valid JSON 2/2 in 6.6 s and 8.5 s (kind `conflict`, the D-213 cause). Branch `diagnosis-isolated`.
+
+## D-213 — A member is accepted once its own subplan line takes it; another subplan's line that conflicts is reported
+
+- **Date:** 2026-10-30 · **Status:** Accepted · **Refines:** D-164, D-173
+- **Context:** pictures REQ-021 r27 T2.55 (SP-2; the stage r27 added it, so it became an ancestor of SP-14's accepted
+  tasks) failed `bt.integrate` at 11:40:01 with a conflict in `MenuCuenta.tsx`/`textos-cuenta.ts` «(line of SP-14)».
+  RECONCILE_INTEGRATION rebuilt it, but `bt.base_ref` returns its own SP-2 tip (b3f997fe) for every attempt, and SP-14's
+  work is not on it: a2 spent 20 min and met the same conflict; d1 (11:59), the Solucionador's `reverify`, d2 (12:05).
+  `GitLineIntegrator.integrate` required every subplan line in the task's scope to merge, while the legacy
+  `SubplanLineRouter` applies a member to its own line only and the run's own `sync` already reports such a conflict.
+- **Decision:** `integrate(..., home=)`: once the member's own line takes it, a conflict on another subplan's line leaves
+  that line as it was and is reported (`subplan_line_conflict`, read by the Solucionador's gate trail); the gate that
+  composes both subplans meets it where resolutions are made. Gate tasks and calls with no home keep the old rule. The
+  change is inside the `bt.integrate` step (no step sequence change, no patch).
+- **Rule:** a failure whose retry starts from the same base can never be the task's failure.
+- **Evidence:** `test_durable_subplans.OtherSubplansLine` (3, real git, red on main). Found by the second Metamorfosis
+  audit (Opus subagent). Not done (proposals): a gate line left out at base time (D-173) still fails every retry the same
+  way; dependents of a left-out predecessor are not held (legacy `PREDECESSOR_NEEDS_RESOLUTION`); `sync_lines` repeats
+  its report each time the accepted set changes.
+
+## D-214 — The Solucionador's watchdog and account move wait for the session's own integration; a superseded session is told and kept
+
+- **Date:** 2026-10-30 · **Status:** Accepted · **Refines:** D-175, D-176
+- **Context:** Solucionador session `20261030-100736-d494` (started 10:07:36, `solver.max_minutes` 120) was running its
+  own `bt_integrate.py --session 20261030-100736-d494` (D-203/D-208), a child of its agent in tmux; at 12:07:36
+  `_supervise` would have killed the tmux session and the integration with it, mid-regression or mid-merge. The operator
+  raised the limit to 240 at 11:53; the integration landed at 11:59. Its trigger (r26 T10.45:d1) had also gone with r26,
+  cancelled by the 11:18 stage join.
+- **Decision:** `solver.integrations(sid)` finds live `bt_integrate.py --session <sid>` processes (post-merge runs are
+  their own units, left out); while one runs, neither the watchdog nor the account move kills the session, for at most
+  `solver.integrate_grace_minutes` (120) beyond `max_minutes`, recorded once in the activity feed. A session whose
+  requirement's run is no longer its trigger's run is told once (inbox + typed): do not answer the old decision, finish
+  and integrate the fix, check the current run; it is not killed.
+- **Rule:** a supervisor never kills a process tree that holds the integration lock.
+- **Evidence:** `test_durable_solver` (5 new, 4 red on main); live probe `integrations('20261030-100736-d494') == [2582981]`.
+  `solver.max_minutes` goes back to 120 once this is on main. A sounder complement (bt_integrate re-executing its
+  pre-merge phase in a transient unit) is left to the owner of `bt_integrate`.
+
+## D-225 — An integration runs in its own unit; its caller only follows it
+
+- **Date:** 2026-10-30 · **Status:** Accepted · **Refines:** D-176, D-214
+- **Context:** (suggested by `metodologia-90`) the Solucionador's `bt_integrate` was a child of its codex process in
+  tmux; its own watchdog would have killed the session at 12:07 in the middle of the D-203 integration (D-214 now makes
+  that watchdog wait). Any other kill of an integration's caller — an agent session, its tmux, a terminal — could still
+  cut it after the merge and before the restart and smoke, or halfway through its regression.
+- **Decision:** `bt_integrate` re-runs itself in a transient user unit (`bt-integrate-<branch>-<stamp>`, its output in
+  `~/.local/share/bitacora-integrate/runs/<unit>.log`, its exit code in `<unit>.rc`) and the caller follows the log and
+  returns that exit code; if the caller dies, the integration finishes. `--attached` (and `--dry-run`, post-merge runs
+  and runs already inside the unit) run in place.
+- **Evidence:** `test_integrate.Detached` (2); a live smoke (a refused integration ran in its unit and returned 75).
+  Numbered D-225 because D-221 was taken meanwhile — the collision class D-209 removes.
+
+## D-227 — The regression creates its worktree's uv venv when a suite needs it
+
+- **Date:** 2026-10-30 · **Status:** Accepted · **Refines:** D-197 (staged/selective regression)
+- **Context:** integrating `diagnosis-isolated` (12:33) died with a Python traceback — `FileNotFoundError` on
+  `<worktree>/.venv/bin/python` — as soon as the selection reached a suite that needs DBOS: an integration's worktree is
+  a fresh `git worktree add` and nothing created its venv; operators and agents had always made it by hand.
+- **Decision:** `bt_regress.venv` runs `uv sync --frozen` once per worktree (cached, under a lock) when the first suite
+  that needs the venv starts; a failed sync fails each such suite with the reason in its log (code 125) instead of
+  crashing the regression.
+- **Rule:** a step the integration needs is the integration's, never the operator's memory.
+- **Evidence:** `test_regress_venv` (3; red on main: no `venv`); live: `uv sync --frozen` in the `diagnosis-isolated`
+  worktree, 3.2 s. Integrated with D-212 (branch `diagnosis-isolated`).
+
+
+## D-228 — A regression forcing SIGTTIN must establish its child's signal disposition
+
+- **Date:** 2026-10-30 · **Status:** Accepted · **Refines:** D-177 (repair regression failures at their origin)
+- **Context:** audit-metamorfosis-2's full integration regression and its isolated rerun both failed test_terminal_read_before_json_resumes_after_forced_background_stop: "fixture did not force the SIGTTIN startup window". The same suite passed in the Solucionador's foreground context (18 tests), but running the exact case with inherited SIGTTIN=SIG_IGN reproduced the failure deterministically. Ignored dispositions survive fork/exec, so the fixture's required stopped state cannot occur in that invocation environment.
+- **Decision:** reset SIGTTIN to SIG_DFL in the fixture child before it opens/reads the controlling terminal. Add an explicit regression with the caller's SIGTTIN ignored, restoring the caller's previous disposition afterward. Keep the original real stopped-state, resumed input, success and timeout assertions unchanged. This is a test-fixture correction; production terminal and permission policy are unchanged.
+- **Consequences:** the regression proves the intended startup window independently of the invoking shell's inherited ignored signal. It remains red if the production SIGCONT recovery is removed. No timeout is increased and no failure is allowlisted.
+- **Rule:** a fixture asserting a kernel signal transition must establish the disposition necessary for that transition rather than inherit it from its launcher.
+- **Source:** Solucionador 20261030-120814-28ad, while integrating D-221; prior integration audit-metamorfosis-2 refused on this same regression.
+- **Evidence:** terminal-ignored-red.log and new terminal-regression-red.log both exit 1 before the correction, with the exact prior fixture assertion (0.737s / 0.735s). The final full terminal-suite result and integration receipt are recorded in the session REPORT.md.
+
+## D-206 — Old engines run by tests never kill other labs' agents; a re-run launch adopts when systemd is slow
+
+- **Date:** 2026-10-30 · **Status:** Accepted · **Refines:** D-188, D-191
+- **Context:** `test_durable_shutdown` saw «2 != 1» launches under load, and D-191 had left an unexplained double T2 in
+  `test_durable_subplans`. Origin: every test lab uses the same attempt keys, and the old engines that the upgrade and
+  replay suites run (code from before e2d961ee5) kill any process of the user carrying that key — when one finished its
+  T1 it SIGTERMed the T1 agent of every other lab on the machine (AGENT_CANCELLED → 30 s → a second launch). Reproduced
+  naturally: 10 of 14 stressed labs lost their agent in the same second while another regression ran
+  `test_durable_remote`. Separately, a real defect: a `bt.launch` re-run after a restart while the user manager did not
+  answer exhausted DBOS's 3 tries in seconds (D-188's grace covered observation, not launch's own `systemctl show`),
+  ending the agent workflow in ERROR with a healthy agent killed by the reaper.
+- **Decision:** `durable_support.export_engine` scopes an old engine's kill scan to processes without
+  `BT_SUPERVISOR_ID`; `SystemdSupervisor.launch` adopts its unit from its own files (record, started.json, exit.json)
+  when the manager does not answer, and `bt.launch` retries MANAGER_UNAVAILABLE for up to 30 s. No step order changes.
+- **Rule:** a test that runs old code must never act on processes it did not create.
+- **Evidence:** `test_durable_launch_hiccup`, `test_durable_old_engines`, a new `test_supervisor_lifecycle` case;
+  injected hiccup with 16 CPU hogs: main 5/5 red, branch 5/5 green. Commits bf534e7d5, 09bf01a0a, 0680767af, 30e5bfba6.
+
+## D-207 — Tests wait for a join's last act, not its middle
+
+- **Date:** 2026-10-30 · **Status:** Accepted · **Refines:** D-185
+- **Context:** `test_durable_stage_join` failed under load asserting the join marker was gone right after the owner
+  record named the new run; the join writes the owner before `client.start`, the run pointer and the marker removal,
+  which is deliberately last (a drain cut after the owner write is finished by the next pass). The product is right.
+- **Decision:** the drain tests wait for the marker to disappear, then check owner and pointer. Under load: main 1/16,
+  branch 0/16. Commit 82be089d7.
+
+## D-210 — A deliberate restart costs the interrupted work nothing
+
+- **Date:** 2026-10-30 · **Status:** Accepted · **Refines:** D-171, D-181, D-203, D-204
+- **Context:** the owner (11:2x): «no importa que se reinicie el motor, éste debería ser capaz de continuar sin problemas
+  autónomamente». D-171 re-ran an interrupted verification once per request, so two deploys turned T10.45 into a
+  decision; DBOS counts every recovery against `max_recovery_attempts`.
+- **Decision:** `bt_durable/restarts.py`: the engine writes `engine.session.json` at start and, on SIGTERM, a matching
+  fsynced `engine.stopped.json` before DBOS is destroyed and before D-181's `os._exit`; at start it classifies the last
+  stop as `clean`, `unexplained` or `first`. After a clean stop, M6 requeues interrupted verifications without spending
+  their retry (`requeue_after_clean_stop`, evidence in `verification_restarts`) and PENDING workflows get back the
+  dispatch DBOS's recovery counts (`credit_recoveries`); agents are adopted (D-206), joins finished by the drain.
+  Composition per M6 request: clean stop → same request requeued free (D-210); first unexplained stop → same request
+  requeued once (D-171); second unexplained → a new `:relaxed` request re-verifies the same snapshot, counted against
+  the task's `max_environment_repairs` (D-203). Exactly one path per case; none requeues a request twice. No step order
+  changes, no `DBOS.patch` needed.
+- **Rule:** restarts are routine; only unexplained deaths spend budget.
+- **Evidence:** `test_durable_restarts`, `test_durable_restart_verify` (3 SIGTERMs on one verification: 0 retries, 3
+  restarts recorded; plus D-203's two-SIGKILL case), `test_durable_shutdown` (recovery_attempts stays 1), and the chaos
+  e2e `test_durable_chaos` (3 subplans, audits, gate CG-1, 5 seeded restarts incl. one SIGKILL and a verification cut
+  twice): 6/6 seeds green, main 6/6 red. Branch regression 307 files, no failures, no reruns. Commits f2c126c80,
+  a4948bfe4, 8b94b4a32, merge 1a1548efc.
+
+- **Focused receipt for D-228:** commit df426432 on solver/20261030-120814-28ad; all 19 terminal tests pass in 4.074s (terminal-green.log, exit 0). The ignored-caller regression was red before the fixture correction and all original assertions/timeouts remain unchanged. Integration is still pending.
+
+## D-229 — Regression suites start with the job-control signals at their default
+
+- **Date:** 2026-10-30 · **Status:** Accepted · **Refines:** D-177 (failures fixed at origin), D-227
+- **Context:** the integrations of `audit-metamorfosis-2` (12:33) and `diagnosis-isolated` (13:02) were refused for
+  `test_orchestration_terminal`, red in the full run and alone, while it passes by hand. Not load: `bt_integrate` was
+  started from a background shell (an agent's tool), which ignores SIGTTIN, SIGTTOU and SIGTSTP (SigIgn of the live
+  integration process); an ignored disposition survives exec, so the suite's child read the tty from the background, got
+  EIO instead of stopping, and the fixture failed every time. A first margin fix on the fixture (wait-until 10 s) was
+  withdrawn: it did not touch the cause.
+- **Decision:** `bt_regress` runs each suite as `python -c` that resets those three signals to SIG_DFL and then runs
+  `unittest.main(argv=[…, name])` — `python -m unittest name` with a sane start, wherever the regression is launched from.
+- **Rule:** a test environment starts from defaults, not from whatever its launcher inherited.
+- **Evidence:** `run_suite` on `test_orchestration_terminal` with the three signals ignored: main 1, branch 0;
+  `test_regress_venv.Signals` red against main's `bt_regress`. Branch `diagnosis-isolated` (with D-212, D-227).
+
+## D-230 — The integrate lock serves waiters in arrival order
+
+- **Date:** 2026-10-30 · **Status:** Accepted · **Refines:** D-176, D-220
+- **Context:** `machine_lock` polled a non-blocking flock, so whoever polled at the right moment won: `integrate-hygiene`
+  waited from 12:32 to its 90-minute limit while the Solucionador's and `metodologia-90`'s integrations, started later,
+  went first. With three or four sessions and agents integrating, an early waiter could starve indefinitely.
+- **Decision:** `machine_lock` (the integrate lock and the regression slot) keeps a ticket queue next to the lock file
+  (`<lock>.queue/<time_ns>-<pid>`); only the oldest live waiter tries the flock; a dead waiter's ticket is dropped.
+  Waiters running older code (no ticket) can still take a free lock until every caller runs this one.
+- **Evidence:** `test_integrate.FairLock` (arrival order a, b, c behind a holder; a dead ticket is skipped). First
+  number taken with `id D --reserve` (D-209).
+
+## D-231 — Probar's automatic sign-in works in any project: the recipe seeds its accounts and names its roles
+
+- **Date:** 2026-10-30 · **Status:** Accepted · **Refines:** D-205, D-211
+- **Context:** owner: «es importante que la cuestión con las credenciales no sólo funcione en REQ-021 sino en cualquier
+  entorno en general». Test accounts had been seeded by hand, the guide mapped roles through a pictures-only
+  `_ROLE_ALIAS`, the accounts were named `@req021.test` in a project-level recipe, and a missing account or a malformed
+  recipe failed without saying why.
+- **Decision:** `auto_login` may declare `seed`, an idempotent command run in the version's copy with its environment,
+  `BT_TEST_ACCOUNTS` (`[{email, role}]`) and `BT_TEST_PASSWORD` (the owner's secret named by `password_secret`); the
+  panel runs it once when `mint` exits 3 (missing account), retries `mint`, and records the outcome in the version's
+  state and `login.log` with secrets masked. `accounts` may be `{email, role, label, aliases}` (plain strings still
+  work); the guide, the manual-evidence card and the picker map plan accounts through them. A malformed `auto_login` is
+  refused on load with a Spanish message; a failed sign-in lands on a panel page that says why, with «Abrir sin sesión».
+  pictures moved to `test+<role>@pictures.test`, seeded with its own scrypt parameters (old rows kept; backup
+  `verify-servers.json.bak-20261030`). Contract: `references/requirements.md` «Test servers recipe».
+- **Rule:** what a project needs to sign in lives in its recipe, never in metodologia's code; a secret reaches only the
+  seed's environment.
+- **Evidence:** `test_verify_servers.AutoLogin` (+4, one a non-pictures app seeded on its first click),
+  `test_verify_guide.SignedIn` (+2); 125 selected suites pass. Live (copy of the panel on 8781, real Chromium): SP-2 link
+  → seed created six accounts → signed in as `test+administrador@pictures.test`; `/admin/cuentas` 200; a password
+  sign-in through `/api/login` 200 (the seeded hash matches pictures' `verifyPassword`). Built by an Opus subagent.
+  Until it is on main the live recipe stays at the backup (main's panel ignores object accounts).
+
+## D-233 — A confirmed medium audit finding blocks by default, so it is repaired
+
+- **Date:** 2026-10-30 · **Status:** Accepted · **Refines:** D-087 (forward remediation), the audit gate's default policy
+- **Context:** pictures REQ-021 T2.7 (SP-2 visual review) confirmed six medium contract mismatches in T2.3/T2.4/T2.5
+  (no ES/EN control on access screens, Escape leaves the invitation dialog open, rows clipped at 360 px, plain loading
+  text instead of skeletons…). Only critical/high blocked, so they would have stayed open with nobody sent to fix them;
+  the operator asked the owner whether to include medium. Owner: «los hallazgos son reales y son un problema, entonces
+  hay que arreglarlo, es algo que el sistema debería poder hacer sin mi intervención».
+- **Decision:** default `gates.audit_blocking` = critical+high+medium (`bt_config` default and
+  `bt_audit_gate.BLOCKING_SEVERITIES`; live config set 14:53); `low` stays informational. Blocking findings go through
+  the existing remediation (named tasks reworked, audit rerun, bounded by `gates.remediation_rounds`).
+- **Rule:** a confirmed defect is repaired by the system; the owner is asked only for what the system cannot decide.
+- **Evidence:** `test_audit_gate` (`test_a_confirmed_medium_finding_blocks_by_default_so_it_is_repaired`; the two tests
+  that encoded the old default updated); `test_audit_routing`, `test_planblock`, `test_durable_audits(_upgrade)` pass.
+  Branch `audit-medium-blocks`; the one-line `bt_config` default changed with its owner session's agreement.
+
+## D-234 — A blocking finding that names only its audit reruns the audit
+
+- **Date:** 2026-10-30 · **Status:** Accepted · **Refines:** D-087 (audit remediation)
+- **Context:** pictures REQ-021 r27 T2.7 at 14:49: the visual audit's high finding F8 named only T2.7 («T2.7 must be
+  rerun»; its capture harness failed on `/cuenta`). `bt_audit_gate.evaluate` drops the audit's own id, so F8 had no
+  owner and the run held the audit blocked «for the owner». The operator retried it by hand at ~14:55 with a note.
+- **Decision:** the durable `AuditGate.judge` reports an open blocking finding whose tasks name only the audit as a
+  problem of the audit; the run reruns the audit with a note naming what to complete, within `gates.remediation_rounds`,
+  then holds it as before. Judged inside the `bt.audit_gate` step (no step order change, no patch); the legacy gate is
+  unchanged; mixed with owned findings, the audit reruns first.
+- **Rule:** a gap in an audit's own coverage goes back to the audit, never to the owner first.
+- **Evidence:** `test_durable_audits` (2 real-DBOS e2e + 1 unit; red with the live message before the fix). Built by an
+  Opus subagent; full regression 304/304.
+
+## D-235 — A task the run holds blocked while it goes on reaches the Solucionador
+
+- **Date:** 2026-10-30 · **Status:** Accepted · **Refines:** D-190, REQ-031
+- **Context:** T2.7 sat blocked from 14:49 with no decision while r27 kept running other tasks; `stalled`/`ended`
+  triggers see only runs that stopped, so nobody was told until the operator acted.
+- **Decision:** Solucionador trigger kind `blocked`: the run is PENDING and not paused and holds a task `blocked` with no
+  decision behind it, after `solver.blocked_after_seconds` (300); once per block (round workflow + reason); a block
+  already handed over is not given again by `stalled`/`ended`; the brief carries the reason and the `retry-task` command.
+  No desktop notification of its own (the activity line records it).
+- **Rule:** every block without a decision reaches someone, once.
+- **Evidence:** `test_durable_solver` (2 new; red→green); full regression 304/304. Integrated with D-233.
+
+## D-236 — A tool's warning is never the decisive line
+
+- **Date:** 2026-10-30 · **Status:** Accepted · **Refines:** the failure digest (`bitacora_platform.failure_lines`)
+- **Context:** pictures REQ-021 r27 T10.45 a2 and a3 failed verification and their agents were told, as the «decisive
+  lines», uv's «warning: Failed to hardlink files; falling back to full copy…» (it matched the weak word «Failed»),
+  while the real cause — `CG-10: candidate_identity_failure: snapshot source bytes match …` followed by a node
+  `+ actual - expected` diff — matched nothing (a snake_case code has no word boundary before «failure»). Two attempts
+  retried blind; the same digest feeds healing's diagnosis and the Solucionador's brief.
+- **Decision:** uv's hardlink warning and its two advice lines are noise like npm's notices; `+ actual - expected` and
+  snake_case `*_failure:` / `*_error:` codes rank as strong.
+- **Rule:** when an attempt fails twice with the same digest, check the digest names the real cause before blaming the
+  agent.
+- **Evidence:** `test_failure_lines.test_uvs_hardlink_warning_is_never_the_decisive_line` (red before the fix).

@@ -1,0 +1,4 @@
+
+> demo-decoracion@0.1.0 idioma:test-cobertura
+> tsx scripts/idioma/cobertura.ts src/components/tres-d/DecoracionesPequenas.tsx src/components/tres-d/ControlesTactiles.tsx
+

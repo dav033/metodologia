@@ -1,0 +1,9 @@
+import InicioChat from "./InicioChat";
+import { resolveServerRequestSession } from "@/lib/cuentas/sesion-servidor";
+
+export const instant = false;
+
+export default async function HomePage() {
+  const session = await resolveServerRequestSession();
+  return <InicioChat permisos={session?.permissions ?? []} />;
+}

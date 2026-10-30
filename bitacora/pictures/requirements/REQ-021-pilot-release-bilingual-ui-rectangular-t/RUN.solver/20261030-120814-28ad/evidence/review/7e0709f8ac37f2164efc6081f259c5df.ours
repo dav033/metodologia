@@ -1,0 +1,18 @@
+import { connection } from "next/server";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import { PortadaHerramientas } from "@/components/herramientas/PortadaHerramientas";
+import { SESSION_COOKIE } from "@/lib/auth/session";
+import { resolverSesion } from "@/lib/cuentas/sesion";
+import { getRequestLanguage } from "@/lib/idioma/servidor";
+
+export const instant = false;
+
+export default async function HomePage() {
+  await connection();
+  const token = (await cookies()).get(SESSION_COOKIE)?.value;
+  const session = token && /^[A-Za-z0-9_-]{43}$/.test(token) ? await resolverSesion(token) : null;
+  if (!session) redirect("/login");
+
+  return <PortadaHerramientas permissions={session.permissions} roles={session.roles} language={await getRequestLanguage()} />;
+}

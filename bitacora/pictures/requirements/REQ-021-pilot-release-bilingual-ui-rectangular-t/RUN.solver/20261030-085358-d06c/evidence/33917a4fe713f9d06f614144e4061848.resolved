@@ -1,0 +1,29 @@
+import Link from "next/link";
+import { cookies } from "next/headers";
+import { GastoIa } from "@/components/admin/GastoIa";
+import { SESSION_COOKIE } from "@/lib/auth/session";
+import { PERMISOS } from "@/lib/cuentas/permisos";
+import { resolverSesion } from "@/lib/cuentas/sesion";
+
+export const instant = false;
+
+export default async function GastoIaPage() {
+  let session = null;
+  try {
+    const token = (await cookies()).get(SESSION_COOKIE)?.value;
+    if (token && /^[A-Za-z0-9_-]{43}$/.test(token)) session = await resolverSesion(token);
+  } catch {
+    return <AccessState title="No se pudo comprobar el acceso" message="Inténtalo de nuevo más tarde." />;
+  }
+
+  if (!session) return <AccessState title="Inicia sesión para continuar" message="El gasto de IA requiere una sesión y permiso de acceso." action="Iniciar sesión" href="/login" />;
+  if (!session.permissions.includes(PERMISOS.gasto_ia)) return <AccessState title="Sin acceso" message="Tu cuenta no tiene permiso para ver el gasto de IA." action="Abrir Mi cuenta" href="/cuenta" />;
+  return <GastoIa canManageAccounts={session.permissions.includes(PERMISOS.administracion_usuarios)} canManageRoles={session.permissions.includes(PERMISOS.administracion_roles)} />;
+}
+
+function AccessState({ title, message, action, href }: { title: string; message: string; action?: string; href?: string }) {
+  return <main className="mx-auto w-full max-w-7xl flex-1 px-5 py-8 sm:px-7 lg:px-10" lang="es">
+    <header className="mb-6 flex items-center justify-between gap-4"><h1 className="text-2xl font-semibold text-texto">Gasto de IA</h1><Link href="/" className="ui-button-ghost min-h-11 rounded-full px-4">← Volver a herramientas</Link></header>
+    <section className="mx-auto max-w-xl rounded-[2rem] border border-borde bg-superficie p-8 text-center"><h2 className="text-xl font-semibold text-texto">{title}</h2><p className="my-4 text-texto-suave">{message}</p>{action && href ? <Link className="ui-button-primary inline-flex min-h-11 items-center rounded-full px-5" href={href}>{action}</Link> : null}</section>
+  </main>;
+}

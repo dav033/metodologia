@@ -1,0 +1,89 @@
+{
+ "about": "How «Probar esta versión» starts a REQ version of pictures (bt_verify_servers). The owner's local .env.local, with the database switched to the REQ-021 test database and the web pointed at the version's own ai-api. ${NAME} comes from the owner's secret files at start; {port:x} is the port actually used. Every link opens the version already signed in as a real test account (auto_login, D-205): `mint` inserts an account_sessions row for the chosen test+<role>@pictures.test account and exits 3 when it does not exist; `seed` then creates the missing accounts (pictures' own scrypt parameters read from the version's src/lib/seguridad/scrypt.ts, password PICTURES_TEST_PASSWORD from the owner's secrets file, never printed) and mint runs again (D-231). The older test+<role>@req021.test rows (seeded by hand 2026-10-30) are kept. Backup of the previous recipe: verify-servers.json.bak-20261030.",
+ "env_file": "~/dev/pictures/.env.local",
+ "env": {
+  "DATABASE_URL": "${PICTURES_REQ021_DATABASE_URL}",
+  "PICTURES_REQ021_DATABASE_URL": "${PICTURES_REQ021_DATABASE_URL}",
+  "PYTHON_BACKEND_URL": "http://127.0.0.1:{port:ai-api}"
+ },
+ "prepare": [
+  {
+   "unless": "node_modules",
+   "run": "npm ci --prefer-offline --no-audit --no-fund"
+  },
+  {
+   "run": "npm run build --workspaces --if-present"
+  },
+  {
+   "run": "npm run rag:migrate"
+  }
+ ],
+ "servers": [
+  {
+   "name": "ai-api",
+   "port": 8000,
+   "ready": "/healthz",
+   "run": "APP_ENV=development DATABASE_URL= RERANK_MODEL_WARMUP=false uv run --frozen --directory services/ai-api uvicorn app.main:app --host 127.0.0.1 --port {port}"
+  },
+  {
+   "name": "web",
+   "port": 3000,
+   "ready": "/",
+   "open": "/",
+   "run": "node scripts/next-with-system-ca.cjs dev --port {port}"
+  }
+ ],
+ "auto_login": {
+  "cookie": "session",
+  "default": "test+administrador@pictures.test",
+  "password_secret": "PICTURES_TEST_PASSWORD",
+  "accounts": [
+   {
+    "email": "test+administrador@pictures.test",
+    "role": "administrador",
+    "label": "Administrador",
+    "aliases": [
+     "admin",
+     "administrator"
+    ]
+   },
+   {
+    "email": "test+master_designer@pictures.test",
+    "role": "master_designer",
+    "label": "Master Designer",
+    "aliases": [
+     "master"
+    ]
+   },
+   {
+    "email": "test+designer_plus@pictures.test",
+    "role": "designer_plus",
+    "label": "Designer Plus"
+   },
+   {
+    "email": "test+designer@pictures.test",
+    "role": "designer",
+    "label": "Designer"
+   },
+   {
+    "email": "test+entusiasta@pictures.test",
+    "role": "entusiasta",
+    "label": "Entusiasta",
+    "aliases": [
+     "enthusiast"
+    ]
+   },
+   {
+    "email": "test+empleado_interno@pictures.test",
+    "role": "empleado_interno",
+    "label": "Empleado interno",
+    "aliases": [
+     "empleado",
+     "employee"
+    ]
+   }
+  ],
+  "mint": "node -e 'const {Pool}=require(\"pg\");const c=require(\"crypto\");(async()=>{const p=new Pool({connectionString:process.env.DATABASE_URL,max:1});try{const a=await p.query(\"SELECT id FROM accounts WHERE lower(email)=lower($1) AND status=$2\",[process.env.BT_LOGIN_ACCOUNT,\"active\"]);if(!a.rowCount){console.error(\"no existe la cuenta de prueba \"+process.env.BT_LOGIN_ACCOUNT);process.exitCode=3;return}let v=\"\";try{v=(require(\"fs\").readFileSync(\"src/lib/cuentas/aviso-datos.ts\",\"utf8\").match(/VERSION_AVISO_DATOS\\s*=\\s*\"([^\"]+)\"/)||[])[1]||\"\"}catch(e){}if(v){await p.query(\"UPDATE accounts SET data_notice_version=$1, data_notice_accepted_at=now() WHERE id=$2\",[v,a.rows[0].id])}const t=c.randomBytes(32).toString(\"base64url\");const now=new Date();await p.query(\"INSERT INTO account_sessions (id,account_id,token_hash,created_at,expires_at) VALUES ($1,$2,$3,$4,$5)\",[c.randomUUID(),a.rows[0].id,c.createHash(\"sha256\").update(t).digest(),now,new Date(now.getTime()+864e5)]);process.stdout.write(t)}finally{await p.end()}})().catch(e=>{console.error(e.message);process.exitCode=1})'",
+  "seed": "node -e 'const {Pool}=require(\"pg\");const c=require(\"crypto\");const fs=require(\"fs\");(async()=>{const want=JSON.parse(process.env.BT_TEST_ACCOUNTS||\"[]\");const pw=process.env.BT_TEST_PASSWORD||\"\";if(pw.length<8){console.error(\"la contraseña de prueba tiene menos de 8 caracteres\");process.exitCode=2;return}const src=fs.readFileSync(\"src/lib/seguridad/scrypt.ts\",\"utf8\");const k=n=>Number(((src.match(new RegExp(\"const \"+n+\"\\\\s*=\\\\s*([0-9_]+)\"))||[])[1]||\"\").replace(/_/g,\"\"));const N=k(\"COST\"),r=k(\"BLOCK_SIZE\"),P=k(\"PARALLELIZATION\"),L=k(\"KEY_LENGTH\");if(!(N&&r&&P&&L)){console.error(\"no encuentro los parámetros scrypt de la app (src/lib/seguridad/scrypt.ts)\");process.exitCode=1;return}let v=\"\";try{v=(fs.readFileSync(\"src/lib/cuentas/aviso-datos.ts\",\"utf8\").match(/VERSION_AVISO_DATOS\\s*=\\s*\"([^\"]+)\"/)||[])[1]||\"\"}catch(e){}const p=new Pool({connectionString:process.env.DATABASE_URL,max:1});const db=await p.connect();try{await db.query(\"BEGIN\");for(const a of want){const email=String(a.email).trim().toLocaleLowerCase(\"en-US\");if(!(await db.query(\"SELECT 1 FROM account_roles WHERE id=$1\",[a.role])).rowCount)throw new Error(\"no existe el rol \"+a.role+\" en la base de datos de prueba\");let row=await db.query(\"SELECT id FROM accounts WHERE lower(email)=$1\",[email]);if(!row.rowCount){const salt=c.randomBytes(16);const key=c.scryptSync(pw,salt,L,{N:N,r:r,p:P,maxmem:256*N*r});const hash=[\"scrypt\",N,r,P,salt.toString(\"base64url\"),key.toString(\"base64url\")].join(\"$\");const id=c.randomUUID();await db.query(\"INSERT INTO accounts (id,email,status,password_hash,data_notice_version,data_notice_accepted_at) VALUES ($1,$2,$3,$4,$5,$6)\",[id,email,\"active\",hash,v||null,v?new Date():null]);row={rows:[{id:id}]};console.log(\"creada \"+email)}await db.query(\"INSERT INTO account_role_assignments (account_id,role_id) VALUES ($1,$2) ON CONFLICT DO NOTHING\",[row.rows[0].id,a.role])}await db.query(\"COMMIT\")}catch(e){await db.query(\"ROLLBACK\");throw e}finally{db.release();await p.end()}})().catch(e=>{console.error(e.message);process.exitCode=1})'"
+ }
+}

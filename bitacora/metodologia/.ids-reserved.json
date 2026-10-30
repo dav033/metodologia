@@ -1,0 +1,59 @@
+{
+ "D": [
+  {
+   "id": "D-226",
+   "by": "solver 20261030-120814-28ad: existing D-221 already recorded",
+   "at": "2026-10-30T12:33:12"
+  },
+  {
+   "id": "D-227",
+   "by": "metodologia-90: bt_regress creates the integration worktree's venv",
+   "at": "2026-10-30T12:34:15"
+  },
+  {
+   "id": "D-228",
+   "by": "solver 20261030-120814-28ad: make the SIGTTIN regression independent of inherited ignored signals",
+   "at": "2026-10-30T13:08:52"
+  },
+  {
+   "id": "D-229",
+   "by": "metodologia-90: regression suites start with job-control signals at default",
+   "at": "2026-10-30T13:31:25"
+  },
+  {
+   "id": "D-230",
+   "by": "metodologia-1a: fair integrate lock",
+   "at": "2026-10-30T13:44:55"
+  },
+  {
+   "id": "D-231",
+   "by": "autologin-general subagent: recipe-driven seed/accounts for Probar auto-login in any project",
+   "at": "2026-10-30T14:01:56"
+  },
+  {
+   "id": "D-232",
+   "by": "regress-fast subagent: overlapped longest-first regression schedule with heavy lanes",
+   "at": "2026-10-30T14:28:05"
+  },
+  {
+   "id": "D-233",
+   "by": "metodologia-90: confirmed medium audit findings are repaired automatically",
+   "at": "2026-10-30T14:53:15"
+  },
+  {
+   "id": "D-234",
+   "by": "audit-self-rerun subagent: a blocking finding that names only its audit reruns the audit within the remediation bound",
+   "at": "2026-10-30T14:54:02"
+  },
+  {
+   "id": "D-235",
+   "by": "audit-self-rerun subagent: a task the run left blocked while it goes on reaches the Solucionador once per block",
+   "at": "2026-10-30T14:54:03"
+  },
+  {
+   "id": "D-236",
+   "by": "metodologia-1a: tool warnings never decisive",
+   "at": "2026-10-30T16:35:13"
+  }
+ ]
+}

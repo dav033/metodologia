@@ -1,0 +1,58 @@
+[
+  {
+    "key": "28ce5f3ce2ffed34d3931537b375238d",
+    "path": "src/components/cuentas/textos-cuenta.ts",
+    "baseline_conflicts": true,
+    "empty_base_additions": true,
+    "both_sides_preserved": true
+  },
+  {
+    "key": "3782dc2de506bca88a314cb269b4d4cf",
+    "path": "src/components/cuentas/textos-cuenta.ts",
+    "baseline_conflicts": true,
+    "empty_base_additions": true,
+    "both_sides_preserved": true
+  },
+  {
+    "key": "408be1e42340abed0caf33cf67f92f90",
+    "path": "src/components/cuentas/MenuCuenta.tsx",
+    "baseline_conflicts": true,
+    "empty_base_additions": true,
+    "both_sides_preserved": true
+  },
+  {
+    "key": "7b573948067deb96eb32f5090f0a5ede",
+    "path": "src/components/cuentas/MenuCuenta.tsx",
+    "baseline_conflicts": true,
+    "empty_base_additions": true,
+    "both_sides_preserved": true
+  },
+  {
+    "key": "2c510cd9ea8fff4f4b2c17c43817b574",
+    "path": "src/components/cuentas/textos-cuenta.ts",
+    "baseline_conflicts": true,
+    "empty_base_additions": true,
+    "both_sides_preserved": true
+  },
+  {
+    "key": "a1ae427c4b7190229c90c2c26ad89adf",
+    "path": "src/components/cuentas/MenuCuenta.tsx",
+    "baseline_conflicts": true,
+    "empty_base_additions": true,
+    "both_sides_preserved": true
+  },
+  {
+    "key": "da8e22c1661eee03419204fe5ee2978f",
+    "path": "src/components/cuentas/textos-cuenta.ts",
+    "baseline_conflicts": true,
+    "empty_base_additions": true,
+    "both_sides_preserved": true
+  },
+  {
+    "key": "e2664fad7b125a80de13dc152c0d6a91",
+    "path": "src/components/cuentas/MenuCuenta.tsx",
+    "baseline_conflicts": true,
+    "empty_base_additions": true,
+    "both_sides_preserved": true
+  }
+]

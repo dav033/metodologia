@@ -1,0 +1,25 @@
+import type { Viewport } from "next";
+import { redirect } from "next/navigation";
+import { ShellHerramientas } from "@/components/herramientas/ShellHerramientas";
+import { VistaGuiada } from "@/components/guiado/VistaGuiada";
+import { resolveServerRequestSession } from "@/lib/cuentas/sesion-servidor";
+import { getRequestLanguage } from "@/lib/idioma/servidor";
+import { resolverVersionCodigo } from "@/lib/registro/version";
+
+/** Sin esto, env(safe-area-inset-*) vale 0 y el teclado del celular tapa el compositor. */
+export const viewport: Viewport = { width: "device-width", initialScale: 1, viewportFit: "cover", interactiveWidget: "resizes-content" };
+
+export default async function PaginaAsistenteGuiado() {
+  // Con qué código se sirvió la página: si un turno lo responde otro despliegue, la vista pide recargar (version-pagina.ts).
+  // `resolverVersionCodigo` y no `versionCodigo`: la de caché lee Date.now(), que con cacheComponents no se puede usar al
+  // prerenderizar la página (Next lo marca como ruta bloqueante y rompe la construcción).
+  const session = await resolveServerRequestSession();
+  if (!session) redirect("/login");
+
+  const language = await getRequestLanguage();
+  return (
+    <ShellHerramientas permissions={session.permissions} language={language} variant="app">
+      <VistaGuiada permisos={session.permissions} language={language} versionPagina={resolverVersionCodigo().corta} />
+    </ShellHerramientas>
+  );
+}

@@ -1,0 +1,54 @@
+{
+  "schema": "pictures-req021-integration@1",
+  "task": "REQ-021/SP-9/T9.5",
+  "runtime": {
+    "build": "next build",
+    "server": "next start",
+    "browser": "Chromium headless",
+    "locales": [
+      "en-US",
+      "es-CO"
+    ]
+  },
+  "database": {
+    "source": "PICTURES_REQ021_DATABASE_URL"
+  },
+  "assertions": {
+    "catalogue": {
+      "source": "Tiara Met Happy New Year",
+      "seededEnglish": "Met Happy New Year Tiara",
+      "correctedEnglish": "REQ-021 corrected product name",
+      "spanishRestored": true,
+      "variant": "PACK X 3"
+    },
+    "workshopLibrary": {
+      "language": "en",
+      "decorationName": "Black and white entrance arch",
+      "correctedDecorationName": "REQ-021 corrected decoration name",
+      "correctionVisibleAfterRequest": true
+    },
+    "gallery": {
+      "language": "en",
+      "decorationName": "Black and white entrance arch",
+      "correctedDecorationName": "REQ-021 corrected decoration name",
+      "correctionVisibleAfterRequest": true,
+      "spanishNamePreserved": "Arco de entrada en blanco y negro"
+    },
+    "administrator": {
+      "correctedProduct": true,
+      "correctedShoppingProduct": true,
+      "correctedDecoration": true,
+      "repeatSeedPreservedCorrections": true
+    },
+    "shoppingList": {
+      "language": "en",
+      "productNames": [
+        "Fashion White Round Balloon",
+        "Round Fashion Black Balloon"
+      ],
+      "correctedName": "REQ-021 corrected shopping product",
+      "correctionVisibleAfterRequest": true,
+      "spanishNamePreserved": "Globo Redondo Fashion Blanco"
+    }
+  }
+}

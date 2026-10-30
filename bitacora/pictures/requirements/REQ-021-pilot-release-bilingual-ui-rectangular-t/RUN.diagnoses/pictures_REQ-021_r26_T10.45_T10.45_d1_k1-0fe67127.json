@@ -1,0 +1,10 @@
+{
+ "request": "pictures:REQ-021:r26:T10.45:T10.45:d1@k1",
+ "state": "failed",
+ "error": "Expecting property name enclosed in double quotes: line 1 column 2 (char 1)",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-30T10:07:29",
+ "seconds": 54.0
+}

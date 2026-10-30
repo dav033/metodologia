@@ -1,5 +1,16 @@
 {
  "approvals": {
+  "chat-a-3d@v1": {
+   "comments": "approved with the plan",
+   "contract": "chat-a-3d@v1",
+   "draft": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/design/history/chat-a-3d@v1/approved.md",
+   "path": "design/contracts/chat-a-3d@v1.md",
+   "sha256": "ae0ce1d4aa2d3280ab92e73652bfe3520ef4bc88d44a5ef6c0de2b9068d93372",
+   "status": "approved",
+   "via": "plan",
+   "when": "2026-10-29T21:55:56+00:00",
+   "who": "owner"
+  },
   "cuentas-admin@v1": {
    "comments": "approved with the plan",
    "contract": "cuentas-admin@v1",
@@ -31,6 +42,17 @@
    "status": "approved",
    "via": "plan",
    "when": "2026-10-29T17:09:51+00:00",
+   "who": "owner"
+  },
+  "herramientas-chat@v1": {
+   "comments": "approved with the plan",
+   "contract": "herramientas-chat@v1",
+   "draft": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/design/history/herramientas-chat@v1/approved.md",
+   "path": "design/contracts/herramientas-chat@v1.md",
+   "sha256": "43231de35ca2be1c22fcbf86bafb1ec0516116637262c7a37069feca2fd57c73",
+   "status": "approved",
+   "via": "plan",
+   "when": "2026-10-29T20:27:44+00:00",
    "who": "owner"
   },
   "planes@v1": {

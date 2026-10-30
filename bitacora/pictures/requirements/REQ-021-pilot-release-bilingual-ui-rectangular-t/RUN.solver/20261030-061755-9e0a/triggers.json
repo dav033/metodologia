@@ -1,0 +1,13 @@
+[
+ {
+  "kind": "decision",
+  "key": "pictures:REQ-021:r25:T10.5:T10.5:d1@k1",
+  "run_id": "pictures:REQ-021:r25",
+  "task_id": "T10.5",
+  "request_id": "T10.5:d1",
+  "round": 1,
+  "reason": "the diagnosis is not enough to answer alone (option reverify, confidence media): Falta la evidencia manual del chat con el proveedor de IA (inglés y español)",
+  "status": "pending",
+  "at": "2026-10-30T06:17:55"
+ }
+]

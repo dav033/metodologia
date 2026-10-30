@@ -1,0 +1,15 @@
+import { connection } from "next/server";
+import { redirect } from "next/navigation";
+import { PortadaHerramientas } from "@/components/herramientas/PortadaHerramientas";
+import { resolveServerRequestSession } from "@/lib/cuentas/sesion-servidor";
+import { getRequestLanguage } from "@/lib/idioma/servidor";
+
+export const instant = false;
+
+export default async function HomePage() {
+  await connection();
+  const session = await resolveServerRequestSession();
+  if (!session) redirect("/login");
+
+  return <PortadaHerramientas permissions={session.permissions} roles={session.roles} language={await getRequestLanguage()} />;
+}

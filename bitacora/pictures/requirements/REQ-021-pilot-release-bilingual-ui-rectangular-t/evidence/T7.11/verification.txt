@@ -1,0 +1,26 @@
+T7.11 verification evidence
+Audited source tree: d95e648ca55e7682529e3bb65a870e2262b1550f
+
+npm ci --offline
+Exit 0; 576 packages added, 579 audited, 0 vulnerabilities.
+
+npm run build --workspaces --if-present
+Exit 0; @sempertex/agente-core and @sempertex/happie-package-ia built.
+
+npm run herramientas:test-gating -- --test-name-pattern=sin-precios
+Exit 0; tests 2, pass 2, fail 0. Covered price sanitization and the POST accionIdea=costear permission case.
+
+npm run herramientas:test-gating -- --test-name-pattern=etiquetas
+Exit 0; tests 1, pass 1, fail 0. The test checks the route catalogue mapping only; it does not assert persisted ai_usage.tool.
+
+npm run herramientas:test-gating -- --test-name-pattern=abuso
+Exit 0; tests 1, pass 1, fail 0. Forged headers/client IDs and cross-origin POST were denied.
+
+npm run contador:test-api -- --test-name-pattern='formulario|frase|foto'
+Exit 0; tests 3, pass 3, fail 0.
+
+npm run galeria:test-ui -- --solo permisos
+Exit 0; PASS permissions and unknown-ID/deep-link behavior.
+
+python3 /home/david/dev/metodologia/skill/scripts/bitacora.py audit-ledger check .evidence/REQ-021/SP-7.findings.json
+Exit 0; OK: audit ledger contract is valid.
