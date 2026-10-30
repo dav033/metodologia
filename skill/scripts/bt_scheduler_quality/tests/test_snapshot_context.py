@@ -1,4 +1,4 @@
-"""A gitless check can bind evidence to M6's exact captured snapshot (D-205)."""
+"""A gitless check can bind evidence to M6's exact captured snapshot (D-208)."""
 from __future__ import annotations
 
 import hashlib

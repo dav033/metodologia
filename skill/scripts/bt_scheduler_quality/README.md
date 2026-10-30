@@ -83,7 +83,7 @@ snapshot, and archives the snapshot into an owned temporary directory. The sourc
 artifact are read-only inputs. `PredecessorIntegrator` remains the only merge/conflict implementation; M3 records
 the base it used before execution.
 
-Check commands receive a read-only `/run/bt-m6/snapshot.json` outside the writable workspace (D-205), generated only
+Check commands receive a read-only `/run/bt-m6/snapshot.json` outside the writable workspace (D-208), generated only
 after that validation. Its additive input schema is `m6.snapshot-context/1`: `schema`, `snapshot_sha`, `base_sha`,
 `manifest_sha256`, `content_sha256`, and `files`. The SHA is the captured commit, not an agent worktree's HEAD.
 `files` maps relative POSIX paths to `{kind: "file", sha256: "<file bytes SHA256>"}` or
