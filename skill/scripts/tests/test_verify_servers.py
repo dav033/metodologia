@@ -168,7 +168,7 @@ class Start(unittest.TestCase):
 class Status(unittest.TestCase):
     def setUp(self):
         self.root = Path(tempfile.mkdtemp(prefix="bt-verify-status-"))
-        self.copy = self.root / "c"
+        self.copy = self.root / "SP-1-v2"
         self.logs = Path(f"{self.copy}.logs")
         self.logs.mkdir(parents=True)
 

@@ -129,6 +129,8 @@ class PlanningActions:
             msg = verification.decide(project, rdir, sid, "approved" if action == "verify-approve" else "rejected",
                                       form.get("comments", ""), "owner", "web")
             commit(ROOT, f"{project}: {rid} verification ({action}, web)", push=False)
+        if re.fullmatch(r"T\d+(?:\.\d+)*", sid):       # «Probar esto» on a decision card: back to that card
+            return f"/plans/{quote(project)}/{quote(rid)}?msg={quote(msg)}"
         return f"{base}?tab=plan&mode=subplans&view=verify&sp={quote(sid)}&msg={quote(msg)}"
 
     def tell_planner(self, project: str, rid: str, text: str) -> None:

@@ -7,6 +7,7 @@ failed and its log tail, and «Reintentar» restarts it clean. Pure functions: H
 from __future__ import annotations
 
 import json
+import re
 from html import escape as e
 from pathlib import Path
 
@@ -20,7 +21,8 @@ def status_json(root: Path, project: str, rdir: Path, sid: str) -> str:
 
 def page(root: Path, project: str, rid: str, rdir: Path, sid: str, token: str = "") -> str:
     now = servers.status(root, project, rdir, sid)
-    back = purl(project, "req", rid) + f"?tab=plan&mode=subplans&view=verify&sp={e(sid)}"
+    back = (f"/plans/{e(project)}/{e(rid)}" if re.fullmatch(r"T\d+(?:\.\d+)*", sid or "") else
+            purl(project, "req", rid) + f"?tab=plan&mode=subplans&view=verify&sp={e(sid)}")
     retry = (f'<form method="post" action="{purl(project, "req", rid, "verify-run")}" id="vrun-retry" class="pp-vform"'
              f'{"" if now["state"] == "failed" else " hidden"}><input type="hidden" name="token" value="{e(token)}">'
              f'<input type="hidden" name="anchor" value="{e(sid)}"><button type="submit" class="pp-approve">Reintentar desde cero'
@@ -32,7 +34,7 @@ def page(root: Path, project: str, rid: str, rdir: Path, sid: str, token: str = 
             f'<p id="vrun-step" class="pp-meta">{e(now.get("step") or "")}</p>'
             f'<ul id="vrun-servers">{_rows(now)}</ul><pre id="vrun-log"{"" if now.get("log") else " hidden"}>{e(now.get("log") or "")}</pre>'
             f'{retry}<p class="pp-meta">Esta pestaña se abrirá sola en la dirección cuando todos los servidores respondan. '
-            f'<a href="{back}">Volver a «Probar»</a></p></section>'
+            f'<a href="{back}">Volver</a></p></section>'
             '<script src="/static/verify-run.js"></script>')
     return layout(f"Probar {sid}", body)
 

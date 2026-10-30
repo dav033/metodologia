@@ -164,7 +164,8 @@ def _decision(task_id: str, k: int, workflow_id: str, request: dict, attempt: st
             "round": k, "workflow_id": workflow_id, "attempt": attempt, "reason": str(request.get("reason") or "")[:1000],
             "limit_hit": request.get("limit_hit"),
             "failure": {name: str(failure[name])[:2000] for name in keep if failure.get(name) is not None},
-            "options": [o for o in request.get("options") or [] if isinstance(o, str)]}
+            "options": [o for o in request.get("options") or [] if isinstance(o, str)],
+            "verify_attempt": str(request.get("verify_attempt") or "") or None}   # the snapshot a receipt binds to
 
 
 def _queue(plan, tasks: list[dict], summary_tasks: dict) -> None:

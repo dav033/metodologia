@@ -4,6 +4,8 @@
 // answers, or shows the failed step with its log. A file, not inline: the panel's CSP runs only its own scripts.
 (function () {
   "use strict";
+  if (window.__btVerifyRun) return;                   // loaded by several cards on one page: one listener
+  window.__btVerifyRun = true;
   document.addEventListener("click", function (ev) {
     var a = ev.target && ev.target.closest ? ev.target.closest("a[data-vstart]") : null;
     if (!a || ev.button !== 0 || ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.altKey) return;

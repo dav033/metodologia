@@ -72,25 +72,84 @@ def recipe(root: Path, project: str, rdir: Path | None = None) -> dict | None:
     return None
 
 
+def slug(sid: str, version: object) -> str:
+    """A subplan version is `SP-8-v1`; a task snapshot is `T10.5-a1-098ef7ce` (the attempt that produced it)."""
+    return f"{sid}-v{version}" if str(version).isdigit() else f"{sid}-{version}"
+
+
 def _files(root: Path, project: str, rdir: Path, sid: str, version: object) -> dict[str, Path]:
-    copy = verification.workdir(root, project, verification._req(rdir), sid, version)
-    base = copy.parent / f"{copy.name}"
+    copy = verification.workdir(root, project, verification._req(rdir), sid, 0).parent / slug(sid, version)
+    base = copy
     return {"copy": copy, "state": Path(f"{base}.servers.json"), "env": Path(f"{base}.env"),
             "script": Path(f"{base}.run.sh"), "logs": Path(f"{base}.logs"), "lock": Path(f"{base}.lock")}
 
 
 def session_name(project: str, rdir: Path, sid: str, version: object) -> str:
-    return f"bv-{project}-{verification._req(rdir)}-{sid}-v{version}"[:80]
+    name = f"bv-{project}-{verification._req(rdir)}-{slug(sid, version)}"
+    return re.sub(r"[.:]", "_", name)[:80]               # tmux reads «.» and «:» in a target as window and pane
 
 
 def mark(project: str, rdir: Path, sid: str, version: object) -> str:
     """What every process of the version carries in its environment (`BITACORA_VERIFY_ID`)."""
-    return f"{project}/{verification._req(rdir)}/{sid}-v{version}"
+    return f"{project}/{verification._req(rdir)}/{slug(sid, version)}"
 
 
-def _row(rdir: Path, sid: str) -> dict | None:
+_TASK = re.compile(r"T\d+(?:\.\d+)*")
+_ATTEMPT = re.compile(r"-(a\d+-[0-9a-f]{4,})$")
+
+
+def _row(rdir: Path, sid: str, root: Path | None = None, project: str = "") -> dict | None:
+    """What «Probar» starts for `sid`: a subplan's published version, or — for a task whose open decision waits for the
+    owner's manual evidence — the snapshot of the attempt that decision names. None when there is nothing to start."""
+    if _TASK.fullmatch(sid or "") and root is not None:
+        return task_target(root, project, rdir, sid)
     row = next((r for r in verification.state(rdir)["subplans"] if r["id"] == sid), None)
-    return row if row and row.get("version") else None
+    return {**row, "kind": "subplan"} if row and row.get("version") else None
+
+
+def task_target(root: Path, project: str, rdir: Path, task: str) -> dict | None:
+    import bt_durable_panel
+    for decision in bt_durable_panel.decisions(rdir):
+        manual = decision.get("manual")
+        if not manual or manual["task"] != task:
+            continue
+        commit = snapshot_of(root, project, manual["attempt"])
+        found = _ATTEMPT.search(manual["attempt"])
+        if commit:
+            return {"id": task, "kind": "task", "commit": commit, "attempt": manual["attempt"], "decision": decision["id"],
+                    "version": found.group(1) if found else manual["attempt"][-12:]}
+    return None
+
+
+def snapshot_of(root: Path, project: str, attempt: str) -> str | None:
+    """The snapshot commit an attempt left (`refs/m3/handoff/…`, subject «m3 snapshot <attempt>»)."""
+    import bt_workspace as ws
+    for repo in ws.repos(root, project).values():
+        listed = verification._git(Path(repo), "for-each-ref", "refs/m3/handoff/", "--format=%(objectname) %(contents:subject)")
+        for line in listed.stdout.splitlines():
+            sha, _, subject = line.partition(" ")
+            if subject.strip() == f"m3 snapshot {attempt}" and verification.SHA.fullmatch(sha):
+                return sha
+    return None
+
+
+def _open(root: Path, project: str, rdir: Path, sid: str, row: dict) -> tuple[Path | None, str]:
+    """The copy to start: a subplan version through bt_verification; a task snapshot the same way, detached, outside
+    every repository."""
+    if row.get("kind") != "task":
+        return verification.open_local(root, project, rdir, sid)
+    target = _files(root, project, rdir, sid, row["version"])["copy"]
+    repo = verification._repo_with(root, project, row["commit"])
+    if repo is None:
+        return None, "No encuentro el commit de ese intento en los repos del proyecto."
+    if target.exists():
+        return target, f"Ya estaba abierto en {target}."
+    target.parent.mkdir(parents=True, exist_ok=True)
+    verification._git(repo, "worktree", "prune")
+    done = verification._git(repo, "worktree", "add", "--detach", str(target), row["commit"])
+    if done.returncode != 0:
+        return None, "No pude abrir el intento: " + (done.stderr or "").strip()[:200]
+    return target, f"Intento {row['version']} de {sid} abierto en {target}."
 
 
 def _load(path: Path) -> dict:
@@ -168,7 +227,7 @@ def _url(data: dict, ports: dict[str, int]) -> str:
 
 def planned(root: Path, project: str, rdir: Path, sid: str) -> dict:
     """Where the version will answer, before it is started: {url, ports}; empty when there is nothing to start."""
-    data, row = recipe(root, project, rdir), _row(rdir, sid)
+    data, row = recipe(root, project, rdir), _row(rdir, sid, root, project)
     if data is None or row is None:
         return {"url": "", "ports": {}}
     paths = _files(root, project, rdir, sid, row["version"])
@@ -275,7 +334,7 @@ def _fail(paths: dict[str, Path], state: dict, message: str) -> dict:
 
 def start(root: Path, project: str, rdir: Path, sid: str, run: str = "") -> dict:
     """Stop everything of the version, then start it clean from its published commit. {ok, message, url}."""
-    data, row = recipe(root, project, rdir), _row(rdir, sid)
+    data, row = recipe(root, project, rdir), _row(rdir, sid, root, project)
     if data is None:
         return {"ok": False, "message": f"El proyecto no tiene receta de servidores de prueba ({project}/{RECIPE}).", "url": ""}
     if row is None:
@@ -289,7 +348,7 @@ def start(root: Path, project: str, rdir: Path, sid: str, run: str = "") -> dict
                  "url": previous.get("url", "")}
         _save(paths["state"], state)
         stopped = stop_version(paths, name, own)
-        target, message = verification.open_local(root, project, rdir, sid)
+        target, message = _open(root, project, rdir, sid, row)
         if target is None:
             return _fail(paths, state, message)
         why = _dirty(target, row["commit"])
@@ -328,7 +387,7 @@ def begin(root: Path, project: str, rdir: Path, sid: str) -> dict:
     the new ones) and run `start` in the background; the tab follows its phases. {ok, message}."""
     if recipe(root, project, rdir) is None:
         return {"ok": False, "message": f"El proyecto no tiene receta de servidores de prueba ({project}/{RECIPE})."}
-    row = _row(rdir, sid)
+    row = _row(rdir, sid, root, project)
     if row is None:
         return {"ok": False, "message": f"{sid} todavía no tiene una versión publicada que probar."}
     paths, run = _files(root, project, rdir, sid, row["version"]), uuid.uuid4().hex
@@ -339,7 +398,7 @@ def begin(root: Path, project: str, rdir: Path, sid: str) -> dict:
 
 def stop(root: Path, project: str, rdir: Path, sid: str) -> str:
     """Stop the version's servers and everything they started."""
-    row = _row(rdir, sid)
+    row = _row(rdir, sid, root, project)
     if row is None:
         return "No había servidores en marcha."
     paths, name = _files(root, project, rdir, sid, row["version"]), session_name(project, rdir, sid, row["version"])
@@ -386,7 +445,7 @@ def _step(text: str) -> str:
 
 def status(root: Path, project: str, rdir: Path, sid: str) -> dict:
     """{state: stopped|preparing|ready|failed, step, url, servers: {name: bool}, log, elapsed}: what the tab polls."""
-    row = _row(rdir, sid)
+    row = _row(rdir, sid, root, project)
     out = {"state": "stopped", "step": "", "url": "", "servers": {}, "log": "", "elapsed": 0, "ports": {}}
     if row is None:
         return out
