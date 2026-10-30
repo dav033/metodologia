@@ -473,6 +473,47 @@ class Detached(unittest.TestCase):
         self.assertIn("without an exit code", shown)
 
 
+class FairLock(unittest.TestCase):
+    """D-230: waiters get the machine lock in arrival order; a dead waiter's ticket never blocks the queue."""
+
+    def test_waiters_are_served_in_arrival_order(self):
+        import threading
+        with tempfile.TemporaryDirectory() as tmp:
+            lock, order = Path(tmp) / "integrate.lock", []
+            holding = threading.Event()
+
+            def holder():
+                with integ.machine_lock(lock, 5, poll=0.01):
+                    holding.set()
+                    time.sleep(0.3)
+
+            def waiter(name):
+                with integ.machine_lock(lock, 10, poll=0.01):
+                    order.append(name)
+                    time.sleep(0.05)
+            first = threading.Thread(target=holder)
+            first.start()
+            holding.wait()
+            threads = []
+            for name in ("a", "b", "c"):
+                threads.append(threading.Thread(target=waiter, args=(name,)))
+                threads[-1].start()
+                time.sleep(0.05)                          # arrival order a, b, c
+            for thread in [first, *threads]:
+                thread.join()
+            self.assertEqual(order, ["a", "b", "c"])
+
+    def test_a_dead_waiters_ticket_is_skipped(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            lock = Path(tmp) / "integrate.lock"
+            queue = lock.with_name("integrate.lock.queue")
+            queue.mkdir()
+            (queue / f"{0:020d}-999999999").touch()       # a waiter that died long ago
+            with integ.machine_lock(lock, 2, poll=0.01):
+                pass
+            self.assertEqual(list(queue.iterdir()), [])
+
+
 class Drain(unittest.TestCase):
     """D-204: the 09:31 and 10:06 deploys of 2026-10-30 cut pictures REQ-021 T10.45's verification twice; the second
     cut left it for the owner as BLOCKED_ENV. An engine restart now waits for running verifications first."""

@@ -86,24 +86,49 @@ def machine_lock(path: Path, wait_seconds: float = 0.0, poll: float = 1.0) -> It
     path.parent.mkdir(parents=True, exist_ok=True)
     handle = open(path, "a+", encoding="utf-8")        # noqa: SIM115 - held for the whole integration
     deadline = time.monotonic() + max(0.0, wait_seconds)
+    queue = path.with_name(f"{path.name}.queue")         # first come, first served (D-230)
+    queue.mkdir(exist_ok=True)
+    ticket = queue / f"{time.time_ns():020d}-{os.getpid()}"
+    ticket.touch()
     try:
         while True:
-            try:
-                fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
-                break
-            except BlockingIOError:
-                if time.monotonic() >= deadline:
-                    handle.seek(0)
-                    holder = handle.read().strip()[:200]
-                    raise Busy(f"another integration holds {path}" + (f" ({holder})" if holder else "")) from None
-                time.sleep(poll)
+            if _first_in(queue, ticket):
+                try:
+                    fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                    break
+                except BlockingIOError:
+                    pass
+            if time.monotonic() >= deadline:
+                handle.seek(0)
+                holder = handle.read().strip()[:200]
+                raise Busy(f"another integration holds {path}" + (f" ({holder})" if holder else "")) from None
+            time.sleep(poll)
+        ticket.unlink(missing_ok=True)
         handle.seek(0)
         handle.truncate()
         handle.write(f"pid {os.getpid()} since {dt.datetime.now().isoformat(timespec='seconds')}\n")
         handle.flush()
         yield
     finally:
+        ticket.unlink(missing_ok=True)
         handle.close()                                   # closing the descriptor releases the flock
+
+
+def _first_in(queue: Path, ticket: Path) -> bool:
+    """Is `ticket` the oldest live waiter? Tickets of dead waiters are removed. flock alone is not fair: whoever polls
+    at the right moment wins, and on 2026-10-30 an integration waited 90 min while three later ones went first (D-230)."""
+    for entry in sorted(queue.iterdir()):
+        if entry == ticket:
+            return True
+        try:
+            os.kill(int(entry.name.rsplit("-", 1)[1]), 0)
+        except (ValueError, IndexError, ProcessLookupError):
+            entry.unlink(missing_ok=True)
+            continue
+        except PermissionError:
+            pass
+        return False
+    return True
 
 
 def git(cwd: Path, *args: str, check: bool = True) -> str:
