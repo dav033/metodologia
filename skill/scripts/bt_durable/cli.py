@@ -21,6 +21,7 @@ import argparse
 import hashlib
 import json
 import logging
+import os
 import sys
 import time
 from pathlib import Path
@@ -248,11 +249,21 @@ def cmd_status(args) -> int:
     return 0
 
 
+BY = ("owner", "solver", "operator")
+
+
+def default_by() -> str:
+    """Who acts when `--by` is not given: a Solucionador session (`BITACORA_SOLVER`, set by bt_durable.solver) acts as
+    `solver`. Its `retry-task` of pictures REQ-021 T99 (2026-10-30 05:2x) was recorded as the owner's: retry-task took no
+    `--by`, and the Solucionador's decisions and the owner's must stay apart (D-190 reads owner stops from them) (D-194)."""
+    return "solver" if os.environ.get("BITACORA_SOLVER") else "owner"
+
+
 def cmd_answer(args) -> int:
     client = _client()
     try:
         request_id, _, round_no = args.request_id.partition("@k")
-        answer = OwnerAnswer(request_id=request_id, action=args.action, note=args.note or "", by=args.by)
+        answer = OwnerAnswer(request_id=request_id, action=args.action, note=args.note or "", by=args.by or default_by())
         print(client.answer(_run_of(args.project, args.req), args.task, answer,
                             round_no=int(round_no) if round_no.isdigit() else None))
     finally:
@@ -327,7 +338,7 @@ def cmd_command(args) -> int:
     try:
         kind = {"pause": "pause", "resume": "resume", "retry-task": "retry_task"}[args.cmd]
         sent = client.command(_run_of(args.project, args.req), kind, task_id=getattr(args, "task", None),
-                              note=getattr(args, "note", "") or "")
+                              note=getattr(args, "note", "") or "", by=getattr(args, "by", None) or default_by())
         print(sent.model_dump_json())
     finally:
         client.close()
@@ -368,8 +379,8 @@ def main(argv: list[str] | None = None) -> int:
         a.add_argument(name)
     a.add_argument("action", choices=("reverify", "retry", "retry_with_note", "retry_other_route", "stop"))
     a.add_argument("--note", default="")
-    a.add_argument("--by", default="owner", choices=("owner", "solver", "operator"),
-                   help="who answers (the Solucionador of REQ-031 answers as `solver`)")
+    a.add_argument("--by", default=None, choices=BY,
+                   help="who answers; default `solver` inside a Solucionador session, else `owner` (D-194)")
     t = sub.add_parser("attest")
     for name in ("project", "req", "task"):
         t.add_argument(name)
@@ -381,6 +392,7 @@ def main(argv: list[str] | None = None) -> int:
     for name in ("project", "req", "task"):
         r.add_argument(name)
     r.add_argument("--note", default="")
+    r.add_argument("--by", default=None, choices=BY, help="who retries; default as for `answer`")
     args = parser.parse_args(argv)
     handlers = {"engine": cmd_engine, "start": cmd_start, "migrate": cmd_migrate, "join": cmd_join, "status": cmd_status,
                 "answer": cmd_answer, "attest": cmd_attest, "pause": cmd_command, "resume": cmd_command,

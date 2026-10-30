@@ -6,6 +6,7 @@ No tmux, no agent and no database: the terminal, the route, the owner's notifica
 from __future__ import annotations
 
 import json
+import os
 import sys
 import tempfile
 import unittest
@@ -449,6 +450,34 @@ class SolverTests(unittest.TestCase):
         with patch.object(cli, "_client", return_value=Answering()), patch.object(cli, "_run_of", return_value=None):
             cli.main(["answer", "proj", "REQ-900", "T7.4", "T7.4:d1@k2", "retry", "--by", "solver"])
         self.assertEqual(sent, [("T7.4", "solver", 2)])
+
+    def test_inside_a_solver_session_its_commands_are_its_own(self):
+        """2026-10-30 (D-194): the first live Solucionador's `retry-task T99` was recorded as the owner's."""
+        from bt_durable import cli
+        seen = []
+
+        class Commanding:
+            def command(self, run, kind, *, task_id=None, note="", by="owner", **_):
+                seen.append((kind, task_id, by))
+                from types import SimpleNamespace
+                return SimpleNamespace(model_dump_json=lambda: "{}")
+
+            def answer(self, run, task, answer, round_no=None):
+                seen.append(("answer", task, answer.by))
+                return "wf"
+
+            def close(self):
+                pass
+        with patch.object(cli, "_client", return_value=Commanding()), patch.object(cli, "_run_of", return_value=None):
+            with patch.dict(os.environ, {"BITACORA_SOLVER": "20261030-051648-0278"}):
+                cli.main(["retry-task", "proj", "REQ-900", "T99", "--note", "resolved"])
+                cli.main(["answer", "proj", "REQ-900", "T7.4", "T7.4:d1", "retry"])
+                cli.main(["retry-task", "proj", "REQ-900", "T99", "--by", "operator"])
+            with patch.dict(os.environ, {}, clear=False):
+                os.environ.pop("BITACORA_SOLVER", None)
+                cli.main(["retry-task", "proj", "REQ-900", "T99"])
+        self.assertEqual(seen, [("retry_task", "T99", "solver"), ("answer", "T7.4", "solver"),
+                                ("retry_task", "T99", "operator"), ("retry_task", "T99", "owner")])
 
 
 if __name__ == "__main__":
