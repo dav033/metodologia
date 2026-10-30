@@ -3,17 +3,16 @@
 from __future__ import annotations
 
 import time
-from dataclasses import dataclass
-from pathlib import Path
 from collections.abc import Callable
+from dataclasses import dataclass
 from typing import Any
 
-from .contracts import QualityError, VerifyRequest
-from .criteria import CheckResult, CriterionResult, evaluate_criteria, overall_status
-from .evidence import build_evidence, sha256_bytes, validate_result_contract
 from . import reuse
 from .authority import VerificationAuthority
 from .check_runner import CheckExecutor
+from .contracts import QualityError, VerifyRequest
+from .criteria import CheckResult, CriterionResult, evaluate_criteria, overall_status
+from .evidence import build_evidence, sha256_bytes, validate_result_contract
 from .policy import CheckSpec, QualityPolicy, compile_verification
 from .review import ReviewerPort, validate_reviewer_evidence
 from .runner import CommandOutcome, SandboxRunner
@@ -228,7 +227,7 @@ class QualityEngine:
                 specs, snapshot.directory, started, source.worktree, source.repository,
                 tree=None if ignore else reuse.tree_id(source.repository, snapshot.snapshot_sha),
                 tree_for=check_tree if ignore else None,
-                order=order,
+                order=order, snapshot=snapshot,
             )
             full_tree = reuse.tree_id(source.repository, snapshot.snapshot_sha)
             if not ignore:

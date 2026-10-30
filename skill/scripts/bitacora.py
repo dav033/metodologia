@@ -73,6 +73,8 @@ def main() -> None:
     sub.add_parser("init", help="create the project tree")
     p_id = sub.add_parser("id", help="next free ID")
     p_id.add_argument("kind", choices=["D", "P", "REQ", "d", "p", "req"])
+    p_id.add_argument("--reserve", default="", metavar="WHO",
+                      help="take the number now (who and what for); later calls skip it even before its entry is written")
     p_req = sub.add_parser("req", help="requirements")
     p_req.add_argument("action", choices=["new", "plan"])
     p_req.add_argument("arg", help='title for "new", REQ-NNN for "plan"')
@@ -391,7 +393,7 @@ def main() -> None:
                 "week_of_month": week_of_month(today())}
         print(json.dumps(info, indent=1, ensure_ascii=False))
     elif a.cmd == "id":
-        print(next_id(pdir, a.kind))
+        print(next_id(pdir, a.kind, reserve=a.reserve))
     elif a.cmd == "req":
         if a.action == "new":
             rid = next_id(pdir, "REQ")

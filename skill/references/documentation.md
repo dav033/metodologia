@@ -157,7 +157,9 @@ work, surprises/gotchas. Not worth it: routine reads, every command run, chatter
 
 ## Central files — rules
 
-**DECISIONS.md** — get the ID with `bitacora.py id D`. Entry format is in the file header. Append only; when a
+**DECISIONS.md** — take the ID with `bitacora.py id D --reserve "<who: what for>"` the moment you decide to write one
+(several sessions and agents write at once; a reserved number is never handed out again). Entry format is in the
+file header. Append only; when a
 decision changes, write a new entry with `Supersedes: D-xxx` and change only the old one's Status to
 `Superseded by D-yyy`. A decision is anything a future reader would ask "why is it like this?" about: tech/library
 choices, scope cuts, data model, process rules, trade-offs, rejected approaches.

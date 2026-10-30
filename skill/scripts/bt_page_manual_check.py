@@ -52,7 +52,11 @@ def block(root: Path, project: str, req: str, rdir: Path, decision: dict, base: 
                                                           "expect": " ".join(s["expect"] or "" for s in guide["steps"])}])
                      if p != "/"]
     port = (re.search(r":(\d+)", url or "") or [None, ""])[1]
-    links = verify_page.link_items(origin, port, pages, form_id)
+    login = servers.auto_login(data)                 # D-211: the card's links sign in too, as the account the check needs
+    who_first = (guide["accounts"] or [""])[0] if login else ""
+    go = (f"/p/{quote(project)}/req/{quote(req)}/verify-go?sp={quote(task)}&t={quote(token)}"
+          + (f"&account={quote(who_first)}" if who_first else "")) if login else ""
+    links = verify_page.link_items(origin, port, pages, form_id, go)
     said = {"ready": ("ok", "En marcha: responde."), "preparing": ("warn", "Arrancando…"),
             "failed": ("bad", "Falló al arrancar. " + str(now.get("step") or ""))}.get(now["state"], ("none", "Detenido."))
     steps = "".join(f'<li><p>{inline(s["do"])}</p>' + (f'<p class="pp-vexpect"><strong>Debes ver:</strong> {inline(s["expect"])}</p>'
@@ -74,8 +78,9 @@ def block(root: Path, project: str, req: str, rdir: Path, decision: dict, base: 
               f'<textarea name="reason" required rows="2" placeholder="Qué falló: qué hiciste y qué viste" '
               f'aria-label="Qué falló"></textarea><button type="submit">No funciona</button>'
               f'<p class="muted">Un intento nuevo de {e(task)} que recibe tu nota.</p></form>')
+    picker = verify_page.account_picker({**login, "default": who_first or login.get("default")}, task) if login else ""
     return (f'<div class="pp-vtry dx-manual" data-state="{e(now["state"])}"><span class="pp-vlabel">Probar esto: dónde</span>'
-            f'<ul class="pp-vlinks">{links}</ul>'
+            f'{picker}<ul class="pp-vlinks">{links}</ul>'
             f'<p class="pp-vstatus {said[0]}" role="status">{e(said[1])}</p>'
             f'<p class="muted">Es el intento <code>{e(target["version"])}</code> de {e(task)} (commit '
             f'<code>{e(target["commit"][:10])}</code>), el mismo que se vuelve a verificar con tu respuesta. Si no está en '
