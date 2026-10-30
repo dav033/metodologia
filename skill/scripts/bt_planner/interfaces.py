@@ -30,6 +30,13 @@ def _interface_text_findings(where: str, interface: dict) -> list[str]:
     return findings
 
 
+def _ids(items: object, field: str) -> set[str]:
+    """The text values of `field` across a list of objects. A malformed schema-1.3 value (a list or an object where an id
+    belongs) is the contract validator's to report; here it used to crash `validate` with an unhashable set element."""
+    return {item[field] for item in items if isinstance(item, dict) and isinstance(item.get(field), str)} \
+        if isinstance(items, list) else set()
+
+
 def check(plan: object, ancestors: Mapping[str, set[str]]) -> tuple[list[str], list[str]]:
     """Validate declared cross-task interfaces using the plan's transitive dependency map."""
     if not isinstance(plan, dict):
@@ -46,8 +53,8 @@ def check(plan: object, ancestors: Mapping[str, set[str]]) -> tuple[list[str], l
 
     task_subplan = {task["id"]: task.get("subplan_id") for task in task_items
                     if isinstance(task, dict) and isinstance(task.get("id"), str)} if isinstance(task_items, list) else {}
-    subplan_ids = {item.get("id") for item in plan.get("subplans") or [] if isinstance(item, dict)}
-    gate_tasks = {gate.get("task") for gate in plan.get("composition_gates") or [] if isinstance(gate, dict)}
+    subplan_ids = _ids(plan.get("subplans"), "id")
+    gate_tasks = _ids(plan.get("composition_gates"), "task")
     seen_ids: set[str] = set()
     for index, interface in enumerate(interfaces):
         where = f"interfaces[{index}]"
