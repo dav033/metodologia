@@ -133,7 +133,7 @@ def _servers(ctx: dict, row: dict, paths: list[str]) -> str:
     go = (f'/p/{quote(ctx["project"])}/req/{quote(ctx["rid"])}/verify-go?sp={quote(row["id"])}&t={quote(ctx["token"])}'
           + (f'&account={quote(str(login.get("default") or ""))}' if login.get("default") else "")) if login else ""
     links = link_items(origin, web, pages, form_id, go)
-    picker = account_picker(login, row["id"])
+    picker = account_picker(login, row["id"]) + login_notice(data, now)
     session = servers.session_name(ctx["project"], ctx["rdir"], row["id"], row["version"])
     port_list = ", ".join(f"{n} {p}" for n, p in (ports or {}).items())
     remote = remote_help(web)
@@ -185,15 +185,31 @@ def link_items(origin: str, port: str, pages: list[str], form_id: str, go: str =
 
 
 def account_picker(login: dict, sid: str) -> str:
-    """«Entrar como»: the recipe's test accounts; every link of the block signs in as the chosen one (D-205)."""
-    accounts = [str(a) for a in (login or {}).get("accounts") or [] if isinstance(a, str)]
+    """«Entrar como»: the recipe's test accounts (a label, when the recipe gives one, before the address); every link of
+    the block signs in as the chosen one (D-205, D-231)."""
+    import bt_verify_servers as servers
+    accounts = servers.login_accounts(login)
     if not accounts:
         return ""
-    default = str(login.get("default") or accounts[0])
-    options = "".join(f'<option value="{e(a)}"{" selected" if a == default else ""}>{e(a)}</option>' for a in accounts)
+    default = str(login.get("default") or accounts[0]["email"])
+    options = "".join(f'<option value="{e(a["email"])}"{" selected" if a["email"] == default else ""}>'
+                      f'{e(a["label"] + " (" + a["email"] + ")" if a["label"] else a["email"])}</option>' for a in accounts)
     return (f'<p class="pp-vaccount"><label>Entras ya con sesión iniciada como <select data-sp="{e(sid)}" '
             f'aria-label="Cuenta con la que entras">{options}</select></label> <span class="pp-meta">(cámbiala para probar '
             f'otro rol)</span></p>')
+
+
+def login_notice(data: dict | None, now: dict) -> str:
+    """Why the links do not sign in: a malformed `auto_login` in the recipe, or the last sign-in (or seed) that failed
+    (D-231). Spanish, no secret: bt_verify_servers masks them."""
+    import bt_verify_servers as servers
+    problem = servers.auto_login_problem(data)
+    if problem:
+        return (f'<p class="pp-vstatus bad" role="alert">Inicio de sesión automático desactivado: {e(problem)} Corrige '
+                f'<code>verify-servers.json</code>; mientras tanto los enlaces abren la versión sin sesión.</p>')
+    if now.get("login_error"):
+        return f'<p class="pp-vstatus bad" role="alert">Último inicio de sesión automático: {e(now["login_error"])}</p>'
+    return ""
 
 
 def remote_help(port: str) -> str:

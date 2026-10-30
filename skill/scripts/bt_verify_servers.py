@@ -18,6 +18,11 @@ values; a requirement may carry its own `verify-servers.json` in its folder, whi
 `${NAME}` is read from the owner's secret files (`verifier.secret_files`) when the servers start and lands only in a
 0600 file next to the copy; `{port:<server>}` and `{port}` are the ports actually used.
 
+`auto_login` (D-205, D-231) opens every link signed in as a real test account: `mint` prints a session token for
+`BT_LOGIN_ACCOUNT` and exits MISSING_ACCOUNT (3) when the account does not exist; an optional idempotent `seed` then
+creates `BT_TEST_ACCOUNTS` with `BT_TEST_PASSWORD` (the owner's secret named by `password_secret`) and `mint` runs once
+more. The full contract, with an example for any app: references/requirements.md «Test servers recipe».
+
 Every start is clean (`start`): under the version's lock it stops everything of that version (its tmux session, every
 process carrying its mark, servers listening inside its copy: `bt_verify_procs`), checks the copy is exactly the
 published commit with no edits, drops the framework cache (`.next`) and the old logs, picks its ports (the ones it had,
@@ -389,48 +394,176 @@ def start(root: Path, project: str, rdir: Path, sid: str, run: str = "", login: 
             "message": f"Arrancando {', '.join(ports)} de {sid} (versión {row['version']}) desde cero.{told}"}
 
 
+# ------------------------------------------------------------------ automatic sign-in (D-205, D-231)
+
+MISSING_ACCOUNT = 3                       # `mint` exit code: the account does not exist yet (the panel runs `seed`)
+_COOKIE = re.compile(r"[A-Za-z0-9_.-]{1,64}")
+_ENV_NAME = re.compile(r"[A-Z][A-Z0-9_]{0,80}")
+_EMAIL = re.compile(r"[^\s@]+@[^\s@]+\.[^\s@]+")
+_LOCAL_ROLE = re.compile(r"[^+@]+\+([^@]+)@")          # test+<role>@… names its role
+
+
+def login_accounts(login: dict | None) -> list[dict]:
+    """The recipe's test accounts as [{email, role, label, aliases}]: an entry is an e-mail («test+<role>@…» names its
+    role) or {email, role?, label?, aliases?}. Malformed entries are left out (auto_login_problem says why)."""
+    out = []
+    for item in (login or {}).get("accounts") or []:
+        if isinstance(item, str):
+            item = {"email": item}
+        if not isinstance(item, dict) or not isinstance(item.get("email"), str) or not _EMAIL.fullmatch(item["email"]):
+            continue
+        found = _LOCAL_ROLE.match(item["email"])
+        role = item.get("role") if isinstance(item.get("role"), str) else (found.group(1) if found else "")
+        aliases = [str(a) for a in item.get("aliases") or [] if isinstance(a, str)] if isinstance(item.get("aliases"), list) else []
+        out.append({"email": item["email"], "role": role, "label": str(item.get("label") or ""), "aliases": aliases})
+    return out
+
+
+def auto_login_problem(data: dict | None) -> str:
+    """Why the recipe's `auto_login` cannot be used, in Spanish, or "" (also when there is none)."""
+    if not isinstance(data, dict) or "auto_login" not in data:
+        return ""
+    value = data["auto_login"]
+    if not isinstance(value, dict):
+        return "«auto_login» debe ser un objeto con cookie, accounts y mint."
+    if not _COOKIE.fullmatch(str(value.get("cookie") or "")):
+        return "«auto_login.cookie» debe ser el nombre de la cookie de sesión de la app (letras, números y «_.-»)."
+    if not isinstance(value.get("mint"), str) or not value["mint"].strip():
+        return "«auto_login.mint» debe ser el comando que imprime el token de sesión de BT_LOGIN_ACCOUNT."
+    if "seed" in value and (not isinstance(value["seed"], str) or not value["seed"].strip()):
+        return "«auto_login.seed» debe ser el comando que crea las cuentas de BT_TEST_ACCOUNTS (o no estar)."
+    if "password_secret" in value and not _ENV_NAME.fullmatch(str(value["password_secret"])):
+        return "«auto_login.password_secret» debe ser el NOMBRE de una variable de tus archivos de secretos, no su valor."
+    raw = value.get("accounts")
+    if not isinstance(raw, list) or not raw:
+        return "«auto_login.accounts» debe ser una lista de cuentas de prueba."
+    for number, item in enumerate(raw, 1):
+        entry = {"email": item} if isinstance(item, str) else item
+        ok = isinstance(entry, dict) and isinstance(entry.get("email"), str) and _EMAIL.fullmatch(entry["email"]) and \
+            all(isinstance(entry.get(k, ""), str) for k in ("role", "label")) and \
+            (isinstance(entry.get("aliases", []), list) and all(isinstance(a, str) for a in entry.get("aliases", [])))
+        if not ok:
+            return (f"La cuenta n.º {number} de «auto_login.accounts» no es válida: debe ser un correo o "
+                    "{email, role, label, aliases}.")
+    emails = [a["email"] for a in login_accounts(value)]
+    if value.get("default") and value["default"] not in emails:
+        return "«auto_login.default» debe ser una de las cuentas de «auto_login.accounts»."
+    return ""
+
+
 def auto_login(data: dict | None) -> dict:
-    """The recipe's `auto_login` ({cookie, accounts, default, mint}) or {} (D-205)."""
+    """The recipe's `auto_login` ({cookie, accounts, default, mint, seed?, password_secret?}) or {} when there is none or
+    it is malformed (D-205, D-231)."""
     value = (data or {}).get("auto_login")
-    ok = isinstance(value, dict) and isinstance(value.get("mint"), str) and re.fullmatch(r"[A-Za-z0-9_.-]{1,64}", str(value.get("cookie") or ""))
-    return value if ok else {}
+    return value if isinstance(value, dict) and not auto_login_problem(data) else {}
 
 
 TOKEN = re.compile(r"[A-Za-z0-9_\-]{20,200}")
+
+
+def _version_env(paths: dict[str, Path]) -> dict[str, str]:
+    env: dict[str, str] = {}
+    for line in paths["env"].read_text(encoding="utf-8").splitlines():
+        key, _, value = line.partition("=")
+        if re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", key):
+            env[key] = shlex.split(value)[0] if value.strip() else ""
+    return env
+
+
+def _masked(text: str, hidden: list[str]) -> str:
+    """The last line of a command's output, with every secret value of the version replaced by ***."""
+    line = ((text or "").strip().splitlines()[-1:] or ["sin salida"])[0]
+    for value in sorted({h for h in hidden if len(h) >= 8}, key=len, reverse=True):
+        line = line.replace(value, "***")
+    return line[:200]
+
+
+def _record(paths: dict[str, Path], **entries: dict) -> None:
+    """The outcome of a sign-in (and of a seed) in the version's state and its login.log; never a secret or a token."""
+    stamp = time.time()
+    lock = paths.get("lock")
+    with (_locked(lock) if lock else contextlib.nullcontext()):
+        state = _load(paths["state"])
+        state.update({k: {**v, "at": stamp} for k, v in entries.items()})
+        _save(paths["state"], state)
+    if paths.get("logs"):
+        paths["logs"].mkdir(parents=True, exist_ok=True)
+        with open(paths["logs"] / "login.log", "a", encoding="utf-8") as log:
+            when = time.strftime('%Y-%m-%dT%H:%M:%S', time.localtime(stamp))
+            log.writelines(f"{when} {kind} {'ok' if entry.get('ok') else 'failed'} {entry.get('account') or ''} "
+                           f"{entry.get('message') or ''}\n" for kind, entry in entries.items())
 
 
 def mint_session(root: Path, project: str, rdir: Path, sid: str, account: str = "") -> dict:
     """A real session of a test account for the running version: the recipe's `mint` command runs in the version's copy
     with its environment and `BT_LOGIN_ACCOUNT`, and prints the session token. {ok, token, cookie, account, url, message}.
     Owner, 2026-10-30: «que se inicie sesión automáticamente» — a real account (menus and roles as in production), not
-    the local administrator shortcut; the panel hands the cookie to the browser (localhost cookies hold for every port)."""
+    the local administrator shortcut; the panel hands the cookie to the browser (localhost cookies hold for every port).
+
+    When `mint` exits MISSING_ACCOUNT and the recipe has `seed`, the seed runs once in the same copy with the same
+    environment, `BT_TEST_ACCOUNTS` (JSON [{email, role}]) and `BT_TEST_PASSWORD` (from the owner's secret named by
+    `password_secret`), and `mint` is tried once more («que funcione en cualquier entorno», D-231)."""
     data, row = recipe(root, project, rdir), _row(rdir, sid, root, project)
+    problem = auto_login_problem(data)
+    if problem:
+        return {"ok": False, "message": f"Inicio de sesión automático desactivado: {problem}"}
     login = auto_login(data)
     if not login or row is None:
-        return {"ok": False, "message": "Esta versión no tiene inicio de sesión automático."}
-    accounts = [str(a) for a in login.get("accounts") or [] if isinstance(a, str)]
-    account = account if account in accounts else str(login.get("default") or (accounts[0] if accounts else ""))
-    if not account:
-        return {"ok": False, "message": "La receta no nombra ninguna cuenta de prueba."}
+        return {"ok": False, "configured": False, "message": "Esta versión no tiene inicio de sesión automático."}
+    accounts = login_accounts(login)
+    emails = [a["email"] for a in accounts]
+    account = account if account in emails else str(login.get("default") or (emails[0] if emails else ""))
     paths = _files(root, project, rdir, sid, row["version"])
-    state = _load(paths["state"])
-    if not state.get("url"):
+    if not _load(paths["state"]).get("url"):
         return {"ok": False, "message": "La versión no está en marcha."}
-    env = {**os.environ, "BT_LOGIN_ACCOUNT": account}
     try:
-        for line in paths["env"].read_text(encoding="utf-8").splitlines():
-            key, _, value = line.partition("=")
-            if re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", key):
-                env[key] = shlex.split(value)[0] if value.strip() else ""
-        done = subprocess.run(["bash", "-c", login["mint"]], cwd=paths["copy"], env=env, capture_output=True, text=True,
-                              timeout=60)
+        version_env = _version_env(paths)
+    except (OSError, ValueError) as exc:
+        return {"ok": False, "message": f"No pude leer el entorno de la versión: {exc.__class__.__name__}."}
+    hidden = [v for v in version_env.values() if v]
+    env = {**os.environ, **version_env, "BT_LOGIN_ACCOUNT": account}
+
+    def run(command: str, extra: dict[str, str] | None = None, timeout: int = 60) -> subprocess.CompletedProcess:
+        return subprocess.run(["bash", "-c", command], cwd=paths["copy"], env={**env, **(extra or {})},
+                              capture_output=True, text=True, timeout=timeout)
+
+    def fail(message: str, seed: str = "") -> dict:
+        _record(paths, auto_login={"ok": False, "account": account, "message": message},
+                **({"seed": {"ok": False, "account": account, "message": seed}} if seed else {}))
+        return {"ok": False, "message": message}
+
+    try:
+        done = run(login["mint"])
+        if done.returncode == MISSING_ACCOUNT:
+            if not login.get("seed"):
+                return fail(f"No pude iniciar sesión como {account}: {_masked(done.stderr or done.stdout, hidden)}. "
+                            "La receta no tiene «seed» para crear las cuentas de prueba; créalas a mano o añádelo.")
+            extra = {"BT_TEST_ACCOUNTS": json.dumps([{"email": a["email"], "role": a["role"]} for a in accounts])}
+            name = str(login.get("password_secret") or "")
+            if name:
+                password = _secrets(project).get(name, "")
+                if not password:
+                    return fail(f"Falta {name} en tus archivos de secretos (verifier.secret_files): no creo las cuentas "
+                                "de prueba sin su contraseña.", seed=f"falta {name}")
+                extra["BT_TEST_PASSWORD"] = password
+                hidden.append(password)
+            seeded = run(login["seed"], extra, timeout=180)
+            if seeded.returncode:
+                why = _masked(seeded.stderr or seeded.stdout, hidden)
+                return fail(f"No pude crear las cuentas de prueba (seed, salida {seeded.returncode}): {why}",
+                            seed=why)
+            _record(paths, seed={"ok": True, "account": account, "message": f"{len(accounts)} cuentas aseguradas"})
+            done = run(login["mint"])
+    except subprocess.TimeoutExpired as exc:
+        return fail(f"No pude iniciar sesión como {account}: la receta tardó más de {exc.timeout:.0f} s.")
     except (OSError, ValueError, subprocess.SubprocessError) as exc:
-        return {"ok": False, "message": f"No pude iniciar sesión: {exc}"}
+        return fail(f"No pude iniciar sesión como {account}: {exc.__class__.__name__}.")
     token = (done.stdout or "").strip()
     if done.returncode or not TOKEN.fullmatch(token):
-        why = (done.stderr or done.stdout or "").strip().splitlines()[-1:] or ["sin salida"]
-        return {"ok": False, "message": f"No pude iniciar sesión como {account}: {why[0][:200]}"}
-    return {"ok": True, "token": token, "cookie": login["cookie"], "account": account, "url": state["url"], "message": ""}
+        return fail(f"No pude iniciar sesión como {account}: {_masked(done.stderr or done.stdout, hidden)}")
+    _record(paths, auto_login={"ok": True, "account": account, "message": ""})
+    return {"ok": True, "token": token, "cookie": login["cookie"], "account": account, "url": _load(paths["state"]).get("url", ""),
+            "message": ""}
 
 
 def has_local_auth(data: dict | None) -> bool:
@@ -447,7 +580,8 @@ def begin(root: Path, project: str, rdir: Path, sid: str, login: bool = False) -
     if row is None:
         return {"ok": False, "message": f"{sid} todavía no tiene una versión publicada que probar."}
     paths, run = _files(root, project, rdir, sid, row["version"]), uuid.uuid4().hex
-    _save(paths["state"], {**_load(paths["state"]), "phase": "stopping", "run": run, "started_at": time.time(), "error": ""})
+    _save(paths["state"], {**_load(paths["state"]), "phase": "stopping", "run": run, "started_at": time.time(), "error": "",
+                           "auto_login": {}})
     threading.Thread(target=start, args=(root, project, rdir, sid, run, login), name=f"probar-{sid}", daemon=True).start()
     return {"ok": True, "message": f"Reiniciando {sid} desde cero."}
 
@@ -508,6 +642,8 @@ def status(root: Path, project: str, rdir: Path, sid: str) -> dict:
     paths = _files(root, project, rdir, sid, row["version"])
     current, name = _load(paths["state"]), session_name(project, rdir, sid, row["version"])
     out["login"] = bool(current.get("login", True))
+    tried = current.get("auto_login") if isinstance(current.get("auto_login"), dict) else {}
+    out["login_error"] = "" if tried.get("ok", True) else str(tried.get("message") or "")
     out.update(url=current.get("url", ""), ports=current.get("ports") or {},
                elapsed=int(time.time() - float(current.get("started_at") or time.time())))
     phase = current.get("phase", "servers" if current else "")

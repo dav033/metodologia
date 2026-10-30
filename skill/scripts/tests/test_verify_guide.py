@@ -6,6 +6,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from typing import ClassVar
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import bt_verify_guide as guides
@@ -117,6 +118,38 @@ class SignedIn(unittest.TestCase):
         self.assertEqual(guides.test_account("designer-plus@prueba.local", self.ACCOUNTS), "test+designer_plus@req021.test")
         self.assertEqual(guides.test_account("master-designer@x", self.ACCOUNTS), "test+master_designer@req021.test")
         self.assertEqual(guides.test_account("nadie@x.test", self.ACCOUNTS), "nadie@x.test")
+
+    # D-231: roles and aliases come from the recipe, not from code
+    SHOP: ClassVar[list] = [{"email": "qa+owner@shop.test", "role": "owner", "label": "Dueño", "aliases": ["admin", "store-manager"]},
+            {"email": "qa+clerk@shop.test", "role": "clerk", "label": "Cajero"},
+            {"email": "qa+night_clerk@shop.test", "role": "night_clerk"}]
+
+    def test_plan_accounts_map_through_the_recipes_roles_and_aliases(self):
+        self.assertFalse(hasattr(guides, "_ROLE_ALIAS"))
+        self.assertEqual(guides.test_account("admin@prueba.local", self.SHOP), "qa+owner@shop.test")
+        self.assertEqual(guides.test_account("Store_Manager@x", self.SHOP), "qa+owner@shop.test")
+        self.assertEqual(guides.test_account("CLERK@x", self.SHOP), "qa+clerk@shop.test")
+        self.assertEqual(guides.test_account("night-clerk@x", self.SHOP), "qa+night_clerk@shop.test")
+        self.assertEqual(guides.test_account("cajero@x", self.SHOP), "qa+clerk@shop.test")       # its label
+        self.assertEqual(guides.test_account("nadie@x.test", self.SHOP), "nadie@x.test")
+        self.assertEqual(guides.test_account("night@x", self.SHOP), "qa+night_clerk@shop.test")  # one role starts so
+        self.assertEqual(guides.test_account("n@x", self.SHOP), "n@x")                          # too short to guess
+
+    def test_the_guide_and_the_manual_card_name_the_recipes_accounts(self):
+        root = Path(tempfile.mkdtemp(prefix="bt-verify-guide-"))
+        rdir = root / "shop" / "requirements" / "REQ-002-x"
+        rdir.mkdir(parents=True)
+        (rdir / "SPEC.md").write_text("# Spec\n\n## Pruebas\n\n" + TABLE.format(w="Where", h="How", e="Expect") +
+                                      "| SP-1 | Local | 1) Open http://localhost:3000/till and sign in as clerk@shop.local. "
+                                      "| 1) The till opens. |\n\n## Next\n")
+        (rdir / "PLAN.json").write_text(json.dumps({"tasks": [{"id": "T1.1", "subplan_id": "SP-1", "verification": [
+            {"type": "manual", "value": "As Cajero, close the till", "purpose": "Totals match"}]}]}))
+        recipe = {"auto_login": {"cookie": "sid", "mint": "x", "default": "qa+owner@shop.test", "accounts": self.SHOP}}
+        g = guides.guide(root, "shop", rdir, "SP-1", url="http://localhost:3005/", recipe=recipe)
+        self.assertIn("elige qa+clerk@shop.test", g["steps"][0]["do"])
+        self.assertEqual((g["accounts"], g["password"], g["signed"]), (["qa+clerk@shop.test"], "", "qa+owner@shop.test"))
+        card = guides.manual(root, "shop", rdir, "T1.1", url="http://localhost:3005/", recipe=recipe)
+        self.assertEqual(card["accounts"], ["qa+clerk@shop.test"])                                # «As Cajero»: its label
 
 
 if __name__ == "__main__":

@@ -311,6 +311,42 @@ A decision is pinned to the version it saw: a newer version makes it outdated. T
 subplan is not approved: the review merge refuses (`bt_verification.gate`). Revert is shown as a command with the subplans
 that depend on it; nothing reverts automatically. Only runs that follow the collaborative flow (or whose SPEC has `## Pruebas`) and whose projection reports `subplans` are gated; once seen, the gate is persisted so it cannot fail open. Every subplan needs its own row (an `all` row only supplements; `none` needs a reason).
 
+**Test servers recipe (`verify-servers.json`, D-195..D-231).** «Probar» starts a version from
+`<bitácora>/<project>/verify-servers.json` (a `requirements/REQ-NNN-*/verify-servers.json` wins). The operator keeps it;
+it never holds a secret value. Fields:
+
+- `env_file` (optional dotenv) and `env`: `${NAME}` is read from the owner's secret files (`verifier.secret_files`) at
+  start and lands only in the version's 0600 env file; `{port:<server>}` / `{port}` are the ports actually used.
+- `prepare`: `[{run, unless?}]`, run in the copy before the servers (`unless`: a path that skips the step when present).
+- `servers` (required): `[{name, port, run, ready?, open?, local_auth?}]`. `local_auth` is env for that server's run
+  line only when the version starts «sin login» (an app's own development-only mode, D-202).
+- `auto_login` (optional, D-205/D-231): every link opens the version signed in as a real test account.
+  - `cookie`: the app's session cookie name. `accounts`: e-mails (`test+<role>@…` names its role) or
+    `{email, role, label?, aliases?}`; `label` shows in «Entras como», and `role`/`label`/`aliases` map the plan's
+    accounts (`admin@prueba.local` → the account aliased `admin`; case, `-`/`_` ignored). `default`: one of them.
+  - `mint`: runs in the version's copy with its environment and `BT_LOGIN_ACCOUNT`; prints the session token
+    (20–200 chars of `[A-Za-z0-9_-]`) and exits 0; **exits 3 when the account does not exist**; anything else fails.
+  - `seed` (optional): idempotent; same copy and environment plus `BT_TEST_ACCOUNTS` (JSON `[{email, role}]`, every
+    account of the recipe) and `BT_TEST_PASSWORD` (the owner's secret named by `password_secret`, never printed, never in
+    a URL or log). The panel runs it once when `mint` exits 3, then `mint` once more. Without `password_secret` the seed
+    gets no password (apps whose test accounts need none). Exit 0 = accounts ensured; else the panel shows its last
+    output line with every secret value masked.
+  - The outcome is recorded in the version's `<copy>.servers.json` (`auto_login`, `seed`) and `<copy>.logs/login.log`.
+    A malformed `auto_login` is refused on load and the panel says which field, in Spanish; a failed `seed`/`mint`
+    lands on a panel page with the reason and a link to the page without a session.
+
+A minimal recipe for any app whose CLI can create users and sessions:
+
+```json
+{"env": {"DATABASE_URL": "${SHOP_TEST_DATABASE_URL}"},
+ "servers": [{"name": "web", "port": 4000, "ready": "/health", "open": "/", "run": "npm run dev -- --port {port}"}],
+ "auto_login": {"cookie": "sid", "default": "qa+owner@shop.test", "password_secret": "SHOP_TEST_PASSWORD",
+   "accounts": [{"email": "qa+owner@shop.test", "role": "owner", "label": "Dueño", "aliases": ["admin"]},
+                {"email": "qa+clerk@shop.test", "role": "clerk", "label": "Cajero"}],
+   "mint": "node scripts/session-for.js \"$BT_LOGIN_ACCOUNT\"",
+   "seed": "node scripts/ensure-test-users.js"}}
+```
+
 Requirements not started on this flow keep planning-time design as before: `design draft REQ-NNN` drafts every UI
 subplan at once and `design sync REQ-NNN` follows the changed ones (amending chosen designs, below); `design drafts
 REQ-NNN` lists state and questions.
