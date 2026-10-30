@@ -256,6 +256,7 @@ such guard: `_enqueue` turns a child's failure into an `internal_error` fact.
 | Symptom | Look at |
 |---|---|
 | a task is `needs_decision` | `status` → `decision.reason`, `failure.code`, `limit_hit`; answer with its request id |
+| an integration conflict has a recorded resolution | `reverify` observes integration again for that verification profile (`bt-task-reverify-reintegrates`, D-221); replay keeps the same child ID, and older histories retain their recorded ID |
 | a check is `BLOCKED_ENV CHECK_UNSUPPORTED` | M6 refuses inline code (`python3 -c …`): put the check in a script of the repository |
 | `SANDBOX_UNAVAILABLE` | `bwrap` missing or an invalid sandbox environment (duplicate variables are now resolved policy-first) |
 | an agent seems stuck | `python -m bt_supervisor show <attempt key>`; `systemctl --user status bt-att-*` |
