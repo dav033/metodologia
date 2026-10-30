@@ -79,14 +79,17 @@ def operator_verifier(store_path: Path) -> M6Verifier:
     return verifier
 
 
-def record_verdict(attempt: AttemptRef, outcome) -> None:
+def record_verdict(attempt: AttemptRef, outcome, profile: str = "standard") -> None:
     """What the legacy quality port writes after a verdict: a FAIL's digest becomes the last-failure note and one line
-    of the task's history; a PASS clears the note. A verdict that is not about the code (needs review) writes nothing."""
+    of the task's history; a PASS clears the note. A verdict that is not about the code (needs review) writes nothing.
+    One history line per (attempt, profile, verdict ref): the verify step that runs again after an engine restart gets
+    M6's stored verdict back and must not report the same failure twice (audit of REQ-030, 2026-10-29)."""
     from .legacy import record_history, write_verify_notes
     rdir = requirement_dir(attempt.run)
     if outcome.status.value == "FAIL" and outcome.digest:
         write_verify_notes(rdir, attempt.task_id, outcome.digest)
-        record_history(rdir, attempt.task_id, attempt.attempt_key, outcome.digest)
+        record_history(rdir, attempt.task_id, attempt.attempt_key, outcome.digest,
+                       verdict=f"{attempt.attempt_key}:{profile}:{outcome.result_ref}")
     elif outcome.status.value == "PASS":
         write_verify_notes(rdir, attempt.task_id, "")
 

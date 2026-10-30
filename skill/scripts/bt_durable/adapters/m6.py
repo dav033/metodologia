@@ -110,7 +110,7 @@ class M6Verifier:
         # `attestations_for(run)`: the run's coordinator receipts (bt_attestation.lookup of its requirement folder);
         # a valid receipt settles only its own manual check, command checks still have to pass
         self.attestations_for = attestations_for or (lambda run: attestations)
-        # `on_verdict(attempt, outcome)`: the shared notes trail (RUN.notes history and last verification failure)
+        # `on_verdict(attempt, outcome, profile)`: the shared notes trail (RUN.notes history and last verification failure)
         self.on_verdict = on_verdict
         self._engines: dict[tuple[str, str], QualityEngine] = {}
 
@@ -166,7 +166,7 @@ class M6Verifier:
         outcome = outcome_of(result, self.store)
         if self.on_verdict is not None:
             try:
-                self.on_verdict(attempt, outcome)
+                self.on_verdict(attempt, outcome, profile)
             except Exception as error:  # noqa: BLE001 - the notes trail informs; it never changes a verdict
                 LOG.warning("notes for %s not written: %s", attempt.attempt_key, error)
         return outcome

@@ -10,6 +10,7 @@ or reports what blocks it instead of repeating it.
 """
 from __future__ import annotations
 
+import fcntl
 import hashlib
 import json
 import re
@@ -83,17 +84,31 @@ def signature(text: str) -> str:
     return hashlib.sha256("\n".join(norm).encode()).hexdigest()[:12] if norm else ""
 
 
-def record(rdir: Path, task: str, attempt: str, text: str, kind: str = "verification") -> None:
-    """Append one failure of one attempt (best effort: the history only informs, it never stops a run)."""
+def record(rdir: Path, task: str, attempt: str, text: str, kind: str = "verification", *, verdict: str = "") -> None:
+    """Append one failure of one attempt (best effort: the history only informs, it never stops a run). `verdict`
+    names the verdict the line is about; a second line for the same verdict is not written (a durable verify step that
+    runs again after an engine restart returns the stored verdict and reported it once more)."""
     if not text.strip() or not attempt:
         return
     target = path(rdir, task)
     try:
         target.parent.mkdir(parents=True, exist_ok=True)
-        with target.open("a", encoding="utf-8") as handle:
-            handle.write(json.dumps({"attempt": attempt, "kind": kind, "at": time.time(), "signature": signature(text),
-                                     "signature_authority": "informational_only",
-                                     "text": text.strip()}, ensure_ascii=False) + "\n")
+        with target.open("a+", encoding="utf-8") as handle:
+            fcntl.flock(handle, fcntl.LOCK_EX)
+            if verdict:
+                handle.seek(0)
+                for line in handle:
+                    try:
+                        if json.loads(line).get("verdict") == verdict:
+                            return
+                    except (ValueError, AttributeError):
+                        continue
+            row = {"attempt": attempt, "kind": kind, "at": time.time(), "signature": signature(text),
+                   "signature_authority": "informational_only", "text": text.strip()}
+            if verdict:
+                row["verdict"] = verdict
+            handle.seek(0, 2)
+            handle.write(json.dumps(row, ensure_ascii=False) + "\n")
     except OSError:
         pass
 
