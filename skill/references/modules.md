@@ -499,8 +499,9 @@ once per signature (D-167) → the Solucionador → the owner, only for what nee
   decision once, to its round, `--by solver`, only if still open; stops with one precise owner question for anything
   irreversible, external or security-sensitive; leaves a regression test and a D-NNN.
 - **Integration** (`bt_integrate.py`, `bt_regress.py`): under a machine-wide flock (`<state>/integrate.lock`): preflight
-  (live checkout on main, branch committed, no `bitacora/` path, main's code already in the branch) → full regression
-  (only `integrate.allowed_failures` may fail, empty by default; any other failure is rerun alone once) → DBOS backup when runtime code
+  (live checkout on main, branch committed, no `bitacora/` path, main's code already in the branch) → regression
+  (only `integrate.allowed_failures` may fail, empty by default; any other failure is rerun alone once; see
+  **Selection** below) → DBOS backup when runtime code
   changed and the release-log entry → `merge --no-ff` in a deploy worktree → `merge --ff-only` in `~/dev/metodologia`
   (the only write it ever gets) → push → restart `bt-durable.service` and `bitacora-web.service` as the changed paths
   need → smoke (active, web 200, «bt_durable engine started» in the journal); a failed smoke reverts the merge the same
@@ -508,6 +509,18 @@ once per signature (D-167) → the Solucionador → the owner, only for what nee
   (`git worktree remove`) and its branch deleted with `git branch -d` (never -D); `--keep-worktree` skips it, a caller
   standing inside the worktree keeps it and gets the command, the live checkout and the deploy worktree are never
   removed. Exit codes: 0 integrated, 1 refused, 2 fast-forward refused, 3 reverted, 4 revert failed, 75 lock busy.
+- **Selection** (`bt_regress_select.py`, `integrate.regression`): the suites the branch's changes can reach, walked
+  forward from each suite over a static graph (module-level imports transitively; lazy imports, module names in
+  strings and scripts it runs from the suite and what it imports directly, and inside one package at any depth;
+  assets, named folders and globs as data), plus the changed suites and the always-run boundary/integration/contract suites. `staged` (default) runs them
+  first and refuses at once on a red, then runs the rest; `selective` (`--selective`) integrates on them alone and,
+  after the smoke, runs the full regression of the merge in its own transient unit (`bt_integrate_post.py`): a red one
+  goes to the release log and a notification with the `--revert MERGE` command, never a silent revert; `full`
+  (`--full`) skips it. Not trusted, so everything runs first: dependencies (`pyproject.toml` beyond `py-modules`,
+  `uv.lock`), the regression's own code, the tests' shared helpers/fixtures, a changed file no suite reaches, more than
+  `integrate.selective_max_percent` (40) of the suites; even then its always-run, changed and directly reached suites
+  run first, so a boundary red still refuses in minutes. `bt_regress.py <worktree> --dry-run` and `bt_integrate.py
+  --dry-run` print the selection with a reason per suite.
 - **Not claimed.** A session runs at most once per trigger as far as the state file shows: a crash between the launch
   and the state write leaves a tmux session the next pass finds and refuses to duplicate, without adopting it.
 
