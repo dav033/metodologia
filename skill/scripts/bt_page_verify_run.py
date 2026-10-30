@@ -30,6 +30,10 @@ def page(root: Path, project: str, rid: str, rdir: Path, sid: str, token: str = 
              f'<input type="hidden" name="anchor" value="{e(sid)}"><input type="hidden" name="path" value="{e(path)}"><button type="submit" class="pp-approve">Reintentar desde cero'
              f'</button></form>' if token else "")
     url = now.get("url") or ""
+    if not next_url and token and servers.auto_login(servers.recipe(root, project, rdir)):
+        # every start lands signed in, «Reiniciar desde cero» and decision cards included (owner, 2026-10-30, D-211)
+        from urllib.parse import urlencode
+        next_url = purl(project, "req", rid, "verify-go") + "?" + urlencode({"sp": sid, "path": path, "t": token})
     nxt = next_url if next_url.startswith(f"/p/") else ""          # sign in and land (D-205); never another host
     body = (f'<section class="pp-vrun" data-sp="{e(sid)}" data-path="{e(path)}" data-next="{e(nxt)}" data-poll="{purl(project, "req", rid, "verify-run")}"><h1>Probar {e(sid)}</h1>'
             f'<p class="pp-vrun-url"><span class="pp-vlabel">Dirección</span><code id="vrun-url">{e(url) or "…"}</code></p>'

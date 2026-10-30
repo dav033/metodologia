@@ -111,6 +111,29 @@ def _design(root: Path, project: str, rdir: Path, sid: str) -> dict | None:
     return {"ref": ref, "doc": ""}
 
 
+_SIGN_IN = re.compile(r"\s*\b(?:e\s+|y\s+)?inici(?:a|e|ar)\s+sesi[oó]n\s+como\s+([\w.+-]+@[\w-]+(?:\.[\w-]+)+)",
+                      re.IGNORECASE)
+_ROLE_ALIAS = {"admin": "administrador", "designer-plus": "designer_plus", "master-designer": "master_designer",
+               "empleado": "empleado_interno", "master": "master_designer"}
+
+
+def test_account(email: str, accounts: list[str]) -> str:
+    """The recipe's test account for an account the plan names (admin@prueba.local → test+administrador@…): the plan was
+    written before the seeded accounts existed (owner, 2026-10-30: the guide asked for admin@prueba.local, which the test
+    database does not have, D-211). The plan's own address when nothing matches."""
+    local = email.split("@", 1)[0].lower().removeprefix("test+")
+    role = _ROLE_ALIAS.get(local, local.replace("-", "_"))
+    return next((a for a in accounts if a.split("@", 1)[0].lower() == f"test+{role}"), email)
+
+
+def signed_in(text: str, accounts: list[str]) -> str:
+    """A step that asks to sign in, when «Probar» already opens the version signed in (D-205): it says so, naming the
+    account to pick in «Entras como» when the step needs a given one."""
+    def say(m: re.Match) -> str:
+        return f" (ya entras con sesión iniciada; en «Entras como» elige {test_account(m.group(1), accounts)})"
+    return _SIGN_IN.sub(say, text)
+
+
 def guide(root: Path, project: str, rdir: Path, sid: str, *, url: str = "", recipe: dict | None = None,
           copy: Path | None = None) -> dict:
     """{steps: [{do, expect}] (at most MAX_STEPS; `more` says how many were left out), expect: what to see overall,
@@ -175,7 +198,16 @@ def guide(root: Path, project: str, rdir: Path, sid: str, *, url: str = "", reci
         commands = f"cd {copy} && set -a && . {env} && set +a"
     done = [f"«Probar» ya ejecuta `{step['run']}` al arrancar." for step in (recipe or {}).get("prepare") or []
             if isinstance(step, dict) and isinstance(step.get("run"), str) and f"`{step['run']}`" in text_all]
+    login = (recipe or {}).get("auto_login") if isinstance((recipe or {}).get("auto_login"), dict) else {}
+    signed = ""
+    if login:                                          # D-211: the session is already open; no password to look for
+        tests = [str(a) for a in login.get("accounts") or [] if isinstance(a, str)]
+        steps = [{"do": signed_in(s["do"], tests), "expect": signed_in(s["expect"], tests)} for s in steps]
+        before = [signed_in(b, tests) for b in before if not _SEED.search(b)]
+        signed = str(login.get("default") or (tests[0] if tests else ""))
+        accounts, password = [test_account(a, tests) for a in accounts], ""
     return {"steps": steps[:MAX_STEPS], "more": more, "before": before, "expect": expect_all, "done": done, "accounts": accounts, "password": password,
+            "signed": signed,
             "commands": commands, "dev": bool(_DEV.search(text_all)), "design": _design(root, project, rdir, sid),
             "source": source}
 
@@ -253,8 +285,15 @@ def manual(root: Path, project: str, rdir: Path, task: str, *, url: str = "", re
         wanted = re.sub(r"[^a-z]+", "-", role.lower()).strip("-").replace("administrador", "admin").replace("administrator", "admin")
         accounts += [m for m in dict.fromkeys(m.group(0).rstrip(".") for m in _EMAIL.finditer(every))
                      if m.split("@")[0] == wanted and m not in accounts]
-    steps = [{"do": f"Abre {origin + '/' if origin else 'la dirección de prueba'}" +
-                    (f" e inicia sesión como {accounts[0]}." if accounts else "."), "expect": ""}]
+    login = (recipe or {}).get("auto_login") if isinstance((recipe or {}).get("auto_login"), dict) else {}
+    tests = [str(a) for a in (login or {}).get("accounts") or [] if isinstance(a, str)]
+    if login:                                          # D-211: the link opens it signed in as the account the check needs
+        accounts = [test_account(a, tests) for a in accounts] or [str(login.get("default") or "")]
+        steps = [{"do": f"Abre {origin + '/' if origin else 'la dirección de prueba'} con el enlace de arriba: entras ya "
+                        f"con sesión iniciada; en «Entras como» elige {accounts[0]}.", "expect": ""}]
+    else:
+        steps = [{"do": f"Abre {origin + '/' if origin else 'la dirección de prueba'}" +
+                        (f" e inicia sesión como {accounts[0]}." if accounts else "."), "expect": ""}]
     steps += [{"do": _with_origin(s, origin), "expect": ""} for s in _related(rdir, sid, text, 1)] if sid else []
     pair = bool(_PAIR.search(text))
     if pair:
@@ -267,7 +306,7 @@ def manual(root: Path, project: str, rdir: Path, task: str, *, url: str = "", re
         steps.append({"do": "Comprueba lo que pide el plan: " + check["value"], "expect": check["expected"]})
     seed = _SEED.search(every)
     note = (recipe or {}).get("accounts")
-    password = (note.strip() if isinstance(note, str) and note.strip() else
+    password = ("" if login else note.strip() if isinstance(note, str) and note.strip() else
                 f"la contraseña es la que escribiste al ejecutar `{seed.group(1)}`; la bitácora no la guarda." if accounts and seed
                 else "")
     named = provider(recipe)
