@@ -299,7 +299,7 @@ class Panel(unittest.TestCase):
         self.assertIn('href="http://localhost:3002/login"', rows)
         self.assertIn('href="bitacora://open/?port=3002&amp;path=/login"', rows)
         self.assertIn('class="pp-vwin"', rows)
-        self.assertIn('data-copy="ssh -N -L 3002:127.0.0.1:3002 -J root@185.147.157.25 -p 2222 david@127.0.0.1"', rows)
+        self.assertIn('data-copy="ssh -N -L 3002:127.0.0.1:3002 laptop"', rows)
         self.assertEqual(rows.count("copiar puente"), 2)
         help_ = page.remote_help("3002")
         self.assertIn("/static/bitacora-opener.ps1", help_)
