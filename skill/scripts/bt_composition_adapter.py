@@ -145,6 +145,7 @@ class GitSubprocessPort:
             return None
 
     resolutions: Path | None = None             # create_engine: <store folder>/resolutions; None leaves conflicts as they are
+    request_resolutions = True                  # False: use recorded resolutions, never ask for new ones (a virtual base)
 
     def _recorded(self, tree: str, base: str, ours: str, theirs: str,
                   conflicts: tuple[str, ...]) -> tuple[str, tuple[str, ...]]:
@@ -152,7 +153,9 @@ class GitSubprocessPort:
         git rerere): its context waits in `<resolutions>/<key>.diff3` and `.json`; writing `<key>.resolved` (the file's
         final content) settles it, for this gate and every later one composing the same members (pictures REQ-021: SP-4
         and SP-5 both edited TABLAS_TRABAJO_CUENTA, and every gate after them was rejected). A member that changes the
-        file gets a new key and asks again."""
+        file gets a new key and asks again. The final content does not depend on which side is «ours», so the same
+        versions met the other way round use the same resolution (D-174: a line's virtual base merged SP-5 × SP-4 where
+        the composer had recorded SP-4 × SP-5)."""
         if self.resolutions is None:
             return tree, conflicts
         folder = Path(self.resolutions)
@@ -160,12 +163,14 @@ class GitSubprocessPort:
         for path in conflicts:
             ids = [self._blob_id(revision, path) for revision in (base, ours, theirs)]
             key = hashlib.sha256("\0".join((path, *ids)).encode()).hexdigest()[:32]
+            swapped = hashlib.sha256("\0".join((path, ids[0], ids[2], ids[1])).encode()).hexdigest()[:32]
             resolved = folder / f"{key}.resolved"
-            if resolved.is_file():
-                blobs[path] = self._run_input(resolved.read_text(encoding="utf-8"), "hash-object", "-w", "--stdin").stdout.strip()
+            found = next((candidate for candidate in (resolved, folder / f"{swapped}.resolved") if candidate.is_file()), None)
+            if found is not None:
+                blobs[path] = self._run_input(found.read_text(encoding="utf-8"), "hash-object", "-w", "--stdin").stdout.strip()
                 continue
             context = folder / f"{key}.json"
-            if not context.exists():
+            if self.request_resolutions and not context.exists():
                 folder.mkdir(parents=True, exist_ok=True)
                 (folder / f"{key}.diff3").write_text(self._diff3(path, ids), encoding="utf-8")
                 context.write_text(json.dumps({"path": path, "blobs": dict(zip(("base", "ours", "theirs"), ids)),

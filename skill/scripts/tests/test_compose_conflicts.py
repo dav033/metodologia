@@ -117,6 +117,17 @@ class RecordedResolution(Repo):
         self.assertEqual(second.conflicts, ())
         self.assertEqual(git(self.repo, "cat-file", "blob", f"{second.tree}:list.ts"), "export const T = [\"p\", \"a\", \"d\"];")
 
+    def test_a_resolution_serves_the_same_versions_met_the_other_way_round(self):
+        """D-174: the final content does not depend on which side is «ours»."""
+        ours = self.branch("ours", {"list.ts": "export const T = [\"p\", \"a\"];\n"})
+        theirs = self.branch("theirs", {"list.ts": "export const T = [\"a\", \"d\"];\n"})
+        self.port.merge_tree(self.base, ours, theirs)
+        next(self.port.resolutions.glob("*.json")).with_suffix(".resolved").write_text("export const T = [\"p\", \"a\", \"d\"];\n")
+        swapped = self.port.merge_tree(self.base, theirs, ours)
+        self.assertEqual(swapped.conflicts, ())
+        self.assertEqual(git(self.repo, "cat-file", "blob", f"{swapped.tree}:list.ts"), "export const T = [\"p\", \"a\", \"d\"];")
+        self.assertEqual(len(list(self.port.resolutions.glob("*.json"))), 1)
+
 
 class OwnWork(Repo):
     def test_a_member_folds_from_where_its_own_snapshots_start(self):
@@ -192,6 +203,42 @@ class LineIntegration(Repo):
         merged = json.loads(git(self.repo, "cat-file", "blob", f"{ref}:package.json"))
         self.assertEqual(merged["scripts"], {"a": "x", "d": "w", "e": "v"})
         self.assertFalse(list((self.tmp / "state" / "composition" / "resolutions").glob("*.json")))
+
+    def test_a_virtual_base_uses_the_recorded_resolutions(self):
+        """pictures REQ-021 r25 (D-174): the bases' own conflict (SP-4 × SP-5 in dependientes.ts) was resolved for the
+        composer; a virtual base without it kept git's markers and T95 conflicted with SP-8's line on every retry."""
+        from types import SimpleNamespace
+        from bt_contracts.execution import RunRef, Snapshot
+        from bt_durable.adapters.integration import GitLineIntegrator
+        resolved = "export const T = [\"p\", \"a\", \"d\"];\n"
+        one = self.branch("one", {"list.ts": "export const T = [\"p\", \"a\"];\n"})
+        two = self.branch("two", {"list.ts": "export const T = [\"a\", \"d\"];\n"})
+        recorder = adapter.GitSubprocessPort(self.repo, self.tmp / "ws2")
+        recorder.resolutions = self.tmp / "state" / "composition" / "resolutions"
+        self.assertEqual(recorder.merge_tree(self.base, two, one).conflicts, ("list.ts",))
+        next(recorder.resolutions.glob("*.json")).with_suffix(".resolved").write_text(resolved)
+        tips = {}
+        for name, first, second in (("line", one, two), ("gate", two, one)):
+            git(self.repo, "checkout", "-q", "-b", name, first)
+            subprocess.run(["git", "-c", "user.name=T", "-c", "user.email=t@t", "merge", "-q", "--no-edit", second],
+                           cwd=self.repo, capture_output=True, check=False)
+            tips[name] = commit(self.repo, {"list.ts": resolved}, f"{name}: resolved")
+        git(self.repo, "checkout", "-q", "line")
+        line_tip = commit(self.repo, {"list.ts": resolved + "export const X = 1;\n"}, "line: one more export")
+        self.assertEqual(len(git(self.repo, "merge-base", "--all", line_tip, tips["gate"]).split()), 2)
+        git(self.repo, "checkout", "-q", "main")
+        run = RunRef(project="proj", req="REQ-900", revision=1, plan_id="REQ-900", plan_path="/nonexistent",
+                     plan_sha256="0" * 64)
+        lines = GitLineIntegrator({"app": self.repo}, composer=SimpleNamespace(state_dir=self.tmp / "state"))
+        lines.sync(run, "app", {"SP-8": []})
+        ref = lines.subplan_ref(run, "app", "SP-8")
+        git(self.repo, "update-ref", ref, line_tip)
+        _tip, conflict, _note = lines.integrate(run, SimpleNamespace(id="T95", repository="app"),
+                                                Snapshot(snapshot_sha=tips["gate"], base_sha=self.base,
+                                                         manifest_path=self.tmp / "none.json"), lines=("SP-8",))
+        self.assertEqual(conflict, "")
+        self.assertEqual(git(self.repo, "cat-file", "blob", f"{ref}:list.ts") + "\n", resolved + "export const X = 1;\n")
+        self.assertEqual(len(list(recorder.resolutions.glob("*.json"))), 1)       # the virtual base asked nobody
 
 
 class GateBase(Repo):
