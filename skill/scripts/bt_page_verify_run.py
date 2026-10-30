@@ -46,6 +46,19 @@ def page(root: Path, project: str, rid: str, rdir: Path, sid: str, token: str = 
     return layout(f"Probar {sid}", body)
 
 
+def login_failed(project: str, rid: str, sid: str, message: str, url: str) -> str:
+    """Where a version link lands when the automatic sign-in failed (D-231): the reason in Spanish (no secret; the
+    servers module masks them) and the page itself, without a session, one click away."""
+    back = purl(project, "req", rid) + f"?tab=plan&mode=subplans&view=verify&sp={e(sid)}"
+    body = (f'<section class="pp-vrun" data-sp="{e(sid)}"><h1>Probar {e(sid)}</h1>'
+            f'<p class="pp-vstatus bad" role="alert">No pude abrir la versión con la sesión iniciada.</p>'
+            f'<p>{e(message)}</p>'
+            f'<p><a class="pp-vurl" href="{e(url)}">Abrir {e(url)} sin sesión</a> · <a href="{back}">Volver al panel</a></p>'
+            f'<p class="pp-meta">Las cuentas de prueba, su «seed» y su contraseña se describen en '
+            f'<code>{e(project)}/verify-servers.json</code> (<code>auto_login</code>).</p></section>')
+    return layout(f"Probar {sid}", body)
+
+
 def _cls(now: dict) -> str:
     return {"ready": "ok", "failed": "bad", "preparing": "warn"}.get(now["state"], "none")
 

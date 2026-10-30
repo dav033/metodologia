@@ -100,9 +100,18 @@ def settings() -> dict:
 
 
 def argv(provider: str, binary: str, model: str, effort: str, out: Path) -> list[str]:
+    """The diagnosing agents (this diagnosis, the attempt analyst, the manual reviewer) read and answer, nothing else.
+    Claude gets the read-only tools only (the analyst reads its sealed snapshot) and none of the user's or the project's
+    settings, hooks, memory, MCP servers or slash commands: with them, haiku took the metodologia skill's instructions
+    and the bitácora's gitleaks notice as its task and the final message, the one `--output-format text` prints, was that
+    task's report instead of the JSON (pictures REQ-021 T10.45:d1 and T2.55:d1/d2, 2026-10-30: «la respuesta no trae
+    JSON» every time, 45–88 s; isolated, the same request answered in 7 s). `out` is in the call's own temporary
+    directory, which also holds the empty MCP configuration."""
     if provider == "claude":
-        cmd = [binary, "-p", "--model", model, "--output-format", "text",
-               "--disallowedTools", "Bash,Edit,Write,NotebookEdit,WebFetch,WebSearch"]
+        mcp = out.parent / "mcp-empty.json"
+        mcp.write_text('{"mcpServers": {}}', encoding="utf-8")
+        cmd = [binary, "--print", "--model", model, "--tools", "Read,Grep,Glob", "--strict-mcp-config",
+               "--mcp-config", str(mcp), "--setting-sources", "", "--disable-slash-commands", "--output-format", "text"]
         return cmd + (["--effort", effort] if effort else [])
     if provider == "codex":
         return [binary, "exec", "--model", model, "--config", f"model_reasoning_effort={effort or 'medium'}",
@@ -110,12 +119,20 @@ def argv(provider: str, binary: str, model: str, effort: str, out: Path) -> list
     raise ValueError(f"diagnosis does not drive {provider}")
 
 
+def _said(text: str) -> str:
+    """What the agent answered instead, in one line: a failed diagnosis keeps its evidence."""
+    return " ".join(text.split())[:240] or "(vacía)"
+
+
 def parse(text: str, request: dict) -> dict:
     """The model's JSON, checked: known kind, an offered option, 1-4 steps. Raises ValueError otherwise."""
     start, end = text.find("{"), text.rfind("}")
     if start < 0 or end <= start:
-        raise ValueError("la respuesta no trae JSON")
-    data = json.loads(text[start:end + 1])
+        raise ValueError("la respuesta no trae JSON: " + _said(text))
+    try:
+        data = json.loads(text[start:end + 1])
+    except ValueError as exc:
+        raise ValueError(f"la respuesta no es JSON válido ({exc}): {_said(text)}") from None
     if not isinstance(data, dict):
         raise ValueError("la respuesta no es un objeto")
     offered = [o["id"] for o in request.get("options", [])]

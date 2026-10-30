@@ -238,7 +238,10 @@ class Agent(unittest.TestCase):
         self.assertEqual(result["state"], "done")
         self.assertEqual(result["label"], rules.KINDS["conflict"][0])
         self.assertIn("EVIDENCE", seen["input"])
-        self.assertIn("--disallowedTools", seen["argv"])
+        for needle in ("--tools", "--strict-mcp-config", "--setting-sources", "--disable-slash-commands"):
+            self.assertIn(needle, seen["argv"])
+        self.assertEqual(seen["argv"][seen["argv"].index("--tools") + 1], "Read,Grep,Glob")     # reads, never writes
+        self.assertEqual(seen["argv"][seen["argv"].index("--setting-sources") + 1], "")         # no user hooks/memory
         self.assertEqual(agent.cached(self.rdir, "T16:4")["headline"], "Choca T14b")
         self.assertIsNone(agent.cached(self.rdir, "T16:5"))                # a new attempt is a new request
 
@@ -248,7 +251,10 @@ class Agent(unittest.TestCase):
         self.assertEqual((result["option"], result["kind"]), ("retry", "unknown"))
 
     def test_a_broken_answer_or_exit_is_stored_as_a_failure(self):
-        self.assertEqual(self.run_with("no json here")[0]["state"], "failed")
+        prose = self.run_with("Aye\n\n**Diagnóstico:** es un falso positivo de gitleaks")[0]
+        self.assertEqual(prose["state"], "failed")
+        self.assertIn("falso positivo de gitleaks", prose["error"])      # what came back instead is kept as evidence
+        self.assertIn("no es JSON válido", self.run_with("{kind: conflict}")[0]["error"])
         failed = self.run_with("{}", code=3)[0]
         self.assertEqual(failed["state"], "failed")
         self.assertIn("3", failed["error"])
