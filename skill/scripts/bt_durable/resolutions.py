@@ -6,7 +6,9 @@ the three commits) and `<key>.diff3`, and wait for someone to write `<key>.resol
 did: on pictures REQ-021 three requests sat open for up to 3 h while T95 kept failing with INTEGRATION_CONFLICT and
 healing kept answering `retry_with_note`, which no retry can fix. A request older than `solver.resolution_after_seconds`
 becomes a `resolution` trigger for the run whose task conflicts: the run whose open decision names the conflict's path
-or one of its commits, else the one run with an open INTEGRATION_CONFLICT decision (with several such runs and no
+or one of its commits, else the run whose rejected composition gate conflicted on that path (its last `gate_composed`
+event in the engine's telemetry: a gate the composer rejects leaves no decision to name it — pictures REQ-021 r25, CG-9,
+2026-10-30 04:38, D-193), else the one run with an open INTEGRATION_CONFLICT decision (with several such runs and no
 match the request waits: guessing could resolve a file for the wrong project).
 """
 from __future__ import annotations
@@ -48,8 +50,42 @@ def _decision_text(task: dict) -> str:
     return "\n".join(pieces)
 
 
-def target(request: dict, statuses: dict[str, dict]) -> tuple[str, str] | None:
-    """(run id, task id) the request belongs to, or None when it cannot be told."""
+def rejected_paths(telemetry: Path | None, statuses: dict[str, dict]) -> dict[str, dict[str, str]]:
+    """{run id: {path: gate}} for the gates each run's summary rejects now, from each gate's last rejected
+    `gate_composed` event (its per-member conflict paths)."""
+    wanted = {run_id: set((((status or {}).get("summary") or {}).get("gates") or {}).get("rejected") or {})
+              for run_id, status in statuses.items()}
+    wanted = {run_id: gates for run_id, gates in wanted.items() if gates}
+    if not wanted or telemetry is None:
+        return {}
+    last: dict[tuple[str, str], dict] = {}
+    try:
+        with open(telemetry, encoding="utf-8") as stream:
+            for line in stream:
+                if '"gate_composed"' not in line or '"rejected"' not in line:
+                    continue
+                try:
+                    row = json.loads(line)
+                except ValueError:
+                    continue
+                run_id, gate = row.get("run_id"), row.get("gate")
+                if row.get("event") == "gate_composed" and row.get("state") == "rejected" \
+                        and gate in wanted.get(run_id, ()) and isinstance(row.get("conflicts"), dict):
+                    last[(run_id, gate)] = row["conflicts"]
+    except OSError:
+        return {}
+    out: dict[str, dict[str, str]] = {}
+    for (run_id, gate), conflicts in sorted(last.items()):
+        for paths in conflicts.values():
+            for path in paths if isinstance(paths, list) else ():
+                out.setdefault(run_id, {})[str(path)] = gate
+    return out
+
+
+def target(request: dict, statuses: dict[str, dict],
+           rejected: dict[str, dict[str, str]] | None = None) -> tuple[str, str] | None:
+    """(run id, task id) the request belongs to, or None when it cannot be told; a rejected gate's conflict is given
+    as (run id, gate id)."""
     commits = [c for c in (request.get("commits") or {}).values() if isinstance(c, str) and len(c) >= 12]
     named, conflicting = [], []
     for run_id, status in sorted(statuses.items()):
@@ -63,15 +99,22 @@ def target(request: dict, statuses: dict[str, dict]) -> tuple[str, str] | None:
                 conflicting.append((run_id, task_id))
     if named:
         return named[0]
+    gates = sorted((run_id, paths[request["path"]]) for run_id, paths in (rejected or {}).items()
+                   if request["path"] in paths)
+    if len({run_id for run_id, _ in gates}) == 1:
+        return gates[0]
     runs = {run_id for run_id, _ in conflicting}
     return conflicting[0] if len(runs) == 1 else None
 
 
-def triggers(folder: Path, statuses: dict[str, dict], now: float, after_seconds: int) -> list[dict]:
+def triggers(folder: Path, statuses: dict[str, dict], now: float, after_seconds: int,
+             telemetry: Path | None = None) -> list[dict]:
     from .solver import round_of, trigger
     out = []
-    for request in open_requests(folder, now, after_seconds):
-        found = target(request, statuses)
+    requests = open_requests(folder, now, after_seconds)
+    rejected = rejected_paths(telemetry, statuses) if requests else {}
+    for request in requests:
+        found = target(request, statuses, rejected)
         if found is None:
             continue
         run_id, task_id = found
