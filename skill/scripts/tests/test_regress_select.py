@@ -95,6 +95,13 @@ class ImportGraph(Case):
         self.assertIn(scripts + "pkg/__main__.py", graph.nodes[scripts + "tests/test_module_run.py"].lazy)  # -m pkg
         self.assertIn(scripts + "pkg/cli.py", graph.nodes[scripts + "tests/test_tool.py"].lazy)        # console script
 
+    def test_lazy_imports_inside_one_package_are_followed_at_any_depth(self):
+        write(self.repo, {"skill/scripts/pkg/engine.py": "def start():\n    from .wiring import W\n",
+                          "skill/scripts/pkg/wiring.py": "W = 1\n",
+                          "skill/scripts/pkg/helpers.py": "def go():\n    from . import engine\n"})
+        reach = sel.Graph(self.repo).reach("skill/scripts/tests/test_patch.py")
+        self.assertIn("skill/scripts/pkg/wiring.py", reach)   # helpers (1) -> engine (2) -> wiring (3), all lazy
+
     def test_lazy_imports_are_followed_only_near_the_suite(self):
         graph = sel.Graph(self.repo)
         reach = graph.reach("skill/scripts/tests/test_a.py")
@@ -147,6 +154,8 @@ class Fallbacks(Case):
         self.assertIn("no suite reaches skill/scripts/bt_deep.py", self.select("skill/scripts/bt_deep.py").full)
         crowded = self.select("skill/scripts/bt_core.py", limit=20)
         self.assertIn("more than 20%", crowded.full)
+        self.assertIn("test_core", crowded.first)                                   # direct: it still goes first
+        self.assertNotIn("test_a", crowded.first)                                   # via bt_a: with the rest
         self.assertEqual(self.select("skill/scripts/bt_core.py", limit=100).full, "")
 
     def test_pyproject_is_trusted_only_when_just_py_modules_changed(self):

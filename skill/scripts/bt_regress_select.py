@@ -4,9 +4,10 @@ Each suite's reach is walked forward over a static graph of the repository (ever
 for the file names they hold), and the suite is selected when its reach holds a changed path. A suite reaches
   - the modules it imports, and everything those import at module level, transitively;
   - lazy imports (inside a function), module names in strings (`importlib.import_module("bt_x")`, `mock.patch(
-    "bt_x.f")`, `-m bt_durable`) and scripts it names (`SCRIPTS / "bitacora.py"`, run as a subprocess) — but only from
-    the suite itself and from what it imports directly (`LAZY_DEPTH`). Followed everywhere, they would reach the whole
-    tree: `bt_core` lazily imports `bt_index`, which imports most of the CLI, and every suite imports `bt_core`;
+    "bt_x.f")`, `-m bt_durable`) and scripts it names (`SCRIPTS / "bitacora.py"`, run as a subprocess) — from the
+    suite itself and from what it imports directly (`LAZY_DEPTH`), and inside one package at any depth (bt_durable wires
+    its engine lazily: client -> engine -> workflows). Followed everywhere they would reach the whole tree: `bt_core`
+    lazily imports `bt_index`, which imports most of the CLI, and every suite imports `bt_core`;
   - the assets any reached file names (`ASSETS / "plans.js"`; assets name each other the same way), the files under a
     directory it names (`"agents/designer/skills/david-ui-kit/real"`), the files a glob of it matches in a directory it
     names, and — for the suite itself — every .py when it globs `*.py` or runs `unittest discover`.
@@ -156,6 +157,12 @@ def _module_maps(files: list[str]) -> tuple[dict[str, str], dict[str, list[str]]
     return primary, secondary
 
 
+def _package(path: str) -> str:
+    """The package of skill/scripts a file belongs to (`bt_durable`), or "" for a top-level module or a test."""
+    parts = path.split("/")
+    return parts[2] if len(parts) > 3 and parts[:2] == ["skill", "scripts"] and parts[2] != "tests" else ""
+
+
 class Graph:
     """Every file of the repository but the live bitácora, and what each Python file or asset depends on."""
 
@@ -275,8 +282,9 @@ class Graph:
             if node is None:
                 continue
             near = depth[current] < lazy_depth
+            home = _package(current)
             edges = [(t, "imports") for t in sorted(node.imports)]
-            edges += [(t, "imports") for t in sorted(node.lazy)] if near else []
+            edges += [(t, "imports") for t in sorted(node.lazy) if near or (home and _package(t) == home)]
             for target in self.named(current):
                 if not target.endswith(".py"):
                     edges.append((target, "reads"))
@@ -325,6 +333,14 @@ class Selection:
     @property
     def trusted(self) -> bool:
         return not self.full
+
+    @property
+    def first(self) -> list[str]:
+        """What a staged run puts first: the selection, or — when it is not trusted and everything runs anyway — the
+        always-run suites, the changed ones and the direct dependents (a boundary red still comes in minutes)."""
+        if self.trusted:
+            return self.names
+        return [s for s in self.names if any(w in ("always", "changed") or " via " not in w for w in self.suites[s])]
 
     def headline(self) -> str:
         text = f"selection: {len(self.suites)}/{self.total} suites for {len(self.changed)} changed path(s)"

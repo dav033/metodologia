@@ -381,8 +381,10 @@ class Staged(unittest.TestCase):
         self.assertIn("[selective: selected 2 in", result.summary())
         self.ran.clear()
         result, text = self.staged("selective", self.selection(full="uv.lock changed (dependencies)"))
-        self.assertEqual(sorted(self.ran), ["test_a", "test_b", "test_c", "test_durable_d"])
-        self.assertEqual(result.mode, "full")
+        self.assertEqual(self.ran[:2], ["test_b", "test_durable_d"])               # its first phase, then everything
+        self.assertEqual(sorted(self.ran[2:]), ["test_a", "test_c"])
+        self.assertEqual(result.mode, "staged")
+        self.assertIn("[staged: first 2 in 0m00s, then the rest 2 in 0m00s]", result.summary())
         self.assertIn("NOT trusted, full regression: uv.lock changed", text)
 
     def test_the_estimate_follows_the_schedule(self):

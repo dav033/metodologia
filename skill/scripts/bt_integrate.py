@@ -542,7 +542,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--release-log", type=Path)
     parser.add_argument("--wait-seconds", type=float, default=3600.0, help="how long to wait for another integration")
     parser.add_argument("--trailer", action="append", default=[], help="a line for the merge message (repeatable)")
-    parser.add_argument("--dry-run", action="store_true", help="preflight only: what would be restarted")
+    parser.add_argument("--dry-run", action="store_true", help="preflight and the selection only: what would run and be restarted")
     parser.add_argument("--keep-worktree", action="store_true",
                         help="keep the branch's worktree and branch after a successful integration")
     modes = parser.add_mutually_exclusive_group()

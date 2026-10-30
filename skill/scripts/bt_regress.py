@@ -186,11 +186,14 @@ def _execute(worktree: Path, scratch: Path, only: Iterable[str] | None, workers:
 def staged(worktree: Path, scratch: Path, out: Path | None = None, *, selection=None, mode: str = "staged",
            workers: int = 6, allowed: Iterable[str] | None = None, suite: Callable[..., str] = run_suite) -> Result:
     """The regression by `mode` over a `bt_regress_select.Selection`: `staged` runs the selected suites, stops when
-    they are red, then runs the rest; `selective` runs the selected ones alone; `full` (or no trusted selection) runs
-    everything at once."""
+    they are red, then runs the rest; `selective` runs the selected ones alone; `full` (or no selection) runs
+    everything at once. A selection that is not trusted runs staged whatever the mode: its first phase (the always-run,
+    changed and directly reached suites) first, then everything else."""
     worktree, scratch = Path(worktree), Path(scratch)
     described = selection.describe() if selection is not None else []
-    if mode == "full" or selection is None or not selection.trusted:
+    if selection is not None and not selection.trusted:
+        mode = "staged"                                    # everything runs before the merge; the selection goes first
+    if mode == "full" or selection is None or not selection.first:
         started = time.monotonic()
         result, reruns = _execute(worktree, scratch, None, workers, allowed, suite)
         result.selection, result.phases = described, [("all", len(result.lines), time.monotonic() - started)]
@@ -198,19 +201,19 @@ def staged(worktree: Path, scratch: Path, out: Path | None = None, *, selection=
             write(out, result, reruns)
         return result
     everything = [f.stem for f in suites(worktree)]
-    chosen = [name for name in everything if name in selection.suites]
+    head = set(selection.first)
+    chosen = [name for name in everything if name in head]
     started = time.monotonic()
     first, reruns = _execute(worktree, scratch, chosen, workers, allowed, suite)
     first.mode, first.selection = mode, described
-    first.phases = [("selected", len(first.lines), time.monotonic() - started)]
+    first.phases = [("selected" if selection.trusted else "first", len(first.lines), time.monotonic() - started)]
     if not first.ok or mode == "selective":
         first.stopped = "selected" if not first.ok and mode == "staged" else ""
         if out is not None:
             write(out, first, reruns)
         return first
     started = time.monotonic()
-    rest, more = _execute(worktree, scratch, [n for n in everything if n not in selection.suites], workers, allowed,
-                          suite)
+    rest, more = _execute(worktree, scratch, [n for n in everything if n not in head], workers, allowed, suite)
     merged = Result(lines=sorted(first.lines + rest.lines), failed=first.failed + rest.failed,
                     allowed=first.allowed + rest.allowed, flaky=first.flaky + rest.flaky, real=first.real + rest.real,
                     mode=mode, selection=described,
@@ -251,8 +254,8 @@ def dry_run(worktree: Path, base: str = "main", timings: Path | None = None) -> 
     seconds = durations(timings) if timings else {}
     if seconds:
         everything = [f.stem for f in suites(Path(worktree))]
-        chosen = everything if not selection.trusted else selection.names
-        lines.append(f"estimated from {timings}: selected {clock(estimate(seconds, chosen))} vs full "
+        label = "selected" if selection.trusted else "first phase (not trusted: everything runs)"
+        lines.append(f"estimated from {timings}: {label} {clock(estimate(seconds, selection.first))} vs full "
                      f"{clock(estimate(seconds, everything))}")
     return lines
 

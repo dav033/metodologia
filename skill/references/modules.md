@@ -511,14 +511,15 @@ once per signature (D-167) → the Solucionador → the owner, only for what nee
   removed. Exit codes: 0 integrated, 1 refused, 2 fast-forward refused, 3 reverted, 4 revert failed, 75 lock busy.
 - **Selection** (`bt_regress_select.py`, `integrate.regression`): the suites the branch's changes can reach, walked
   forward from each suite over a static graph (module-level imports transitively; lazy imports, module names in
-  strings and scripts it runs only from the suite and what it imports directly; assets, named folders and globs as
-  data), plus the changed suites and the always-run boundary/integration/contract suites. `staged` (default) runs them
+  strings and scripts it runs from the suite and what it imports directly, and inside one package at any depth;
+  assets, named folders and globs as data), plus the changed suites and the always-run boundary/integration/contract suites. `staged` (default) runs them
   first and refuses at once on a red, then runs the rest; `selective` (`--selective`) integrates on them alone and,
   after the smoke, runs the full regression of the merge in its own transient unit (`bt_integrate_post.py`): a red one
   goes to the release log and a notification with the `--revert MERGE` command, never a silent revert; `full`
   (`--full`) skips it. Not trusted, so everything runs first: dependencies (`pyproject.toml` beyond `py-modules`,
   `uv.lock`), the regression's own code, the tests' shared helpers/fixtures, a changed file no suite reaches, more than
-  `integrate.selective_max_percent` (40) of the suites. `bt_regress.py <worktree> --dry-run` and `bt_integrate.py
+  `integrate.selective_max_percent` (40) of the suites; even then its always-run, changed and directly reached suites
+  run first, so a boundary red still refuses in minutes. `bt_regress.py <worktree> --dry-run` and `bt_integrate.py
   --dry-run` print the selection with a reason per suite.
 - **Not claimed.** A session runs at most once per trigger as far as the state file shows: a crash between the launch
   and the state write leaves a tmux session the next pass finds and refuses to duplicate, without adopting it.
