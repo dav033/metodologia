@@ -26,7 +26,8 @@ from bt_contracts.failure import (
 TRANSIENT_BACKOFF = (30.0, 120.0, 600.0, 1800.0)
 QUOTA_COOLDOWN = 1800.0            # bt_config quota.default_cooldown_min when the provider gives no reset time
 REPAIRABLE_ENVIRONMENT = frozenset({"VERIFIER_OOM", "VERIFIER_PROCESS_LIMIT", "AGENT_OOM", "CHECK_TIMEOUT"})
-REVERIFY = frozenset({"VERIFIER_OOM", "VERIFIER_PROCESS_LIMIT", "CHECK_TIMEOUT", "FLAKY_SUSPECTED"})   # same snapshot, no new agent run
+REVERIFY = frozenset({"VERIFIER_OOM", "VERIFIER_PROCESS_LIMIT", "CHECK_TIMEOUT", "FLAKY_SUSPECTED",
+                      "ENGINE_INTERRUPTED"})   # same snapshot, no new agent run
 
 
 def spent(outcomes: Iterable[AttemptOutcome], *, waits: int = 0, repairs: int = 0, route_changes: int = 0,
@@ -53,7 +54,8 @@ def spent(outcomes: Iterable[AttemptOutcome], *, waits: int = 0, repairs: int = 
 
 
 def decide(failure: FailureReport, used: Spent, budget: Budget, *, now: float, other_route: bool,
-           reset_epoch: float | None = None, remediated: bool = False) -> RecoveryDecision:
+           reset_epoch: float | None = None, remediated: bool = False,
+           interrupted_reverify: bool = True) -> RecoveryDecision:
     def make(action: RecoveryAction, reason: str, *, not_before: float | None = None, note: str = "",
              limit: str = "") -> RecoveryDecision:
         return RecoveryDecision(action=action, reason=reason[:500], failure=failure, not_before=not_before,
@@ -85,10 +87,12 @@ def decide(failure: FailureReport, used: Spent, budget: Budget, *, now: float, o
         delay = TRANSIENT_BACKOFF[min(max(repeats - 1, 0), len(TRANSIENT_BACKOFF) - 1)]
         return make(RecoveryAction.WAIT, f"transient failure, retry after {int(delay)} s", not_before=now + delay)
     if cls in (FailureClass.ENVIRONMENT, FailureClass.VERIFICATION):
-        if failure.code in REPAIRABLE_ENVIRONMENT | REVERIFY and used.environment_repairs < budget.max_environment_repairs:
+        repairable = failure.code in REPAIRABLE_ENVIRONMENT | REVERIFY and (
+            failure.code != "ENGINE_INTERRUPTED" or interrupted_reverify)
+        if repairable and used.environment_repairs < budget.max_environment_repairs:
             return make(RecoveryAction.REPAIR_ENVIRONMENT, f"bounded environment repair for {failure.code}")
         return make(RecoveryAction.ESCALATE, f"environment needs the owner: {failure.summary}",
-                    limit="max_environment_repairs" if failure.code in REPAIRABLE_ENVIRONMENT | REVERIFY else "")
+                    limit="max_environment_repairs" if repairable else "")
     if cls == FailureClass.INTEGRATION:
         if repeats < budget.max_same_signature:
             return make(RecoveryAction.RECONCILE_INTEGRATION, "rebuild on the current integration line")
