@@ -231,6 +231,53 @@ class SolverTests(unittest.TestCase):
         self.assertEqual(solver.error_triggers(type("R", (), {"run_id": run_id})(), errored)[0]["key"],
                          f"{run_id}:error:bt:{run_id}@2")
 
+    def test_a_run_with_nothing_live_and_nothing_to_answer_is_stalled(self):
+        """pictures REQ-021 r25, 2026-10-29: the run workflow PENDING, every task workflow ended, no decision, while gate
+        CG-7's composition failed every turn; no trigger saw it. The brief carries the gate's failed turns."""
+        run_id = "proj:REQ-900:r1"
+        done = {"workflow_id": f"bt:{run_id}:T7.4:k1", "workflow_status": "SUCCESS", "state": {"state": "completed"},
+                "decision": None}
+        summary = {"status": "running", "tasks": {"T7.4": "completed"}, "gates": {"composed": {}, "rejected": {}}}
+        self.client.runs[run_id] = {"run_id": run_id, "workflow_id": f"bt:{run_id}", "workflow_status": "PENDING",
+                                    "summary": summary, "tasks": {"T7.4": done}}
+        telemetry = self.root / ".state" / "durable" / "telemetry.jsonl"
+        telemetry.parent.mkdir(parents=True)
+        telemetry.write_text("".join(json.dumps(row) + "\n" for row in (
+            {"event": "gate_compose_failed", "run_id": run_id, "gate": "CG-7", "turn": 1,
+             "reason": "StepFailure: GitCommandError: git merge-tree … app/[locale]/page.tsx"},
+            {"event": "gate_compose_failed", "run_id": "proj:REQ-901:r1", "gate": "CG-1", "turn": 1, "reason": "other"},
+            {"event": "task_settled", "run_id": run_id, "task_id": "T7.4", "status": "completed"})))
+        self.solver().run_pass([])                       # first sight (an engine just restarted): the clock starts
+        self.clock[0] += 44 * 60
+        self.solver().run_pass([])
+        self.assertEqual(self.terminal.started, [])
+        self.clock[0] += 2 * 60
+        self.solver().run_pass([])
+        session = self.session()
+        self.assertEqual(session["kind"], "stalled")
+        brief = (Path(session["dir"]) / "BRIEF.md").read_text()
+        self.assertIn("## Composition gates", brief)
+        self.assertIn("CG-7", brief)
+        self.assertIn("GitCommandError", brief)
+        self.assertNotIn("CG-1", brief)                  # another run's gate
+
+    def test_a_paused_run_a_live_task_or_a_change_is_not_stalled(self):
+        run = type("R", (), {"run_id": "proj:REQ-900:r1"})()
+        cfg, state = solver.settings(), {}
+        quiet = {"workflow_id": "bt:proj:REQ-900:r1", "workflow_status": "PENDING",
+                 "summary": {"status": "running", "tasks": {"T1": "completed"}}, "tasks": {}}
+        later = 46 * 60.0
+        self.assertEqual(solver.stalled_triggers(run, quiet, state, 0.0, cfg), [])
+        self.assertEqual(solver.stalled_triggers(run, quiet, state, later, cfg)[0]["kind"], "stalled")
+        paused = {**quiet, "summary": {"status": "paused", "tasks": {"T1": "completed"}}}
+        self.assertEqual(solver.stalled_triggers(run, paused, {}, later, cfg), [])
+        live = {**quiet, "tasks": {"T2": {"workflow_status": "PENDING", "state": {"state": "running"}}}}
+        self.assertEqual(solver.stalled_triggers(run, live, {}, later, cfg), [])
+        ended = {**quiet, "workflow_status": "SUCCESS"}
+        self.assertEqual(solver.stalled_triggers(run, ended, {}, later, cfg), [])
+        moved = {**quiet, "summary": {"status": "running", "tasks": {"T1": "completed", "T2": "completed"}}}
+        self.assertEqual(solver.stalled_triggers(run, moved, state, later, cfg), [])      # a change restarts the clock
+
     def test_a_task_that_used_its_sessions_and_a_stale_trigger_stay_with_the_owner(self):
         state = {"tasks": {"T7.4": 3}}
         solver.save(self.rdirs["REQ-900"], state)

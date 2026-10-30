@@ -13,6 +13,9 @@ Triggers (`Trigger`), each launched at most once per key:
 - `stuck`: a PENDING task whose state did not move for `solver.stuck_minutes` beyond its known waits (a running agent
   gets `scheduler.attempt_timeout_minutes` more, a quota wait counts from its `until`, a pause or a decision never);
 - `error`: the run workflow ended in ERROR;
+- `stalled`: the run workflow is PENDING and not paused, but no task workflow is live (nothing runs, waits for quota or
+  recovers) and no decision is open, unchanged for `solver.stuck_minutes`: pictures REQ-021 r25 sat like that while gate
+  CG-7's composition failed every turn (a GitCommandError), and no other trigger saw it (2026-10-29);
 - `resolution`: a composition conflict waits in `<state>/composition/resolutions/<key>.json` without `<key>.resolved`
   for `solver.resolution_after_seconds` (`bt_durable.resolutions`): no retry can settle it.
 
@@ -110,6 +113,37 @@ def error_triggers(run, status: dict) -> list[dict]:
     return []
 
 
+def _live_tasks(status: dict) -> list[str]:
+    """Task workflows that still run (each is watched by `stuck_triggers`, or waits for the owner's decision)."""
+    return [t for t, item in (status.get("tasks") or {}).items()
+            if (item or {}).get("workflow_status") in ("PENDING", "ENQUEUED")]
+
+
+def stalled_triggers(run, status: dict, state: dict, now: float, cfg: dict) -> list[dict]:
+    """A PENDING, unpaused run workflow with no live task workflow, unchanged (summary and gates) for `stuck_minutes`.
+    The `since` mark starts when the picture last changed, so an engine restart or a deploy never fires it at once.
+    Updates `state["stall"]`."""
+    summary = status.get("summary") if isinstance(status.get("summary"), dict) else None
+    # no summary: the run workflow has not set its first one (it sets one before anything else), nothing to judge yet
+    if status.get("workflow_status") != "PENDING" or not summary or summary.get("status") == "paused" \
+            or _live_tasks(status):
+        state.pop("stall", None)
+        return []
+    basis = json.dumps([status.get("workflow_id"), summary.get("status"), summary.get("tasks"), summary.get("gates")],
+                       sort_keys=True, default=str)
+    fingerprint = hashlib.sha256(basis.encode()).hexdigest()[:16]
+    mark = state.get("stall") or {}
+    if mark.get("fp") != fingerprint:
+        state["stall"] = mark = {"fp": fingerprint, "since": now}
+    since = float(mark.get("since", now))
+    if now < since + cfg["stuck_minutes"] * 60:
+        return []
+    rejected = ", ".join(sorted((summary.get("gates") or {}).get("rejected") or {}))
+    return [trigger("stalled", f"{run.run_id}:stalled:{fingerprint}", run.run_id,
+                    reason=f"the run workflow {status.get('workflow_id')} is PENDING with no live task and no open "
+                           f"decision since {_iso(since)}" + (f"; rejected gates: {rejected}" if rejected else ""))]
+
+
 def stuck_triggers(run, status: dict, state: dict, now: float, cfg: dict) -> list[dict]:
     """PENDING tasks whose state did not move for `stuck_minutes` beyond their known waits. Updates `state["watch"]`."""
     watch = state.setdefault("watch", {})
@@ -158,7 +192,8 @@ class Solver:
                  work: Path | None = None, state_dir: Path | None = None):
         import bt_agent_terminal
         self.root, self.client, self.now = Path(root), client, now
-        self.resolutions = Path(state_dir or Path(root) / ".state" / "durable") / "composition" / "resolutions"
+        self.state_dir = Path(state_dir or Path(root) / ".state" / "durable")
+        self.resolutions = self.state_dir / "composition" / "resolutions"
         self.terminal = terminal or bt_agent_terminal
         self.route_for = route_for or (lambda project, avoid: bt_agent_terminal.role_route(
             project, "solver", avoid, override="BITACORA_SOLVER_CLAUDE_CONFIG_DIR"))
@@ -200,7 +235,7 @@ class Solver:
             if status is None:
                 continue
             found = by_run.get(run.run_id, []) + error_triggers(run, status) + \
-                stuck_triggers(run, status, state, self.now(), cfg)
+                stuck_triggers(run, status, state, self.now(), cfg) + stalled_triggers(run, status, state, self.now(), cfg)
             for item in found:
                 said += self._register(run, rdir, state, item)
             if state.get("active"):
@@ -221,6 +256,7 @@ class Solver:
         triggers[item["key"]] = {**item, "status": "pending", "at": _iso(self.now())}
         what = {"decision": "la autocuración dejó la decisión para ti", "repeat": "el mismo fallo volvió",
                 "stuck": "la tarea no avanza", "error": "el workflow del run terminó en error",
+                "stalled": "el run no avanza: nada corre y nada espera tu decisión",
                 "resolution": "un conflicto de composición espera una resolución"}.get(item["kind"], item["kind"])
         self.record(rdir, f"{item.get('task_id') or 'run'}: {what}; pasa al Solucionador ({item['reason'][:160]})")
         return [f"{item['key']}: {item['kind']} queued for the Solucionador"]
@@ -258,6 +294,10 @@ class Solver:
             return status.get("workflow_status") in ERRORED
         if item["kind"] == "stuck":
             return task.get("workflow_status") == "PENDING"
+        if item["kind"] == "stalled":
+            summary = status.get("summary") if isinstance(status.get("summary"), dict) else {}
+            return status.get("workflow_status") == "PENDING" and summary.get("status") != "paused" \
+                and not _live_tasks(status)
         if item["kind"] == "resolution":
             return not Path((item.get("resolution") or {}).get("resolved") or "/").exists()
         return True
@@ -285,7 +325,8 @@ class Solver:
                                             encoding="utf-8")
         (folder / "inbox.jsonl").touch()
         from .solver_brief import brief, prompt
-        (folder / "BRIEF.md").write_text(brief(run, rdir, session, items, status), encoding="utf-8")
+        (folder / "BRIEF.md").write_text(brief(run, rdir, session, items, status,
+                                               telemetry=self.state_dir / "telemetry.jsonl"), encoding="utf-8")
         (folder / "PROMPT.md").write_text(prompt(folder), encoding="utf-8")
         error = self._start(run, session, avoid="")
         if error:
@@ -440,5 +481,5 @@ def read_result(folder: Path) -> dict | None:
     return data if isinstance(data, dict) and data.get("outcome") in OUTCOMES else None
 
 
-__all__ = ["Solver", "enabled", "error_triggers", "load", "read_result", "round_of", "settings", "stuck_triggers",
-           "trigger"]
+__all__ = ["Solver", "enabled", "error_triggers", "load", "read_result", "round_of", "settings", "stalled_triggers",
+           "stuck_triggers", "trigger"]
