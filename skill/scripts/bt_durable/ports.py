@@ -75,10 +75,11 @@ class Integrator(Protocol):
     """One integration line per run and repository (plus one per 1.3.0 subplan). `integrate` is compare-and-swap: it
     never loses accepted work. `home`/`lines` come from `control.subplans` ("" / () for plans without subplans)."""
     def base_ref(self, run: RunRef, task: TaskSpec, *, home: str = "", lines: tuple[str, ...] = ()) -> str: ...
-    def integrate(self, run: RunRef, task: TaskSpec, snapshot: Snapshot, *,
-                  lines: tuple[str, ...] = ()) -> tuple[str | None, str, str]: ...
-    # (ref, conflict, run-line note): a subplan member counts once its subplan lines take it (legacy SubplanLineRouter);
-    # a conflict on the run line alone is the note, left to the composition gates
+    def integrate(self, run: RunRef, task: TaskSpec, snapshot: Snapshot, *, lines: tuple[str, ...] = (),
+                  home: str = "") -> tuple[str | None, str, str, dict[str, str]]: ...
+    # (ref, conflict, run-line note, other subplan lines left out): a subplan member counts once its own subplan line
+    # takes it (legacy SubplanLineRouter); a conflict on the run line or on another subplan's line is reported, left to
+    # the composition gates
     def sync(self, run: RunRef, role: str, items: dict[str, list[tuple[str, str]]]) -> dict[str, dict]: ...
 
 

@@ -291,10 +291,55 @@ class AtomicLines(unittest.TestCase):
         self.assertEqual(self.tip(self.run_line), before_run)        # the run line did not move without its subplan line
         self.assertEqual(self.tip(self.sp_line), other)
         self.lines._merge = merge                                    # the step's retry, on the new tips: both move
-        new_tip, conflict, note = self.lines.integrate(self.run_ref, self.task, snap, lines=("SP-1",))
-        self.assertEqual((new_tip, conflict, note), (self.tip(self.run_line), "", ""))
+        new_tip, conflict, note, left = self.lines.integrate(self.run_ref, self.task, snap, lines=("SP-1",))
+        self.assertEqual((new_tip, conflict, note, left), (self.tip(self.run_line), "", "", {}))
         for ref in (self.run_line, self.sp_line):
             lab_support.git(self.repo, "merge-base", "--is-ancestor", snap.snapshot_sha, ref)    # raises if not in
+
+
+class OtherSubplansLine(AtomicLines):
+    """pictures REQ-021 r27 (2026-10-30): T2.55, added to SP-2 by a later stage, became an ancestor of SP-14's accepted
+    tasks, so its work also belongs to SP-14's line. That line had SP-14's own change to the same file (MenuCuenta.tsx);
+    T2.55 starts from SP-2's line, which never holds it, so every «rebuild on the current integration line» met the same
+    conflict. Its own line takes it: it is accepted, SP-14's line is left as it was and the conflict is reported for the
+    gates that compose both subplans (as `sync` and the legacy SubplanLineRouter do). Real git."""
+
+    def setUp(self):
+        super().setUp()
+        self.lines.sync(self.run_ref, "app", {"SP-1": [], "SP-2": []})
+        self.foreign = self.lines.subplan_ref(self.run_ref, "app", "SP-2")
+        base = self.tip(self.foreign)
+        lab_support.git(self.repo, "checkout", "-q", "--detach", base)
+        lab_support.git(self.repo, "update-ref", self.foreign, self.commit("menu.txt", "SP-2's plans link\n"))
+        lab_support.git(self.repo, "checkout", "-q", "main")
+        self.snap = self.snapshot("menu.txt")         # from the run line (= SP-1's), the same file changed otherwise
+
+    def test_a_conflict_on_another_subplans_line_does_not_fail_the_member(self):
+        before = self.tip(self.foreign)
+        tip, conflict, _note, left = self.lines.integrate(self.run_ref, self.task, self.snap, lines=("SP-1", "SP-2"),
+                                                          home="SP-1")
+        self.assertEqual(conflict, "")
+        self.assertEqual(list(left), ["SP-2"])
+        self.assertIn("menu.txt", left["SP-2"])
+        self.assertEqual(self.tip(self.foreign), before)                   # the other subplan's line is untouched
+        for ref in (self.run_line, self.sp_line):
+            lab_support.git(self.repo, "merge-base", "--is-ancestor", self.snap.snapshot_sha, ref)
+        self.assertEqual(tip, self.tip(self.run_line))
+
+    def test_a_conflict_on_its_own_line_still_fails(self):
+        """Its own line is the one a rebuild starts from: a conflict there is the member's to fix."""
+        _tip, conflict, _note, _left = self.lines.integrate(self.run_ref, self.task, self.snap, lines=("SP-2", "SP-1"),
+                                                            home="SP-2")
+        self.assertIn("(line of SP-2)", conflict)
+
+    def test_without_a_home_every_line_must_take_it(self):
+        """A gate task (or a caller that names no home) keeps the old rule: its base is caught up with the lines."""
+        for home in ("", "gate:CG-1"):
+            _tip, conflict, _note, _left = self.lines.integrate(self.run_ref, self.task, self.snap,
+                                                                lines=("SP-1", "SP-2"), home=home)
+            self.assertIn("(line of SP-2)", conflict)
+
+    test_a_line_moved_in_between_leaves_every_line_as_it_was = None
 
 
 class StepFailureInTheRun(EngineCase):

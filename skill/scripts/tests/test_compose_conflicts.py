@@ -204,7 +204,7 @@ class LineIntegration(Repo):
         line = lines.subplan_ref(run, "app", "SP-1")
         git(self.repo, "update-ref", line, self.branch("line", {"package.json": manifest({"a": "x", "b": "y"})}))
         snapshot = self.branch("gate", {"package.json": manifest({"a": "x", "c": "z"})})
-        _tip, conflict, _note = lines.integrate(run, SimpleNamespace(id="T93", repository="app"),
+        _tip, conflict, _note, _left = lines.integrate(run, SimpleNamespace(id="T93", repository="app"),
                                                 Snapshot(snapshot_sha=snapshot, base_sha=self.base,
                                                          manifest_path=self.tmp / "none.json"), lines=("SP-1",))
         return conflict, line
@@ -242,7 +242,7 @@ class LineIntegration(Repo):
         lines.sync(run, "app", {"SP-7": []})
         ref = lines.subplan_ref(run, "app", "SP-7")
         git(self.repo, "update-ref", ref, line_tip)
-        _tip, conflict, _note = lines.integrate(run, SimpleNamespace(id="T93", repository="app"),
+        _tip, conflict, _note, _left = lines.integrate(run, SimpleNamespace(id="T93", repository="app"),
                                                 Snapshot(snapshot_sha=snapshot, base_sha=self.base,
                                                          manifest_path=self.tmp / "none.json"), lines=("SP-7",))
         self.assertEqual(conflict, "")
@@ -279,7 +279,7 @@ class LineIntegration(Repo):
         lines.sync(run, "app", {"SP-8": []})
         ref = lines.subplan_ref(run, "app", "SP-8")
         git(self.repo, "update-ref", ref, line_tip)
-        _tip, conflict, _note = lines.integrate(run, SimpleNamespace(id="T95", repository="app"),
+        _tip, conflict, _note, _left = lines.integrate(run, SimpleNamespace(id="T95", repository="app"),
                                                 Snapshot(snapshot_sha=tips["gate"], base_sha=self.base,
                                                          manifest_path=self.tmp / "none.json"), lines=("SP-8",))
         self.assertEqual(conflict, "")
