@@ -22,8 +22,10 @@ class ForegroundTests(ForegroundHarness, unittest.TestCase):
     def test_terminal_read_before_json_resumes_after_forced_background_stop(self):
         attempted = self.base / 'early-read'
         self.child.write_text(f'''
-import json, os, sys
+import json, os, signal, sys
 from pathlib import Path
+# The caller can inherit SIGTTIN ignored from a background shell; this fixture must actually stop.
+signal.signal(signal.SIGTTIN, signal.SIG_DFL)
 fd=os.open('/dev/tty',os.O_RDWR)
 Path({str(attempted)!r}).write_text('attempted')
 read=os.read(fd,2).decode()
@@ -53,6 +55,13 @@ os.tcsetpgrp=delayed
         os.write(fd, b'x\n')
         code, output = self.finish(pid, fd)
         self.assertEqual(code, 0, output)
+
+    def test_forced_background_stop_does_not_depend_on_the_callers_sigttin_disposition(self):
+        previous = signal.signal(signal.SIGTTIN, signal.SIG_IGN)
+        try:
+            self.test_terminal_read_before_json_resumes_after_forced_background_stop()
+        finally:
+            signal.signal(signal.SIGTTIN, previous)
 
     def test_fresh_children_take_foreground_on_same_controlling_terminal(self):
         pid, fd = self.start(self.source({'scope': 'bounded'}, repeat=2))
