@@ -327,6 +327,7 @@ py-modules = [
   "bt_subplan_status",
   "bt_integrate",
   "bt_regress",
+  "bt_regress_select",
   "bt_page_solver",
 ]
 
