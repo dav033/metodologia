@@ -112,8 +112,37 @@ class GitSubprocessPort:
         if conflicts:
             tree, conflicts = self._merge_manifests(tree, base, ours, theirs, conflicts)
         if conflicts:
+            tree, conflicts = self._merge_subsumed(tree, base, ours, theirs, conflicts)
+        if conflicts:
             tree, conflicts = self._recorded(tree, base, ours, theirs, conflicts)
         return GitResult(tree, conflicts)
+
+    def _merge_subsumed(self, tree: str, base: str, ours: str, theirs: str,
+                        conflicts: tuple[str, ...]) -> tuple[str, tuple[str, ...]]:
+        """A text file whose every conflicting hunk is one side's change plus additions takes the larger side there
+        (`merge_subsumed`). pictures REQ-021 r25: gate T95 and SP-8's line both had the new TABLAS_TRABAJO_CUENTA line
+        and SP-8 also added `anonimizarGastoCuenta` after it; the same text conflict came back on every retry (D-172)."""
+        blobs: dict[str, str] = {}
+        for path in conflicts:
+            texts = [self._text_at(revision, path) for revision in (base, ours, theirs)]
+            if texts[1] is None or texts[2] is None:
+                continue
+            merged = merge_subsumed(texts[0] or "", texts[1], texts[2])
+            if merged is not None:
+                blobs[path] = self._run_input(merged, "hash-object", "-w", "--stdin").stdout.strip()
+        if not blobs:
+            return tree, conflicts
+        return self._with_blobs(tree, blobs), tuple(path for path in conflicts if path not in blobs)
+
+    def _text_at(self, revision: str, path: str) -> str | None:
+        """The file at `revision` as text; None when it is missing or not UTF-8 text."""
+        shown = self._run_bytes("show", f"{revision}:{path}", check=False)
+        if shown.returncode or b"\0" in shown.stdout:
+            return None
+        try:
+            return shown.stdout.decode("utf-8")
+        except UnicodeDecodeError:
+            return None
 
     resolutions: Path | None = None             # create_engine: <store folder>/resolutions; None leaves conflicts as they are
 
@@ -352,7 +381,7 @@ def get_candidate(store: Store, candidate_id: str):
 
 
 __all__ = ["Action", "EvidenceKey", "GitCommandError", "GitSubprocessPort", "PropagationChange", "VerdictProof",
-           "create_engine", "get_candidate", "propagate"]
+           "create_engine", "get_candidate", "merge_subsumed", "propagate"]
 
 
 def merge_json(base: object, ours: object, theirs: object, path: str = "") -> tuple[object, list[str]]:
@@ -384,6 +413,55 @@ def merge_json(base: object, ours: object, theirs: object, path: str = "") -> tu
     if base == ours:
         return theirs, clashes
     return ours, [path or "."]
+
+
+MARK = 31                                       # wider than any conflict marker a file of the repository may contain
+
+
+def merge_subsumed(base: str, ours: str, theirs: str) -> str | None:
+    """Three-way text merge that settles a conflicting hunk when one side is the other side's lines plus additions, in
+    order, and none of the added lines was in the base there (taking it would bring back what the other side removed).
+    Blank lines do not count as added content. Returns the merged text, or None when any hunk is a real conflict."""
+    with tempfile.TemporaryDirectory(prefix="bt-compose-subsumed-") as scratch:
+        files = []
+        for name, text in (("ours", ours), ("base", base), ("theirs", theirs)):
+            (Path(scratch) / name).write_text(text, encoding="utf-8")
+            files.append(str(Path(scratch) / name))
+        done = subprocess.run(["git", "merge-file", "-p", "--diff3", f"--marker-size={MARK}", *files],
+                              capture_output=True, text=True, check=False)
+    if done.returncode < 0 or done.returncode > 127:
+        return None
+    if done.returncode == 0:
+        return done.stdout
+    out: list[str] = []
+    block: dict[str, list[str]] = {}
+    side = ""
+    for line in done.stdout.splitlines(keepends=True):
+        if not side and line.startswith("<" * MARK + " "):
+            block, side = {"ours": [], "base": [], "theirs": []}, "ours"
+        elif side and line.startswith("|" * MARK + " "):
+            side = "base"
+        elif side and line.rstrip("\r\n") == "=" * MARK:
+            side = "theirs"
+        elif side and line.startswith(">" * MARK + " "):
+            pick = _superset(block["ours"], block["theirs"], block["base"])
+            if pick is None:
+                return None
+            out.extend(pick)
+            side = ""
+        else:
+            (block[side] if side else out).append(line)
+    return None if side else "".join(out)
+
+
+def _superset(ours: list[str], theirs: list[str], base: list[str]) -> list[str] | None:
+    for big, small in ((ours, theirs), (theirs, ours)):
+        rest = iter(big)
+        if all(any(line == other for other in rest) for line in small):
+            added = [line for line in big if line not in small and line.strip()]
+            if not set(added) & set(base):
+                return big
+    return None
 
 
 def _json_indent(text: str) -> int:
