@@ -113,12 +113,16 @@ class PgroupSupervisor(BaseSupervisor):
             return self._observation(self._bare_identity(key), "unknown" if busy else "absent", record, live=[])
         identity = self._identity(key, record)
         same_boot = identity.boot_id == procs.boot_id()
-        live = list(self._targets(key)) if same_boot else []
         exit_rec = self.store.read(key, "exit.json")
         if exit_rec is None and same_boot and (procs.alive(identity.main_pid, identity.main_start_time)
                                                or self._reaper_alive(key)):
-            return self._observation(identity, "running", record, live=live)
+            return self._observation(identity, "running", record, live=list(self._targets(key)))
         exit_rec = exit_rec or self.store.read(key, "exit.json")       # it may have landed meanwhile
+        # Sample the processes only now: the reaper writes exit.json once the tree is gone, so a sample taken before
+        # reading it could list an agent the reaper killed in between, and an exited attempt then reported its dead
+        # leader as a straggler (test_supervisor_limits under load, 2026-10-29). The systemd backend reads the unit
+        # state first for the same reason.
+        live = list(self._targets(key)) if same_boot else []
         if exit_rec is None:          # the reaper is gone without a record: killed, or the host rebooted
             return self._observation(identity, "exited", record, live=live, outcome=(None, None, "lost", False))
         outcome = derive_outcome(exit_rec, None, self._terminate_requested(key))
