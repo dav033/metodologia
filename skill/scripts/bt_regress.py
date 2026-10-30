@@ -91,6 +91,32 @@ def allowed_failures() -> tuple[str, ...]:
     return tuple(value) if isinstance(value, list) else BASELINE
 
 
+_VENVS: dict[Path, tuple[str, str]] = {}
+_VENV_LOCK = threading.Lock()
+
+
+def venv(worktree: Path, runner: Callable[..., subprocess.CompletedProcess] = subprocess.run) -> tuple[str, str]:
+    """The worktree's uv interpreter, created once (`uv sync --frozen`) when the worktree has none: an integration's
+    worktree is a fresh `git worktree add` (D-227; 2026-10-30, `diagnosis-isolated`: the regression died with FileNotFoundError
+    on `.venv/bin/python` as soon as its selection reached a suite that needs DBOS). (interpreter, "") or ("", why)."""
+    worktree = Path(worktree).resolve()
+    with _VENV_LOCK:
+        if worktree not in _VENVS:
+            python = worktree / ".venv" / "bin" / "python"
+            why = ""
+            if not python.exists():
+                env = {k: v for k, v in os.environ.items() if k not in ("VIRTUAL_ENV", "UV_PROJECT_ENVIRONMENT")}
+                try:
+                    done = runner(["uv", "sync", "--frozen", "--quiet"], cwd=worktree, env=env, capture_output=True,
+                                  text=True, timeout=600)
+                    if done.returncode or not python.exists():
+                        why = f"uv sync --frozen in {worktree} failed ({done.returncode}): {(done.stderr or '')[-800:]}"
+                except (OSError, subprocess.SubprocessError) as exc:
+                    why = f"uv sync --frozen in {worktree} could not run: {exc}"
+            _VENVS[worktree] = ("", why) if why else (str(python), "")
+        return _VENVS[worktree]
+
+
 def run_suite(worktree: Path, scratch: Path, path: Path, tag: str = "") -> str:
     """One suite in its own process and root; returns its result line. `tag` keeps a rerun's logs apart."""
     worktree, scratch = Path(worktree).resolve(), Path(scratch).resolve()   # the suite runs from tests/: no relative path
@@ -105,11 +131,13 @@ def run_suite(worktree: Path, scratch: Path, path: Path, tag: str = "") -> str:
            "PYTHONPATH": f"{worktree / 'skill' / 'scripts'}:{tests}"}
     for leak in ("BITACORA_ATTEMPT", "BITACORA_TASK", "BITACORA_DELEGATION", "BT_DURABLE_DATABASE_URL"):
         env.pop(leak, None)                # a suite must never reach the live engine's database or act as a run
-    venv = worktree / ".venv" / "bin" / "python"
-    interpreter = str(venv) if new else SYSTEM_PYTHON
     log = scratch / "logs" / f"{name}{tag}.log"
     log.parent.mkdir(parents=True, exist_ok=True)
     started = time.monotonic()
+    interpreter, why = (venv(worktree) if new else (SYSTEM_PYTHON, ""))
+    if not interpreter:
+        log.write_text(why, encoding="utf-8")
+        return f"{name} 125 {round(time.monotonic() - started)} venv"
     try:
         done = subprocess.run([interpreter, "-m", "unittest", name], cwd=tests, env=env, capture_output=True,
                               text=True, timeout=TIMEOUT)
