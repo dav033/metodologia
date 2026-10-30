@@ -434,6 +434,45 @@ class Hygiene(unittest.TestCase):
             self.assertEqual(overlap, [])
 
 
+class Detached(unittest.TestCase):
+    """D-225: an integration re-runs itself in its own unit; the caller follows its log and returns its exit code."""
+
+    def run_detached(self, unit_states, write_rc=True):
+        import io
+        with tempfile.TemporaryDirectory() as tmp:
+            deploy = Path(tmp) / "deploy"
+            calls = []
+
+            def fake_run(argv, **kwargs):
+                calls.append(argv)
+                if argv[0] == "systemd-run":
+                    log = Path(next(a for a in argv if a.startswith("--property=StandardOutput=append:")).split(":", 1)[1])
+                    rc = Path(next(a for a in argv if a.startswith("--setenv=BT_INTEGRATE_RC=")).split("=", 2)[2])
+                    log.write_text("preflight ok\nmain is now abc\n")
+                    if write_rc:
+                        rc.write_text("0\n")
+                    return subprocess.CompletedProcess(argv, 0, "", "")
+                return subprocess.CompletedProcess(argv, 0, unit_states.pop(0) if unit_states else "inactive", "")
+            out = io.StringIO()
+            with mock.patch.object(integ, "DEPLOY", deploy), mock.patch.object(integ.subprocess, "run", side_effect=fake_run):
+                code = integ.detached(["--branch", "x", "--title", "t"], "x", poll=0.0, out=out)
+            return code, out.getvalue(), calls
+
+    def test_the_caller_prints_the_units_log_and_returns_its_code(self):
+        code, shown, calls = self.run_detached([])
+        self.assertEqual(code, 0)
+        self.assertIn("main is now abc", shown)
+        start = calls[0]
+        self.assertEqual(start[:2], ["systemd-run", "--user"])
+        self.assertIn("--setenv=BT_INTEGRATE_DETACHED=1", start)
+        self.assertEqual(start[-4:], ["--branch", "x", "--title", "t"])
+
+    def test_a_unit_that_ends_without_an_exit_code_is_reported(self):
+        code, shown, _ = self.run_detached(["inactive", "inactive"], write_rc=False)
+        self.assertEqual(code, 4)
+        self.assertIn("without an exit code", shown)
+
+
 class Drain(unittest.TestCase):
     """D-204: the 09:31 and 10:06 deploys of 2026-10-30 cut pictures REQ-021 T10.45's verification twice; the second
     cut left it for the owner as BLOCKED_ENV. An engine restart now waits for running verifications first."""

@@ -52,6 +52,7 @@ from pathlib import Path
 LIVE = Path.home() / "dev" / "metodologia"
 DEPLOY = Path.home() / ".local" / "share" / "bitacora-integrate" / "deploy"
 ENGINE_UNIT, WEB_UNIT = "bt-durable.service", "bitacora-web.service"
+DETACHED, RC_FILE = "BT_INTEGRATE_DETACHED", "BT_INTEGRATE_RC"   # set inside the integration's own unit
 REGRESS_SLOT_WAIT = 7200.0                # a full regression is ~30 min; two queued at most
 DRAIN_POLL = 10.0                       # seconds between looks at the running verifications
 WEB_URL = "http://127.0.0.1:8765/"
@@ -598,6 +599,9 @@ def main(argv: list[str] | None = None) -> int:
                        help="run the full regression without a selection first")
     modes.add_argument("--staged", dest="regression", action="store_const", const="staged",
                        help="the selected suites first, then the rest (the default unless integrate.regression says)")
+    parser.add_argument("--attached", action="store_true",
+                        help="run in this process; by default an integration re-runs itself in its own transient unit, "
+                             "so killing its caller (an agent session, its tmux) never cuts it half way (D-225)")
     actions = parser.add_mutually_exclusive_group()
     actions.add_argument("--post-merge", metavar="MERGE", help="run the full regression of an integrated merge")
     actions.add_argument("--revert", metavar="MERGE", help="revert an integrated merge (deploy worktree, ff-only)")
@@ -606,6 +610,8 @@ def main(argv: list[str] | None = None) -> int:
                   live=args.live, deploy=args.deploy, scratch=args.scratch, log=args.release_log,
                   wait_seconds=args.wait_seconds, trailers=args.trailer, dry_run=args.dry_run,
                   keep_worktree=args.keep_worktree, regression=args.regression or "")
+    if not (args.dry_run or args.attached or args.post_merge or os.environ.get(DETACHED)) and _which("systemd-run"):
+        return detached(list(sys.argv[1:] if argv is None else argv), args.branch)
     if args.post_merge or args.revert:
         import bt_integrate_post
         return (bt_integrate_post.post_merge(req, args.post_merge) if args.post_merge
@@ -615,5 +621,54 @@ def main(argv: list[str] | None = None) -> int:
     return integrate(req).code
 
 
+def detached(argv: list[str], branch: str, *, poll: float = 1.0, out=None) -> int:
+    """Run this integration again in a transient user unit and follow it: its log is printed as it grows and its exit
+    code is returned. If the caller dies, the integration goes on and finishes: a merge without its restart and smoke,
+    or a regression killed at minute 20, was one tmux kill away when an agent integrated from its session
+    (2026-10-30: the Solucionador's watchdog would have cut its own D-203 integration; D-225)."""
+    out = out or sys.stdout
+    stamp = f"{dt.datetime.now():%Y%m%d-%H%M%S}"
+    name = f"bt-integrate-{''.join(c if c.isalnum() else '-' for c in branch)[:60]}-{stamp}"
+    runs = Path(DEPLOY).parent / "runs"
+    runs.mkdir(parents=True, exist_ok=True)
+    log, rc = runs / f"{name}.log", runs / f"{name}.rc"
+    keep = ("PATH", "HOME", "BITACORA_ROOT", "PYTHONPATH", "BITACORA_SOLVER", "BITACORA_TMUX_SOCKET")
+    env = [f"--setenv={k}={os.environ[k]}" for k in keep if os.environ.get(k)]
+    command = ["systemd-run", "--user", f"--unit={name}", "--collect", "--quiet", f"--working-directory={os.getcwd()}",
+               f"--property=StandardOutput=append:{log}", f"--property=StandardError=append:{log}",
+               f"--setenv={DETACHED}=1", f"--setenv={RC_FILE}={rc}", *env,
+               sys.executable, str(Path(__file__).resolve()), *argv]
+    started = subprocess.run(command, capture_output=True, text=True, check=False)
+    if started.returncode:
+        print(f"could not start the integration unit ({started.stderr.strip()[:200]}); running attached", file=out)
+        return main([*argv, "--attached"])
+    print(f"integration runs in unit {name} (log {log}); it finishes even if this caller stops", file=out, flush=True)
+    shown = 0
+    while True:
+        text = log.read_text(encoding="utf-8", errors="replace") if log.is_file() else ""
+        if len(text) > shown:
+            print(text[shown:], end="", file=out, flush=True)
+            shown = len(text)
+        if rc.is_file():
+            try:
+                return int(rc.read_text().strip() or 1)
+            except ValueError:
+                return 1
+        state = subprocess.run(["systemctl", "--user", "is-active", name], capture_output=True, text=True,
+                               check=False).stdout.strip()
+        if state not in ("active", "activating", "reloading") and not rc.is_file():
+            time.sleep(poll)
+            if not rc.is_file():
+                print(f"the integration unit {name} ended without an exit code ({state}); see {log}", file=out)
+                return 4
+        time.sleep(poll)
+
+
 if __name__ == "__main__":
-    sys.exit(main())
+    code = 1
+    try:
+        code = main()
+    finally:
+        if os.environ.get(RC_FILE):
+            Path(os.environ[RC_FILE]).write_text(f"{code}\n", encoding="utf-8")
+    sys.exit(code)
