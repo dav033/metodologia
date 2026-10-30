@@ -43,6 +43,7 @@ if scenario == "ok":
 elif scenario == "own":                         # leaves a file of its own, so each line's content is visible
     Path(f"{task_id}.task").write_text(f"{task_id}\n")
     Path("out.txt").write_text("good\n")
+    time.sleep(float(os.environ.get("FAKE_OWN_DELAY", "0")))     # a window to restart the engine in (chaos test)
     done()
 elif scenario == "append":                      # adds its line at the end of a shared file, like an npm script entry
     Path(f"{task_id}.task").write_text(f"{task_id}\n")

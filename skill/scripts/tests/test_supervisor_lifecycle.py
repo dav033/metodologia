@@ -200,7 +200,33 @@ class LifecycleTests:
 
 
 class SystemdLifecycle(SystemdCase, LifecycleTests):
-    pass
+    def test_a_relaunch_adopts_from_its_files_while_the_manager_does_not_answer(self):
+        """A launch run again after the engine stopped (D-181) meets a user manager that does not answer: the attempt's
+        files prove it started, so it is adopted, never started again; without that proof the error stands
+        (test_durable_shutdown under load, 2026-10-30; the engine-level case is test_durable_launch_hiccup)."""
+        from unittest import mock
+
+        from bt_supervisor.errors import ManagerUnavailable
+        counter = self.tmp / "silent-counter"
+        key = self.key("silent")
+        spec = self.sh(key, f"echo started >> '{counter}'; sleep 30")
+        first = self.sup.launch(spec)
+        again = self.supervisor()
+        for status in ("started", "starting"):                     # finalized, or cut between systemd-run and that
+            record = self.sup.store.read(key, "launch.json")
+            self.sup.store.write(key, "launch.json", {**record, "status": status, "identity": None})
+            with mock.patch.object(again, "_show", side_effect=ManagerUnavailable("bus timed out")):
+                self.assertEqual(again.launch(spec).invocation_id, first.invocation_id, status)
+        time.sleep(0.3)
+        self.assertEqual(counter.read_text().splitlines(), ["started"])
+        self.sup.terminate(key, grace=1)
+        fresh = self.sh(self.key("silent2"), f"echo second >> '{counter}'")
+        store = self.sup.store                                     # a record, but nothing says the unit started
+        store.prepare(fresh, store.new_record(fresh, backend="systemd", unit=None, unenforced=[]), env_format="systemd")
+        with mock.patch.object(again, "_show", side_effect=ManagerUnavailable("bus timed out")), \
+                self.assertRaises(ManagerUnavailable):
+            again.launch(fresh)
+        self.assertEqual(counter.read_text().splitlines(), ["started"])
 
 
 class PgroupLifecycle(PgroupCase, LifecycleTests):

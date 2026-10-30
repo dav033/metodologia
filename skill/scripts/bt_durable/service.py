@@ -74,8 +74,12 @@ def operator_verifier(store_path: Path) -> M6Verifier:
                           authority_for=lambda run: owner_verification_authority(requirement_dir(run), run.project),
                           attestations_for=lambda run: attestations(requirement_dir(run)),
                           on_verdict=record_verdict)
-    for key in verifier.recover_interrupted():                # D-171: a restart never leaves a verification orphaned
-        LOG.info("verification %s was interrupted by the restart: queued to run again", key)
+    from . import restarts
+    # D-171: a restart never leaves a verification orphaned; D-210: after a recorded stop it costs no retry
+    clean = restarts.previous_stop(Path(store_path).parent) == restarts.CLEAN
+    for key in verifier.recover_interrupted(clean=clean):
+        LOG.info("verification %s was interrupted by the restart: queued to run again%s", key,
+                 " (clean stop: no retry used)" if clean else "")
     return verifier
 
 
@@ -198,8 +202,17 @@ def exit_now(code: int) -> None:
 
 def _loop(cfg: EngineConfig, ports: Ports, stop: threading.Event, *, reap_seconds: float, project_seconds: float,
           marker: Path | None) -> None:
+    from . import restarts
     from .projection import EngineProjector
     from .remote import write_marker
+    previous = restarts.previous_stop(cfg.state_dir)
+    if previous == restarts.CLEAN:                  # D-210: a deliberate restart spends no recovery budget
+        credited = restarts.credit_recoveries(cfg.system_database_url, cfg.executor_id)
+        LOG.info("previous engine stopped cleanly: %d workflows resume without a recovery attempt", credited)
+    elif previous == restarts.UNEXPLAINED:
+        LOG.warning("previous engine ended without a recorded stop (crash, OOM or SIGKILL): interrupted work counts "
+                    "against its bounded budgets")
+    restarts.begin(cfg.state_dir)
     engine.start(cfg, ports)
     write_marker(marker or cfg.state_dir / "engine.json")
     projector = EngineProjector(DBOS)
@@ -228,6 +241,11 @@ def _loop(cfg: EngineConfig, ports: Ports, stop: threading.Event, *, reap_second
                 except Exception as error:  # noqa: BLE001 - an open decision is looked at again on the next pass
                     LOG.warning("healing pass failed: %s", error)
     finally:
+        if stop.is_set():                           # a signal, not a failure: recorded before DBOS goes (D-181)
+            try:
+                restarts.record_clean_stop(cfg.state_dir)
+            except OSError as error:
+                LOG.warning("clean stop not recorded: %s", error)
         engine.stop()
 
 

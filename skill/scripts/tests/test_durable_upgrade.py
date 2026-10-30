@@ -23,19 +23,16 @@ sys.path.insert(0, str(HERE))
 import durable_support as lab_support
 from bt_contracts.execution import RunRef
 from bt_contracts.owner import OwnerAnswer
-from durable_support import subplan, task, wait_until
+from durable_support import export_engine, subplan, task, wait_until
 from test_durable_e2e import FAST, EngineCase
 
 PREVIOUS = os.environ.get("BT_PREVIOUS_ENGINE_COMMIT", "366cbf372")    # main before iteration 2 (live engine code)
 
 
 def export_previous(into: Path) -> Path:
-    """`git archive` of the previous engine's skill/scripts into a private directory (no worktree, no checkout)."""
-    repo = HERE.parents[2]
-    archive = subprocess.run(["git", "-C", str(repo), "archive", PREVIOUS, "skill/scripts"], capture_output=True,
-                             check=True).stdout
-    subprocess.run(["tar", "-x", "-C", str(into)], input=archive, check=True)
-    return into / "skill" / "scripts"
+    """The previous engine's skill/scripts in a private directory (durable_support.export_engine: its kill list kept
+    to its own processes, which an old engine's was not)."""
+    return export_engine(PREVIOUS, into)
 
 
 class EngineUpgrade(EngineCase):

@@ -41,6 +41,10 @@ class RestartMidVerification(EngineCase):
         with sqlite3.connect(f"file:{store}?mode=ro", uri=True) as db:
             return db.execute("SELECT count(*) FROM requests WHERE state = 'running'").fetchone()[0]
 
+    def request_states(self) -> list[str]:
+        with sqlite3.connect(f"file:{self.lab.state / 'm6-quality.sqlite3'}?mode=ro", uri=True) as db:
+            return [r[0] for r in db.execute("SELECT state FROM requests")]
+
     def test_a_verification_cut_by_an_engine_kill_runs_again_in_the_next_engine(self):
         (self.lab.repo / "checks" / "check_slow.py").write_text(SLOW_CHECK)
         lab_support.git(self.lab.repo, "add", "-A")
@@ -60,6 +64,34 @@ class RestartMidVerification(EngineCase):
         with sqlite3.connect(f"file:{self.lab.state / 'm6-quality.sqlite3'}?mode=ro", uri=True) as db:
             retried = db.execute("SELECT count(*) FROM verification_retries").fetchone()[0]
         self.assertEqual(retried, 1)                         # recovered once by the engine's start (D-171)
+
+    def test_deliberate_restarts_over_one_verification_never_turn_it_into_a_decision(self):
+        """D-210: three deploys in a row cut the same verification. Each SIGTERM is recorded as a deliberate stop, so
+        each restart queues the request again without using its one interrupted retry; before, the second cut left a
+        review the task turned into a decision (pictures REQ-021 r26 T10.45, 09:31 and 10:06, 2026-10-30)."""
+        import signal
+        (self.lab.repo / "checks" / "check_slow.py").write_text(SLOW_CHECK)
+        lab_support.git(self.lab.repo, "add", "-A")
+        lab_support.git(self.lab.repo, "commit", "-q", "-m", "a slow check")
+        run = RunRef.model_validate(self.lab.freeze([task("T1", check="python3 checks/check_slow.py")]))
+        self.start_engine()
+        self.client.start(run, FAST)
+        for cut in range(3):
+            wait_until(lambda: self.running_verifications() == 1, 120, interval=0.2, what=f"verification run {cut + 1}")
+            time.sleep(1.0)
+            self.engine.send_signal(signal.SIGTERM)
+            self.assertEqual(self.engine.wait(60), 0)
+            self.assertEqual(self.request_states(), ["running"], (self.lab.root / "engine.log").read_text()[-3000:])
+            engine = self.start_engine()
+            wait_until(lambda: self.lab.engine_ready(engine), 120, what="the next engine")   # it has recovered M6
+        status = self.settled(run, timeout=240)
+        self.assertEqual(status["summary"]["status"], "completed", status)
+        self.assertFalse(status["tasks"]["T1"]["decision"])
+        self.assertEqual(len(self.lab.launches()), 1)
+        with sqlite3.connect(f"file:{self.lab.state / 'm6-quality.sqlite3'}?mode=ro", uri=True) as db:
+            retried = db.execute("SELECT count(*) FROM verification_retries").fetchone()[0]
+            restarted = db.execute("SELECT count(*) FROM verification_restarts").fetchone()[0]
+        self.assertEqual((retried, restarted), (0, 3))       # no retry used; each deliberate cut on record
 
     def test_two_engine_cuts_reverify_the_same_snapshot_within_the_task_repair_budget(self):
         (self.lab.repo / "checks" / "check_slow.py").write_text(SLOW_CHECK)

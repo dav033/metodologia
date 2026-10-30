@@ -67,6 +67,36 @@ def subplan(sid, members_test, audit, *, produces=()):
             "audit_task": audit, **({"produces": list(produces)} if produces else {})}
 
 
+# The kill-list scan of engines older than e2d961ee5 (bt_supervisor/procs.py `marked(key)`) matched every process of
+# the user carrying the attempt key, and every lab hands out the same keys (proj-REQ-900-r1-T1-a1-5667e64e). An old
+# engine run by an upgrade/replay test terminated its T1 and SIGTERMed every other lab's T1 agent on the machine: the
+# other labs read «cancelled», waited 30 s and launched again (test_durable_shutdown «2 != 1» while a parallel
+# regression ran test_durable_remote, 2026-10-30; 10 of 14 stressed labs killed in the same second).
+_OLD_SCAN = "            if proc.environ().get(MARKER_ENV) != key:\n                continue\n"
+_SCOPED_SCAN = ("            environ = proc.environ()\n"
+                "            if environ.get(MARKER_ENV) != key or environ.get(\"BT_SUPERVISOR_ID\"):\n"
+                "                continue                # marked by a newer supervisor: another lab's agent (test harness)\n")
+
+
+def export_engine(commit: str, into: Path) -> Path:
+    """`git archive` of an earlier engine's skill/scripts into `into` (no worktree, no checkout), with its kill list
+    kept to its own processes: an old supervisor never sets BT_SUPERVISOR_ID, so a process carrying it belongs to a
+    newer one (another lab). Only that scan changes; the engine and its histories are the recorded ones."""
+    repo = HERE.parents[2]
+    archive = subprocess.run(["git", "-C", str(repo), "archive", commit, "skill/scripts"], capture_output=True,
+                             check=True).stdout
+    subprocess.run(["tar", "-x", "-C", str(into)], input=archive, check=True)
+    scripts = into / "skill" / "scripts"
+    procs = scripts / "bt_supervisor" / "procs.py"
+    if procs.exists():
+        text = procs.read_text(encoding="utf-8")
+        if "SUPERVISOR_ENV" not in text:                     # older than the scoped scan
+            if _OLD_SCAN not in text:
+                raise RuntimeError(f"{commit}: unknown kill-list scan in bt_supervisor/procs.py; scope it here")
+            procs.write_text(text.replace(_OLD_SCAN, _SCOPED_SCAN), encoding="utf-8")
+    return scripts
+
+
 def gate(gid, members, task_id):
     return {"id": gid, "subplans": list(members), "task": task_id, "criteria": [f"{gid} composes {', '.join(members)}"]}
 
