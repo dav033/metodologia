@@ -101,7 +101,10 @@
         (isProposal ? '<p>Elige los candidatos aprobados para continuar la verificación.</p>' : (item.diagnosis_html || '<p>' + esc(item.what) + '</p>')) +
         (evidence ? '<ul>' + evidence + '</ul>' : '') +
         (review ? '<p><a class="fl-failure-link" href="' + esc(review) + '" target="_blank" rel="noopener">Abrir log del último intento</a></p>' : '') +
-        (isProposal ? proposalForm(item, project, req) : '') + options + '</article>';
+        (isProposal ? proposalForm(item, project, req) : '') +
+        (item.manual ? '<p><a class="fl-manual-link primary" href="/plans/' + encodeURIComponent(project) + '/' +
+          encodeURIComponent(req) + '#d-' + esc(item.id) + '">Probar esto: arrancar ' + esc(item.manual.task) +
+          ' y responder Funciona / No funciona →</a></p>' : '') + options + '</article>';
     }).join('') + '<p class="fl-decision-status" role="status"></p>';
     clearTimeout(pollTimer);       // while an agent is diagnosing, refresh until its answer is on the card
     if (visible.some(function (item) { return item.agent && item.agent.state === 'running'; })) {
