@@ -159,6 +159,10 @@ class Store:
         row = self.connection.execute("SELECT body FROM candidates WHERE id=?", (candidate_id,)).fetchone()
         return self._candidate(row)
 
+    def list_candidates(self, plan_id: str) -> tuple[Candidate, ...]:
+        rows = self.connection.execute("SELECT body FROM candidates WHERE plan_id=?", (plan_id,)).fetchall()
+        return tuple(candidate for candidate in map(self._candidate, rows) if candidate is not None)
+
     def candidate_for_commit(self, plan_id: str, commit: str) -> Candidate | None:
         rows = self.connection.execute("SELECT body FROM candidates WHERE plan_id=?", (plan_id,)).fetchall()
         for row in rows:

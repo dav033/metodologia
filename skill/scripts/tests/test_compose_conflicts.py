@@ -129,6 +129,52 @@ class RecordedResolution(Repo):
         self.assertEqual(len(list(self.port.resolutions.glob("*.json"))), 1)
 
 
+class BracketedPaths(Repo):
+    """Next.js paths such as `app/[id]/page.tsx` (D-186): for a missing one `git rev-parse REV:path` exits 0 echoing the
+    argument and `git show REV:path` prints the commit, so composing pictures REQ-021's CG-7 failed on every turn."""
+    PAGE = "app/[id]/page.tsx"
+
+    def test_a_missing_bracketed_path_reads_as_missing(self):
+        self.assertEqual(self.port._blob_id(self.base, self.PAGE), "-")
+        self.assertIsNone(self.port._text_at(self.base, self.PAGE))
+        self.assertIsNone(self.port._json_at(self.base, "app/[id]/package.json"))
+        present = commit(self.repo, {self.PAGE: "export default 1;\n"}, "page")
+        self.assertRegex(self.port._blob_id(present, self.PAGE), r"^[0-9a-f]{40}$")
+        self.assertEqual(self.port._text_at(present, self.PAGE), "export default 1;\n")
+
+    def test_a_conflict_on_a_page_one_side_deleted_waits_for_a_resolution(self):
+        start = commit(self.repo, {self.PAGE: "export default 1;\n"}, "page")
+        git(self.repo, "checkout", "-q", "-b", "edit", start)
+        ours = commit(self.repo, {self.PAGE: "export default 2;\n"}, "edit")
+        git(self.repo, "checkout", "-q", "-b", "drop", start)
+        git(self.repo, "rm", "-q", self.PAGE)
+        git(self.repo, "commit", "-q", "-m", "drop")
+        theirs = git(self.repo, "rev-parse", "HEAD")
+        result = self.port.merge_tree(start, ours, theirs)
+        self.assertEqual(result.conflicts, (self.PAGE,))
+        self.assertEqual(len(list(self.port.resolutions.glob("*.json"))), 1)
+
+
+class PriorCandidate(Repo):
+    """A member whose line already holds an earlier candidate is folded from it (D-187): pictures REQ-021 r25 SP-7's
+    line held CG-6's C3, and folding SP-7 from where its own snapshots start conflicted in 13 files."""
+
+    def test_the_largest_candidate_of_already_folded_members_on_the_line_is_the_base(self):
+        from types import SimpleNamespace
+        from bt_durable.adapters.composition import _prior_candidate
+        small = self.branch("c1", {"one.ts": "1\n"})
+        git(self.repo, "checkout", "-q", "-b", "c3", small)
+        large = commit(self.repo, {"two.ts": "2\n"}, "c3")
+        tip = commit(self.repo, {"own.ts": "7\n"}, "member work")
+        stray = self.branch("other", {"x.ts": "x\n"})
+        built = [SimpleNamespace(id="C1", members={"SP-1": 1}, integrated_commit=small),
+                 SimpleNamespace(id="C3", members={"SP-1": 1, "SP-2": 1}, integrated_commit=large),
+                 SimpleNamespace(id="C5", members={"SP-1": 1, "SP-2": 1}, integrated_commit=stray)]
+        self.assertEqual(_prior_candidate(self.repo, tip, built, {"SP-1", "SP-2"}), large)
+        self.assertEqual(_prior_candidate(self.repo, tip, built, {"SP-1"}), small)
+        self.assertEqual(_prior_candidate(self.repo, tip, built, {"SP-9"}), "")
+
+
 class OwnWork(Repo):
     def test_a_member_folds_from_where_its_own_snapshots_start(self):
         from bt_durable.adapters.composition import _own_work_base
