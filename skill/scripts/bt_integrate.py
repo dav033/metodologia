@@ -16,9 +16,14 @@ Under one machine-wide lock (flock on `<state>/integrate.lock`), in this order:
   5. `git merge --ff-only deploy-<branch>` in the live checkout (one rebuild when a bitácora commit moved main between
      4 and 5); `git push origin main`;
   6. restart the units the changed paths need, smoke them (unit active, web answers 200, the engine journal says it
-     started); a failed smoke reverts the merge the same way (deploy worktree, ff-only, restart) and says so.
+     started); a failed smoke reverts the merge the same way (deploy worktree, ff-only, restart) and says so;
+  7. after a passing smoke, clean up: when the branch's worktree is clean (no tracked change, no untracked file),
+     `git worktree remove` it and `git branch -d` the branch (never -D). `--keep-worktree` skips this; a caller whose
+     cwd is inside that worktree keeps it and gets the command instead; the live checkout and the deploy worktree are
+     never removed. By 2026-10-29 integrations had left 14 merged worktrees and 64 merged branches behind.
 
-usage: bt_integrate.py --branch B --worktree WT --title "what it does (D-NNN)" [--session ID] [--dry-run] ...
+usage: bt_integrate.py --branch B --worktree WT --title "what it does (D-NNN)" [--session ID] [--dry-run]
+                       [--keep-worktree] ...
 Exit codes: 0 integrated, 1 refused before any change, 2 refused at the fast-forward (live unchanged), 3 smoke failed and
 the merge was reverted, 4 the revert failed too (the owner must look), 75 another integration holds the lock.
 """
@@ -230,6 +235,8 @@ class Request:
     wait_seconds: float = 3600.0
     trailers: list[str] = field(default_factory=list)
     dry_run: bool = False
+    keep_worktree: bool = False
+    cwd: Path | None = None                      # the caller's working directory (default: this process's)
 
 
 @dataclass
@@ -365,6 +372,7 @@ def _integrate(req: Request, services: Services, note: Callable[[str], None], li
     problems = _restart(services, units, note)
     if not problems:
         _append(log, f"result: merged {merge[:12]}, restarted {', '.join(units) or 'nothing'}, smoke ok\n")
+        _clean_up(req, note)
         return Outcome(0, lines, merge)
     note(f"SMOKE FAILED: {'; '.join(problems)}; reverting the merge")
     try:
@@ -374,6 +382,42 @@ def _integrate(req: Request, services: Services, note: Callable[[str], None], li
         raise Refused(f"smoke failed and the revert failed too: {error}. The owner must look", 4) from error
     _append(log, f"result: merged {merge[:12]}, smoke failed ({'; '.join(problems)}), reverted by {reverted[:12]}\n")
     return Outcome(3, lines, merge)
+
+
+def _inside(path: Path, base: Path) -> bool:
+    try:
+        Path(path).resolve().relative_to(Path(base).resolve())
+        return True
+    except ValueError:
+        return False
+
+
+def _clean_up(req: Request, note: Callable[[str], None]) -> None:
+    """Remove the integrated branch's worktree and branch when that is safe; say what was kept and why. Never fails the
+    integration: main is already integrated and smoked when this runs."""
+    worktree, live = Path(req.worktree).resolve(), Path(req.live).resolve()
+    command = f"git -C {live} worktree remove {worktree} && git -C {live} branch -d {req.branch}"
+    if req.keep_worktree:
+        note(f"kept {worktree} and branch {req.branch} (--keep-worktree)")
+        return
+    if worktree in (live, Path(req.deploy).resolve()):
+        note(f"kept {worktree}: the live checkout and the deploy worktree are never removed")
+        return
+    if _inside(req.cwd or Path.cwd(), worktree):
+        note(f"kept {worktree}: it is the current directory. Clean up later with: {command}")
+        return
+    if git(worktree, "status", "--porcelain", check=False):
+        note(f"kept {worktree}: it has uncommitted or untracked files. Clean up by hand: {command}")
+        return
+    git(live, "worktree", "remove", str(worktree), check=False)
+    if Path(worktree).exists():
+        note(f"kept {worktree}: git worktree remove refused (locked?). Clean up by hand: {command}")
+        return
+    git(live, "branch", "-d", req.branch, check=False)
+    if git(live, "rev-parse", "--verify", "-q", f"refs/heads/{req.branch}", check=False):
+        note(f"removed {worktree}; branch {req.branch} kept: git branch -d refused it")
+        return
+    note(f"removed {worktree} and branch {req.branch}")
 
 
 def _restart(services: Services, units: list[str], note: Callable[[str], None]) -> list[str]:
@@ -417,10 +461,13 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--wait-seconds", type=float, default=3600.0, help="how long to wait for another integration")
     parser.add_argument("--trailer", action="append", default=[], help="a line for the merge message (repeatable)")
     parser.add_argument("--dry-run", action="store_true", help="preflight only: what would be restarted")
+    parser.add_argument("--keep-worktree", action="store_true",
+                        help="keep the branch's worktree and branch after a successful integration")
     args = parser.parse_args(argv)
     outcome = integrate(Request(branch=args.branch, worktree=args.worktree, title=args.title, session=args.session,
                                 live=args.live, deploy=args.deploy, scratch=args.scratch, log=args.release_log,
-                                wait_seconds=args.wait_seconds, trailers=args.trailer, dry_run=args.dry_run))
+                                wait_seconds=args.wait_seconds, trailers=args.trailer, dry_run=args.dry_run,
+                                keep_worktree=args.keep_worktree))
     return outcome.code
 
 
