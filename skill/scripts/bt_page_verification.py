@@ -38,10 +38,11 @@ def _text(value: str) -> str:
 
 
 def _form(ctx: dict, action: str, label: str, sp: str, *, cls: str = "", note: bool = False, danger: bool = False,
-          blank: bool = False, path: bool = False) -> str:
+          blank: bool = False, path: bool = False, login: bool = False) -> str:
     field = ('<textarea name="comments" rows="3" required placeholder="Qué falló o qué esperabas ver"></textarea>' if note else "")
     target = ' target="_blank" rel="noopener"' if blank else ""
     page = '<input type="hidden" name="path" value="/">' if path else ""     # the page the new tab lands on (D-200)
+    page += '<input type="hidden" name="login" value="1">' if login else ""   # start it as in production (D-202)
     return (f'<form method="post" action="{purl(ctx["project"], "req", ctx["rid"], action)}" class="pp-vform{" note" if note else ""}"{target}>'
             f'<input type="hidden" name="token" value="{e(ctx["token"])}"><input type="hidden" name="anchor" value="{e(sp)}">'
             f'{page}{field}<button type="submit" class="{e(cls)}{" danger" if danger else ""}">{e(label)}</button></form>')
@@ -108,6 +109,20 @@ def _servers(ctx: dict, row: dict, paths: list[str]) -> str:
     start = _form(ctx, "verify-run", "Reiniciar desde cero", row["id"], cls="secondary", blank=True, path=True).replace(
         "<form ", f'<form id="{e(form_id)}" ', 1)
     stop = _form(ctx, "verify-stop", "Detener servidores", row["id"], cls="secondary") if now["state"] in ("ready", "preparing") else ""
+    data = servers.recipe(ctx["root"], ctx["project"], ctx["rdir"])
+    signed = ""
+    if servers.has_local_auth(data):                  # D-202: enter already signed in; «con login» for accounts and roles
+        running = now["state"] in ("ready", "preparing")
+        with_login = running and now.get("login", True)
+        signed = ('<p class="pp-meta"><strong>' + ("Con login: entra con una cuenta de prueba." if with_login else
+                  "Sin login: entras ya como administrador local.") + "</strong> " +
+                  ("Para probar con una cuenta o un rol concretos usa «Reiniciar con login»." if not with_login else
+                   "«Reiniciar sin login» vuelve a entrar ya autenticado.") + "</p>")
+        other = (_form(ctx, "verify-run", "Reiniciar sin login", row["id"], cls="secondary", blank=True, path=True)
+                 if with_login else
+                 _form(ctx, "verify-run", "Reiniciar con login (roles)", row["id"], cls="secondary", blank=True, path=True,
+                       login=True))
+        stop = other + stop
     cls, said = _SAID.get(now["state"], _SAID["stopped"])
     if now["state"] == "failed" and now.get("step"):
         said += " " + now["step"]
@@ -124,7 +139,7 @@ def _servers(ctx: dict, row: dict, paths: list[str]) -> str:
            "</code> (" + e(port_list) + ") y la pestaña nueva llega a esa página cuando responde.")
     return (f'<div class="pp-vtry" data-state="{e(now["state"])}"><span class="pp-vlabel">Dónde probarlo</span>'
             f'<ul class="pp-vlinks">{links}</ul><p class="pp-vstatus {cls}" role="status">{e(said)}</p>'
-            f'<p class="pp-meta">{how}</p><div class="pp-vtry-row">{start}{stop}</div>{remote}</div>')
+            f'<p class="pp-meta">{how}</p>{signed}<div class="pp-vtry-row">{start}{stop}</div>{remote}</div>')
 
 
 def tunnel_command(port: str) -> str:
