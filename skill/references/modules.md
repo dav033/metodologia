@@ -231,7 +231,7 @@ fingerprints stay distinct even at the same location. `audit-ledger check` valid
 once across auditors. `bt_scheduler_quality_adapter` reads the ledger from
 the verified snapshot after M6 says PASS and judges it with `bt_audit_gate.evaluate`:
 
-- an open critical/high finding, a missing or malformed ledger, or a risk «accepted» by anyone but the owner turns the
+- an open blocking finding (critical/high/medium by default, `gates.audit_blocking`), a missing or malformed ledger, or a risk «accepted» by anyone but the owner turns the
   PASS into a **rejecting verdict** (evidence `audit gate: …`); a snapshot that cannot be read leaves the verdict
   pending instead of judging the ledger;
 - **Evidence provenance is content, not commit identity.** An evidence JSON producer and the audit ledger may both
@@ -391,7 +391,7 @@ the verified snapshot after M6 says PASS and judges it with `bt_audit_gate.evalu
   reset); the redo must prove each fix with a test over the real entry point;
 - an audit is **read-only**: the adapter compares the snapshot with its base (`git diff`, exact) and rejects the audit if it changed any file other than the ones it declares (report, ledger; `gates.audit_read_only`, default true). An auditor that patches source hides the builder's defect from the router and, beside a second auditor, hands every later task an `INTEGRATION_CONFLICT` between the two patches (REQ-027, T18 vs T18b). It records the defect as an open finding naming the task that owns it, and the system sends that task back;
 - bounded and owner-configurable (`bitacora.py config`): `gates.audit_blocking` (severities that reject, default
-  critical+high), `gates.max_reworks` (times one task may be sent back by the system, default 2) and
+  critical+high+medium since D-233: a confirmed defect is repaired, not left open; `low` stays informational), `gates.max_reworks` (times one task may be sent back by the system, default 2) and
   `gates.audit_ledger_required` (default true; set false only to let an old plan without a ledger through: each skip is
   recorded as `audit_gate_skipped`). When the rework cannot start: a **live attempt** in scope defers the whole verdict
   (nothing is applied; M6 offers it again later), **`max_reworks` reached** applies the rejection and blocks the audit

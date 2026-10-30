@@ -162,7 +162,7 @@ router's job and is recorded per attempt, not set here (`agents.md`, `modules.md
 **An audit that finds critical or high problems does not end the run as a success.** Its findings ledger rejects it
 and the Scheduler itself sends the named tasks (and what depends on them) back for rework, then runs the audit again
 (`modules.md` §Audit gate and rework). A run is `done` only when the last audit accepted a ledger with no open
-critical/high finding; after `max_reworks` rounds the owner decides.
+critical/high/medium finding (`gates.audit_blocking`; `low` is informational); after `max_reworks` rounds the owner decides.
 
 `launch` writes `HANDOFF.md` next to the plan (everything the executor needs), refreshes the PLAN.md status block, and
 opens a native terminal window (Linux terminal, macOS Terminal, or Windows Terminal) in the project's repo running

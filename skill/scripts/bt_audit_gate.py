@@ -9,7 +9,7 @@ machine-readable ledger beside it:
          "evidence": "..." (required when fixed), "accepted_by": "owner", "reason": "..." (required when accepted)}]}
 
 The gate reads the ledger, never the prose. Whether the report says «PARTIAL, release blocked» is irrelevant: a
-critical/high finding still `open` rejects the task, a ledger that is missing or malformed rejects it, and the tasks the
+critical/high/medium finding still `open` (the default `gates.audit_blocking`) rejects the task, a ledger that is missing or malformed rejects it, and the tasks the
 findings name are sent back for rework by the Scheduler (`SchedulerCore.reject_and_rework`). Only the owner can accept a
 risk; an auditor cannot waive its own finding. Standard library only; ledger evaluation is pure, and the provenance
 helpers read git trees without changing the repository (the caller reads evidence files).
@@ -28,7 +28,8 @@ from bt_audit_evidence import DIGEST, evidence_gate, evidence_outputs, evidence_
 LEDGER_SUFFIX = ".findings.json"
 SCHEMA = "audit-findings/1"
 SEVERITIES = ("critical", "high", "medium", "low")
-BLOCKING_SEVERITIES = ("critical", "high")     # the default policy; `bt_config` `gates.audit_blocking` overrides it
+BLOCKING_SEVERITIES = ("critical", "high", "medium")   # default (D-233): a confirmed defect is repaired, not left open;
+#                                                       `bt_config` `gates.audit_blocking` overrides it
 STATUSES = ("open", "fixed", "accepted")
 REWORK_SCOPES = ("named", "downstream")
 MAX_BYTES = 1 << 20
@@ -99,7 +100,7 @@ def policy_from(get) -> Policy:
 class Gate:
     ok: bool
     problems: tuple[str, ...]      # the ledger is unusable (nothing can be sent back; the auditor must fix it)
-    blocking: tuple[dict, ...]     # open critical/high findings: {id, severity, summary, tasks, evidence}
+    blocking: tuple[dict, ...]     # open blocking findings: {id, severity, summary, tasks, evidence}
     rework: tuple[str, ...]        # plan tasks named by blocking findings, in first-seen order
 
     def summary(self) -> str:
