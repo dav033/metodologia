@@ -278,7 +278,8 @@ class Solver:
             except Exception as error:  # noqa: BLE001 - a run that cannot be read is tried on the next pass
                 LOG.warning("solver: %s status failed: %s", run.run_id, error)
         from . import resolutions
-        for item in resolutions.triggers(self.resolutions, statuses, self.now(), cfg["resolution_after_seconds"]):
+        for item in resolutions.triggers(self.resolutions, statuses, self.now(), cfg["resolution_after_seconds"],
+                                          telemetry=self.state_dir / "telemetry.jsonl"):
             by_run.setdefault(item["run_id"], []).append(item)
         for rdir, run in runs:
             state = states[str(rdir)]

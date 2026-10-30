@@ -381,6 +381,41 @@ class SolverTests(unittest.TestCase):
         (folder / "k1.resolved").write_text("A\nB\n")
         self.assertEqual(resolutions.open_requests(folder, self.clock[0], 120), [])
 
+    def test_a_rejected_gates_conflict_goes_to_its_run_without_any_decision(self):
+        """pictures REQ-021 r25, 2026-10-30 04:38 (D-193): the composer rejected CG-9 on Taller3D.tsx; the request named
+        no decision, so the trigger never found its run and the requests sat open."""
+        import os
+        from bt_durable import resolutions
+        state_dir = self.root / ".state" / "durable"
+        folder = state_dir / "composition" / "resolutions"
+        folder.mkdir(parents=True)
+        for key, path in (("k9", "src/components/tres-d/Taller3D.tsx"), ("old", "src/app/3d/page.tsx")):
+            (folder / f"{key}.json").write_text(json.dumps({"path": path, "blobs": {}, "commits": {}}))
+            (folder / f"{key}.diff3").write_text("<<<<<<< ours\nA\n=======\nB\n>>>>>>> theirs\n")
+            old = self.clock[0] - 300
+            os.utime(folder / f"{key}.json", (old, old))
+        run_id = "proj:REQ-900:r1"
+        self.open_decision("REQ-901")                                        # another run, nothing to do with it
+        self.client.runs["proj:REQ-901:r1"]["tasks"]["T7.4"]["decision"]["failure"].update(code="CHECKS_FAILED",
+                                                                                         summary="checks failed",
+                                                                                         evidence=[])
+        self.client.runs[run_id] = {"run_id": run_id, "workflow_id": f"bt:{run_id}", "workflow_status": "PENDING",
+                                    "summary": {"status": "running", "gates": {"rejected": {"CG-9": "git_text_conflict"}}},
+                                    "tasks": {}}
+        rows = [{"event": "gate_composed", "run_id": run_id, "gate": "CG-9", "state": "rejected",
+                 "conflicts": {"SP-4": ["src/components/tres-d/Taller3D.tsx"]}},
+                {"event": "gate_composed", "run_id": "proj:REQ-777:r1", "gate": "CG-9", "state": "rejected",
+                 "conflicts": {"SP-1": ["src/app/3d/page.tsx"]}}]                # a run no longer in the statuses
+        (state_dir / "telemetry.jsonl").write_text("".join(json.dumps(r) + "\n" for r in rows))
+        self.assertEqual(resolutions.rejected_paths(state_dir / "telemetry.jsonl", self.client.runs),
+                         {run_id: {"src/components/tres-d/Taller3D.tsx": "CG-9"}})
+        self.solver().run_pass([])
+        self.assertEqual(self.session()["kind"], "resolution")
+        self.assertEqual(self.session()["task"], "CG-9")
+        triggers = self.state()["triggers"]
+        self.assertEqual([t["resolution"]["path"] for t in triggers.values()], ["src/components/tres-d/Taller3D.tsx"])
+        self.assertEqual(self.state("REQ-901").get("triggers", {}), {})
+
     def test_it_is_off_with_its_switch_or_without_the_healing_before_it(self):
         for key in ("solver.enabled", "healing.model_diagnosis"):
             with self.subTest(key=key), patch.dict(FLAGS, {key: False}):
