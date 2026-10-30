@@ -5,6 +5,7 @@ import sys
 import tempfile
 import unittest
 import json
+import threading
 import time
 import os
 from pathlib import Path
@@ -244,6 +245,58 @@ class OwnerSubplanEntryPoint(unittest.TestCase):
         self.assertEqual(len(resumed["publications"]), 3)
         self.assertEqual(len(resumed["compositions"]), 1)
         self.assertEqual(next(iter(resumed["compositions"].values()))["state"], "published")
+
+    def _run_with_verdict_after_owner_pass(self, held_task: str, completed_first: set[str]):
+        """Land `held_task`'s M6 verdict after the owner's reconcile pass and before its terminal snapshot.
+
+        Under load the last verdict reached M1 in that window and the owner judged the run by a snapshot its pass
+        had not seen: it ended `blocked` with SP-2 accepted but unpublished, or `completed` with the composition
+        still a candidate. The verdict is held in its M6 thread until every task in `completed_first` is done,
+        then released from inside `reconcile_compositions` (the pass's last reader) and awaited there.
+        """
+        held, release, landed, released_in_window = (threading.Event() for _ in range(4))
+        original_submit = scheduler_adapter.core.SchedulerCore.submit_verdict
+        original_reconcile = OwnerCompositionRuntime.reconcile_compositions
+
+        def submit_verdict(core, verdict):
+            if verdict.task_id == held_task and not release.is_set():
+                held.set()
+                release.wait(120)              # bounded: on a timeout the verdict lands anyway and the test fails below
+                try:
+                    return original_submit(core, verdict)
+                finally:
+                    landed.set()
+            return original_submit(core, verdict)
+
+        def reconcile_compositions(runtime):
+            published = original_reconcile(runtime)
+            if held.is_set() and not release.is_set():
+                tasks = runtime.scheduler.snapshot().tasks
+                if all(tasks[task_id]["state"] == "completed" for task_id in completed_first):
+                    release.set()
+                    if landed.wait(120):
+                        released_in_window.set()
+            return published
+
+        with patch.object(scheduler_adapter.core.SchedulerCore, "submit_verdict", submit_verdict), \
+                patch.object(OwnerCompositionRuntime, "reconcile_compositions", reconcile_compositions):
+            result, state = self._run_13_owner()
+        self.assertTrue(released_in_window.is_set(), f"{held_task}'s verdict never landed inside the window")
+        return result, state
+
+    def test_subplan_verdict_landing_after_owner_pass_is_published_before_the_run_ends(self):
+        others = {f"T{number}" for number in range(1, 12)} - {"T8"}
+        result, state = self._run_with_verdict_after_owner_pass("T8", others)
+        self.assertEqual(result, 0)
+        self.assertEqual(state["subplan_status"], {"SP-1": "published", "SP-2": "published", "SP-3": "published"})
+        self.assertEqual(state["snapshot"].status, "completed")
+
+    def test_composition_audit_verdict_landing_after_owner_pass_is_published_before_the_run_ends(self):
+        result, state = self._run_with_verdict_after_owner_pass("T13", {f"T{number}" for number in range(1, 13)})
+        self.assertEqual(result, 0)
+        self.assertEqual(state["snapshot"].status, "completed")
+        self.assertEqual(len(state["compositions"]), 1)
+        self.assertEqual(next(iter(state["compositions"].values()))["state"], "published")
 
     def test_old_verdict_and_candidate_are_stale_until_next_subplan_revision(self):
         _, first = self._run_13_owner()
