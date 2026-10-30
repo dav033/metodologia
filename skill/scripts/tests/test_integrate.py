@@ -8,6 +8,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest import mock
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -70,6 +71,10 @@ class Fake(integ.Services):
         self.calls.append(("push", sh(live, "rev-parse", "HEAD")))
         return ""
 
+    def drain(self, timeout):
+        self.calls.append(("drain",))
+        return getattr(self, "drained", (0.0, []))
+
     def restart(self, unit):
         self.calls.append(("restart", unit))
 
@@ -117,7 +122,7 @@ class Integrate(unittest.TestCase):
         self.assertEqual(sh(self.live, "rev-parse", "HEAD^2"), self.tip)        # a --no-ff merge, fast-forwarded here
         self.assertIn("Co-Authored-By: Test", sh(self.live, "log", "-1", "--format=%B"))
         self.assertEqual(sh(self.live, "symbolic-ref", "--short", "HEAD"), "main")
-        self.assertEqual([c[0] for c in fake.calls], ["regress", "backup", "push", "restart", "restart", "smoke"])
+        self.assertEqual([c[0] for c in fake.calls], ["regress", "backup", "push", "drain", "restart", "restart", "smoke"])
         self.assertEqual(fake.calls[2], ("push", head))
         self.assertEqual([c[1] for c in fake.calls if c[0] == "restart"], [integ.ENGINE_UNIT, integ.WEB_UNIT])
         self.live_bitacora_intact()
@@ -307,7 +312,7 @@ class Integrate(unittest.TestCase):
         self.assertEqual(post.revert(self.request(), merged.merge, fake, say=lambda text: None), 0)
         self.assertEqual(sh(self.live, "show", "HEAD:skill/scripts/bt_x.py"), "x = 1")
         self.assertEqual(sh(self.live, "rev-parse", "HEAD^"), merged.merge)
-        self.assertEqual([c[0] for c in fake.calls], ["push", "restart", "restart", "smoke"])
+        self.assertEqual([c[0] for c in fake.calls], ["push", "drain", "restart", "restart", "smoke"])
         self.assertIn("reverted by", self.log.read_text())
         self.live_bitacora_intact()
 
@@ -399,6 +404,35 @@ class Staged(unittest.TestCase):
         self.assertEqual(bt_regress.estimate(seconds, seconds, workers=2), 10 + 30 + 100)   # a, c | b
         self.assertEqual(bt_regress.estimate(seconds, ["test_a", "test_b"], workers=2), 10)
 
+
+
+class Drain(unittest.TestCase):
+    """D-204: the 09:31 and 10:06 deploys of 2026-10-30 cut pictures REQ-021 T10.45's verification twice; the second
+    cut left it for the owner as BLOCKED_ENV. An engine restart now waits for running verifications first."""
+
+    def test_the_engine_restart_waits_for_running_verifications(self):
+        notes = []
+        fake = integ.Services()
+        seen = [["v1", "v2"], ["v2"], []]
+        fake.verifying = lambda: seen.pop(0) if seen else []
+        fake.restart = lambda unit: notes.append(("restart", unit, len(seen)))
+        fake.smoke = lambda units, since: []
+        with mock.patch.object(integ, "DRAIN_POLL", 0.0):
+            integ._restart(fake, [integ.ENGINE_UNIT], notes.append)
+        self.assertEqual([n for n in notes if isinstance(n, tuple)], [("restart", integ.ENGINE_UNIT, 0)])
+
+    def test_a_web_only_restart_does_not_wait_and_a_timeout_restarts_anyway(self):
+        fake = integ.Services()
+        fake.verifying = lambda: ["stuck"]
+        calls = []
+        fake.restart = lambda unit: calls.append(unit)
+        fake.smoke = lambda units, since: []
+        integ._restart(fake, [integ.WEB_UNIT], calls.append)
+        self.assertEqual(calls[0], integ.WEB_UNIT)
+        with mock.patch.object(integ, "DRAIN_POLL", 0.0), mock.patch("bt_config.get", return_value=0):
+            notes = []
+            integ._restart(fake, [integ.ENGINE_UNIT], notes.append)
+        self.assertTrue(any("1 still running" in n for n in notes if isinstance(n, str)))
 
 if __name__ == "__main__":
     unittest.main()
