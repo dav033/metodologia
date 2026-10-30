@@ -126,6 +126,12 @@ def _classify_verdict(verify: VerifyOutcome, out: str, facts: AttemptFacts) -> F
         return _report(FailureClass.PERMISSION, reason, "a check needs an authorization the operator has not given", ev)
     if verify.status == VerifyStatus.NEEDS_REVIEW:
         codes = set(verify.issue_codes) or {reason}
+        # M6's aggregate BLOCKED_ENV also covers an interrupted engine. Only a pure interruption can be
+        # reverified without an agent; mixed/manual/authorization issues keep their existing guards.
+        if reason in {"BLOCKED_ENV", "ENGINE_INTERRUPTED"} and codes == {"ENGINE_INTERRUPTED"}:
+            return _report(FailureClass.VERIFICATION, "ENGINE_INTERRUPTED",
+                           "the engine interrupted verification before a complete verdict was persisted",
+                           [*ev, Evidence(kind="verify_issue", ref=verify.result_ref, excerpt="ENGINE_INTERRUPTED")])
         if "CRITERION_MANUAL" in codes and codes <= _ATTESTABLE:
             # not a failure of the code and not opaque: the owner (or coordinator) attests the named manual checks
             # with `bt-durable attest`, and the same snapshot is verified again without an agent run
