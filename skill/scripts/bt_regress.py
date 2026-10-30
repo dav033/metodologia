@@ -5,8 +5,10 @@ under the worktree's uv venv; the heavy durable/supervisor end-to-end suites run
 an operator's scratchpad script until REQ-031: the integration (`bt_integrate`) and the Solucionador run it now.
 
 A failure is judged in three steps: a suite in the known baseline (`integrate.allowed_failures`) is allowed; any other
-failing suite runs once more ALONE (load flakes seen on 2026-10-29: test_platform, test_supervisor_limits pass alone);
-what still fails is real and stops an integration.
+failing suite runs once more ALONE (a load flake passes alone); what still fails is real and stops an integration. The
+baseline is empty since 2026-10-29: its four suites (test_plan_boundary, test_real_designer_kit, test_recovery_views,
+test_remote_panel) and the two load flakes (test_platform, test_supervisor_limits) were fixed at their origin. The
+mechanism stays for a failure the owner accepts for a while; the live config can list it.
 
 usage: python3 bt_regress.py <worktree> <scratch> <results.txt> [only.txt]
 """
@@ -25,7 +27,7 @@ from pathlib import Path
 NEW = re.compile(r"\b(bt_durable|bt_contracts|bt_supervisor|pydantic|dbos|hypothesis|psutil|durable_support|"
                  r"supervisor_support|test_durable_\w+|bench_runtimes)\b")
 HEAVY = re.compile(r"^test_(durable_|supervisor_)")
-BASELINE = ("test_plan_boundary", "test_real_designer_kit", "test_recovery_views", "test_remote_panel")
+BASELINE: tuple[str, ...] = ()
 SYSTEM_PYTHON = "/usr/bin/python3"
 TIMEOUT = 1800
 
