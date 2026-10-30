@@ -51,8 +51,8 @@ def block(root: Path, project: str, req: str, rdir: Path, decision: dict, base: 
     pages = ["/"] + [p for p in verify_page.test_paths([{"how": " ".join(s["do"] for s in guide["steps"]),
                                                           "expect": " ".join(s["expect"] or "" for s in guide["steps"])}])
                      if p != "/"]
-    links = "".join(f'<li><a class="pp-vurl" href="{e(origin + p)}" target="_blank" rel="noopener" data-vstart="{e(form_id)}"'
-                    f' data-path="{e(p)}">{e(origin + p)}</a></li>' for p in pages) if origin else ""
+    port = (re.search(r":(\d+)", url or "") or [None, ""])[1]
+    links = verify_page.link_items(origin, port, pages, form_id)
     said = {"ready": ("ok", "En marcha: responde."), "preparing": ("warn", "Arrancando…"),
             "failed": ("bad", "Falló al arrancar. " + str(now.get("step") or ""))}.get(now["state"], ("none", "Detenido."))
     steps = "".join(f'<li><p>{inline(s["do"])}</p>' + (f'<p class="pp-vexpect"><strong>Debes ver:</strong> {inline(s["expect"])}</p>'
@@ -80,5 +80,5 @@ def block(root: Path, project: str, req: str, rdir: Path, decision: dict, base: 
             f'<p class="muted">Es el intento <code>{e(target["version"])}</code> de {e(task)} (commit '
             f'<code>{e(target["commit"][:10])}</code>), el mismo que se vuelve a verificar con tu respuesta. Si no está en '
             f'marcha, al abrir un enlace lo arranco desde cero y la pestaña llega a esa página cuando responde.</p>'
-            f'<div class="pp-vtry-row">{start}</div>{who}{named}<ol class="pp-vsteps">{steps}</ol>'
+            f'<div class="pp-vtry-row">{start}</div>{verify_page.remote_help(port)}{who}{named}<ol class="pp-vsteps">{steps}</ol>'
             f'<div class="dx-manual-answers">{works}{broken}</div></div><script src="/static/verify-run.js"></script>')
