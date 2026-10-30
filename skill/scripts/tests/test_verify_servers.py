@@ -257,6 +257,45 @@ class RealProcesses(unittest.TestCase):
                 proc.kill()
 
 
+class SignedIn(unittest.TestCase):
+    """D-202: «que en local no pida login». A server with `local_auth` starts with it unless the owner asks for login."""
+    AUTH = {**RECIPE, "servers": [RECIPE["servers"][0], {**RECIPE["servers"][1],
+                                                         "local_auth": {"AUTH_LOCAL_SIN_RESTRICCIONES": "1"}}]}
+
+    def paths(self):
+        base = Path(tempfile.mkdtemp())
+        return {"copy": base / "copy", "logs": base / "logs", "env": base / "env"}
+
+    def test_the_web_server_starts_signed_in_and_the_api_never_gets_it(self):
+        script = servers._script(self.paths(), self.AUTH, {"api": 8001, "web": 3002}, "p/REQ-1/SP-1-v1", login=False)
+        web = next(line for line in script.splitlines() if "serve-web" in line)
+        api = next(line for line in script.splitlines() if "serve-api" in line)
+        self.assertIn("AUTH_LOCAL_SIN_RESTRICCIONES=1 serve-web", web)
+        self.assertNotIn("AUTH_LOCAL", api)                          # pictures' ai-api refuses the variable
+        self.assertNotIn("AUTH_LOCAL", script.split("phase servers")[0])  # never during prepare (next build refuses it)
+
+    def test_with_login_it_starts_as_in_production(self):
+        script = servers._script(self.paths(), self.AUTH, {"api": 8001, "web": 3002}, "p/REQ-1/SP-1-v1", login=True)
+        self.assertNotIn("AUTH_LOCAL", script)
+        self.assertTrue(servers.has_local_auth(self.AUTH))
+        self.assertFalse(servers.has_local_auth(RECIPE))
+
+    def test_the_panel_says_the_mode_and_offers_the_other(self):
+        import bt_page_verification as page
+        ctx = {"project": "proj", "rid": "REQ-021", "token": "t", "root": Path("/r"), "rdir": Path("/r/x")}
+        for login, said, offer in ((False, "Sin login: entras ya como administrador local.", "Reiniciar con login (roles)"),
+                                   (True, "Con login: entra con una cuenta de prueba.", "Reiniciar sin login")):
+            now = {"state": "ready", "url": "http://localhost:3002/", "ports": {"web": 3002}, "servers": {"web": True},
+                   "log": "", "login": login}
+            with patch.object(servers, "recipe", return_value=self.AUTH), \
+                    patch.object(servers, "planned", return_value={"url": "http://localhost:3002/", "ports": {"web": 3002}}), \
+                    patch.object(servers, "status", return_value=now):
+                html = page._servers(dict(ctx), ROW, [])
+            self.assertIn(said, html)
+            self.assertIn(offer, html)
+        self.assertIn('name="login" value="1"', html if False else page._form(dict(ctx), "verify-run", "x", "SP-1", login=True))
+
+
 class Panel(unittest.TestCase):
     CTX = {"project": "proj", "rid": "REQ-021", "token": "t", "root": Path("/r"), "rdir": Path("/r/x")}
 
