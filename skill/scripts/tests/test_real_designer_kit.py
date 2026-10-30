@@ -59,6 +59,19 @@ class Inventory(unittest.TestCase):
 
 @unittest.skipUnless((workspace.workspace() / "node_modules").is_dir(), "real kit workspace is not installed")
 class OfflineBuild(unittest.TestCase):
+    """The rendered checks build what they test from this checkout's source into a temporary dist: the shared
+    workspace's dist is whatever was built last (2026-10-29 it predated runtime fixes), not the code under test."""
+
+    def fresh_dist(self) -> Path:
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        out = Path(tmp.name)
+        self.run_tool(["node", str(workspace.REAL / "build.mjs"), "gallery", "--out", str(out), "--only", "text-type",
+                       "--ws", str(workspace.workspace())])
+        self.run_tool(["node", str(workspace.REAL / "build.mjs"), "mockup", str(workspace.REAL / "reference/acceso.tsx"),
+                       "--out", str(out / "reference/acceso.html"), "--ws", str(workspace.workspace())])
+        return out
+
     def run_tool(self, argv, timeout=180):
         proc = subprocess.run(argv, cwd="/tmp", env={**os.environ, "UV_OFFLINE": "1"}, capture_output=True,
                               text=True, timeout=timeout, check=False)
@@ -79,19 +92,16 @@ class OfflineBuild(unittest.TestCase):
 
     @unittest.skipUnless(shutil.which("uv") and shutil.which("chromium"), "cached Playwright/Chromium unavailable")
     def test_built_reference_passes_rendered_audit(self):
-        ref = workspace.dist() / "reference/acceso.html"
-        if not ref.is_file():
-            self.skipTest("gallery references have not been built")
+        ref = self.fresh_dist() / "reference/acceso.html"
         output = self.run_tool(["uv", "run", "--offline", "--with", "playwright", "python",
                                 str(bt_kit.KIT / "audit_mockup.py"), str(ref)])
         self.assertIn("RESULT: PASS", output)
 
     @unittest.skipUnless(shutil.which("uv") and shutil.which("chromium"), "cached Playwright/Chromium unavailable")
     def test_gallery_controls_reach_references_and_text_type_is_static_when_reduced(self):
-        ref = workspace.dist() / "reference/acceso.html"
-        if not ref.is_file():
-            self.skipTest("gallery references have not been built")
-        with tempfile.TemporaryDirectory() as tmp:
+        dist = self.fresh_dist()
+        ref = dist / "reference/acceso.html"
+        with tempfile.TemporaryDirectory() as tmp, patch.object(workspace, "dist", return_value=dist):
             demo = Path(tmp) / "text-type.html"
             demo.write_text(bt_kit.live_doc("text-type", "light", "expressive", "1"))
             script = '''
