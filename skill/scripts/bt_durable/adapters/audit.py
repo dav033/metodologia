@@ -13,6 +13,7 @@ DBOS step, so a recovered run replays the same repairs.
 """
 from __future__ import annotations
 
+import json
 import subprocess
 from collections.abc import Callable, Mapping
 from pathlib import Path
@@ -69,11 +70,45 @@ class AuditGate:
             if stray:
                 problems.append(audit_gate.scope_problem(stray))
         blocking = [_plain(item) for item in gate.blocking]
+        # a blocking finding that names only this audit is a gap in the audit's own coverage (pictures REQ-021 r27 T2.7
+        # F8: «T2.7 must be rerun», its capture harness failed on one route): no other task can repair it, so it is a
+        # problem of the audit, which runs again told what to complete, within the same rounds (D-234)
+        own = coverage_findings(raw, [t.id for t in plan.tasks], task.id, policy) if not gate.problems else set()
+        coverage = [item for item in blocking if not item.get("tasks") and item["id"] in own]
+        problems += [_coverage_problem(task.id, item) for item in coverage]
         out = {**base, "ok": gate.ok and not problems, "problems": problems[:20], "blocking": blocking,
                "summary": gate.summary()}
+        if coverage:
+            out["coverage"] = [item["id"] for item in coverage]
         if blocking and not problems:
             out["repairs"] = repairs(plan, task.id, blocking)
         return out
+
+
+def coverage_findings(raw_ledgers, plan_task_ids, audit_id: str, policy) -> set[str]:
+    """Ids of the open blocking findings whose tasks name this audit and no other task of the plan (`bt_audit_gate`
+    drops the audit's own id from a finding's tasks, so such a finding reaches the gate with no task at all)."""
+    known = set(plan_task_ids) - {audit_id}
+    out: set[str] = set()
+    for raw in raw_ledgers:
+        try:
+            data = json.loads(raw.decode("utf-8") if isinstance(raw, bytes) else raw or "null")
+        except (UnicodeDecodeError, ValueError):
+            continue
+        for item in (data.get("findings") or ()) if isinstance(data, dict) else ():
+            if not isinstance(item, dict) or item.get("severity") not in policy.blocking or item.get("status") != "open":
+                continue
+            names = {str(name).strip() for name in item.get("tasks", item.get("taskReferences")) or ()}
+            if audit_id in names and not names & known:
+                out.add(str(item.get("id") or "").strip())
+    return out
+
+
+def _coverage_problem(audit_id: str, finding: Mapping) -> str:
+    evidence = f" Its evidence: {finding['evidence']}" if finding.get("evidence") else ""
+    return (f"finding {finding['id']} ({finding['severity']}) names only this audit ({audit_id}): it is a gap in the "
+            "audit's own coverage, not a defect another task can repair. Complete what it says is missing in this run "
+            f"and record its real status: {finding['summary']}{evidence}")[:1500]
 
 
 def _plain(record: Mapping) -> dict:

@@ -70,12 +70,19 @@ class Evaluate(unittest.TestCase):
         self.assertEqual([f["id"] for f in result.blocking], ["F1", "F2"])
         self.assertEqual(result.rework, ("T2", "T1"))
 
-    def test_medium_low_fixed_and_owner_accepted_findings_do_not_block(self):
+    def test_low_fixed_and_owner_accepted_findings_do_not_block(self):
         result = self.judge(ledger(
-            finding("F1", "medium"), finding("F2", "low"),
+            finding("F2", "low"),
             finding("F3", "critical", "fixed", evidence="regression test test_x"),
             finding("F4", "high", "accepted", accepted_by="owner", reason="known; shipped behind a flag")))
         self.assertTrue(result.ok, result.summary())
+
+    def test_a_confirmed_medium_finding_blocks_by_default_so_it_is_repaired(self):
+        # D-233, owner 2026-10-30: «los hallazgos son reales y son un problema … el sistema debería poder hacerlo sin
+        # mi intervención» (pictures T2.7: six medium contract mismatches would otherwise stay open)
+        result = self.judge(ledger(finding("F1", "medium")))
+        self.assertFalse(result.ok)
+        self.assertEqual([f["id"] for f in result.blocking], ["F1"])
 
     def test_an_auditor_cannot_accept_its_own_finding(self):
         result = self.judge(ledger(finding("F1", "high", "accepted", accepted_by="auditor", reason="minor")))
@@ -142,8 +149,8 @@ class Evaluate(unittest.TestCase):
 class Configured(unittest.TestCase):
     def test_the_blocking_severities_come_from_the_policy(self):
         medium = ledger(finding("F1", "medium"))
-        self.assertTrue(gate.evaluate(medium, PLAN, "T9").ok)
-        self.assertFalse(gate.evaluate(medium, PLAN, "T9", gate.Policy(blocking=("critical", "high", "medium"))).ok)
+        self.assertFalse(gate.evaluate(medium, PLAN, "T9").ok)                       # the default blocks it (D-233)
+        self.assertTrue(gate.evaluate(medium, PLAN, "T9", gate.Policy(blocking=("critical", "high"))).ok)
 
     def test_policy_from_reads_config_and_falls_back_on_garbage(self):
         values = {"gates.audit_blocking": ["high", "medium"], "gates.audit_ledger_required": False}

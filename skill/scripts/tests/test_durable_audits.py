@@ -118,6 +118,35 @@ class DurableAudits(EngineCase):
         self.assertIn("remediation round", panel.reason_of(held))
         self.assertIn(held["state"], panel.STOPPED)
 
+    def test_a_finding_that_names_only_the_audit_runs_the_audit_again(self):
+        """pictures REQ-021 r27 T2.7 (2026-10-30 14:49): its one high finding F8 named only T2.7 («T2.7 must be rerun»,
+        its capture harness failed on a route); the gate dropped the audit's own id, the finding had no owner and the
+        audit was blocked for the owner. A gap in the audit's own coverage reruns the audit, told what to complete."""
+        run = self.freeze("auditself")
+        self.start_engine()
+        self.client.start(run, SERIAL)
+        status = self.settled(run, timeout=420)
+        self.assertEqual(status["summary"]["status"], "completed", status)
+        self.assertEqual({task_id: len(items) for task_id, items in self.per_task().items()},
+                         {"T1": 1, "T2": 1, "TA": 2, "T9": 1})          # nothing repaired: the audit ran again
+        blocked = self.events("audit_blocked")
+        self.assertEqual(len(blocked), 1, blocked)
+        self.assertEqual((blocked[0]["findings"], blocked[0]["repairs"]), (["F8"], []))
+        self.assertIn("names only this audit", blocked[0]["problems"][0])
+        prompt = next(self.lab.state.glob("attempts-root/attempts/*-TA-a101-*/prompt.txt")).read_text()
+        self.assertIn("capture harness failed on /cuenta", prompt)      # told exactly what to complete
+        self.assertEqual(len(self.events("audit_passed")), 1)
+
+    def test_a_coverage_gap_that_never_closes_stops_at_the_round_limit(self):
+        run = self.freeze("auditselfnever")
+        self.start_engine()
+        self.client.start(run, SERIAL)
+        status = self.settled(run, timeout=420)
+        self.assertEqual(status["summary"]["tasks"]["TA"], "blocked", status)
+        self.assertIn("remediation round", status["summary"]["results"]["TA"]["audit"])
+        self.assertEqual({task_id: len(items) for task_id, items in self.per_task().items()},
+                         {"T1": 1, "T2": 1, "TA": 3})                    # gates.remediation_rounds = 2 reruns
+
 
 class RepairCompilation(unittest.TestCase):
     """The repair compiler alone (pure, over the legacy grouping): related findings share one repair, unrelated ones
@@ -142,6 +171,19 @@ class RepairCompilation(unittest.TestCase):
         self.assertIn("F2 (critical)", out[0]["note"])
         orphan = repairs(self.plan(), "TA", [{"id": "F9", "severity": "high", "summary": "x", "tasks": [], "evidence": ""}])
         self.assertEqual(orphan[0]["owner"], "")
+
+    def test_only_a_finding_that_names_the_audit_alone_is_a_coverage_gap(self):
+        from bt_durable.adapters.audit import coverage_findings
+        from bt_durable.legacy import audit_policy
+        ledger = json.dumps({"schema": "audit-findings/1", "findings": [
+            {"id": "F1", "severity": "high", "status": "open", "summary": "s", "tasks": ["TA"]},
+            {"id": "F2", "severity": "high", "status": "open", "summary": "s", "tasks": ["TA", "T1"]},   # T1 owns it
+            {"id": "F3", "severity": "low", "status": "open", "summary": "s", "tasks": ["TA"]},          # not blocking (D-233: medium blocks)
+            {"id": "F4", "severity": "high", "status": "fixed", "summary": "s", "tasks": ["TA"], "evidence": "e"},
+            {"id": "F5", "severity": "critical", "status": "open", "summary": "s", "tasks": []},       # no owner at all
+            {"id": "F6", "severity": "high", "status": "open", "summary": "s", "tasks": [" TA ", "T404"]}]})
+        found = coverage_findings([ledger.encode(), None, b"\xff"], ["T1", "T2", "TA", "T9"], "TA", audit_policy())
+        self.assertEqual(found, {"F1", "F6"})
 
 
 class AuditInThePanels(unittest.TestCase):

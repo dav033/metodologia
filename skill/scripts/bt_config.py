@@ -73,7 +73,7 @@ DEFAULTS: dict = {
                  # inherit the owner's environment and ALL variables of verifier.secret_files (secret-looking values stay redacted). They are
                  # ambient: they reach the checks but are NOT part of the evidence fingerprint, so earlier results keep verifying
                  "inherit_env": []},
-    "gates": {"audit_blocking": ["critical", "high"], "audit_ledger_required": True, "max_reworks": 2,
+    "gates": {"audit_blocking": ["critical", "high", "medium"], "audit_ledger_required": True, "max_reworks": 2,
               "second_auditor": True, "audit_read_only": True,   # an audit that changes source is rejected (bt_audit_gate)
               # a verified result that could not be combined with the accepted work around it (the tasks about to start
               # after it) is rejected with the clash, so the task that caused it is the one sent back

@@ -72,7 +72,18 @@ elif scenario in ("auditk", "auditnever"):       # a read-only audit: its report
     Path(f"docs/{task_id}.md").write_text(f"# Audit {task_id}\n\n{'fixed' if fixed else 'two related defects'}\n")
     Path(f"docs/{task_id}.findings.json").write_text(json.dumps({"schema": "audit-findings/1", "findings": findings}))
     done()
-elif scenario == "fixlater":                    # wrong first, right when it continues from its own snapshot
+elif scenario in ("auditself", "auditselfnever"):  # pictures REQ-021 T2.7: a coverage gap that names only the audit
+    complete = scenario == "auditself" and "gap in the audit's own coverage" in prompt
+    findings = [{"id": "F2", "severity": "low", "status": "open", "summary": "a spacing defect", "tasks": ["T1"]}]   # informational (D-233)
+    if not complete:
+        findings.append({"id": "F8", "severity": "high", "status": "open", "tasks": [task_id],
+                         "summary": f"the audit lacks fresh evidence for the account route; {task_id} must be rerun",
+                         "evidence": "capture harness failed on /cuenta"})
+    Path("docs").mkdir(exist_ok=True)
+    Path(f"docs/{task_id}.md").write_text(f"# Audit {task_id}\n\n{'complete' if complete else 'incomplete'}\n")
+    Path(f"docs/{task_id}.findings.json").write_text(json.dumps({"schema": "audit-findings/1", "findings": findings}))
+    done()
+elif scenario == "fixlater":                  # wrong first, right when it continues from its own snapshot
     time.sleep(float(os.environ.get("FAKE_FIXLATER_DELAY", "0")))
     if Path("attempt-marker.txt").exists():
         Path("out.txt").write_text("good\n")
