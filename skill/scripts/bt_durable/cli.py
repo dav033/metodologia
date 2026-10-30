@@ -252,7 +252,7 @@ def cmd_answer(args) -> int:
     client = _client()
     try:
         request_id, _, round_no = args.request_id.partition("@k")
-        answer = OwnerAnswer(request_id=request_id, action=args.action, note=args.note or "", by="owner")
+        answer = OwnerAnswer(request_id=request_id, action=args.action, note=args.note or "", by=args.by)
         print(client.answer(_run_of(args.project, args.req), args.task, answer,
                             round_no=int(round_no) if round_no.isdigit() else None))
     finally:
@@ -368,6 +368,8 @@ def main(argv: list[str] | None = None) -> int:
         a.add_argument(name)
     a.add_argument("action", choices=("reverify", "retry", "retry_with_note", "retry_other_route", "stop"))
     a.add_argument("--note", default="")
+    a.add_argument("--by", default="owner", choices=("owner", "solver", "operator"),
+                   help="who answers (the Solucionador of REQ-031 answers as `solver`)")
     t = sub.add_parser("attest")
     for name in ("project", "req", "task"):
         t.add_argument(name)
