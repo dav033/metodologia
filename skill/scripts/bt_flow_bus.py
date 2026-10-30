@@ -33,6 +33,8 @@ COVERED_TABLES = {"m1": {"audit"}, "m2": {"decision_records"}, "m3": {"events"},
 IGNORED_TABLES = {
     "state": "M1's state document: the audit table is its message log",
     "verification_retries": "M6 record of an operator retry of a verification; the request row keeps the verdict",
+    "verification_restarts": "M6 record of a verification queued again after a deliberate engine restart (D-210); "
+                             "the request row keeps the verdict",
     "check_pass_cache": "M6 cache of passing checks per tree (REQ-030): a performance record, no message",
     "check_stats": "M6 last duration of each check (REQ-030): input to ordering, no message",
     "precious": "integrity probe of the store, no message",

@@ -12,7 +12,9 @@ already says, in this order:
 
 Local URLs in the text (`http://localhost:3000/…`) become the version's own URL. Accounts are the e-mail addresses the
 steps name; a password is never shown: the recipe's `accounts` text says where it comes from, else the seed command the
-steps name. A UI subplan links its approved design contract. Pure functions; standard library only.
+steps name. With the recipe's `auto_login` the session is already open: plan accounts map to the recipe's test accounts
+through their role, label and aliases (D-231). A UI subplan links its approved design contract. Pure functions;
+standard library only.
 """
 from __future__ import annotations
 
@@ -111,19 +113,55 @@ def _design(root: Path, project: str, rdir: Path, sid: str) -> dict | None:
     return {"ref": ref, "doc": ""}
 
 
-_SIGN_IN = re.compile(r"\s*\b(?:e\s+|y\s+)?inici(?:a|e|ar)\s+sesi[oó]n\s+como\s+([\w.+-]+@[\w-]+(?:\.[\w-]+)+)",
-                      re.IGNORECASE)
-_ROLE_ALIAS = {"admin": "administrador", "designer-plus": "designer_plus", "master-designer": "master_designer",
-               "empleado": "empleado_interno", "master": "master_designer"}
+_SIGN_IN = re.compile(r"\s*\b(?:(?:e|y|and)\s+)?(?:inici(?:a|e|ar)\s+sesi[oó]n\s+como|(?:sign|log)\s+in\s+as)\s+"
+                      r"([\w.+-]+@[\w-]+(?:\.[\w-]+)+)", re.IGNORECASE)
 
 
-def test_account(email: str, accounts: list[str]) -> str:
-    """The recipe's test account for an account the plan names (admin@prueba.local → test+administrador@…): the plan was
-    written before the seeded accounts existed (owner, 2026-10-30: the guide asked for admin@prueba.local, which the test
-    database does not have, D-211). The plan's own address when nothing matches."""
-    local = email.split("@", 1)[0].lower().removeprefix("test+")
-    role = _ROLE_ALIAS.get(local, local.replace("-", "_"))
-    return next((a for a in accounts if a.split("@", 1)[0].lower() == f"test+{role}"), email)
+def _key(text: str) -> str:
+    """A role or name compared loosely: case, spaces, «-» and «_» do not matter."""
+    return re.sub(r"[\s_-]+", "_", (text or "").strip().lower())
+
+
+def _accounts(accounts: list) -> list[dict]:
+    import bt_verify_servers as servers
+    return servers.login_accounts({"accounts": list(accounts or [])})
+
+
+def _names(account: dict) -> set[str]:
+    local = account["email"].split("@", 1)[0].lower()
+    local = local.split("+", 1)[1] if "+" in local else local
+    return {_key(n) for n in (account["role"], account["label"], local, *account["aliases"]) if n}
+
+
+def test_account(email: str, accounts: list) -> str:
+    """The recipe's test account for an account the plan names (admin@prueba.local → the account whose role, label or
+    alias is «admin», else the only one whose role starts so): the plan was written before the test accounts existed
+    (owner, 2026-10-30, D-211). Roles and aliases come from the recipe's `auto_login.accounts`, never from code (D-231).
+    The plan's own address when nothing matches."""
+    wanted = _key(email.split("@", 1)[0].lower().removeprefix("test+"))
+    entries = _accounts(accounts)
+    exact = [a for a in entries if wanted in _names(a)]
+    if exact:
+        return exact[0]["email"]
+    starts = [a for a in entries if any(n.startswith(wanted) for n in _names(a))] if len(wanted) >= 3 else []
+    return starts[0]["email"] if len(starts) == 1 else email
+
+
+def named_accounts(text: str, accounts: list) -> list[str]:
+    """The recipe's accounts whose label, role or alias the text names («As Cajero …»), in the order they appear; a longer
+    name wins over one inside it («Designer Plus» is not also «Designer»)."""
+    found = []
+    for account in _accounts(accounts):
+        for name in {account["label"], account["role"], *account["aliases"]}:
+            if len(name or "") < 3:
+                continue
+            pattern = r"(?<!\w)" + r"[\s_-]+".join(re.escape(p) for p in re.split(r"[\s_-]+", name.strip())) + r"(?!\w)"
+            found += [(m.start(), m.end(), account["email"]) for m in re.finditer(pattern, text or "", re.IGNORECASE)]
+    taken: list[tuple[int, int, str]] = []
+    for start, end, email in sorted(found, key=lambda f: (f[0], f[0] - f[1])):
+        if all(end <= s or start >= e for s, e, _ in taken):
+            taken.append((start, end, email))
+    return list(dict.fromkeys(email for _, _, email in taken))
 
 
 def signed_in(text: str, accounts: list[str]) -> str:
@@ -132,6 +170,12 @@ def signed_in(text: str, accounts: list[str]) -> str:
     def say(m: re.Match) -> str:
         return f" (ya entras con sesión iniciada; en «Entras como» elige {test_account(m.group(1), accounts)})"
     return _SIGN_IN.sub(say, text)
+
+
+def _login(recipe: dict | None) -> dict:
+    """The recipe's usable `auto_login`, else {} (a malformed one signs nobody in, so the guide does not say it does)."""
+    import bt_verify_servers as servers
+    return servers.auto_login(recipe or {})
 
 
 def guide(root: Path, project: str, rdir: Path, sid: str, *, url: str = "", recipe: dict | None = None,
@@ -198,13 +242,13 @@ def guide(root: Path, project: str, rdir: Path, sid: str, *, url: str = "", reci
         commands = f"cd {copy} && set -a && . {env} && set +a"
     done = [f"«Probar» ya ejecuta `{step['run']}` al arrancar." for step in (recipe or {}).get("prepare") or []
             if isinstance(step, dict) and isinstance(step.get("run"), str) and f"`{step['run']}`" in text_all]
-    login = (recipe or {}).get("auto_login") if isinstance((recipe or {}).get("auto_login"), dict) else {}
+    login = _login(recipe)
     signed = ""
     if login:                                          # D-211: the session is already open; no password to look for
-        tests = [str(a) for a in login.get("accounts") or [] if isinstance(a, str)]
+        tests = login.get("accounts") or []
         steps = [{"do": signed_in(s["do"], tests), "expect": signed_in(s["expect"], tests)} for s in steps]
         before = [signed_in(b, tests) for b in before if not _SEED.search(b)]
-        signed = str(login.get("default") or (tests[0] if tests else ""))
+        signed = str(login.get("default") or next((a["email"] for a in _accounts(tests)), ""))
         accounts, password = [test_account(a, tests) for a in accounts], ""
     return {"steps": steps[:MAX_STEPS], "more": more, "before": before, "expect": expect_all, "done": done, "accounts": accounts, "password": password,
             "signed": signed,
@@ -285,10 +329,11 @@ def manual(root: Path, project: str, rdir: Path, task: str, *, url: str = "", re
         wanted = re.sub(r"[^a-z]+", "-", role.lower()).strip("-").replace("administrador", "admin").replace("administrator", "admin")
         accounts += [m for m in dict.fromkeys(m.group(0).rstrip(".") for m in _EMAIL.finditer(every))
                      if m.split("@")[0] == wanted and m not in accounts]
-    login = (recipe or {}).get("auto_login") if isinstance((recipe or {}).get("auto_login"), dict) else {}
-    tests = [str(a) for a in (login or {}).get("accounts") or [] if isinstance(a, str)]
+    login = _login(recipe)
+    tests = (login or {}).get("accounts") or []
     if login:                                          # D-211: the link opens it signed in as the account the check needs
-        accounts = [test_account(a, tests) for a in accounts] or [str(login.get("default") or "")]
+        accounts = (named_accounts(text, tests) or named_accounts(own, tests) or      # D-231: the recipe's roles
+                    list(dict.fromkeys(test_account(a, tests) for a in accounts)) or [str(login.get("default") or "")])
         steps = [{"do": f"Abre {origin + '/' if origin else 'la dirección de prueba'} con el enlace de arriba: entras ya "
                         f"con sesión iniciada; en «Entras como» elige {accounts[0]}.", "expect": ""}]
     else:

@@ -18,7 +18,7 @@ from typing import Any, Literal, Self
 from .contracts import QualityError, VerifyRequest
 from .evidence import canonical_json, finished_at, read_result
 from .check_history import CHECK_HISTORY_SCHEMA, CheckHistory
-from .recovery import retry_attested, retry_interrupted, retry_m5_transient
+from .recovery import requeue_after_clean_stop, retry_attested, retry_interrupted, retry_m5_transient
 
 _SCHEMA_VERSION = 2
 
@@ -340,6 +340,14 @@ class QualityStore:
         _validate_operator(operator, reason, "FAIL")
         with self._transaction() as connection:
             retry_interrupted(connection, request_key, operator, reason)
+
+    def requeue_after_clean_stop(self, request_key: str, reason: str) -> None:
+        """Requeue a verification interrupted by a recorded, deliberate engine stop without using its one interrupted
+        retry (recovery.requeue_after_clean_stop, D-210). No verdict is created; dispatch revalidates as usual."""
+        if not reason.strip():
+            raise QualityError("RETRY_INVALID", "a reason is required")
+        with self._transaction() as connection:
+            requeue_after_clean_stop(connection, request_key, reason)
 
     def open_reviews_of(self, task_id: str) -> tuple[str, ...]:
         """Request keys of the open reviews that belong to `task_id` (oldest first)."""
@@ -717,6 +725,12 @@ CREATE TABLE IF NOT EXISTS reviews (
 CREATE TABLE IF NOT EXISTS verification_retries (
     request_key TEXT PRIMARY KEY REFERENCES requests(idempotency_key),
     operator TEXT NOT NULL,
+    reason TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    previous_result_json TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS verification_restarts (
+    request_key TEXT NOT NULL REFERENCES requests(idempotency_key),
     reason TEXT NOT NULL,
     created_at TEXT NOT NULL,
     previous_result_json TEXT NOT NULL

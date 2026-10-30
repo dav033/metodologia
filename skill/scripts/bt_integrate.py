@@ -52,6 +52,8 @@ from pathlib import Path
 LIVE = Path.home() / "dev" / "metodologia"
 DEPLOY = Path.home() / ".local" / "share" / "bitacora-integrate" / "deploy"
 ENGINE_UNIT, WEB_UNIT = "bt-durable.service", "bitacora-web.service"
+DETACHED, RC_FILE = "BT_INTEGRATE_DETACHED", "BT_INTEGRATE_RC"   # set inside the integration's own unit
+REGRESS_SLOT_WAIT = 7200.0                # a full regression is ~30 min; two queued at most
 DRAIN_POLL = 10.0                       # seconds between looks at the running verifications
 WEB_URL = "http://127.0.0.1:8765/"
 STARTED = "bt_durable engine started"
@@ -84,24 +86,49 @@ def machine_lock(path: Path, wait_seconds: float = 0.0, poll: float = 1.0) -> It
     path.parent.mkdir(parents=True, exist_ok=True)
     handle = open(path, "a+", encoding="utf-8")        # noqa: SIM115 - held for the whole integration
     deadline = time.monotonic() + max(0.0, wait_seconds)
+    queue = path.with_name(f"{path.name}.queue")         # first come, first served (D-230)
+    queue.mkdir(exist_ok=True)
+    ticket = queue / f"{time.time_ns():020d}-{os.getpid()}"
+    ticket.touch()
     try:
         while True:
-            try:
-                fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
-                break
-            except BlockingIOError:
-                if time.monotonic() >= deadline:
-                    handle.seek(0)
-                    holder = handle.read().strip()[:200]
-                    raise Busy(f"another integration holds {path}" + (f" ({holder})" if holder else "")) from None
-                time.sleep(poll)
+            if _first_in(queue, ticket):
+                try:
+                    fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                    break
+                except BlockingIOError:
+                    pass
+            if time.monotonic() >= deadline:
+                handle.seek(0)
+                holder = handle.read().strip()[:200]
+                raise Busy(f"another integration holds {path}" + (f" ({holder})" if holder else "")) from None
+            time.sleep(poll)
+        ticket.unlink(missing_ok=True)
         handle.seek(0)
         handle.truncate()
         handle.write(f"pid {os.getpid()} since {dt.datetime.now().isoformat(timespec='seconds')}\n")
         handle.flush()
         yield
     finally:
+        ticket.unlink(missing_ok=True)
         handle.close()                                   # closing the descriptor releases the flock
+
+
+def _first_in(queue: Path, ticket: Path) -> bool:
+    """Is `ticket` the oldest live waiter? Tickets of dead waiters are removed. flock alone is not fair: whoever polls
+    at the right moment wins, and on 2026-10-30 an integration waited 90 min while three later ones went first (D-230)."""
+    for entry in sorted(queue.iterdir()):
+        if entry == ticket:
+            return True
+        try:
+            os.kill(int(entry.name.rsplit("-", 1)[1]), 0)
+        except (ValueError, IndexError, ProcessLookupError):
+            entry.unlink(missing_ok=True)
+            continue
+        except PermissionError:
+            pass
+        return False
+    return True
 
 
 def git(cwd: Path, *args: str, check: bool = True) -> str:
@@ -151,8 +178,12 @@ class Services:
     """What touches the machine beyond git: the regression, the database backup, the units. Tests pass a fake."""
 
     def regress(self, worktree: Path, scratch: Path, out: Path, selection=None, mode: str = "full"):
+        """One full regression at a time on this machine (`<state>/regress-slot.lock`), integrations and post-merge
+        runs alike: on 2026-10-30 three ran at once (a post-merge run took 1 h 40) and the shared load produced the
+        «load flake, passes alone» lines that every integration then had to judge (D-220)."""
         import bt_regress
-        return bt_regress.staged(worktree, scratch, out, selection=selection, mode=mode)
+        with machine_lock(Path(lock_file()).with_name("regress-slot.lock"), REGRESS_SLOT_WAIT):
+            return bt_regress.staged(worktree, scratch, out, selection=selection, mode=mode)
 
     def select(self, worktree: Path):
         """The suites the branch's changes can reach (bt_regress_select), diffed against main."""
@@ -357,6 +388,14 @@ def _deploy_merge(req: Request) -> str:
     return git(deploy, "rev-parse", "HEAD")
 
 
+def _drop_branch(req: Request, name: str) -> None:
+    """The deploy worktree's own branch is history once main holds it: detach the worktree on main and delete the
+    branch with -d (never -D). 17 merged deploy-* branches had piled up by 2026-10-30 (D-220)."""
+    deploy = Path(req.deploy)
+    git(deploy, "checkout", "-q", "--detach", "main", check=False)
+    git(req.live, "branch", "-d", "-q", name, check=False)
+
+
 def _fast_forward(req: Request, ref: str) -> bool:
     """`git merge --ff-only` in the live checkout: the only write it ever gets. False when git refused."""
     git(req.live, "merge", "--ff-only", "-q", ref, check=False)
@@ -469,6 +508,7 @@ def _integrate(req: Request, services: Services, note: Callable[[str], None], li
         _append(log, f"result: not integrated ({refused})\n")
         raise
     note(f"main is now {merge[:12]} (merge of {req.branch})")
+    _drop_branch(req, f"deploy-{req.branch}")
     pushed = services.push(req.live)
     note("pushed origin main" if not pushed else f"WARNING push failed (main is integrated locally): {pushed}")
     problems = _restart(services, units, note)
@@ -551,6 +591,7 @@ def _revert(req: Request, merge: str, services: Services, units: list[str], note
     if not _fast_forward(req, f"revert-{req.branch}"):
         raise Refused("the live checkout refused the revert's fast-forward")
     reverted = git(req.live, "rev-parse", "HEAD")
+    _drop_branch(req, f"revert-{req.branch}")
     note(f"main reverted to the previous release by {reverted[:12]}")
     pushed = services.push(req.live)
     if pushed:
@@ -583,6 +624,9 @@ def main(argv: list[str] | None = None) -> int:
                        help="run the full regression without a selection first")
     modes.add_argument("--staged", dest="regression", action="store_const", const="staged",
                        help="the selected suites first, then the rest (the default unless integrate.regression says)")
+    parser.add_argument("--attached", action="store_true",
+                        help="run in this process; by default an integration re-runs itself in its own transient unit, "
+                             "so killing its caller (an agent session, its tmux) never cuts it half way (D-225)")
     actions = parser.add_mutually_exclusive_group()
     actions.add_argument("--post-merge", metavar="MERGE", help="run the full regression of an integrated merge")
     actions.add_argument("--revert", metavar="MERGE", help="revert an integrated merge (deploy worktree, ff-only)")
@@ -591,6 +635,8 @@ def main(argv: list[str] | None = None) -> int:
                   live=args.live, deploy=args.deploy, scratch=args.scratch, log=args.release_log,
                   wait_seconds=args.wait_seconds, trailers=args.trailer, dry_run=args.dry_run,
                   keep_worktree=args.keep_worktree, regression=args.regression or "")
+    if not (args.dry_run or args.attached or args.post_merge or os.environ.get(DETACHED)) and _which("systemd-run"):
+        return detached(list(sys.argv[1:] if argv is None else argv), args.branch)
     if args.post_merge or args.revert:
         import bt_integrate_post
         return (bt_integrate_post.post_merge(req, args.post_merge) if args.post_merge
@@ -600,5 +646,54 @@ def main(argv: list[str] | None = None) -> int:
     return integrate(req).code
 
 
+def detached(argv: list[str], branch: str, *, poll: float = 1.0, out=None) -> int:
+    """Run this integration again in a transient user unit and follow it: its log is printed as it grows and its exit
+    code is returned. If the caller dies, the integration goes on and finishes: a merge without its restart and smoke,
+    or a regression killed at minute 20, was one tmux kill away when an agent integrated from its session
+    (2026-10-30: the Solucionador's watchdog would have cut its own D-203 integration; D-225)."""
+    out = out or sys.stdout
+    stamp = f"{dt.datetime.now():%Y%m%d-%H%M%S}"
+    name = f"bt-integrate-{''.join(c if c.isalnum() else '-' for c in branch)[:60]}-{stamp}"
+    runs = Path(DEPLOY).parent / "runs"
+    runs.mkdir(parents=True, exist_ok=True)
+    log, rc = runs / f"{name}.log", runs / f"{name}.rc"
+    keep = ("PATH", "HOME", "BITACORA_ROOT", "PYTHONPATH", "BITACORA_SOLVER", "BITACORA_TMUX_SOCKET")
+    env = [f"--setenv={k}={os.environ[k]}" for k in keep if os.environ.get(k)]
+    command = ["systemd-run", "--user", f"--unit={name}", "--collect", "--quiet", f"--working-directory={os.getcwd()}",
+               f"--property=StandardOutput=append:{log}", f"--property=StandardError=append:{log}",
+               f"--setenv={DETACHED}=1", f"--setenv={RC_FILE}={rc}", *env,
+               sys.executable, str(Path(__file__).resolve()), *argv]
+    started = subprocess.run(command, capture_output=True, text=True, check=False)
+    if started.returncode:
+        print(f"could not start the integration unit ({started.stderr.strip()[:200]}); running attached", file=out)
+        return main([*argv, "--attached"])
+    print(f"integration runs in unit {name} (log {log}); it finishes even if this caller stops", file=out, flush=True)
+    shown = 0
+    while True:
+        text = log.read_text(encoding="utf-8", errors="replace") if log.is_file() else ""
+        if len(text) > shown:
+            print(text[shown:], end="", file=out, flush=True)
+            shown = len(text)
+        if rc.is_file():
+            try:
+                return int(rc.read_text().strip() or 1)
+            except ValueError:
+                return 1
+        state = subprocess.run(["systemctl", "--user", "is-active", name], capture_output=True, text=True,
+                               check=False).stdout.strip()
+        if state not in ("active", "activating", "reloading") and not rc.is_file():
+            time.sleep(poll)
+            if not rc.is_file():
+                print(f"the integration unit {name} ended without an exit code ({state}); see {log}", file=out)
+                return 4
+        time.sleep(poll)
+
+
 if __name__ == "__main__":
-    sys.exit(main())
+    code = 1
+    try:
+        code = main()
+    finally:
+        if os.environ.get(RC_FILE):
+            Path(os.environ[RC_FILE]).write_text(f"{code}\n", encoding="utf-8")
+    sys.exit(code)

@@ -147,7 +147,20 @@ class SystemdSupervisor(BaseSupervisor):
         key, unit = spec.attempt_key, self.unit_name(spec.attempt_key)
         with self._locked(key):
             record = self._record(key)
-            props = self._show_one(unit)
+            try:
+                props = self._show_one(unit)
+            except ManagerError:
+                # A re-run launch (the engine stopped before DBOS recorded the step) met a user manager that did not
+                # answer. The attempt's own files prove it was started: adopt it from them, and let the observation
+                # (D-188's grace) wait for the manager. Without that, the step ran out of DBOS's tries in seconds, the
+                # agent workflow failed, the reaper killed the healthy agent and the task asked the owner about a
+                # runtime defect (test_durable_launch_hiccup; test_durable_shutdown under load, 2026-10-30).
+                # Without such proof nothing is started blind: the unit may exist, so the error stands.
+                if record and (record.get("status") == "started" or self.store.exists(key, "started.json")
+                               or self.store.exists(key, "exit.json")):
+                    return self._identity(key, record, None) if record.get("status") == "started" \
+                        else self._finalize(key, record, None)
+                raise
             loaded = props.get("LoadState") == "loaded"
             if loaded and not self._ours(props, key):
                 raise LaunchConflict(f"unit {unit} exists but was not started by this supervisor for {key}")
@@ -171,7 +184,12 @@ class SystemdSupervisor(BaseSupervisor):
                 failure = done.stderr.strip() if done.returncode != 0 else ""
             except (OSError, subprocess.TimeoutExpired) as error:
                 failure = f"systemd-run: {error}"
-            props = self._show_one(unit)
+            try:
+                props = self._show_one(unit)
+            except ManagerError:
+                if failure:
+                    raise                    # the unit may or may not exist: the record stays "starting" (adoptable)
+                props = {}                   # systemd-run created it: its files will say so, the manager need not
             if failure and not (props.get("LoadState") == "loaded" and self._ours(props, key)):
                 self.store.remove(key)       # nothing started: a retry may start it cleanly
                 if props.get("LoadState") == "loaded":

@@ -104,9 +104,9 @@ class StageJoin(EngineCase):
         self.assertEqual((waiting["status"], waiting["live"]), ("waiting", ["T1"]), waiting)
         self.assertTrue((self.lab.rdir / stage_join.PENDING).is_file())
         # the engine finishes the join once T1 has ended (its reaper pass drains pending joins)
-        wait_until(lambda: bt_run_owner.read(self.lab.rdir)["run_id"] == run2.run_id, 240, interval=1.0,
-                   what="the engine to complete the join")
-        self.assertFalse((self.lab.rdir / stage_join.PENDING).exists())
+        wait_until(lambda: not (self.lab.rdir / stage_join.PENDING).exists(), 240, interval=0.5,
+                   what="the engine to complete the join")             # its last act (see the cut-join test below)
+        self.assertEqual(bt_run_owner.read(self.lab.rdir)["run_id"], run2.run_id)
         status = self.settled(run2, timeout=240)
         self.assertEqual(status["summary"]["status"], "completed", status)
         self.assertEqual([item["task"] for item in self.lab.launches()], ["T1", "T2"])
@@ -157,9 +157,12 @@ class StageJoin(EngineCase):
         self.assertEqual(bt_run_owner.read(self.lab.rdir)["run_id"], run1.run_id)
         self.assertTrue((self.lab.rdir / stage_join.PENDING).is_file(), "the cut join left nothing to finish it")
 
-        wait_until(lambda: bt_run_owner.read(self.lab.rdir)["run_id"] == run2.run_id, 120, interval=1.0,
+        # the join's last act is removing the marker; the owner record moves earlier, before the new run is started and
+        # the run pointer moves: waiting on the owner record read the marker mid-join under load (2026-10-30)
+        wait_until(lambda: not (self.lab.rdir / stage_join.PENDING).exists(), 120, interval=0.5,
                    what="the engine to finish the cut join")
-        self.assertFalse((self.lab.rdir / stage_join.PENDING).exists())
+        self.assertEqual(bt_run_owner.read(self.lab.rdir)["run_id"], run2.run_id)
+        self.assertEqual(json.loads((self.lab.rdir / "RUN.durable-run.json").read_text())["revision"], 2)
         status = self.settled(run2, timeout=240)
         self.assertEqual(status["summary"]["status"], "completed", status)
         self.assertEqual(sorted(item["task"] for item in self.lab.launches()), ["T1", "T2", "T2", "T3"])

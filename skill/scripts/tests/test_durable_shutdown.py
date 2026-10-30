@@ -52,7 +52,23 @@ class EngineStops(EngineCase):
         self.start_engine()                               # recovery: the same run, the same agent process
         status = self.settled(run, timeout=180)
         self.assertEqual(status["summary"]["status"], "completed", status)
-        self.assertEqual(len(self.lab.launches()), 1, "the agent must be adopted after the restart, not started again")
+        self.assertEqual(len(self.lab.launches()), 1, "the agent must be adopted after the restart, not started again"
+                         + why_launched(self.lab))
+        import sqlite3                                    # D-210: a deliberate restart is not a recovery attempt
+        with sqlite3.connect(self.lab.state / "dbos.sqlite3") as db:
+            counted = db.execute("SELECT recovery_attempts FROM workflow_status WHERE workflow_uuid LIKE "
+                                 "'%:agent'").fetchall()
+        self.assertEqual(counted, [(1,)], "the agent workflow's one dispatch, the clean restart not counted")
+
+
+def why_launched(lab) -> str:
+    """What a second launch needs to be explained: each start and the engine's decisions about its attempts. The one
+    loaded-regression failure of this test (2026-10-30) left only «2 != 1» and a deleted lab."""
+    events = [{k: e.get(k) for k in ("event", "attempt_key", "action", "code", "reason", "workflow_status") if e.get(k)}
+              for e in lab.telemetry()
+              if e.get("event") in ("attempt_started", "recovery_decision", "orphan_reaped", "decision_requested")]
+    starts = [{k: x.get(k) for k in ("task", "at", "has_note", "remediation", "cwd")} for x in lab.launches()]
+    return f"\nlaunches: {starts}\nevents: {events}\nengine log: {(lab.root / 'engine.log').read_text()[-2000:]}"
 
 
 class ManyRestarts(EngineCase):

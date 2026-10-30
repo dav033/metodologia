@@ -10,6 +10,7 @@ import tempfile
 import time
 import unittest
 from pathlib import Path
+from typing import ClassVar
 from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -355,6 +356,118 @@ class AutoLogin(unittest.TestCase):
         with patch.object(servers, "status", return_value=now), patch.object(servers, "recipe", return_value=self.LOGIN):
             plain = wait.page(Path("/r"), "proj", "REQ-021", Path("/r/x"), "SP-1", "tok", "/admin")
         self.assertIn('data-next="/p/proj/req/REQ-021/verify-go?sp=SP-1&amp;path=%2Fadmin&amp;t=tok"', plain)   # D-211
+
+    # ---- D-231: any project — the recipe seeds its own accounts and names its roles
+
+    SECRET = "s3cret-Value-never-shown"
+    MINT = ("import json,os,sys\n"
+            "db=json.load(open('db.json')) if os.path.exists('db.json') else {}\n"
+            "who=os.environ['BT_LOGIN_ACCOUNT']\n"
+            "if who not in db: print('no such account '+who, file=sys.stderr); sys.exit(3)\n"
+            "print('shop_'+db[who]['role']+'_'+'x'*24, end='')\n")
+    SEED = ("import hashlib,json,os,sys\n"
+            "open('seeds','a').write('1')\n"
+            "pw=os.environ.get('BT_TEST_PASSWORD','')\n"
+            "if os.environ.get('SEED_FAILS'): print('cannot write: '+pw, file=sys.stderr); sys.exit(1)\n"
+            "db=json.load(open('db.json')) if os.path.exists('db.json') else {}\n"
+            "for a in json.loads(os.environ['BT_TEST_ACCOUNTS']):\n"
+            "    db.setdefault(a['email'], {'role': a['role'], 'hash': hashlib.sha256(pw.encode()).hexdigest()})\n"
+            "json.dump(db, open('db.json','w'))\n")
+    SHOP: ClassVar[dict] = {**RECIPE, "auto_login": {
+        "cookie": "shop_sid", "default": "qa+owner@shop.test", "password_secret": "SHOP_TEST_PASSWORD",
+        "accounts": [{"email": "qa+owner@shop.test", "role": "owner", "label": "Dueño", "aliases": ["admin"]},
+                     {"email": "qa+clerk@shop.test", "role": "clerk", "label": "Cajero"}],
+        "mint": "python3 bin/mint.py", "seed": "python3 bin/seed.py"}}
+
+    def shop(self):
+        """A fake app that is not pictures: its «database» is db.json in the version's copy."""
+        files = self.files()
+        (files["copy"] / "bin").mkdir()
+        (files["copy"] / "bin" / "mint.py").write_text(self.MINT)
+        (files["copy"] / "bin" / "seed.py").write_text(self.SEED)
+        files.update(lock=files["copy"].parent / "lock", logs=files["copy"].parent / "logs")
+        return files
+
+    def mint(self, files, recipe, account="", secrets=None):
+        with patch.object(servers, "recipe", return_value=recipe), patch.object(servers, "_row", return_value=ROW), \
+                patch.object(servers, "_files", return_value=files), \
+                patch.object(servers, "_secrets", return_value={"SHOP_TEST_PASSWORD": self.SECRET} if secrets is None else secrets):
+            return servers.mint_session(self.root, "proj", self.rdir, "SP-1", account)
+
+    def test_a_fake_app_seeds_a_missing_account_on_the_first_click_and_signs_in(self):
+        files = self.shop()
+        made = self.mint(files, self.SHOP, "qa+clerk@shop.test")
+        self.assertTrue(made["ok"], made)
+        self.assertEqual((made["cookie"], made["account"]), ("shop_sid", "qa+clerk@shop.test"))
+        self.assertTrue(made["token"].startswith("shop_clerk_"))
+        db = json.loads((files["copy"] / "db.json").read_text())
+        self.assertEqual(sorted(db), ["qa+clerk@shop.test", "qa+owner@shop.test"])      # every recipe account, once
+        self.assertEqual((files["copy"] / "seeds").read_text(), "1")
+        again = self.mint(files, self.SHOP, "qa+owner@shop.test")
+        self.assertTrue(again["ok"], again)
+        self.assertEqual((files["copy"] / "seeds").read_text(), "1")                      # idempotent: not seeded twice
+        state = json.loads(files["state"].read_text())
+        self.assertEqual(state["auto_login"]["account"], "qa+owner@shop.test")
+        self.assertTrue(state["auto_login"]["ok"])
+        self.assertTrue(state["seed"]["ok"])
+        log = (files["logs"] / "login.log").read_text()
+        self.assertIn("seed", log)
+        for text in (json.dumps(made), json.dumps(state), log):
+            self.assertNotIn(self.SECRET, text)
+
+    def test_a_failing_seed_or_a_missing_password_is_said_in_spanish_without_the_secret(self):
+        files = self.shop()
+        failing = {**self.SHOP, "auto_login": {**self.SHOP["auto_login"], "seed": "SEED_FAILS=1 python3 bin/seed.py"}}
+        said = self.mint(files, failing)
+        self.assertFalse(said["ok"])
+        self.assertIn("No pude crear las cuentas de prueba", said["message"])
+        self.assertNotIn(self.SECRET, said["message"] + files["state"].read_text() + (files["logs"] / "login.log").read_text())
+        self.assertIn("***", said["message"])                                             # the secret is masked
+        files = self.shop()
+        said = self.mint(files, self.SHOP, secrets={})
+        self.assertFalse(said["ok"])
+        self.assertIn("Falta SHOP_TEST_PASSWORD", said["message"])
+        self.assertFalse((files["copy"] / "seeds").exists())                              # never seeds without it
+        plain = {**self.SHOP, "auto_login": {k: v for k, v in self.SHOP["auto_login"].items() if k != "seed"}}
+        said = self.mint(self.shop(), plain)
+        self.assertIn("no tiene «seed»", said["message"])
+
+    def test_accounts_may_be_objects_and_a_malformed_block_says_why(self):
+        accounts = servers.login_accounts(self.SHOP["auto_login"])
+        self.assertEqual([(a["email"], a["role"], a["label"]) for a in accounts],
+                         [("qa+owner@shop.test", "owner", "Dueño"), ("qa+clerk@shop.test", "clerk", "Cajero")])
+        self.assertEqual(servers.login_accounts(self.LOGIN["auto_login"])[1]["role"], "designer")  # plain strings still work
+        self.assertEqual(servers.auto_login_problem(self.SHOP), "")
+        self.assertEqual(servers.auto_login_problem(RECIPE), "")
+        bad = {"cookie": "a b", "mint": "x", "accounts": ["a@b.test"]}
+        cases = {"«auto_login.cookie»": bad,
+                 "«auto_login.mint»": {**bad, "cookie": "sid", "mint": ""},
+                 "«auto_login.accounts»": {**bad, "cookie": "sid", "accounts": [{"role": "x"}]},
+                 "«auto_login.default»": {**bad, "cookie": "sid", "default": "other@b.test"},
+                 "«auto_login.seed»": {**bad, "cookie": "sid", "seed": 5},
+                 "«auto_login.password_secret»": {**bad, "cookie": "sid", "password_secret": "lower case"}}
+        for field, value in cases.items():
+            problem = servers.auto_login_problem({**RECIPE, "auto_login": value})
+            self.assertIn(field, problem)
+            self.assertEqual(servers.auto_login({**RECIPE, "auto_login": value}), {})
+        import bt_page_verification as page
+        ctx = {"project": "proj", "rid": "REQ-021", "token": "tok", "root": Path("/r"), "rdir": Path("/r/x")}
+        now = {"state": "ready", "url": "http://localhost:3002/", "ports": {"web": 3002}, "servers": {"web": True}, "log": "",
+               "login_error": "No pude iniciar sesión como qa+owner@shop.test: boom"}
+        broken = {**RECIPE, "auto_login": cases["«auto_login.mint»"]}
+        for recipe, said in ((broken, "Inicio de sesión automático desactivado"), (self.SHOP, "boom")):
+            with patch.object(servers, "recipe", return_value=recipe), \
+                    patch.object(servers, "planned", return_value={"url": "http://localhost:3002/", "ports": {"web": 3002}}), \
+                    patch.object(servers, "status", return_value=now):
+                html = page._servers(dict(ctx), ROW, [])
+            self.assertIn(said, html)
+        self.assertIn('<option value="qa+clerk@shop.test">Cajero (qa+clerk@shop.test)</option>', html)
+
+    def test_a_failed_sign_in_lands_on_a_panel_page_that_says_why(self):
+        import bt_page_verify_run as wait
+        body = wait.login_failed("proj", "REQ-021", "SP-1", "No pude crear las cuentas de prueba: <x>", "http://localhost:3002/admin")
+        self.assertIn("No pude crear las cuentas de prueba: &lt;x&gt;", body)
+        self.assertIn('href="http://localhost:3002/admin"', body)                        # the page, without a session
 
 
 class Panel(unittest.TestCase):
