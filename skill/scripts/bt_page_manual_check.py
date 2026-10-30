@@ -9,6 +9,8 @@ with what failed. Pure functions: HTML out.
 """
 from __future__ import annotations
 
+import re
+
 from html import escape as e
 from pathlib import Path
 from urllib.parse import quote
@@ -42,8 +44,15 @@ def block(root: Path, project: str, req: str, rdir: Path, decision: dict, base: 
     guide = guides.manual(root, project, rdir, task, url=url, recipe=data, attempt=target["attempt"], commit=target["commit"])
     form_id = f"vstart-{task}"
     start = (f'<form id="{e(form_id)}" method="post" action="/p/{quote(project)}/req/{quote(req)}/verify-run" target="_blank" '
-             f'rel="noopener" class="pp-vform">{_hidden(token, anchor=task)}<button type="submit" class="primary">Probar esto ↗'
-             f'</button></form>')
+             f'rel="noopener" class="pp-vform">{_hidden(token, anchor=task, path="/")}<button type="submit" class="secondary">'
+             f'Reiniciar desde cero</button></form>')
+    import bt_page_verification as verify_page          # the pages its steps name, each a link like the version's own (D-200)
+    origin = (re.match(r"https?://[^/]+", url or "") or [""])[0]
+    pages = ["/"] + [p for p in verify_page.test_paths([{"how": " ".join(s["do"] for s in guide["steps"]),
+                                                          "expect": " ".join(s["expect"] or "" for s in guide["steps"])}])
+                     if p != "/"]
+    links = "".join(f'<li><a class="pp-vurl" href="{e(origin + p)}" target="_blank" rel="noopener" data-vstart="{e(form_id)}"'
+                    f' data-path="{e(p)}">{e(origin + p)}</a></li>' for p in pages) if origin else ""
     said = {"ready": ("ok", "En marcha: responde."), "preparing": ("warn", "Arrancando…"),
             "failed": ("bad", "Falló al arrancar. " + str(now.get("step") or ""))}.get(now["state"], ("none", "Detenido."))
     steps = "".join(f'<li><p>{inline(s["do"])}</p>' + (f'<p class="pp-vexpect"><strong>Debes ver:</strong> {inline(s["expect"])}</p>'
@@ -65,10 +74,11 @@ def block(root: Path, project: str, req: str, rdir: Path, decision: dict, base: 
               f'<textarea name="reason" required rows="2" placeholder="Qué falló: qué hiciste y qué viste" '
               f'aria-label="Qué falló"></textarea><button type="submit">No funciona</button>'
               f'<p class="muted">Un intento nuevo de {e(task)} que recibe tu nota.</p></form>')
-    return (f'<div class="pp-vtry dx-manual"><span class="pp-vlabel">Probar esto</span><div class="pp-vtry-row">'
-            f'<a class="pp-vurl" href="{e(url)}" target="_blank" rel="noopener" data-vstart="{e(form_id)}">{e(url)}</a>{start}</div>'
+    return (f'<div class="pp-vtry dx-manual" data-state="{e(now["state"])}"><span class="pp-vlabel">Probar esto: dónde</span>'
+            f'<ul class="pp-vlinks">{links}</ul>'
             f'<p class="pp-vstatus {said[0]}" role="status">{e(said[1])}</p>'
-            f'<p class="muted">Arranca desde cero el intento <code>{e(target["version"])}</code> de {e(task)} (commit '
-            f'<code>{e(target["commit"][:10])}</code>), el mismo que se vuelve a verificar con tu respuesta, y abre la '
-            f'dirección cuando responde.</p>{who}{named}<ol class="pp-vsteps">{steps}</ol>'
+            f'<p class="muted">Es el intento <code>{e(target["version"])}</code> de {e(task)} (commit '
+            f'<code>{e(target["commit"][:10])}</code>), el mismo que se vuelve a verificar con tu respuesta. Si no está en '
+            f'marcha, al abrir un enlace lo arranco desde cero y la pestaña llega a esa página cuando responde.</p>'
+            f'<div class="pp-vtry-row">{start}</div>{who}{named}<ol class="pp-vsteps">{steps}</ol>'
             f'<div class="dx-manual-answers">{works}{broken}</div></div><script src="/static/verify-run.js"></script>')

@@ -1,6 +1,6 @@
-// «Probar»: the version's URL is shown as it is (http://localhost:<port>/…). A plain click on it submits the version's
-// «Probar» form instead (new tab: stop everything of that version, start it clean, then go to the URL); a middle or
-// modified click still opens the URL as is. The waiting tab polls the version and goes to its URL when every server
+// «Probar»: the version's URL and the pages its test names are plain links (http://localhost:<port>/…). On a running
+// version a click opens the page as it is; otherwise it submits the version's restart form with that page (new tab: stop
+// everything of that version, start it clean, then land on that page). A middle or modified click opens the URL as is. The waiting tab polls the version and goes to its URL when every server
 // answers, or shows the failed step with its log. A file, not inline: the panel's CSP runs only its own scripts.
 (function () {
   "use strict";
@@ -9,9 +9,13 @@
   document.addEventListener("click", function (ev) {
     var a = ev.target && ev.target.closest ? ev.target.closest("a[data-vstart]") : null;
     if (!a || ev.button !== 0 || ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.altKey) return;
+    var box = a.closest(".pp-vtry");
+    if (box && box.dataset.state === "ready") return;  // running: the link opens the page as it is (D-200)
     var form = document.getElementById(a.dataset.vstart);
     if (!form) return;
     ev.preventDefault();
+    var page = form.querySelector('input[name="path"]');
+    if (page) page.value = a.dataset.path || "/";     // the new tab lands on the page whose link was clicked
     if (form.requestSubmit) form.requestSubmit(); else form.submit();
   });
 
@@ -53,7 +57,9 @@
       .then(function (s) {
         show(s);
         if (s.state === "ready" && /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?\//.test(s.url || "")) {
-          location.replace(s.url);
+          var origin = s.url.replace(/^(https?:\/\/[^\/]+).*$/, "$1");
+          var page = /^\/[A-Za-z0-9_\-.\/\[\]]*$/.test(run.dataset.path || "") ? run.dataset.path : "/";
+          location.replace(origin + page);
           return;
         }
         if (s.state === "preparing") setTimeout(tick, 2000);

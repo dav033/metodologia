@@ -196,7 +196,7 @@ class Handler(PlanningActions, PlanListActions, BaseHTTPRequestHandler):
                 return self.send("Not found", 404, "text/plain")
             if q.get("format") == "json":
                 return self.send(bt_page_verify_run.status_json(ROOT, project, rdir, q.get("sp", "")), 200, "application/json")
-            return self.send(bt_page_verify_run.page(ROOT, project, rest[1], rdir, q.get("sp", ""), token()))
+            return self.send(bt_page_verify_run.page(ROOT, project, rest[1], rdir, q.get("sp", ""), token(), q.get("path", "/")))
         if kind == "req" and len(rest) == 3 and rest[2] == "preview":
             import bt_design_web
             rdir = find_req(ROOT / project, rest[1])

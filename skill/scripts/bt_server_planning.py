@@ -115,8 +115,10 @@ class PlanningActions:
             msg = "Los servidores de prueba solo se arrancan desde esta máquina."
         elif action == "verify-run":                  # «Probar»: restart the version clean; the new tab follows it
             started = servers.begin(ROOT, project, rdir, sid)
-            if started["ok"]:
-                return f"{base}/verify-run?sp={quote(sid)}"
+            if started["ok"]:                         # the new tab lands on the page whose link was clicked (D-200)
+                page = form.get("path", "/")
+                page = page if re.fullmatch(r"/[A-Za-z0-9_\-./\[\]]{0,200}", page) and "//" not in page else "/"
+                return f"{base}/verify-run?sp={quote(sid)}&path={quote(page)}"
             msg = started["message"]
         elif action == "verify-stop":
             msg = servers.stop(ROOT, project, rdir, sid)
