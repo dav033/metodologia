@@ -470,7 +470,10 @@ once per signature (D-167) → the Solucionador → the owner, only for what nee
   workflow that ended (SUCCESS) with a rejected gate, or `blocked` with a blocked task the owner did not stop himself
   (`decision_answered` stop by `owner`, or `by: owner` in RUN.decisions.jsonl), fired at once, once per run workflow and
   gate/task set (`ended`: r25 at 23:19, CG-7 «COMPOSE_FAILED 3 turns»; the brief names the gate task's
-  `bt-durable retry-task`, which reopens the run and recomposes the gate); a composition
+  `bt-durable retry-task`, which reopens the run and recomposes the gate); a task the PENDING, unpaused run holds
+  `blocked` with no decision behind it (an audit no remediation round cleared) for `solver.blocked_after_seconds` (300),
+  once per block (its round workflow and reason), while other tasks keep running (`blocked`: pictures REQ-021 r27 T2.7,
+  D-235); a block already given to the Solucionador is not given again by `stalled` or `ended`; a composition
   resolution request (`<state>/durable/composition/resolutions/<key>.json` without `<key>.resolved`) older than
   `solver.resolution_after_seconds` (120), given to the run whose open decision names its path or commits, else the one
   run with an open INTEGRATION_CONFLICT decision (`resolution`, `bt_durable/resolutions.py`: its brief carries the

@@ -20,6 +20,11 @@ Triggers (`Trigger`), each launched at most once per key:
   did not stop himself (`decision_answered … stop by owner` in the telemetry, or `by: owner` in RUN.decisions.jsonl):
   r25 then ended at 23:19 with CG-7 rejected («COMPOSE_FAILED 3 turns»), no decision open and no ERROR. Fired at once,
   once per run workflow and rejected-gate/blocked-task set;
+- `blocked`: the run, still PENDING and not paused, holds a task `blocked` with no decision behind it (an audit whose
+  blocking findings no round could clear, `workflows._audit_stuck`) for `solver.blocked_after_seconds`: pictures REQ-021
+  r27's T2.7 sat like that from 14:49 while other tasks kept running, so neither `stalled` nor `ended` saw it and no
+  decision was open (2026-10-30). Once per block (the task's round workflow and the run's reason); a block already given
+  to the Solucionador is not given again by `stalled` or `ended`;
 - `resolution`: a composition conflict waits in `<state>/composition/resolutions/<key>.json` without `<key>.resolved`
   for `solver.resolution_after_seconds` (`bt_durable.resolutions`): no retry can settle it.
 
@@ -71,7 +76,7 @@ def enabled() -> bool:
 def settings() -> dict[str, int]:
     import bt_config
     defaults = {"max_concurrent": 1, "max_per_task": 3, "max_minutes": 120, "stuck_minutes": 45,
-                "resolution_after_seconds": 120, "integrate_grace_minutes": 120}
+                "resolution_after_seconds": 120, "integrate_grace_minutes": 120, "blocked_after_seconds": 300}
     out = {}
     for name, default in defaults.items():
         value = bt_config.get(f"solver.{name}", default)
@@ -125,10 +130,11 @@ def _live_tasks(status: dict) -> list[str]:
             if (item or {}).get("workflow_status") in ("PENDING", "ENQUEUED")]
 
 
-def stalled_triggers(run, status: dict, state: dict, now: float, cfg: dict) -> list[dict]:
+def stalled_triggers(run, status: dict, state: dict, now: float, cfg: dict, handed: Iterable[str] = ()) -> list[dict]:
     """A PENDING, unpaused run workflow with no live task workflow, unchanged (summary and gates) for `stuck_minutes`.
     The `since` mark starts when the picture last changed, so an engine restart or a deploy never fires it at once.
-    Updates `state["stall"]`."""
+    A stall whose only stops are blocks already given to the Solucionador (`handed`, `blocked_triggers`) is not a new
+    block. Updates `state["stall"]`."""
     summary = status.get("summary") if isinstance(status.get("summary"), dict) else None
     # no summary: the run workflow has not set its first one (it sets one before anything else), nothing to judge yet
     if status.get("workflow_status") != "PENDING" or not summary or summary.get("status") == "paused" \
@@ -143,6 +149,9 @@ def stalled_triggers(run, status: dict, state: dict, now: float, cfg: dict) -> l
         state["stall"] = mark = {"fp": fingerprint, "since": now}
     since = float(mark.get("since", now))
     if now < since + cfg["stuck_minutes"] * 60:
+        return []
+    stopped = {t for t, value in (summary.get("tasks") or {}).items() if value in ("blocked", "cancelled")}
+    if stopped and stopped <= set(handed) and not (summary.get("gates") or {}).get("rejected"):
         return []
     rejected = ", ".join(sorted((summary.get("gates") or {}).get("rejected") or {}))
     return [trigger("stalled", f"{run.run_id}:stalled:{fingerprint}", run.run_id,
@@ -175,15 +184,16 @@ def owner_stops(rdir: Path, telemetry: Path | None, run_id: str) -> set[str]:
     return out
 
 
-def ended_triggers(run, status: dict, stopped_by_owner: set[str]) -> list[dict]:
+def ended_triggers(run, status: dict, stopped_by_owner: set[str], handed: Iterable[str] = ()) -> list[dict]:
     """A run workflow that ended (SUCCESS) blocked: a rejected composition gate (never the owner's stop), or a blocked
-    task the owner did not stop. Nothing waits in it any more, so no other trigger can see it."""
+    task the owner did not stop and whose block was not already given to the Solucionador while the run went on
+    (`handed`). Nothing waits in it any more, so no other trigger can see it."""
     summary = status.get("summary") if isinstance(status.get("summary"), dict) else {}
     if status.get("workflow_status") != "SUCCESS" or not summary:
         return []
     rejected = dict((summary.get("gates") or {}).get("rejected") or {})
     blocked = sorted(t for t, state in (summary.get("tasks") or {}).items() if state == "blocked")
-    unexplained = [t for t in blocked if t not in stopped_by_owner]
+    unexplained = [t for t in blocked if t not in stopped_by_owner and t not in set(handed)]
     if not rejected and not (summary.get("status") == "blocked" and unexplained):
         return []
     workflow = status.get("workflow_id") or f"bt:{run.run_id}"
@@ -195,6 +205,63 @@ def ended_triggers(run, status: dict, stopped_by_owner: set[str]) -> list[dict]:
                    reason=f"the run workflow {workflow} ended {summary.get('status')}: " + "; ".join(parts))
     item.update(workflow=workflow, gates=sorted(rejected), blocked=unexplained)
     return [item]
+
+
+def run_holds(status: dict) -> dict[str, tuple[str, str]]:
+    """Tasks the run itself holds `blocked` with no decision behind them -> (block fingerprint, reason). Today that is an
+    audit whose blocking findings no remediation round cleared (`workflows._audit_stuck` records `results[task].audit`);
+    a task whose own workflow ended blocked was stopped by an answered decision and is not one. The fingerprint is the
+    task's latest round workflow and the reason: a `retry-task` (a new round) or a new reason is a new block."""
+    summary = status.get("summary") if isinstance(status.get("summary"), dict) else {}
+    results = summary.get("results") if isinstance(summary.get("results"), dict) else {}
+    out = {}
+    for task_id, value in sorted((summary.get("tasks") or {}).items()):
+        result = results.get(task_id) if isinstance(results.get(task_id), dict) else {}
+        reason = str(result.get("audit") or "")
+        if value != "blocked" or not reason:
+            continue
+        workflow = ((status.get("tasks") or {}).get(task_id) or {}).get("workflow_id") or ""
+        basis = json.dumps([task_id, workflow, reason], ensure_ascii=False)
+        out[task_id] = (hashlib.sha256(basis.encode()).hexdigest()[:16], reason)
+    return out
+
+
+def blocked_key(run_id: str, task_id: str, fingerprint: str) -> str:
+    return f"{run_id}:{task_id}:blocked:{fingerprint}"
+
+
+def handed_blocks(run, status: dict, state: dict) -> set[str]:
+    """Tasks whose current block already has a `blocked` trigger (whatever became of it)."""
+    triggers = state.get("triggers") or {}
+    return {task_id for task_id, (fingerprint, _) in run_holds(status).items()
+            if blocked_key(run.run_id, task_id, fingerprint) in triggers}
+
+
+def blocked_triggers(run, status: dict, state: dict, now: float, cfg: dict) -> list[dict]:
+    """Tasks the run holds blocked (`run_holds`) while its workflow is PENDING and not paused, unchanged for
+    `blocked_after_seconds` (a short grace for the owner's own `retry-task`). A run that ended is `ended`'s. Once per
+    block: the key is the block's fingerprint. Updates `state["held"]`."""
+    summary = status.get("summary") if isinstance(status.get("summary"), dict) else {}
+    held = state.setdefault("held", {})
+    holds = run_holds(status) if status.get("workflow_status") == "PENDING" and summary.get("status") != "paused" else {}
+    for task_id in [t for t in held if t not in holds]:
+        del held[task_id]
+    found = []
+    for task_id, (fingerprint, reason) in holds.items():
+        live = ((status.get("tasks") or {}).get(task_id) or {}).get("workflow_status") in ("PENDING", "ENQUEUED")
+        mark = held.get(task_id) or {}
+        if mark.get("fp") != fingerprint:
+            held[task_id] = mark = {"fp": fingerprint, "since": now}
+        if live or now < float(mark.get("since", now)) + cfg["blocked_after_seconds"]:
+            continue
+        item = trigger("blocked", blocked_key(run.run_id, task_id, fingerprint), run.run_id, task_id=task_id,
+                       reason=f"the run holds {task_id} blocked since {_iso(float(mark['since']))} while it goes on, "
+                              f"with no decision to answer: {reason}")
+        item["block"] = fingerprint
+        found.append(item)
+    if not held:
+        state.pop("held", None)
+    return found
 
 
 def stuck_triggers(run, status: dict, state: dict, now: float, cfg: dict) -> list[dict]:
@@ -310,8 +377,12 @@ class Solver:
             if status is None:
                 continue
             found = by_run.get(run.run_id, []) + error_triggers(run, status) + \
-                stuck_triggers(run, status, state, self.now(), cfg) + stalled_triggers(run, status, state, self.now(), cfg) + \
-                ended_triggers(run, status, owner_stops(rdir, self.state_dir / "telemetry.jsonl", run.run_id))
+                stuck_triggers(run, status, state, self.now(), cfg) + blocked_triggers(run, status, state, self.now(), cfg)
+            for item in found:
+                said += self._register(run, rdir, state, item)
+            handed = handed_blocks(run, status, state)      # a block given to the Solucionador is not given again
+            found = stalled_triggers(run, status, state, self.now(), cfg, handed) + \
+                ended_triggers(run, status, owner_stops(rdir, self.state_dir / "telemetry.jsonl", run.run_id), handed)
             for item in found:
                 said += self._register(run, rdir, state, item)
             if state.get("active"):
@@ -334,7 +405,8 @@ class Solver:
                 "stuck": "la tarea no avanza", "error": "el workflow del run terminó en error",
                 "stalled": "el run no avanza: nada corre y nada espera tu decisión",
                 "ended": "el run terminó bloqueado sin que nadie lo detuviera (una compuerta rechazada o una tarea)",
-                "resolution": "un conflicto de composición espera una resolución"}.get(item["kind"], item["kind"])
+                "resolution": "un conflicto de composición espera una resolución",
+                "blocked": "el run la dejó bloqueada mientras sigue, sin decisión que responder"}.get(item["kind"], item["kind"])
         self.record(rdir, f"{item.get('task_id') or 'run'}: {what}; pasa al Solucionador ({item['reason'][:160]})")
         return [f"{item['key']}: {item['kind']} queued for the Solucionador"]
 
@@ -377,6 +449,9 @@ class Solver:
             summary = status.get("summary") if isinstance(status.get("summary"), dict) else {}
             return status.get("workflow_status") == "PENDING" and summary.get("status") != "paused" \
                 and not _live_tasks(status)
+        if item["kind"] == "blocked":                 # the same block, while the run goes on or after it ended
+            hold = run_holds(status).get(item.get("task_id") or "")
+            return bool(hold) and hold[0] == item.get("block") and status.get("workflow_status") in ("PENDING", "SUCCESS")
         if item["kind"] == "resolution":
             return not Path((item.get("resolution") or {}).get("resolved") or "/").exists()
         return True
@@ -612,5 +687,6 @@ def read_result(folder: Path) -> dict | None:
     return data if isinstance(data, dict) and data.get("outcome") in OUTCOMES else None
 
 
-__all__ = ["Solver", "enabled", "ended_triggers", "error_triggers", "load", "owner_stops", "read_result", "round_of",
-           "settings", "stalled_triggers", "stuck_triggers", "trigger"]
+__all__ = ["Solver", "blocked_triggers", "enabled", "ended_triggers", "error_triggers", "handed_blocks", "load",
+           "owner_stops", "read_result", "round_of", "run_holds", "settings", "stalled_triggers", "stuck_triggers",
+           "trigger"]
