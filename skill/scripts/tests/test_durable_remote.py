@@ -329,7 +329,7 @@ class OldCommandReplay(unittest.TestCase):
         os.killpg(old.pid, signal.SIGKILL)                        # interrupted: the history holds the old pause
         old.wait(10)
         # T1's launches under the old engine: 1, or 2 when an unanswered `systemctl show` under load made that code kill
-        # and relaunch a healthy agent (fixed since in adapters/runtime.py; stress run of 2026-10-29: 4 of 10)
+        # and relaunch a healthy agent (fixed since in execution/steps.py; stress run of 2026-10-29: 4 of 10)
         recorded = len(self.lab.launches())
         self.assertEqual({x["scenario"] for x in self.lab.launches()}, {"slow"})      # T1 only
         engine_client(self, self.lab)                             # this code recovers the run from its history

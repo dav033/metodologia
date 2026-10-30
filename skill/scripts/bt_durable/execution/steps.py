@@ -23,6 +23,12 @@ from ..control import frontier, subplans
 from . import engine
 
 _PLANS: dict[tuple[str, str], object] = {}
+# how long the agent workflow's own observation looks at an `unknown` attempt again before it counts. The supervisor
+# answers `unknown` when the user manager does not answer (`systemctl --user show` failed or timed out, common under
+# load), and the agent workflow terminates whatever is not `running`: one unanswered call killed a healthy agent and
+# launched it again (audit of REQ-030, 2026-10-29: test_durable_postgres ['slow', 'slow', 'ok'];
+# test_durable_observe_hiccup). Only the workflow's steps wait: the engine's reaper acts on `unknown` at once.
+UNKNOWN_GRACE_SECONDS = 30.0
 
 
 class StepFailure(RuntimeError):
@@ -110,15 +116,28 @@ def prepare(attempt: dict, route_data: dict, base: str, note: str, limits: dict)
     return {"prepared": prepared.model_dump(mode="json")}
 
 
+def _past_unknown(ref: AttemptRef, record: ProcessRecord) -> ProcessRecord:
+    """`record`, or a later observation of the same attempt once it is no longer `unknown` (at most the grace)."""
+    waited, delay = 0.0, 0.5
+    while record.state == "unknown" and waited < UNKNOWN_GRACE_SECONDS:
+        time.sleep(delay)
+        waited += delay
+        delay = min(delay * 2, 5.0)
+        record = _port(lambda: engine.ports().runtime.observe(ref))
+    return record
+
+
 @DBOS.step(name="bt.launch", retries_allowed=True, max_attempts=3, interval_seconds=2)
 def launch(attempt: dict, prepared: dict, limits: dict) -> dict:
-    return _port(lambda: engine.ports().runtime.launch(AttemptRef.model_validate(attempt),
-                                                       Prepared.model_validate(prepared), limits)).model_dump(mode="json")
+    ref = AttemptRef.model_validate(attempt)
+    record = _port(lambda: engine.ports().runtime.launch(ref, Prepared.model_validate(prepared), limits))
+    return _past_unknown(ref, record).model_dump(mode="json")
 
 
 @DBOS.step(name="bt.observe", retries_allowed=True, max_attempts=5, interval_seconds=1)
 def observe(attempt: dict) -> dict:
-    return _port(lambda: engine.ports().runtime.observe(AttemptRef.model_validate(attempt))).model_dump(mode="json")
+    ref = AttemptRef.model_validate(attempt)
+    return _past_unknown(ref, _port(lambda: engine.ports().runtime.observe(ref))).model_dump(mode="json")
 
 
 @DBOS.step(name="bt.terminate", retries_allowed=True, max_attempts=3, interval_seconds=2)

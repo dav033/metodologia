@@ -212,7 +212,7 @@ Details: `references/modules.md` §Solver.
 - Engine crash/kill: systemd restarts it; DBOS recovers this executor's PENDING workflows. An agent that kept running
   in its unit is adopted (the launch step is idempotent per attempt key), never started twice. An observation the user
   manager does not answer (`unknown`) is looked at again for up to 30 s before the agent workflow acts on it, so a
-  `systemctl` hiccup never terminates a healthy agent (`adapters/runtime.py`). `bt.run` and `bt.task`
+  `systemctl` hiccup never terminates a healthy agent (`execution/steps.py`; the reaper still acts at once). `bt.run` and `bt.task`
   have no `max_recovery_attempts` (DBOS counts every recovery and would dead-letter a run after 100 deploys); the
   agent, verify and integrate children keep DBOS's default.
 - Database outage: DBOS retries its connections; the run continues when the database is back (tested with PostgreSQL).
