@@ -7,7 +7,9 @@ whose workflow was cancelled or finished while the unit kept running (cancellati
 from __future__ import annotations
 
 import logging
+import os
 import signal
+import sys
 import threading
 import time
 from collections.abc import Callable
@@ -151,15 +153,50 @@ class _KeyRef:
 
 
 def serve(cfg: EngineConfig, ports: Ports, *, reap_seconds: float = 30.0, project_seconds: float = 5.0,
-          stop: threading.Event | None = None, marker: Path | None = None) -> None:
+          stop: threading.Event | None = None, marker: Path | None = None, exit_process: bool | None = None) -> None:
     """Run the engine until SIGTERM/SIGINT: reap orphan units and refresh the panels' projections of every run
     (`bt_durable.projection`; a read model the workflows never read back). `marker` (default
-    `<state>/engine.json`) tells operator tools which message features this engine's workflows understand."""
-    from .projection import EngineProjector
-    from .remote import write_marker
+    `<state>/engine.json`) tells operator tools which message features this engine's workflows understand.
+
+    `exit_process` (default: when `serve` owns the signals, i.e. no `stop` event is given) ends the process right after
+    DBOS is destroyed (`exit_now`). Every workflow thread is a non-daemon worker of DBOS's executor, and a workflow
+    waiting in `DBOS.recv` (an owner decision: 24 h; the run loop: 5 min) or in a long step keeps the interpreter from
+    exiting: every engine restart of 2026-10-28/29 ended in systemd's «State 'stop-sigterm' timed out. Killing» after
+    TimeoutStopSec, the left-over threads failing with «System database accessed before DBOS was launched» meanwhile
+    and still doing their external effects for that minute. Exiting at once loses nothing a SIGKILL would not: every
+    unrecorded step runs again after recovery, and its port is idempotent for its identifiers."""
+    if exit_process is None:
+        exit_process = stop is None
     stop = stop or threading.Event()
     for sig in (signal.SIGTERM, signal.SIGINT):
         signal.signal(sig, lambda *_: stop.set())
+    clean = False
+    try:
+        _loop(cfg, ports, stop, reap_seconds=reap_seconds, project_seconds=project_seconds, marker=marker)
+        clean = True
+    except BaseException:
+        LOG.exception("engine loop failed")
+        raise
+    finally:
+        if exit_process:
+            exit_now(0 if clean else 1)
+
+
+def exit_now(code: int) -> None:
+    """End the process without joining DBOS's workflow threads (see `serve`). Logs and stdio are flushed first."""
+    logging.shutdown()
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            stream.flush()
+        except (OSError, ValueError):
+            pass
+    os._exit(code)
+
+
+def _loop(cfg: EngineConfig, ports: Ports, stop: threading.Event, *, reap_seconds: float, project_seconds: float,
+          marker: Path | None) -> None:
+    from .projection import EngineProjector
+    from .remote import write_marker
     engine.start(cfg, ports)
     write_marker(marker or cfg.state_dir / "engine.json")
     projector = EngineProjector(DBOS)
