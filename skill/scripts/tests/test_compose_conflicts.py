@@ -194,6 +194,36 @@ class LineIntegration(Repo):
         self.assertFalse(list((self.tmp / "state" / "composition" / "resolutions").glob("*.json")))
 
 
+class GateBase(Repo):
+    """A gate task starts from its candidate caught up with the lines it will be integrated into (D-173): pictures
+    REQ-021 r25 T95 started six attempts from a candidate that missed what T93 and SP-8 had put on those lines since."""
+
+    def gate_base(self, line_files: dict[str, str]):
+        from types import SimpleNamespace
+        from bt_contracts.execution import RunRef
+        from bt_durable.adapters.integration import GitLineIntegrator
+        candidate = self.branch("candidate", {"gate.ts": "1\n"})
+        line_tip = self.branch("sp7", line_files)
+        git(self.repo, "checkout", "-q", "main")
+        run = RunRef(project="proj", req="REQ-900", revision=1, plan_id="REQ-900", plan_path="/nonexistent",
+                     plan_sha256="0" * 64)
+        composer = SimpleNamespace(state_dir=self.tmp / "state", candidate_commit=lambda run, task, gate: candidate)
+        lines = GitLineIntegrator({"app": self.repo}, composer=composer)
+        lines.sync(run, "app", {"SP-7": []})
+        git(self.repo, "update-ref", lines.subplan_ref(run, "app", "SP-7"), line_tip)
+        task = SimpleNamespace(id="T95", repository="app")
+        return lines.base_ref(run, task, home="gate:CG-5", lines=("SP-7", "SP-9")), candidate, line_tip
+
+    def test_the_candidate_takes_the_newer_work_of_its_lines(self):
+        base, candidate, line_tip = self.gate_base({"line.ts": "2\n"})
+        for parent in (candidate, line_tip):
+            self.assertEqual(subprocess.run(["git", "merge-base", "--is-ancestor", parent, base], cwd=self.repo).returncode, 0)
+
+    def test_a_line_that_conflicts_is_left_out(self):
+        base, candidate, _line = self.gate_base({"list.ts": "export const T = [\"z\"];\n", "gate.ts": "9\n"})
+        self.assertEqual(base, candidate)
+
+
 class BlockedNotice(unittest.TestCase):
     def test_a_run_blocked_by_rejected_gates_tells_the_owner_once(self):
         from types import SimpleNamespace

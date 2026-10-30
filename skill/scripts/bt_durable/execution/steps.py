@@ -91,7 +91,9 @@ def alternatives(run: dict, task_id: str, exclude: list[str]) -> int:
 def base_ref(run: dict, task_id: str) -> str:
     ref = RunRef.model_validate(run)
     home = subplans.home(plan(ref), task_id)          # "" for plans without subplans: the run line, as before
-    return _port(lambda: engine.ports().integrator.base_ref(ref, frontier.task(plan(ref), task_id), home=home))
+    lines = subplans.lines_of(plan(ref), task_id) if home.startswith("gate:") else ()
+    return _port(lambda: engine.ports().integrator.base_ref(ref, frontier.task(plan(ref), task_id), home=home,
+                                                            lines=lines))
 
 
 @DBOS.step(name="bt.prepare")

@@ -18,6 +18,7 @@ line existed); it is idempotent.
 """
 from __future__ import annotations
 
+import logging
 import re
 import subprocess
 from collections.abc import Callable, Mapping
@@ -27,6 +28,7 @@ from bt_contracts.execution import RunRef, Snapshot
 
 from ..legacy import TaskSpec
 
+LOG = logging.getLogger("bt_durable.integration")
 IDENT = {"GIT_AUTHOR_NAME": "Bitacora Durable", "GIT_AUTHOR_EMAIL": "durable@localhost",
          "GIT_COMMITTER_NAME": "Bitacora Durable", "GIT_COMMITTER_EMAIL": "durable@localhost",
          "GIT_AUTHOR_DATE": "1700000000 +0000", "GIT_COMMITTER_DATE": "1700000000 +0000"}
@@ -78,19 +80,38 @@ class GitLineIntegrator:
             raise RuntimeError(f"LINE_BASE_UNKNOWN: {self.line_ref(run, role)}-base is not pinned")
         return base
 
-    def base_ref(self, run: RunRef, task: TaskSpec, *, home: str = "") -> str:
-        """`home` (control.subplans.home): `gate:<CG>` -> the gate's composition candidate; `<SP>` -> that subplan's
-        line once it exists; "" -> the run line."""
+    def base_ref(self, run: RunRef, task: TaskSpec, *, home: str = "", lines: tuple[str, ...] = ()) -> str:
+        """`home` (control.subplans.home): `gate:<CG>` -> the gate's composition candidate, caught up with the subplan
+        `lines` its work will be integrated into; `<SP>` -> that subplan's line once it exists; "" -> the run line."""
         repo = self._repo(task.repository)
         if home.startswith("gate:"):
             if self.composer is None:
                 raise RuntimeError("GATE_UNSUPPORTED: no composition port is wired")
-            return self.composer.candidate_commit(run, task, home.removeprefix("gate:"))
+            return self._caught_up(repo, run, task, self.composer.candidate_commit(run, task, home.removeprefix("gate:")),
+                                   lines)
         if home:
             tip = self._tip(repo, self.subplan_ref(run, task.repository, home))
             if tip:
                 return tip
         return self._run_line(run, task.repository)
+
+    def _caught_up(self, repo: Path, run: RunRef, task: TaskSpec, candidate: str, lines: tuple[str, ...]) -> str:
+        """The candidate with the newer work of each existing subplan line in `lines` merged in (objects only, the
+        composer's settling rules); a line that conflicts with it is left out, and its conflict reaches the task at
+        integration as before. The candidate is built from the members' registered versions, while the lines keep
+        moving: pictures REQ-021 r25 gate T95 started six attempts from the same candidate and met, at integration, work
+        T93 and SP-8 had put on the SP-7 and SP-8 lines since (D-173)."""
+        tip = candidate
+        for subplan_id in lines:
+            line = self._tip(repo, self.subplan_ref(run, task.repository, subplan_id))
+            if not line:
+                continue
+            new, conflict = self._merge(repo, tip, line, f"bt: {task.id} starts from {subplan_id}'s line")
+            if conflict:
+                LOG.info("%s: base left %s's line out (%s)", task.id, subplan_id, conflict[:200])
+                continue
+            tip = new or tip
+        return tip
 
     def _run_line(self, run: RunRef, role: str) -> str:
         """The run line's tip, created at the repository's HEAD (and its base pinned) the first time it is needed."""
