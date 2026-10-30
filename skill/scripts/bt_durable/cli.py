@@ -34,7 +34,7 @@ from bt_contracts.execution import Backend, OwnerRecord, Route, RunRef
 from bt_contracts.owner import OwnerAnswer
 
 from . import migrate
-from .settings import EngineConfig, Settings
+from .settings import EngineConfig, configured
 
 ENV_FILE = Path.home() / ".config" / "bitacora" / "durable.env"   # 0600; the engine unit reads the same file
 
@@ -173,7 +173,7 @@ def cmd_start(args) -> int:
     (rdir / "RUN.durable-run.json").write_text(run.model_dump_json(indent=1), encoding="utf-8")
     client = _client()
     try:
-        print(client.start(run, Settings()))
+        print(client.start(run, configured()))
     finally:
         client.close()
     return 0
@@ -204,7 +204,7 @@ def cmd_migrate(args) -> int:
     (rdir / "RUN.durable-run.json").write_text(run.model_dump_json(indent=1), encoding="utf-8")
     client = _client()
     try:
-        workflow = client.start(run, Settings(), migrate.legacy_progress(inv))
+        workflow = client.start(run, configured(), migrate.legacy_progress(inv))
     finally:
         client.close()
     print(json.dumps({"owner": record.model_dump(mode="json"), "backup": str(backup), "workflow": workflow,

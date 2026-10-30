@@ -25,6 +25,20 @@ class Settings(BaseModel):
     max_agent_memory_bytes: int = Field(default=16 << 30, ge=1 << 28)   # ceiling for the AGENT_OOM repair
 
 
+def configured(base: Settings | None = None) -> Settings:
+    """`base` (a run's recorded settings, or the defaults) with the operator's live knobs applied: `max_parallel` is
+    `scheduler.max_parallel_tasks`, the same knob the legacy runtime reads. Called when a run starts or a stage join
+    starts its next run (outside any workflow: the value becomes that run's input, so recovery replays it). Until
+    2026-10-30 durable runs always ran 2 tasks at once and every join copied that 2 forward, whatever the
+    configuration said (pictures REQ-021: average parallelism 1.2 over 46.7 h; D-239)."""
+    import bt_config
+    base = base or Settings()
+    value = bt_config.get("scheduler.max_parallel_tasks", base.max_parallel)
+    if isinstance(value, bool) or not isinstance(value, int):
+        return base
+    return base.model_copy(update={"max_parallel": min(16, max(1, value))})
+
+
 class EngineConfig(BaseModel):
     """Process-level DBOS configuration (not part of any workflow input)."""
     model_config = ConfigDict(extra="forbid", frozen=True)
