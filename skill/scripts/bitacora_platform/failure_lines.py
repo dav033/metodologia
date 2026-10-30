@@ -28,6 +28,7 @@ _STRONG_PATTERNS = (
     r"^\s*\[FAIL\]", r"\bCannot find (?:module|package|name)\b", r"\bNo module named\b", r"\bCan't resolve\b",
     r"\bFailed to resolve import\b", r"\bis not (?:defined|a function)\b", r"\bCannot read propert", r"\bpanicked at\b",
     r"^error(?:\[E\d+\])?:", r":\d+(?::\d+)?: error\b", r"^npm ERR!", r"^\s*(?:Expected|Received)\b[^\n]{0,20}:",
+    r"^\+ actual - expected$", r"\b[a-z][a-z0-9]*(?:_[a-z0-9]+)*_(?:failure|error)\b:",   # node assert diff; snake_case codes
 )
 _STRONG = re.compile("|".join(_STRONG_PATTERNS), re.MULTILINE)
 # Weak: worth a line when the budget allows, dropped first when it does not.
@@ -37,7 +38,12 @@ _PROPERTY = re.compile(r"^\s+[\w$]+: ")            # `  code: 'ERR_X',` of a dum
 # a JavaScript stack frame or a native one (`12: 0x19c77d1 [node]`): the first one says where, the rest are noise
 _FRAME = re.compile(r"^\s+at\s|^\s*\d+: 0x[0-9a-f]+\b")
 _LABEL = re.compile(r"^[A-Z][\w ]{0,24}:(?:\s|$)")     # `Call log:`, `Locator: ...`: the detail block of the error above
-_NOISE_LINE = re.compile(r"^\s*npm (?:notice|warn(?:ing)?)\b", re.IGNORECASE)
+# lines that never explain a failure: npm's notices, and uv's hardlink warning (with its two advice lines), which every
+# check of pictures REQ-021 printed and which became the «decisive line» of T10.45 a2/a3 while the real cause sat at
+# the end (D-236)
+_NOISE_LINE = re.compile(r"^\s*npm (?:notice|warn(?:ing)?)\b|^\s*warning: Failed to hardlink files|"
+                         r"^\s*If the cache and target directories are on different filesystems|"
+                         r"^\s*If this is intentional, set `export UV_LINK_MODE=copy`", re.IGNORECASE)
 _JSON_LEVEL = re.compile(r'"(?:nivel|level|lvl|severity|levelname)"\s*:\s*(?:"(?P<name>[A-Za-z]+)"|(?P<num>\d+))')
 _JSON_FAULT = re.compile(r'"(?:error|err|exception|stack)"\s*:\s*(?!null\b|false\b|""|\{\})')
 _LOUD = {"warn", "warning", "error", "err", "fatal", "critical", "crit", "panic", "alert", "emerg", "emergency"}
