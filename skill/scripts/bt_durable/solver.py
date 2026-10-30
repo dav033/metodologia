@@ -687,5 +687,6 @@ def read_result(folder: Path) -> dict | None:
     return data if isinstance(data, dict) and data.get("outcome") in OUTCOMES else None
 
 
-__all__ = ["Solver", "blocked_triggers", "enabled", "ended_triggers", "handed_blocks", "error_triggers", "load", "owner_stops", "read_result", "round_of",
-           "run_holds", "settings", "stalled_triggers", "stuck_triggers", "trigger"]
+__all__ = ["Solver", "blocked_triggers", "enabled", "ended_triggers", "error_triggers", "handed_blocks", "load",
+           "owner_stops", "read_result", "round_of", "run_holds", "settings", "stalled_triggers", "stuck_triggers",
+           "trigger"]

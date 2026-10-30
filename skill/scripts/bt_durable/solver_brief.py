@@ -80,10 +80,12 @@ def brief(run, rdir: Path, session: dict, items: list[dict], status: dict, *, te
         if item["kind"] == "blocked":
             results = (status.get("summary") or {}).get("results") or {}
             held = str(((results.get(item["task_id"]) or {}).get("audit")) or item["reason"])
-            lines += ["", f"The run holds {item['task_id']} blocked with no decision to answer (other tasks may still "
-                      f"run): {held}", "", "Known case (agents/solver.md): fix the origin of that reason, then "
-                      f"`uv run --project ~/dev/metodologia bt-durable retry-task {run.project} {run.req} "
-                      f"{item['task_id']} --note \"...\" --by solver` starts a new round (an audit gets one more round)."]
+            lines += ["", (f"The run holds {item['task_id']} blocked with no decision to answer (other tasks may "
+                           f"still run): {held}"), "",
+                      ("Known case (agents/solver.md): fix the origin of that reason, then "
+                       f"`uv run --project ~/dev/metodologia bt-durable retry-task {run.project} {run.req} "
+                       f"{item['task_id']} --note \"...\" --by solver` starts a new round (an audit gets one more "
+                       "round).")]
         history = rdir / "RUN.notes" / f"{item['task_id']}.history.jsonl"
         lines += ["", f"Attempt history: `{history}`" + ("" if history.is_file() else " (none yet)")]
     open_tasks = [f"- {t}: {(v or {}).get('workflow_status')} {json.dumps((v or {}).get('state'), default=str)[:160]}"
