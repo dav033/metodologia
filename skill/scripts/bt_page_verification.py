@@ -150,7 +150,7 @@ def tunnel_command(port: str) -> str:
     return f"ssh -N -L {port}:127.0.0.1:{port} {target}"
 
 
-DEFAULT_TUNNEL_TARGET = "-J root@185.147.157.25 -p 2222 david@127.0.0.1"
+DEFAULT_TUNNEL_TARGET = "laptop"            # the owner's SSH alias for this machine (2026-10-30)
 
 
 def opener_url(port: str, page: str) -> str:

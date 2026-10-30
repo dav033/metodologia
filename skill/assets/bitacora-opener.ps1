@@ -16,7 +16,7 @@ $Dir = Join-Path $env:LOCALAPPDATA "bitacora"
 $Script = Join-Path $Dir "bitacora-opener.ps1"
 $Config = Join-Path $Dir "opener.json"
 $Key = "HKCU:\Software\Classes\bitacora"
-$DefaultTarget = "-J root@185.147.157.25 -p 2222 david@127.0.0.1"
+$DefaultTarget = "laptop"
 
 function Show-Error([string]$Text) {
     Add-Type -AssemblyName PresentationFramework
