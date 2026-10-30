@@ -1,0 +1,39 @@
+<<<<<<< ours (src/app/3d/Taller3DConPermisoPersonal.tsx)
+import { Taller3D } from "@/components/tres-d/Taller3D";
+import { getAccountLanguage, getCurrentAccount } from "@/lib/cuentas/cuenta-actual";
+
+export async function Taller3DConPermisoPersonal() {
+  const [account, language] = await Promise.all([getCurrentAccount(), getAccountLanguage()]);
+  const canViewOtherAccounts = account?.roles.some((role) => role === "empleado_interno" || role === "administrador") ?? false;
+  return <Taller3D canViewOtherAccounts={canViewOtherAccounts} language={language} />;
+}
+||||||| base
+=======
+import { Taller3D } from "@/components/tres-d/Taller3D";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import { SESSION_COOKIE } from "@/lib/auth/session";
+import { getCurrentAccount } from "@/lib/cuentas/cuenta-actual";
+import { resolverSesion } from "@/lib/cuentas/sesion";
+import { getRequestLanguage } from "@/lib/idioma/servidor";
+import { puedeExplorarDecoraciones } from "@/lib/globos3d/permisos-galeria-decoraciones";
+
+export async function Taller3DConPermisoPersonal({ decoracionId = null }: { decoracionId?: string | null }) {
+  const [account, language, session] = await Promise.all([
+    getCurrentAccount(),
+    getRequestLanguage(),
+    (async () => {
+      const token = (await cookies()).get(SESSION_COOKIE)?.value;
+      return token && /^[A-Za-z0-9_-]{43}$/.test(token) ? resolverSesion(token) : null;
+    })(),
+  ]);
+  if (decoracionId && (!session || !puedeExplorarDecoraciones(session.permissions))) redirect("/sin-acceso?herramienta=decoraciones");
+  const canViewOtherAccounts = account?.roles.some((role) => role === "empleado_interno" || role === "administrador") ?? false;
+  let decoracion: { id: string; escena: import("@/lib/globos3d/escena").Escena | null } | null = null;
+  if (decoracionId) {
+    const { escenaDeDecoracion } = await import("@/lib/globos3d/galeria-decoraciones");
+    decoracion = { id: decoracionId, escena: escenaDeDecoracion(decoracionId) };
+  }
+  return <Taller3D canViewOtherAccounts={canViewOtherAccounts} language={language} decoracionEntrada={decoracion} />;
+}
+>>>>>>> theirs

@@ -1,0 +1,15 @@
+candidate-check/scripts/eval/eval-query-parser-v2.ts(12,25): error TS2307: Cannot find module '../../eval/fixtures/products_catalog.fixture.json' or its corresponding type declarations.
+candidate-check/scripts/test/test-happie-paquete-v1.ts(4,31): error TS2307: Cannot find module '../../packages/happie-package-ia/src/esquemas' or its corresponding type declarations.
+candidate-check/scripts/test/test-modo-local.ts(8,24): error TS2307: Cannot find module '../../next.config' or its corresponding type declarations.
+candidate-check/scripts/test/test-reference-analyze-route.ts(5,24): error TS2307: Cannot find module '../../next.config' or its corresponding type declarations.
+candidate-check/scripts/test/test-sesion-local-paginas.ts(8,24): error TS2307: Cannot find module '../../next.config' or its corresponding type declarations.
+candidate-check/src/lib/cuentas/cuenta-actual.ts(20,5): error TS2322: Type '{ id: string; email: string; displayName: string; roles: readonly string[] | readonly ["administrador"]; permissions: readonly string[] | readonly Permiso[]; dataNoticeVersion: string; dataNoticeAcceptedAt: null; }' is not assignable to type 'OwnAccountRecord & { permissions: readonly string[]; }'.
+  Property 'language' is missing in type '{ id: string; email: string; displayName: string; roles: readonly string[] | readonly ["administrador"]; permissions: readonly string[] | readonly Permiso[]; dataNoticeVersion: string; dataNoticeAcceptedAt: null; }' but required in type 'OwnAccountRecord'.
+candidate-check/src/lib/plan/referencia-sempertex.ts(2,24): error TS2307: Cannot find module '../../../contracts/domain/v1/sempertex/tabla-color.json' or its corresponding type declarations.
+candidate-check/src/lib/referencias-ejemplo/manifiesto.ts(2,29): error TS2307: Cannot find module '../../../public/referencias-ejemplo/manifiesto.json' or its corresponding type declarations.
+candidate-check/src/lib/textos-ingles/fuentes-administracion.ts(1,23): error TS2307: Cannot find module '../../../data/textos-ingles/productos.json' or its corresponding type declarations.
+candidate-check/src/lib/textos-ingles/fuentes-administracion.ts(2,23): error TS2307: Cannot find module '../../../data/textos-ingles/variantes.json' or its corresponding type declarations.
+candidate-check/src/lib/textos-ingles/fuentes-administracion.ts(3,19): error TS2307: Cannot find module '../../../data/textos-ingles/ideas.json' or its corresponding type declarations.
+candidate-check/src/lib/textos-ingles/fuentes-administracion.ts(16,32): error TS7006: Parameter 'row' implicitly has an 'any' type.
+candidate-check/src/lib/textos-ingles/fuentes-administracion.ts(17,32): error TS7006: Parameter 'row' implicitly has an 'any' type.
+candidate-check/src/lib/textos-ingles/fuentes-administracion.ts(18,25): error TS7006: Parameter 'row' implicitly has an 'any' type.

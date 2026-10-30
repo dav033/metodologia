@@ -1,0 +1,281 @@
+{
+  "schemaVersion": 1,
+  "check": "REQ-021 CG-2 composition",
+  "status": "blocked",
+  "tree": "self-test-fixture",
+  "blender": {
+    "version": null,
+    "executable": null
+  },
+  "perTypeResults": [
+    {
+      "type": "columna",
+      "status": "blocked",
+      "details": "Self-test does not execute the app or Blender."
+    },
+    {
+      "type": "arco",
+      "status": "blocked",
+      "details": "Self-test does not execute the app or Blender."
+    },
+    {
+      "type": "pared_malla",
+      "status": "blocked",
+      "details": "Self-test does not execute the app or Blender."
+    },
+    {
+      "type": "pared_trenzas",
+      "status": "blocked",
+      "details": "Self-test does not execute the app or Blender."
+    },
+    {
+      "type": "organico",
+      "status": "blocked",
+      "details": "Self-test does not execute the app or Blender."
+    },
+    {
+      "type": "decoracion",
+      "status": "blocked",
+      "details": "Self-test does not execute the app or Blender."
+    },
+    {
+      "type": "arco_organico",
+      "status": "blocked",
+      "details": "Self-test does not execute the app or Blender."
+    },
+    {
+      "type": "guirnalda",
+      "status": "blocked",
+      "details": "Self-test does not execute the app or Blender."
+    },
+    {
+      "type": "escenografia",
+      "status": "blocked",
+      "details": "Self-test does not execute the app or Blender."
+    },
+    {
+      "type": "globo",
+      "status": "blocked",
+      "details": "Self-test does not execute the app or Blender."
+    },
+    {
+      "type": "forma",
+      "status": "blocked",
+      "details": "Self-test does not execute the app or Blender."
+    },
+    {
+      "type": "letras",
+      "status": "blocked",
+      "details": "Self-test does not execute the app or Blender."
+    },
+    {
+      "type": "metalizado",
+      "status": "blocked",
+      "details": "Self-test does not execute the app or Blender."
+    },
+    {
+      "type": "mural",
+      "status": "blocked",
+      "details": "Self-test does not execute the app or Blender."
+    },
+    {
+      "type": "techo",
+      "status": "blocked",
+      "details": "Self-test does not execute the app or Blender."
+    },
+    {
+      "type": "arbol_globos",
+      "status": "blocked",
+      "details": "Self-test does not execute the app or Blender."
+    },
+    {
+      "type": "modulo",
+      "status": "blocked",
+      "details": "Self-test does not execute the app or Blender."
+    },
+    {
+      "type": "mesa-redonda",
+      "status": "blocked",
+      "details": "Self-test does not execute the app or Blender."
+    },
+    {
+      "type": "mesa-cuadrada",
+      "status": "blocked",
+      "details": "Self-test does not execute the app or Blender."
+    },
+    {
+      "type": "mesa-rectangular",
+      "status": "blocked",
+      "details": "Self-test does not execute the app or Blender."
+    },
+    {
+      "type": "mesa-ovalada",
+      "status": "blocked",
+      "details": "Self-test does not execute the app or Blender."
+    },
+    {
+      "type": "mesa-coctel",
+      "status": "blocked",
+      "details": "Self-test does not execute the app or Blender."
+    },
+    {
+      "type": "mesa-media_luna",
+      "status": "blocked",
+      "details": "Self-test does not execute the app or Blender."
+    },
+    {
+      "type": "mesa-serpentina",
+      "status": "blocked",
+      "details": "Self-test does not execute the app or Blender."
+    },
+    {
+      "type": "mesa-u",
+      "status": "blocked",
+      "details": "Self-test does not execute the app or Blender."
+    },
+    {
+      "type": "mesa-imperial",
+      "status": "blocked",
+      "details": "Self-test does not execute the app or Blender."
+    },
+    {
+      "type": "mesa-infantil",
+      "status": "blocked",
+      "details": "Self-test does not execute the app or Blender."
+    },
+    {
+      "type": "mesa-barra",
+      "status": "blocked",
+      "details": "Self-test does not execute the app or Blender."
+    },
+    {
+      "type": "silla-tiffany",
+      "status": "blocked",
+      "details": "Self-test does not execute the app or Blender."
+    },
+    {
+      "type": "silla-crossback",
+      "status": "blocked",
+      "details": "Self-test does not execute the app or Blender."
+    },
+    {
+      "type": "silla-ghost",
+      "status": "blocked",
+      "details": "Self-test does not execute the app or Blender."
+    },
+    {
+      "type": "silla-plegable",
+      "status": "blocked",
+      "details": "Self-test does not execute the app or Blender."
+    },
+    {
+      "type": "silla-moderna",
+      "status": "blocked",
+      "details": "Self-test does not execute the app or Blender."
+    },
+    {
+      "type": "silla-banca",
+      "status": "blocked",
+      "details": "Self-test does not execute the app or Blender."
+    },
+    {
+      "type": "silla-taburete",
+      "status": "blocked",
+      "details": "Self-test does not execute the app or Blender."
+    },
+    {
+      "type": "backing-panel_redondo",
+      "status": "blocked",
+      "details": "Self-test does not execute the app or Blender."
+    },
+    {
+      "type": "backing-media_luna",
+      "status": "blocked",
+      "details": "Self-test does not execute the app or Blender."
+    },
+    {
+      "type": "backing-arcos_chiara",
+      "status": "blocked",
+      "details": "Self-test does not execute the app or Blender."
+    },
+    {
+      "type": "backing-pedestales",
+      "status": "blocked",
+      "details": "Self-test does not execute the app or Blender."
+    },
+    {
+      "type": "backing-aro_metalico",
+      "status": "blocked",
+      "details": "Self-test does not execute the app or Blender."
+    },
+    {
+      "type": "backing-aro_hexagonal",
+      "status": "blocked",
+      "details": "Self-test does not execute the app or Blender."
+    },
+    {
+      "type": "backing-arco_metalico",
+      "status": "blocked",
+      "details": "Self-test does not execute the app or Blender."
+    },
+    {
+      "type": "backing-panel_arco_apuntado",
+      "status": "blocked",
+      "details": "Self-test does not execute the app or Blender."
+    },
+    {
+      "type": "backing-marco_hexagonal",
+      "status": "blocked",
+      "details": "Self-test does not execute the app or Blender."
+    },
+    {
+      "type": "backing-marco_ventana",
+      "status": "blocked",
+      "details": "Self-test does not execute the app or Blender."
+    },
+    {
+      "type": "backing-pared_shimmer",
+      "status": "blocked",
+      "details": "Self-test does not execute the app or Blender."
+    },
+    {
+      "type": "backing-pedestales_cilindricos",
+      "status": "blocked",
+      "details": "Self-test does not execute the app or Blender."
+    },
+    {
+      "type": "backing-panel_dos_niveles",
+      "status": "blocked",
+      "details": "Self-test does not execute the app or Blender."
+    },
+    {
+      "type": "forma-caja",
+      "status": "blocked",
+      "details": "Self-test does not execute the app or Blender."
+    },
+    {
+      "type": "forma-cilindro",
+      "status": "blocked",
+      "details": "Self-test does not execute the app or Blender."
+    },
+    {
+      "type": "forma-panel",
+      "status": "blocked",
+      "details": "Self-test does not execute the app or Blender."
+    },
+    {
+      "type": "forma-arco_apuntado",
+      "status": "blocked",
+      "details": "Self-test does not execute the app or Blender."
+    },
+    {
+      "type": "sala",
+      "status": "blocked",
+      "details": "Self-test does not execute the app or Blender."
+    }
+  ],
+  "knownDefects": [],
+  "blockedReasons": [
+    "Self-test mode deliberately does not start Next.js, Chromium, or Blender."
+  ]
+}

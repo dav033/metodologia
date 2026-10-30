@@ -1,0 +1,11 @@
+{
+  "outcome": "asked_owner",
+  "summary": "Reparación de SP-10 preparada; faltan reconfirmación y autorización para la observación real Gemini EN/ES. T10.5 sigue abierto.",
+  "handled": [
+    "pictures:REQ-021:r25:T10.5:T10.5:d1@k1"
+  ],
+  "decision": "",
+  "question": "¿Reconfirmas la reparación preparada de SP-10 y autorizas la prueba local de dos turnos de solo texto, uno en inglés y otro en español, con Gemini gemini-3.6-flash (puede generar cargos de API, sin imágenes ni reintentos automáticos)? Con ambas autorizaciones se podrá congelar/incorporar la revisión y ejecutar la prueba real; si no autorizas el gasto, necesitaré tu observación de ambos idiomas con proveedor, fecha y resultado para atestiguarla.",
+  "commits": [],
+  "rule": "D-078"
+}

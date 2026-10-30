@@ -1,0 +1,4 @@
+
+> demo-decoracion@0.1.0 idioma:test-cobertura
+> tsx scripts/idioma/cobertura.ts src/components/tres-d/MenuContextual.tsx src/components/tres-d/MuralesTechoArboles.tsx src/components/tres-d/SelectorRepositorio.tsx src/components/tres-d/UtileriaFiesta.tsx
+

@@ -1,0 +1,53 @@
+[
+  {
+    "width": 360,
+    "focusInside": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ],
+    "escape": {
+      "dialogOpen": true,
+      "focusReturned": false
+    }
+  },
+  {
+    "width": 768,
+    "focusInside": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ],
+    "escape": {
+      "dialogOpen": true,
+      "focusReturned": false
+    }
+  },
+  {
+    "width": 1280,
+    "focusInside": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ],
+    "escape": {
+      "dialogOpen": true,
+      "focusReturned": false
+    }
+  }
+]

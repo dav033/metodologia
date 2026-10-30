@@ -1,0 +1,4 @@
+
+> demo-decoracion@0.1.0 idioma:test-cobertura
+> tsx scripts/idioma/cobertura.ts src/components/tres-d/BuscarPorFoto.tsx src/components/tres-d/FiltrosTaxonomia.tsx src/components/tres-d/FormasYLetras.tsx src/components/tres-d/IdeasDelAsistente.tsx src/components/tres-d/DialogoTaller.tsx src/components/tres-d/HojaMovil.tsx
+

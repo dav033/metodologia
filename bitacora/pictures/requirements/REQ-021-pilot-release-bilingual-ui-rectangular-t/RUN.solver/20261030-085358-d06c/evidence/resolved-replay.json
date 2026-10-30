@@ -1,0 +1,31 @@
+{
+  "commits": {
+    "base": "7042b3ba371b48ba11ce556009d7b489c478b25e",
+    "ours": "7514afd0c0904f5e33ccccfb9746e9b322215e2c",
+    "theirs": "217e5e5053d0497c4867ff21dae3c33e3fd8170a"
+  },
+  "orientations": [
+    {
+      "left": "ours",
+      "right": "theirs",
+      "tree": "0f7d76ca15c92532aef0213e5f74980c81de63c8",
+      "conflicts": [],
+      "blobs": {
+        "src/app/admin/gasto/page.tsx": "5727c71fa02fff8bfdf1c8c5958840f74a0bf749",
+        "src/components/admin/GastoIa.tsx": "9856947de225967b82fb683e650c75bec615d674",
+        "src/lib/ia/nucleo/python-adapter.ts": "a10c17c6cb9d2f08ce6816f8a023c06a6c38fc2d"
+      }
+    },
+    {
+      "left": "theirs",
+      "right": "ours",
+      "tree": "0f7d76ca15c92532aef0213e5f74980c81de63c8",
+      "conflicts": [],
+      "blobs": {
+        "src/app/admin/gasto/page.tsx": "5727c71fa02fff8bfdf1c8c5958840f74a0bf749",
+        "src/components/admin/GastoIa.tsx": "9856947de225967b82fb683e650c75bec615d674",
+        "src/lib/ia/nucleo/python-adapter.ts": "a10c17c6cb9d2f08ce6816f8a023c06a6c38fc2d"
+      }
+    }
+  ]
+}

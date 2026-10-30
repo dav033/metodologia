@@ -1,0 +1,16 @@
+test_a_failed_verification_never_attempts_integration (test_durable_reintegrate.Reintegrate.test_a_failed_verification_never_attempts_integration) ... ok
+test_a_resolution_is_retried_on_each_verification_but_replay_reuses_its_result (test_durable_reintegrate.Reintegrate.test_a_resolution_is_retried_on_each_verification_but_replay_reuses_its_result) ... ok
+test_old_histories_keep_the_recorded_child_id (test_durable_reintegrate.Reintegrate.test_old_histories_keep_the_recorded_child_id) ... ok
+test_projection_uses_latest_integration_in_either_database_order (test_durable_reintegrate.Reintegrate.test_projection_uses_latest_integration_in_either_database_order) ... ok
+test_recorded_resolution_after_two_conflicts_survives_restart_without_another_agent (test_durable_reintegrate.ReintegrateEndToEnd.test_recorded_resolution_after_two_conflicts_survives_restart_without_another_agent) ... /home/david/.local/share/bitacora-solver/pictures/20261030-120814-28ad/wt/skill/scripts/tests/test_durable_e2e.py:41: ResourceWarning: unclosed file <_io.BufferedWriter name='/tmp/bt-durable-lab-8czlugb7/engine.log'>
+  self.engine = self.lab.spawn_engine()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/home/david/.local/share/bitacora-solver/pictures/20261030-120814-28ad/wt/skill/scripts/tests/test_durable_e2e.py:41: ResourceWarning: unclosed file <_io.BufferedWriter name='/tmp/bt-durable-lab-8czlugb7/engine.log'>
+  self.engine = self.lab.spawn_engine()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 23.323s
+
+OK

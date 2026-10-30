@@ -1,0 +1,26 @@
+{
+  "outcome": "fixed",
+  "summary": "Motor integrado y ocho conflictos resueltos; 18 solicitudes tardías quedan en cola.",
+  "handled": [
+    "pictures:REQ-021:r26:T10.45:T10.45:d1@k1",
+    "pictures:REQ-021:r27:resolution:28ce5f3ce2ffed34d3931537b375238d",
+    "pictures:REQ-021:r27:resolution:3782dc2de506bca88a314cb269b4d4cf",
+    "pictures:REQ-021:r27:resolution:408be1e42340abed0caf33cf67f92f90",
+    "pictures:REQ-021:r27:resolution:7b573948067deb96eb32f5090f0a5ede",
+    "pictures:REQ-021:r27:T2.55:T2.55:d1@k1",
+    "pictures:REQ-021:r27:resolution:2c510cd9ea8fff4f4b2c17c43817b574",
+    "pictures:REQ-021:r27:resolution:a1ae427c4b7190229c90c2c26ad89adf",
+    "pictures:REQ-021:r27:resolution:da8e22c1661eee03419204fe5ee2978f",
+    "pictures:REQ-021:r27:resolution:e2664fad7b125a80de13dc152c0d6a91"
+  ],
+  "decision": "T2.55:d1@k1",
+  "question": "",
+  "commits": [
+    "5c7d4b3e3a3c427d1c729d32e6f1a26574c03979",
+    "3961266ef12d8272541edf7264d8cb0e02af9108",
+    "b6411acc57a731f6cb2de058de84930c4ac09d83",
+    "5a52e556dc5f260f5a06b9b48ecae5199284c1d0",
+    "fff622890f28b8093a9a0afda9c4077d056bea1b"
+  ],
+  "rule": "D-203; D-208; pictures D-080"
+}

@@ -1,0 +1,7 @@
+Previous engine ce5c591edca2013924dfb6f05194d5b5538ab673
+test_recorded_resolution_after_two_conflicts_survives_restart_without_another_agent (__main__.LegacyUpgrade.test_recorded_resolution_after_two_conflicts_survives_restart_without_another_agent) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 19.770s
+
+OK

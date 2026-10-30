@@ -1,0 +1,54 @@
+{
+  "schema": "pictures-req021-integration@1",
+  "task": "REQ-021/SP-8/T8.7",
+  "runtime": {
+    "build": "next build",
+    "server": "next start",
+    "browser": "two Chromium processes",
+    "browserLocale": "en-US"
+  },
+  "database": {
+    "source": "PICTURES_REQ021_DATABASE_URL"
+  },
+  "assertions": {
+    "firstVisitSignIn": {
+      "title": "Sign in",
+      "fields": [
+        "Email address",
+        "Password"
+      ],
+      "acceptLanguage": "en-US",
+      "noSavedCookie": true
+    },
+    "navigation": {
+      "section": "Your account tools",
+      "workshop": "3D workshop",
+      "locale": "en"
+    },
+    "englishWorkshop": {
+      "title": "3D Workshop",
+      "menuItems": [
+        "Rename",
+        "Start from a template…",
+        "Save scene to my library…",
+        "Help and keyboard shortcuts",
+        "Back to assistant"
+      ],
+      "scannedRenderedStrings": 96,
+      "spanishStrings": [],
+      "controlsFit": true,
+      "responsiveWidths": [
+        390,
+        768,
+        1280
+      ]
+    },
+    "accountPreference": {
+      "changedTo": "es",
+      "secondBrowser": true,
+      "acceptLanguage": "en-US",
+      "secondBrowserLanguageCookie": false,
+      "navigationAndWorkshop": "es"
+    }
+  }
+}

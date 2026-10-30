@@ -1,0 +1,13 @@
+
+> demo-decoracion@0.1.0 textos:test-scripts
+> tsx --test scripts/textos/test-textos-scripts.ts --test-name-pattern=sembrar
+
+✔ sembrar inserta traducciones una vez y conserva filas corregidas por administración (86.199028ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 553.191681

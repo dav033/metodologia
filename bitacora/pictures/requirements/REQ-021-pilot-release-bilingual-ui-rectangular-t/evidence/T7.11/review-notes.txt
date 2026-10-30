@@ -1,0 +1,32 @@
+T7.11 independent source review
+Repository target: 0ba7c6b429c959746f27176176a8ac9dd8aeaafe
+Scope: SP-7 tasks T7.2-T7.9, R13 and R16; static source and contract review.
+
+Confirmed price-gate bypass:
+- src/lib/ia/contracts/asistente-guiado-v1.ts:71-93 accepts client-controlled estadoGuiado.accionIdea="costear" with a decoration and no plan.
+- src/app/api/asistente-guiado/route.ts:139-145 requires chat permission and computes puedeCostear.
+- src/app/api/asistente-guiado/route.ts:229-240 handles accionIdea and calls responderAccionIdea/costearIdeaElegida before model tool filtering or final response sanitization, without checking puedeCostear.
+- src/lib/ia/guiado/accion-idea.ts:27-32 formats a COP amount in the reply.
+- The ordinary model path does filter costing tools at route.ts:525 and sanitizes the final text at route.ts:598; this does not cover the earlier return.
+
+Confirmed final response filter gap:
+- src/lib/ia/guiado/politica-precios-guiado.ts:17-27 only detects a fixed list of tokens and currency marker.
+- The literal text “Te costará 120000” does not contain any matched token or currency marker; it passes unchanged despite describing a monetary amount.
+- Non-costing model deltas are suppressed at route.ts:585-588, but this filter is the final answer boundary at route.ts:598-600.
+
+Confirmed spend-tag mismatch:
+- src/app/api/asistente-guiado/route.ts:256 calls chatOmoikaneDe(..., "chat_guiado").
+- src/lib/ia/nucleo/registro.ts:92-99 passes purpose to envolverChatPort.
+- src/lib/registro/envoltorios.ts:413-435 retains that purpose in the call description.
+- src/lib/gasto-ia/captura.ts:88-95 writes description.proposito into ai_usage.tool. Therefore guided chat rows have tool="chat_guiado", not the T7.2 required tag "chat".
+
+Negative-case checks from source:
+- Tool API routing is catalogued in src/lib/herramientas/catalogo-herramientas.ts; costing APIs require calculadora_costos and /api/contador requires contador_globos. /api/cotizacion-profesional repeats that guard in route.ts:54-58.
+- The spend header x-herramienta is set only in browser code (src/lib/registro/cliente.ts:137-156); server authorization does not read it. The access test also checks an Entusiasta denial despite the forged header at scripts/test/test-herramientas-gating.ts:56-75.
+- Form counts call llamarPythonEstimarConteo (src/lib/contador/contar.ts:77-99); phrase mode validates extracted data and feeds the same function (116-119, 193-199); photo mode calls llamarPythonConteoReferencia and labels the result an estimate (102-113, 166-174).
+- Gallery entry requires decoraciones.explorar. Unknown IDs do not alter the scene; valid entry uses requestDestination (src/components/tres-d/galeria/useDecoracionEntrada.tsx:22-37), which saves existing projects or opens the first-save dialog before replacing a scene (src/components/proyectos/useTallerProyectos.tsx:80-102).
+
+Prior evidence inspected, not re-executed in this audit:
+- .evidence/REQ-021/SP-7.checkpoint.json (T7.4)
+- .evidence/REQ-021/SP-7.integration.json (T7.9)
+- .evidence/REQ-021/SP-7.visual.md says T7.10 did not assess rendered UI; no visual pass is inferred here.

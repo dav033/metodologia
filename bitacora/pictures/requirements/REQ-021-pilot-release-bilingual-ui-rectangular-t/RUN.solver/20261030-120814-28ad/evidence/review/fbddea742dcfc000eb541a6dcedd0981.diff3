@@ -1,0 +1,42 @@
+import "server-only";
+
+<<<<<<< ours (src/lib/cuentas/cuenta-actual.ts)
+import { cookies } from "next/headers";
+import { SESSION_COOKIE } from "@/lib/auth/session";
+||||||| base
+import { cookies, headers } from "next/headers";
+import { SESSION_COOKIE } from "@/lib/auth/session";
+=======
+import { headers } from "next/headers";
+>>>>>>> theirs
+import { createAccountPool } from "./pool";
+import { createAccountService, type OwnAccountRecord } from "./servicio";
+import { resolveServerSession } from "./sesion-servidor";
+import { CUENTA_ADMINISTRADOR_LOCAL_ID } from "./modo-local";
+import { VERSION_AVISO_DATOS } from "./aviso-datos";
+
+let accounts: ReturnType<typeof createAccountService> | undefined;
+
+function accountService() {
+  accounts ??= createAccountService(createAccountPool(), process.env.DATA_NOTICE_VERSION ?? "v1");
+  return accounts;
+}
+
+export async function getCurrentAccount(): Promise<(OwnAccountRecord & { permissions: readonly string[] }) | null> {
+  const session = await resolveServerSession();
+  if (!session) return null;
+  if (session.accountId === CUENTA_ADMINISTRADOR_LOCAL_ID) {
+    return {
+      id: session.accountId,
+      email: session.email,
+      displayName: "Administrador local",
+      roles: session.roles,
+      permissions: session.permissions,
+      dataNoticeVersion: VERSION_AVISO_DATOS,
+      dataNoticeAcceptedAt: null,
+    };
+  }
+
+  const account = await accountService().getOwnAccount(session.accountId);
+  return account ? { ...account, permissions: session.permissions } : null;
+}

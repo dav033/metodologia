@@ -1,0 +1,14 @@
+
+> demo-decoracion@0.1.0 textos:test
+> node scripts/test/run-textos-ingles.mjs --test-name-pattern=almacen
+
+✔ almacen: la migración crea registros con identidad compuesta y origen restringido (90.807209ms)
+✔ almacen: consulta en inglés devuelve traducción vigente y fallback español cuando falta o quedó obsoleta (15.395259ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 578.908593

@@ -1,0 +1,10 @@
+{
+ "request": "pictures:REQ-021:r27:T2.55:T2.55:d1@k1",
+ "state": "failed",
+ "error": "la respuesta no trae JSON",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-30T12:01:11",
+ "seconds": 56.3
+}

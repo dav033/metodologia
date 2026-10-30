@@ -1,0 +1,68 @@
+{
+  "snapshot": "b9b6b6157255e4853742a4f7e79bcc838afd3ad2",
+  "original_command_records": [
+    {
+      "command": "/usr/bin/bash -lc 'npm run idioma:test-integracion-resto'",
+      "exit_code": 0,
+      "aggregated_output": "\n> demo-decoracion@0.1.0 idioma:test-integracion-resto\n> tsx --conditions=react-server scripts/test/test-integracion-idioma-resto.ts\n\nProduction English remainder integration passed: English and Spanish screens, SP-9 names, staff exclusions, Python fixture service, response-language and Spanish catalogue contracts.\n"
+    }
+  ],
+  "integration_status": "partial",
+  "manual": {
+    "status": "not_run",
+    "provider": "not observed",
+    "englishReply": "not observed",
+    "spanishReply": "not observed",
+    "reason": "This headless run exercised only the deterministic google.genai fixture; no owner/operator observation with the configured live provider was available.",
+    "deterministicCommandCallsPaidProvider": false
+  },
+  "coverageLimitations": {
+    "notExercised": [
+      "guided chat browser flow",
+      "gallery",
+      "saved projects",
+      "personal library",
+      "manual configured-provider English and Spanish conversations"
+    ],
+    "detail": "The existing harness visited login, home, counter, catalogue, calculator and account routes; it checked Spanish catalogue/error behavior and static staff exclusions, and opened the statistics route. It did not navigate the listed routes, so the command passing does not establish those acceptance criteria."
+  },
+  "source_references": [
+    {
+      "line": 204,
+      "text": "await englishPage.goto(`${appOrigin}/login?error=1`);"
+    },
+    {
+      "line": 208,
+      "text": "await login(englishPage, appOrigin, master, \"en\");"
+    },
+    {
+      "line": 209,
+      "text": "await englishPage.goto(appOrigin);"
+    },
+    {
+      "line": 213,
+      "text": "await englishPage.goto(`${appOrigin}/contador`);"
+    },
+    {
+      "line": 216,
+      "text": "await englishPage.goto(`${appOrigin}/catalogo`);"
+    },
+    {
+      "line": 222,
+      "text": "await login(englishPage, appOrigin, designerPlus, \"en\");"
+    },
+    {
+      "line": 223,
+      "text": "await englishPage.goto(`${appOrigin}/calculadora`);"
+    },
+    {
+      "line": 226,
+      "text": "await englishPage.goto(`${appOrigin}/cuenta`);"
+    },
+    {
+      "line": 265,
+      "text": "assertSpanishCatalogueQuery(\"globo l\u00e1tex rosado perlado\");"
+    }
+  ],
+  "t10_5_attestation_exists": false
+}

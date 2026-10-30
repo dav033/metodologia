@@ -1,0 +1,5 @@
+
+> demo-decoracion@0.1.0 idioma:test-integracion
+> tsx --conditions=react-server scripts/test/test-integracion-idioma.ts
+
+Production language browser integration passed: English first visit, English navigation and Taller, Spanish account preference in a second browser, no Spanish Taller strings, and controls fitting at 390/768/1280 px.

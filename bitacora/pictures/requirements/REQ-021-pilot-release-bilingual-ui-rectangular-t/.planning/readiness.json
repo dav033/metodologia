@@ -1,60 +1,6 @@
 {
- "digest": "a490c596e09d712aa985f1657c85ed14d6dc0a0778185e67953a168fe1c718a1",
+ "digest": "058e19aa2f5b096b327430a6f021a614b6030692c4912848fd997c71ad674eef",
  "rows": [
-  {
-   "subplan": "SP-7",
-   "tasks": 11,
-   "ok": true,
-   "problem": "",
-   "depends_on_unfinished": "",
-   "errors": [],
-   "new_errors": []
-  },
-  {
-   "subplan": "SP-8",
-   "tasks": 8,
-   "ok": true,
-   "problem": "",
-   "depends_on_unfinished": "",
-   "errors": [],
-   "new_errors": []
-  },
-  {
-   "subplan": "SP-9",
-   "tasks": 6,
-   "ok": true,
-   "problem": "",
-   "depends_on_unfinished": "",
-   "errors": [],
-   "new_errors": []
-  },
-  {
-   "subplan": "SP-10",
-   "tasks": 6,
-   "ok": true,
-   "problem": "",
-   "depends_on_unfinished": "",
-   "errors": [],
-   "new_errors": []
-  },
-  {
-   "subplan": "SP-11",
-   "tasks": 4,
-   "ok": true,
-   "problem": "",
-   "depends_on_unfinished": "",
-   "errors": [],
-   "new_errors": []
-  },
-  {
-   "subplan": "SP-12",
-   "tasks": 6,
-   "ok": true,
-   "problem": "",
-   "depends_on_unfinished": "",
-   "errors": [],
-   "new_errors": []
-  },
   {
    "subplan": "SP-13",
    "tasks": 8,

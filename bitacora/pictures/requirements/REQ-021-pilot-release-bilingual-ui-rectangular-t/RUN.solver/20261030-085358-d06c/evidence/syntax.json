@@ -1,0 +1,14 @@
+[
+  {
+    "path": "src/app/admin/gasto/page.tsx",
+    "syntaxDiagnostics": []
+  },
+  {
+    "path": "src/components/admin/GastoIa.tsx",
+    "syntaxDiagnostics": []
+  },
+  {
+    "path": "src/lib/ia/nucleo/python-adapter.ts",
+    "syntaxDiagnostics": []
+  }
+]

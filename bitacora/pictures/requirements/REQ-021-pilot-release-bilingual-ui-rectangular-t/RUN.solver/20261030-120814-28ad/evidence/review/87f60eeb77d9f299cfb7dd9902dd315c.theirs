@@ -1,0 +1,281 @@
+{
+  "schemaVersion": 1,
+  "check": "REQ-021 CG-2 composition",
+  "status": "blocked",
+  "tree": "08b193b04e6c2e20a4e438da942c53a1b989676a",
+  "blender": {
+    "version": "Blender 4.5.15 LTS",
+    "executable": "/home/david/.local/opt/blender/current/blender"
+  },
+  "perTypeResults": [
+    {
+      "type": "columna",
+      "status": "blocked",
+      "details": "Not reached."
+    },
+    {
+      "type": "arco",
+      "status": "blocked",
+      "details": "Not reached."
+    },
+    {
+      "type": "pared_malla",
+      "status": "blocked",
+      "details": "Not reached."
+    },
+    {
+      "type": "pared_trenzas",
+      "status": "blocked",
+      "details": "Not reached."
+    },
+    {
+      "type": "organico",
+      "status": "blocked",
+      "details": "Not reached."
+    },
+    {
+      "type": "decoracion",
+      "status": "blocked",
+      "details": "Not reached."
+    },
+    {
+      "type": "arco_organico",
+      "status": "blocked",
+      "details": "Not reached."
+    },
+    {
+      "type": "guirnalda",
+      "status": "blocked",
+      "details": "Not reached."
+    },
+    {
+      "type": "escenografia",
+      "status": "blocked",
+      "details": "Not reached."
+    },
+    {
+      "type": "globo",
+      "status": "blocked",
+      "details": "Not reached."
+    },
+    {
+      "type": "forma",
+      "status": "blocked",
+      "details": "Not reached."
+    },
+    {
+      "type": "letras",
+      "status": "blocked",
+      "details": "Not reached."
+    },
+    {
+      "type": "metalizado",
+      "status": "blocked",
+      "details": "Not reached."
+    },
+    {
+      "type": "mural",
+      "status": "blocked",
+      "details": "Not reached."
+    },
+    {
+      "type": "techo",
+      "status": "blocked",
+      "details": "Not reached."
+    },
+    {
+      "type": "arbol_globos",
+      "status": "blocked",
+      "details": "Not reached."
+    },
+    {
+      "type": "modulo",
+      "status": "blocked",
+      "details": "Not reached."
+    },
+    {
+      "type": "mesa-redonda",
+      "status": "blocked",
+      "details": "Not reached."
+    },
+    {
+      "type": "mesa-cuadrada",
+      "status": "blocked",
+      "details": "Not reached."
+    },
+    {
+      "type": "mesa-rectangular",
+      "status": "blocked",
+      "details": "Not reached."
+    },
+    {
+      "type": "mesa-ovalada",
+      "status": "blocked",
+      "details": "Not reached."
+    },
+    {
+      "type": "mesa-coctel",
+      "status": "blocked",
+      "details": "Not reached."
+    },
+    {
+      "type": "mesa-media_luna",
+      "status": "blocked",
+      "details": "Not reached."
+    },
+    {
+      "type": "mesa-serpentina",
+      "status": "blocked",
+      "details": "Not reached."
+    },
+    {
+      "type": "mesa-u",
+      "status": "blocked",
+      "details": "Not reached."
+    },
+    {
+      "type": "mesa-imperial",
+      "status": "blocked",
+      "details": "Not reached."
+    },
+    {
+      "type": "mesa-infantil",
+      "status": "blocked",
+      "details": "Not reached."
+    },
+    {
+      "type": "mesa-barra",
+      "status": "blocked",
+      "details": "Not reached."
+    },
+    {
+      "type": "silla-tiffany",
+      "status": "blocked",
+      "details": "Not reached."
+    },
+    {
+      "type": "silla-crossback",
+      "status": "blocked",
+      "details": "Not reached."
+    },
+    {
+      "type": "silla-ghost",
+      "status": "blocked",
+      "details": "Not reached."
+    },
+    {
+      "type": "silla-plegable",
+      "status": "blocked",
+      "details": "Not reached."
+    },
+    {
+      "type": "silla-moderna",
+      "status": "blocked",
+      "details": "Not reached."
+    },
+    {
+      "type": "silla-banca",
+      "status": "blocked",
+      "details": "Not reached."
+    },
+    {
+      "type": "silla-taburete",
+      "status": "blocked",
+      "details": "Not reached."
+    },
+    {
+      "type": "backing-panel_redondo",
+      "status": "blocked",
+      "details": "Not reached."
+    },
+    {
+      "type": "backing-media_luna",
+      "status": "blocked",
+      "details": "Not reached."
+    },
+    {
+      "type": "backing-arcos_chiara",
+      "status": "blocked",
+      "details": "Not reached."
+    },
+    {
+      "type": "backing-pedestales",
+      "status": "blocked",
+      "details": "Not reached."
+    },
+    {
+      "type": "backing-aro_metalico",
+      "status": "blocked",
+      "details": "Not reached."
+    },
+    {
+      "type": "backing-aro_hexagonal",
+      "status": "blocked",
+      "details": "Not reached."
+    },
+    {
+      "type": "backing-arco_metalico",
+      "status": "blocked",
+      "details": "Not reached."
+    },
+    {
+      "type": "backing-panel_arco_apuntado",
+      "status": "blocked",
+      "details": "Not reached."
+    },
+    {
+      "type": "backing-marco_hexagonal",
+      "status": "blocked",
+      "details": "Not reached."
+    },
+    {
+      "type": "backing-marco_ventana",
+      "status": "blocked",
+      "details": "Not reached."
+    },
+    {
+      "type": "backing-pared_shimmer",
+      "status": "blocked",
+      "details": "Not reached."
+    },
+    {
+      "type": "backing-pedestales_cilindricos",
+      "status": "blocked",
+      "details": "Not reached."
+    },
+    {
+      "type": "backing-panel_dos_niveles",
+      "status": "blocked",
+      "details": "Not reached."
+    },
+    {
+      "type": "forma-caja",
+      "status": "blocked",
+      "details": "Not reached."
+    },
+    {
+      "type": "forma-cilindro",
+      "status": "blocked",
+      "details": "Not reached."
+    },
+    {
+      "type": "forma-panel",
+      "status": "blocked",
+      "details": "Not reached."
+    },
+    {
+      "type": "forma-arco_apuntado",
+      "status": "blocked",
+      "details": "Not reached."
+    },
+    {
+      "type": "sala",
+      "status": "blocked",
+      "details": "Not reached."
+    }
+  ],
+  "knownDefects": [],
+  "blockedReasons": [
+    "The real CG-2 run reached `next build`, which failed type checking: scripts/test/test-harness-taller-esenciales.ts(12,43): `{}` is missing required `NODE_ENV` for ProcessEnv; scripts/test/test-harness-taller-esenciales.ts(14,51): `{ BLENDER_EXECUTABLE: string }` is missing required `NODE_ENV` for ProcessEnv. No Taller browser or GLB assertions ran."
+  ]
+}

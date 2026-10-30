@@ -1,5 +1,5 @@
 {
- "focus": "SP-9",
+ "focus": "",
  "outline": {
   "at": "2026-10-26T14:13:28-05:00",
   "by": "owner",
@@ -29,6 +29,30 @@
    "repinned": "2026-10-28T07:36:04-05:00 auto remediation of T1.8",
    "via": "web"
   },
+  "SP-10": {
+   "at": "2026-10-30T17:10:52-05:00",
+   "by": "owner",
+   "digest": "2c116d2e8e335bf5",
+   "via": "conversation"
+  },
+  "SP-11": {
+   "at": "2026-10-30T17:10:53-05:00",
+   "by": "owner",
+   "digest": "f1e1c3364d8278a6",
+   "via": "conversation"
+  },
+  "SP-12": {
+   "at": "2026-10-30T17:10:54-05:00",
+   "by": "owner",
+   "digest": "dfe898fd8469430f",
+   "via": "conversation"
+  },
+  "SP-13": {
+   "at": "2026-10-29T16:29:18-05:00",
+   "by": "owner",
+   "digest": "ace195b684a74447",
+   "via": "web"
+  },
   "SP-14": {
    "at": "2026-10-27T18:48:24-05:00",
    "by": "owner",
@@ -37,11 +61,10 @@
    "via": "web"
   },
   "SP-2": {
-   "at": "2026-10-27T15:50:51-05:00",
+   "at": "2026-10-30T11:18:30-05:00",
    "by": "owner",
-   "digest": "d9f721b08c1a6dbf",
-   "repinned": "2026-10-28T08:39:19-05:00 auto: SP-2 builds on the audited SP-1 (T2.2 after T1.8b), plan r12",
-   "via": "web"
+   "digest": "26695d8cc43bff08",
+   "via": "conversation"
   },
   "SP-3": {
    "at": "2026-10-29T10:23:04-05:00",
@@ -56,10 +79,10 @@
    "via": "web"
   },
   "SP-5": {
-   "at": "2026-10-29T12:05:03-05:00",
+   "at": "2026-10-30T08:00:29-05:00",
    "by": "owner",
-   "digest": "fb4e22084a7fc1cd",
-   "via": "web"
+   "digest": "a31f3f6491672a4f",
+   "via": "conversation"
   },
   "SP-6": {
    "at": "2026-10-29T12:06:19-05:00",
@@ -68,11 +91,23 @@
    "repinned": "2026-10-29T12:08:55-05:00 mechanical check mapping: one check per criterion, same command (owner's Ejecutar SP-6 refused PLAN_CHECKS_UNMAPPED)",
    "via": "web"
   },
-  "SP-8": {
-   "at": "2026-10-29T12:12:55-05:00",
+  "SP-7": {
+   "at": "2026-10-29T16:55:43-05:00",
    "by": "owner",
-   "digest": "9e7468f33b86ec25",
-   "via": "web"
+   "digest": "65cb5efa3585bb43",
+   "via": "conversation"
+  },
+  "SP-8": {
+   "at": "2026-10-29T16:55:44-05:00",
+   "by": "owner",
+   "digest": "65b8d2c4b211a5c4",
+   "via": "conversation"
+  },
+  "SP-9": {
+   "at": "2026-10-29T16:55:44-05:00",
+   "by": "owner",
+   "digest": "6c59831628f7351b",
+   "via": "conversation"
   }
  }
 }

@@ -1,0 +1,22 @@
+{
+ "request": "pictures:REQ-021:r25:T95:T95:d3@k1",
+ "state": "done",
+ "kind": "conflict",
+ "label": "Conflicto entre tareas",
+ "tone": "warn",
+ "headline": "Conflicto de integración con SP-8 en src/lib/cuentas/dependientes.ts; T95 no se integra",
+ "origin": "T95 (CG-5, npm run decoraciones:test-integracion) no llega a integrarse: el paso de integración devuelve INTEGRATION_CONFLICT contra el trabajo aceptado de SP-8 en src/lib/cuentas/dependientes.ts (decisión T95:d3, límite max_same_signature). La causa probable es que T95 modifica ese archivo, que pertenece a SP-8, para hacer pasar la prueba; la evidencia no muestra qué cambió T95 en él. Los intentos previos fallaron por otras causas: a1 y a4 dieron page.waitForFunction timeout de 20000ms en waitForNodeCount (scripts/test/test-integracion-decoraciones-personales.ts:153 y :152), y a2 dio 128 !== 0 en el paso de identidad de commit del candidato integrado.",
+ "steps": [
+  "Revisar en el candidato integrado el diff de T95 sobre src/lib/cuentas/dependientes.ts frente a la versión aceptada de SP-8 (la evidencia no lo incluye).",
+  "Reintentar T95 con retry_with_note, con la nota de la clave note: no tocar archivos de SP-8, rebasar sobre el candidato integrado actual y conservar la versión aceptada de dependientes.ts.",
+  "Si vuelve el timeout de waitForNodeCount con el conflicto resuelto, comprobar que los nodos esperados se renderizan antes de cambiar código compartido, y no alterar la comprobación sin una nueva revisión del plan."
+ ],
+ "option": "retry_with_note",
+ "note": "Do not modify src/lib/cuentas/dependientes.ts or any other file owned by SP-8: keep the version already accepted and rebase your work onto the current integrated candidate. Limit your changes to what CG-5 needs. Before running npm run decoraciones:test-integracion, confirm that the nodes waited for in waitForNodeCount (scripts/test/test-integracion-decoraciones-personales.ts:152-153) actually render; earlier attempts timed out at 20000ms.",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-29T19:50:04",
+ "seconds": 27.6
+}

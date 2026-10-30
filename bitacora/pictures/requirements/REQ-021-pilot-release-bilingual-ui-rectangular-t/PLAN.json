@@ -43,7 +43,8 @@
     },
     {
       "criteria": [
-        "The integrated candidate passes account-scoped project save/reopen with every table type and every Backing prop, staff read/copy, conflict rejection and account deletion refusal."
+        "The integrated candidate passes account-scoped project save/reopen with every table type and every Backing prop, staff read/copy, conflict rejection and account deletion refusal.",
+        "On this exact integrated candidate, npm run rag:migrate:check succeeds against an isolated local database and rejects duplicate migration numbers; failure prevents composition acceptance and publication of a Probar version."
       ],
       "id": "CG-3",
       "subplans": [
@@ -57,7 +58,8 @@
     },
     {
       "criteria": [
-        "The integrated candidate passes account-owned saved-decoration persistence across browsers, placement into a project, staff read-only access and owner-only mutation and cross-account denial."
+        "The integrated candidate passes account-owned saved-decoration persistence across browsers, placement into a project, staff read-only access and owner-only mutation and cross-account denial.",
+        "On this exact integrated candidate, npm run rag:migrate:check succeeds against an isolated local database and rejects duplicate migration numbers; failure prevents composition acceptance and publication of a Probar version."
       ],
       "id": "CG-5",
       "subplans": [
@@ -72,7 +74,8 @@
     },
     {
       "criteria": [
-        "The integrated candidate records account/session-attributed usage for representative text and image calls from Next and ai-api; project calls roll up under the project with conversation detail, known billable provider-error usage is partial/error, staff see totals, and Usuario is denied."
+        "The integrated candidate records account/session-attributed usage for representative text and image calls from Next and ai-api; project calls roll up under the project with conversation detail, known billable provider-error usage is partial/error, staff see totals, and Usuario is denied.",
+        "On this exact integrated candidate, npm run rag:migrate:check succeeds against an isolated local database and rejects duplicate migration numbers; failure prevents composition acceptance and publication of a Probar version."
       ],
       "id": "CG-6",
       "subplans": [
@@ -88,7 +91,8 @@
     },
     {
       "criteria": [
-        "On the integrated candidate with SP-7, an Entusiasta counts a decoration without prices and is refused the calculator, a Master Designer opens a gallery decoration as a new project and saves it as a project, and each tool's paid calls appear under its own tag in the staff spend view."
+        "On the integrated candidate with SP-7, an Entusiasta counts a decoration without prices and is refused the calculator, a Master Designer opens a gallery decoration as a new project and saves it as a project, and each tool's paid calls appear under its own tag in the staff spend view.",
+        "On this exact integrated candidate, npm run rag:migrate:check succeeds against an isolated local database and rejects duplicate migration numbers; failure prevents composition acceptance and publication of a Probar version."
       ],
       "id": "CG-7",
       "subplans": [
@@ -105,7 +109,8 @@
     },
     {
       "criteria": [
-        "On the integrated candidate with SP-8, an English first visit signs in, opens a saved project and a gallery decoration in the English Taller, counts with the counter, and switching to Spanish is kept on the account in another browser."
+        "On the integrated candidate with SP-8, an English first visit signs in, opens a saved project and a gallery decoration in the English Taller, counts with the counter, and switching to Spanish is kept on the account in another browser.",
+        "On this exact integrated candidate, npm run rag:migrate:check succeeds against an isolated local database and rejects duplicate migration numbers; failure prevents composition acceptance and publication of a Probar version."
       ],
       "id": "CG-8",
       "subplans": [
@@ -123,7 +128,8 @@
     },
     {
       "criteria": [
-        "On the integrated candidate with SP-9, an English session sees English product names in the counter's shopping list, the calculator and the Taller library, and a saved project reopens with English names."
+        "On the integrated candidate with SP-9, an English session sees English product names in the counter's shopping list, the calculator and the Taller library, and a saved project reopens with English names.",
+        "On this exact integrated candidate, npm run rag:migrate:check succeeds against an isolated local database and rejects duplicate migration numbers; failure prevents composition acceptance and publication of a Probar version."
       ],
       "id": "CG-9",
       "subplans": [
@@ -142,7 +148,8 @@
     },
     {
       "criteria": [
-        "On the integrated candidate with SP-10, an English Master Designer goes from sign-in through the home, chat, counter, calculator, gallery, a saved project and the Taller entirely in English, and a Spanish account sees today's Spanish."
+        "On the integrated candidate with SP-10, an English Master Designer goes from sign-in through the home, chat, counter, calculator, gallery, a saved project and the Taller entirely in English, and a Spanish account sees today's Spanish.",
+        "On this exact integrated candidate, npm run rag:migrate:check succeeds against an isolated local database and rejects duplicate migration numbers; failure prevents composition acceptance and publication of a Probar version."
       ],
       "id": "CG-10",
       "subplans": [
@@ -162,7 +169,8 @@
     },
     {
       "criteria": [
-        "On the integrated candidate with SP-11, an edited column saves as a project and as a personal decoration, reopens with the same spacing, and its editor controls read in English for an English account."
+        "On the integrated candidate with SP-11, an edited column saves as a project and as a personal decoration, reopens with the same spacing, and its editor controls read in English for an English account.",
+        "On this exact integrated candidate, npm run rag:migrate:check succeeds against an isolated local database and rejects duplicate migration numbers; failure prevents composition acceptance and publication of a Probar version."
       ],
       "id": "CG-11",
       "subplans": [
@@ -183,7 +191,8 @@
     },
     {
       "criteria": [
-        "On the integrated candidate with SP-12, an English Master Designer gets English recommendation cards, opens one as a new project, edits a column's spacing and saves it, and the AI spend view shows the chat call under its tag."
+        "On the integrated candidate with SP-12, an English Master Designer gets English recommendation cards, opens one as a new project, edits a column's spacing and saves it, and the AI spend view shows the chat call under its tag.",
+        "On this exact integrated candidate, npm run rag:migrate:check succeeds against an isolated local database and rejects duplicate migration numbers; failure prevents composition acceptance and publication of a Probar version."
       ],
       "id": "CG-12",
       "subplans": [
@@ -223,7 +232,8 @@
       ],
       "task": "T103",
       "criteria": [
-        "The final cumulative pilot candidate passes the local invite-to-save-and-GLB integration with role denials and truthful fixture spend, and its release manifest matches the independently audited production receipt; no cut is inferred from a missing task or failed check."
+        "The final cumulative pilot candidate passes the local invite-to-save-and-GLB integration with role denials and truthful fixture spend, and its release manifest matches the independently audited production receipt; no cut is inferred from a missing task or failed check.",
+        "On this exact integrated candidate, npm run rag:migrate:check succeeds against an isolated local database and rejects duplicate migration numbers; failure prevents composition acceptance and publication of a Probar version."
       ]
     }
   ],
@@ -233,7 +243,9 @@
         "T3.5",
         "T3.6",
         "T3.11",
-        "T4.2"
+        "T4.2",
+        "T8.4",
+        "T8.5"
       ],
       "id": "IF-1",
       "inputs": [
@@ -291,7 +303,10 @@
       "consumer_tasks": [
         "T6.3",
         "T6.4",
-        "T6.7"
+        "T6.7",
+        "T7.4",
+        "T7.9",
+        "T7.11"
       ],
       "id": "IF-3",
       "inputs": [
@@ -498,7 +513,13 @@
         "design_task": "T2.1",
         "version": 1,
         "visual_review_task": "T2.7"
-      }
+      },
+      "checkpoints": [
+        {
+          "task": "T2.6",
+          "purpose": "Prove ordinary account integration before the isolated local-session follow-up."
+        }
+      ]
     },
     {
       "acceptance_criteria": [
@@ -1190,6 +1211,15 @@
           "dependency": "contract",
           "from": "SP-1",
           "version": 1
+        },
+        {
+          "from": "SP-7",
+          "contract": "galeria-index",
+          "version": 1,
+          "dependency": "implementation",
+          "verified_by": [
+            "T9.5"
+          ]
         }
       ],
       "covers": [
@@ -1215,7 +1245,9 @@
         "Every prompt builder that sets the model's reply language (guided chat, plan agent, counter phrase extraction and the Taller scene AI, in Next and in services/ai-api) receives the request's language, and with a stub provider an English request produces an English instruction while a Spanish request produces exactly today's prompt.",
         "With English input the chat's catalogue tools still search the Spanish catalogue: the tool instructions tell the model to search in Spanish, and a stubbed English conversation calls the search tool with Spanish terms and answers in English with the English product names of SP-9.",
         "Staff-only screens (administration, orders, statistics, AI spend, AI feedback, laboratories) stay in Spanish and are excluded from the coverage guard by an explicit list.",
-        "On a production build, with expected texts taken from the dictionaries, an English Designer Plus account uses the home, the guided chat, the counter and the calculator, and a Master Designer opens the gallery and a saved project, all in English; one live chat turn on the cheapest configured model answers in English; and a scan of each rendered page finds no Spanish string outside staff screens."
+        "On a local production build against the REQ-021 test database with expected texts taken from the dictionaries, an English Designer Plus account uses the home, guided chat, counter, calculator and account, and a Master Designer opens the gallery, saved projects and personal library, all in English; controlled providers preserve Spanish catalogue queries and a rendered-page scan finds no Spanish interface string outside the explicit staff exclusions.",
+        "With English idioma@1, guided-chat and scene-AI streamed updates, final replies and recoverable user-facing errors render in English; Spanish requests retain their existing wording and machine error codes, tool keys, product ids, numeric counts and prices do not change.",
+        "A separate manual local observation using the already configured AI provider confirms an English conversation receives an English reply and a Spanish conversation a Spanish reply; record the actual provider and outcome without secrets or exact free-text assertions, and never substitute stub evidence for this observation."
       ],
       "audit_task": "T10.6",
       "consumes": [
@@ -1244,10 +1276,10 @@
     {
       "acceptance_criteria": [
         "Columns, arches and garlands built from quartets accept an optional spacing between quartets of 0.6 to 1.2 balloon diameters and an optional thickness of 0.5 to 0.8 diameters; without them every existing piece, count and golden scene is byte-identical, and values outside the range are refused by the scene schema.",
-        "Changing the spacing of a column, arch or garland changes its number of quartets as height or length divided by the spacing, and the balloon counts, the shopping list and the assembly sheet change accordingly, while changing only the thickness changes no count.",
+        "With D = inflated balloon diameter in cm, s = separacion or 0.8 and L = centreline path length in cm, column levels are max(1, round(L/(D*s))) and arch/garland levels are max(2, round(L/(D*s))+1), with four balloons per level; counts, shopping list and assembly sheet agree. Changing only grosor changes no count.",
         "A scene holding pieces with spacing and thickness saves as a project, reopens with the same values and exports to GLB with the edited geometry.",
         "Selecting a column, arch or garland shows spacing and thickness controls in its editor with the current value in centimetres and a reset to the default; moving them updates the scene, the counts and the shopping list, and undo restores the previous values.",
-        "On a production build against the REQ-021 database, a Master Designer edits the spacing and thickness of a column and an arch, sees the counts and shopping list change, saves the project, reopens it in another browser with the same values, and exports a GLB whose column height is unchanged."
+        "On a production build against the REQ-021 database, a Master Designer edits the spacing and thickness of a column and an arch, sees the counts and shopping list change, saves the project, reopens it in another browser with the same values, and exports a GLB matching the edited rendered geometry while the stored centreline dimensions remain unchanged."
       ],
       "audit_task": "T11.4",
       "consumes": [
@@ -1276,7 +1308,7 @@
     {
       "acceptance_criteria": [
         "Given a brief with event type, approximate size and colours, the recommender returns two or three existing gallery decorations ranked by occasion, colour match and size, each with its id, name, preview image and total balloon count taken from the decoration's own shopping list, and returns none rather than a weak match when nothing fits.",
-        "Within at most three customer messages the guided chat collects the brief and calls the recommendation tool; its reply names only the decorations the tool returned, and a stubbed model that tries to name another decoration or another count is corrected by the final-text guard.",
+        "Within at most three customer messages the guided chat collects the brief and calls the recommendation tool; only returned decoration names and engine counts reach the customer in streamed text, final replies and cards. A stubbed model inventing a name or count, including across split chunks, cannot expose it before final correction.",
         "The chat shows each recommendation as a card with preview, name in the session's language and balloon count; «Abrir en el Taller» appears only for accounts with decoraciones.explorar and opens /3d?decoracion=<id> as a new project, and other accounts see the card without the button and without any mention of a plan.",
         "On a production build, with expected results written from the SPEC, an Entusiasta describes a birthday in two messages and gets two or three recommendation cards without an open button, and a Master Designer gets the same cards, opens one in the Taller as a new unsaved project and saves it."
       ],
@@ -3813,6 +3845,111 @@
       "ui": true
     },
     {
+      "id": "T2.55",
+      "milestone_id": "M1",
+      "title": "Resolve local administrator consistently in server-rendered pages",
+      "objective": "Unify server-rendered session resolution with the existing resolveRequestSession/local administrator path. Evidence at snapshot 6c7ef4a2: API guard honours sesionAdministradorLocal(request), but app/page.tsx reads SESSION_COOKIE/resolverSesion directly and login/page.tsx never redirects an existing session. Inventory every server-rendered page/layout/server component using cookies() for session identity; introduce/reuse one server-only request-context resolver using the same local-mode policy and ordinary cookie resolution as the guard, and migrate those session readers. Do not change unrelated cookie uses (language/theme/consent), permissions or roles. With AUTH_LOCAL_SIN_RESTRICCIONES=1, next dev and a genuine loopback request, / renders the signed-in tool home and /login redirects there; /3d and /admin/cuentas agree on the same local administrator. Without this local session, preserve normal sign-in and existing authorization. Never enable local access in production builds, next start or non-loopback requests; do not trust spoofed Host/Forwarded/X-Forwarded-* as proof of locality, and retain existing local-mode security boundaries. Author/register cuentas:test-sesion-local-paginas with real dev entrypoints, no-cookie mode-on and mode-off cases, ordinary valid/invalid cookie cases, /login redirect without loops, production refusal and non-loopback/forged-forwarding refusal; no paid calls. Record inventory and actual statuses without secrets. The follow-up starts after the existing account integration checkpoint, and downstream verification and audit must consume it. Operator addendum: include all server-rendered navigation/session consumers, specifically header account menu, Administración entry and home tool permissions. Use the shared resolver for both visibility and destination authorization; the local administrator must reach /admin/cuentas by clicking through the UI from home. Do not merely expose a link or hard-code local visibility while retaining cookie-only session resolution. Mode-off signed-out navigation and normal non-admin role menus must remain unchanged.",
+      "repository": "pictures",
+      "after": [
+        "T2.6"
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 90,
+      "risk": "medium",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "Uncalibrated 90 minutes: 20 source classification, 40 bounded implementation, 30 focused positive/negative checks.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "task:T2.2",
+            "task:T2.6",
+            "spec:SPEC.md#requirements"
+          ],
+          "justification": "Reconcile the evidenced server/client boundary with real-entrypoint behavior and focused regressions."
+        },
+        "scope": {
+          "evidence": [
+            "task:T2.2",
+            "task:T2.6",
+            "spec:SPEC.md#requirements"
+          ],
+          "justification": "Only the named existing surface, shared resolver or dictionaries and focused harness may change."
+        },
+        "duration": {
+          "evidence": [
+            "task:T2.2",
+            "task:T2.6",
+            "spec:SPEC.md#requirements"
+          ],
+          "justification": "Provisional 90-minute decomposition; no comparable calibrated history is available."
+        },
+        "risk": {
+          "evidence": [
+            "task:T2.2",
+            "task:T2.6",
+            "spec:SPEC.md#requirements"
+          ],
+          "justification": "A false positive could hide an untranslated screen or grant unintended account access."
+        },
+        "coupling": {
+          "evidence": [
+            "task:T2.2",
+            "task:T2.6",
+            "spec:SPEC.md#requirements"
+          ],
+          "justification": "Existing task predecessors provide the session and language contracts consumed here."
+        },
+        "confidence": {
+          "evidence": [
+            "task:T2.2",
+            "task:T2.6",
+            "spec:SPEC.md#requirements"
+          ],
+          "justification": "Concrete snapshot evidence establishes the defect, while neighboring failures require classification before edits."
+        }
+      },
+      "expected_paths": [
+        "src/lib/cuentas/guardia.ts",
+        "src/lib/cuentas/modo-local.ts",
+        "src/lib/cuentas/sesion-servidor.ts",
+        "src/app/page.tsx",
+        "src/app/login/page.tsx",
+        "src/app/**/layout.tsx",
+        "scripts/test/test-sesion-local-paginas.ts",
+        "src/components/cuentas/MenuCuenta.tsx",
+        "src/components/ui/shell/CabeceraApp.tsx",
+        "src/components/ui/shell/MenuApp.tsx",
+        "src/components/herramientas/PortadaHerramientas.tsx"
+      ],
+      "shared_resources": [
+        "package.json scripts"
+      ],
+      "acceptance_criteria": [
+        "In next dev on genuine loopback with AUTH_LOCAL_SIN_RESTRICCIONES=1 and no cookie, home, login redirect, layouts and protected server pages resolve the same local administrator as the API guard; with mode off, invalid cookies, production or non-loopback/forged-forwarding requests, normal login and permission checks remain enforced without redirect loops. Server-rendered header/account navigation, the Administración entry and home tools use that same resolved session: the local administrator can click from home through the account menu to accounts administration without typing a URL, while mode-off signed-out users see no administrator links and ordinary signed-in roles see only permitted navigation."
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npm run cuentas:test-sesion-local-paginas",
+          "purpose": "In next dev on genuine loopback with AUTH_LOCAL_SIN_RESTRICCIONES=1 and no cookie, home, login redirect, layouts and protected server pages resolve the same local administrator as the API guard; with mode off, invalid cookies, production or non-loopback/forged-forwarding requests, normal login and permission checks remain enforced without redirect loops. Server-rendered header/account navigation, the Administración entry and home tools use that same resolved session: the local administrator can click from home through the account menu to accounts administration without typing a URL, while mode-off signed-out users see no administrator links and ordinary signed-in roles see only permitted navigation.",
+          "created_by": "T2.55",
+          "category": "integration",
+          "requires": [
+            "PICTURES_REQ021_DATABASE_URL"
+          ]
+        }
+      ],
+      "covers": [
+        "R1",
+        "R16"
+      ],
+      "kind": "implement",
+      "subplan_id": "SP-2",
+      "ui": false
+    },
+    {
       "id": "T2.6",
       "milestone_id": "M1",
       "title": "Browser end-to-end: invite, activate, sign in and change plan on a production build",
@@ -3906,13 +4043,101 @@
       "subplan_id": "SP-2"
     },
     {
+      "id": "T2.56",
+      "milestone_id": "M1",
+      "title": "Verify local-session server-page parity and production refusal",
+      "objective": "Run cuentas:test-sesion-local-paginas authored by T2.55 on the exact candidate and record local-on/off, cookie, production and non-loopback refusal evidence. Command-only: no source repair here. Exercise the visible UI path with no session cookie: mode-on loopback home -> header/account menu -> Administración -> accounts administration, checking destination and resolved administrator. Repeat mode-off, signed-out and ordinary non-admin role cases to verify no unauthorized administrator links; never replace the click path with direct URL navigation.",
+      "repository": "pictures",
+      "after": [
+        "T2.55"
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 30,
+      "risk": "medium",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "Provisional agent estimate: 30 minutes to execute the already implemented browser flow and record outcomes; local provider fixtures avoid live-call latency and comparable historical duration remains unknown.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "task:T2.55",
+            "task:T2.6"
+          ],
+          "justification": "Execute the local-session parity and refusal harness; complexity is bounded by the already implemented fixture and exact candidate."
+        },
+        "scope": {
+          "evidence": [
+            "task:T2.55",
+            "task:T2.6"
+          ],
+          "justification": "Execute the local-session parity and refusal harness; scope is bounded by the already implemented fixture and exact candidate."
+        },
+        "duration": {
+          "evidence": [
+            "task:T2.55",
+            "task:T2.6"
+          ],
+          "justification": "Execute the local-session parity and refusal harness; duration is bounded by the already implemented fixture and exact candidate."
+        },
+        "risk": {
+          "evidence": [
+            "task:T2.55",
+            "task:T2.6"
+          ],
+          "justification": "Execute the local-session parity and refusal harness; risk is bounded by the already implemented fixture and exact candidate."
+        },
+        "coupling": {
+          "evidence": [
+            "task:T2.55",
+            "task:T2.6"
+          ],
+          "justification": "Execute the local-session parity and refusal harness; coupling is bounded by the already implemented fixture and exact candidate."
+        },
+        "confidence": {
+          "evidence": [
+            "task:T2.55",
+            "task:T2.6"
+          ],
+          "justification": "Execute the local-session parity and refusal harness; confidence is bounded by the already implemented fixture and exact candidate."
+        }
+      },
+      "expected_paths": [
+        ".evidence/REQ-021/SP-2.local-session.json"
+      ],
+      "shared_resources": [
+        "candidate:SP-2"
+      ],
+      "acceptance_criteria": [
+        "In next dev on genuine loopback with AUTH_LOCAL_SIN_RESTRICCIONES=1 and no cookie, home, login redirect, layouts and protected server pages resolve the same local administrator as the API guard; with mode off, invalid cookies, production or non-loopback/forged-forwarding requests, normal login and permission checks remain enforced without redirect loops. Server-rendered header/account navigation, the Administración entry and home tools use that same resolved session: the local administrator can click from home through the account menu to accounts administration without typing a URL, while mode-off signed-out users see no administrator links and ordinary signed-in roles see only permitted navigation."
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npm run cuentas:test-sesion-local-paginas",
+          "purpose": "In next dev on genuine loopback with AUTH_LOCAL_SIN_RESTRICCIONES=1 and no cookie, home, login redirect, layouts and protected server pages resolve the same local administrator as the API guard; with mode off, invalid cookies, production or non-loopback/forged-forwarding requests, normal login and permission checks remain enforced without redirect loops. Server-rendered header/account navigation, the Administración entry and home tools use that same resolved session: the local administrator can click from home through the account menu to accounts administration without typing a URL, while mode-off signed-out users see no administrator links and ordinary signed-in roles see only permitted navigation.",
+          "created_by": "T2.55",
+          "category": "integration",
+          "requires": [
+            "PICTURES_REQ021_DATABASE_URL"
+          ]
+        }
+      ],
+      "covers": [
+        "R1",
+        "R16"
+      ],
+      "kind": "test",
+      "subplan_id": "SP-2"
+    },
+    {
       "id": "T2.7",
       "milestone_id": "M1",
       "title": "SP-2 visual review against the cuentas-admin@v1 contract",
       "objective": "A fresh reviewer compares the rendered screens with the approved contract at three widths and records every mismatch with the task to redo.",
       "repository": "pictures",
       "after": [
-        "T2.6"
+        "T2.56"
       ],
       "complexity": "medium",
       "scope": "small_change",
@@ -7451,13 +7676,114 @@
       "ui": true
     },
     {
+      "id": "T5.35",
+      "milestone_id": "M2",
+      "title": "Reconcile the duplicate 039 migration before composing saved decorations",
+      "objective": "On the first declared composition of project storage (SP-4) and personal decorations (SP-5), rename only 039_decoraciones_personales.sql to 043_decoraciones_personales.sql, the next free number after 042 in the reported candidate. Inventory migration filenames first; if 043 is occupied, select the first free number greater than 042 and record the exact mapping. Keep SQL bytes unchanged and record the original/new SHA-256. Do not rename 039_proyectos.sql or alter 040/041/042. Implement an explicit old-name to new-name ledger reconciliation in scripts/migrate.ts under the existing advisory lock and transaction, before pending-migration calculation. If only the old ledger row exists with the expected checksum, rename the ledger key preserving applied_at/checksum and do not execute SQL again. If only the new row exists, do nothing. If neither exists, execute the unchanged SQL once in normal migration order. Reject mismatched checksums, ambiguous old/new double rows or legacy null-checksum rows without verified identity; never delete history or silently adopt an unverified alias. Dry-run must report the same reconciliation/pending decision without writing any row, table, checksum or timestamp. Keep duplicate-number refusal and remote-database authorization intact. Author/register migraciones:test-reconciliacion to exercise fresh disposable local DB, restored already-migrated fixture with 36+ rows and old 039 name, already-renamed state, repeat runs, injected failure rollback, checksum conflict, ambiguous double rows and null checksum refusal. Run npm run rag:migrate:check against both fresh and already-migrated fixtures, then apply/repeat migrations on disposable local databases and prove project/decoration data and ledger history are preserved. Do not mutate req021 or production from this task without separate operator authorization; use a private disposable clone for the historical req021 state. Add a concise operator reconciliation instruction with prerequisites for req021 and for refreshed Probar versions; immutable old snapshots remain unchanged and require a newly prepared repaired version.",
+      "repository": "pictures",
+      "after": [
+        "T93",
+        "T5.3"
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 90,
+      "risk": "medium",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "Uncalibrated 90 minutes: 15 inventory/rename, 30 transactional alias reconciliation, 30 fresh/legacy/negative checks, 15 operator notes and evidence.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:scripts/migrate.ts",
+            "task:T5.2",
+            "task:T4.2"
+          ],
+          "justification": "Reconcile filename identity under advisory lock and transactional failure handling across three ledger states."
+        },
+        "scope": {
+          "evidence": [
+            "file:scripts/migrate.ts",
+            "task:T5.2",
+            "task:T4.2"
+          ],
+          "justification": "One unchanged SQL rename, migration runner alias handling and focused fixture harness/documentation."
+        },
+        "duration": {
+          "evidence": [
+            "file:scripts/migrate.ts",
+            "task:T5.2",
+            "task:T4.2"
+          ],
+          "justification": "Provisional 90 minutes for inventory, reconciliation, historical fixtures and operator notes; no calibrated sample."
+        },
+        "risk": {
+          "evidence": [
+            "file:scripts/migrate.ts",
+            "task:T5.2",
+            "task:T4.2"
+          ],
+          "justification": "Incorrect adoption may replay DDL or erase historical identity and saved personal work."
+        },
+        "coupling": {
+          "evidence": [
+            "file:scripts/migrate.ts",
+            "task:T5.2",
+            "task:T4.2"
+          ],
+          "justification": "Depends on project and decoration migration producers, and must precede the personal-decoration integration."
+        },
+        "confidence": {
+          "evidence": [
+            "file:scripts/migrate.ts",
+            "task:T5.2",
+            "task:T4.2"
+          ],
+          "justification": "Existing runner uses filename primary keys and checksums; legacy null-checksum states need explicit refusal."
+        }
+      },
+      "expected_paths": [
+        "scripts/migrations/039_decoraciones_personales.sql",
+        "scripts/migrations/043_decoraciones_personales.sql",
+        "scripts/migrate.ts",
+        "scripts/test/test-migraciones-reconciliacion.ts",
+        "docs/migraciones-req021.md"
+      ],
+      "shared_resources": [
+        "package.json scripts",
+        "postgres:schema_migrations"
+      ],
+      "acceptance_criteria": [
+        "The two former 039 files have unique numbers with byte-identical SQL; rag:migrate:check succeeds without writes on fresh and already-migrated local fixtures, real migrations converge exactly once, old-name ledger reconciliation preserves applied_at/checksum and saved data, retries are idempotent, and conflicting/ambiguous ledger identities fail without mutation."
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npm run migraciones:test-reconciliacion",
+          "purpose": "The two former 039 files have unique numbers with byte-identical SQL; rag:migrate:check succeeds without writes on fresh and already-migrated local fixtures, real migrations converge exactly once, old-name ledger reconciliation preserves applied_at/checksum and saved data, retries are idempotent, and conflicting/ambiguous ledger identities fail without mutation.",
+          "created_by": "T5.35",
+          "category": "integration",
+          "requires": [
+            "PICTURES_REQ021_DATABASE_URL"
+          ]
+        }
+      ],
+      "covers": [
+        "R8"
+      ],
+      "kind": "implement",
+      "subplan_id": "SP-5",
+      "ui": false
+    },
+    {
       "id": "T5.4",
       "milestone_id": "M2",
       "title": "Browser end-to-end: saved decorations across browsers, placement and ownership",
       "objective": "Two accounts and a staff member in real browsers prove persistence, placement, read-only staff access and isolation on a production build.",
       "repository": "pictures",
       "after": [
-        "T5.3"
+        "T5.3",
+        "T5.35"
       ],
       "complexity": "medium",
       "scope": "small_change",
@@ -8704,10 +9030,11 @@
       "id": "T7.4",
       "milestone_id": "M2",
       "title": "Checkpoint: tool gating, counter API and spend tags on a running server",
-      "objective": "Before any screen is built, the gating, counting and tagging work together on a real server against the test database.",
+      "objective": "Before any screen is built, the gating, counting and tagging work together on a real server against the test database. Start an isolated local ai-api on a free loopback port with APP_ENV=development DATABASE_URL= RERANK_MODEL_WARMUP=false uv run --frozen --directory services/ai-api uvicorn app.main:app --host 127.0.0.1 --port <free port>, matching pictures/verify-servers.json. Generate one ephemeral INTERNAL_HMAC_SECRET from at least 32 cryptographically random bytes and pass the same secret to ai-api and Next; point Next PYTHON_BACKEND_URL at this ai-api and use PICTURES_REQ021_DATABASE_URL for Next usage capture. Wait for ai-api /healthz and Next readiness before requests; stop both child servers on success or failure and never log the secret. Build/adapt scripts/test/test-herramientas-checkpoint.ts to run phrase and photo through deterministic local provider fixtures without paid AI calls, preserving the real Next-to-Python HMAC and usage-capture path.",
       "repository": "pictures",
       "after": [
-        "T7.3"
+        "T7.3",
+        "T96"
       ],
       "complexity": "medium",
       "scope": "small_change",
@@ -8768,13 +9095,13 @@
         "package.json scripts"
       ],
       "acceptance_criteria": [
-        "Before any screen is built, with expected statuses written from the SPEC, the real tool, counter and gating APIs pass on a running server against the REQ-021 database: Entusiasta counts by form, phrase and photo, its POST to the professional quote and costing APIs gets 403, and each call lands in the usage ledger under its tool tag."
+        "Before any screen is built, with expected statuses written from the SPEC, the real tool, counter and gating APIs pass on a running server against the REQ-021 database: Entusiasta counts by form, phrase and photo, its POST to the professional quote and costing APIs gets 403, and each model call with deterministic fixture usage lands in the usage ledger under its tool tag and authenticated account/session; deterministic form counting makes no model call and creates no fabricated paid usage. The harness starts both local Next and ai-api with a shared generated INTERNAL_HMAC_SECRET of at least 32 random bytes, sets PYTHON_BACKEND_URL to the local ai-api, awaits both servers, and exercises phrase/photo fixtures without paid AI calls or HTTP 502."
       ],
       "verification": [
         {
           "type": "command",
           "value": "npm run herramientas:test-checkpoint",
-          "purpose": "Before any screen is built, with expected statuses written from the SPEC, the real tool, counter and gating APIs pass on a running server against the REQ-021 database: Entusiasta counts by form, phrase and photo, its POST to the professional quote and costing APIs gets 403, and each call lands in the usage ledger under its tool tag.",
+          "purpose": "Before any screen is built, with expected statuses written from the SPEC, the real tool, counter and gating APIs pass on a running server against the REQ-021 database: Entusiasta counts by form, phrase and photo, its POST to the professional quote and costing APIs gets 403, and each model call with deterministic fixture usage lands in the usage ledger under its tool tag and authenticated account/session; deterministic form counting makes no model call and creates no fabricated paid usage. The harness starts both local Next and ai-api with a shared generated INTERNAL_HMAC_SECRET of at least 32 random bytes, sets PYTHON_BACKEND_URL to the local ai-api, awaits both servers, and exercises phrase/photo fixtures without paid AI calls or HTTP 502.",
           "created_by": "T7.4",
           "category": "integration",
           "requires": [
@@ -9564,7 +9891,8 @@
       "objective": "A person switches language from the account menu, the sign-in screen or the plans page, and every navigation, account and plans text follows the chosen language.",
       "repository": "pictures",
       "after": [
-        "T8.1"
+        "T8.1",
+        "T97"
       ],
       "complexity": "medium",
       "scope": "large_change",
@@ -9760,7 +10088,8 @@
       "objective": "The Taller's frame, library and add panels, menus, help, export and capture are complete in English through one dictionary while Spanish stays unchanged.",
       "repository": "pictures",
       "after": [
-        "T8.3"
+        "T8.3",
+        "T97"
       ],
       "complexity": "low",
       "scope": "large_change",
@@ -9870,7 +10199,8 @@
       "objective": "Everything a person edits or reads about a selected piece, the shopping list and the assembly sheet is complete in English while Spanish output stays byte-identical.",
       "repository": "pictures",
       "after": [
-        "T8.3"
+        "T8.3",
+        "T97"
       ],
       "complexity": "low",
       "scope": "large_change",
@@ -11035,12 +11365,12 @@
       "id": "T10.3",
       "milestone_id": "M3",
       "title": "AI replies in the user's language with catalogue searches kept in Spanish",
-      "objective": "The guided chat, the plan agent, the counter and the Taller scene AI answer in the request's language, and their catalogue searches keep working on the Spanish catalogue.",
+      "objective": "The guided chat, the plan agent, the counter and the Taller scene AI answer in the request's language, and their catalogue searches keep working on the Spanish catalogue. Extract the actual scene reply prompt from src/app/api/escena-ia/route.ts into prompt-escena.ts; entorno-escena.ts composes image backgrounds and is outside this language change. Propagate validated idioma@1 across existing Next/Python adapters with a backward-compatible Spanish default; preserve endpoint/tool schemas, codes, canonical Spanish catalogue queries, counts and prices. Localize user-visible errors and terminal/streamed replies at the presentation boundary; do not translate machine identifiers or user-authored content.",
       "repository": "pictures",
       "after": [
         "T9.6"
       ],
-      "complexity": "medium",
+      "complexity": "high",
       "scope": "large_change",
       "estimated_minutes": 150,
       "risk": "medium",
@@ -11049,11 +11379,12 @@
       "estimate_rationale": "Agent estimate in minutes: 30 locating every reply-language instruction in Next and ai-api + 50 threading the language through prompt builders and the signed internal context + 20 search-in-Spanish tool instruction + 50 stub-provider tests = 150.",
       "classification_evidence": {
         "complexity": {
+          "justification": "Language-aware replies cross Next/Python adapters, streamed and final output plus fixed Spanish search keys, requiring high cross-component reasoning.",
           "evidence": [
+            "file:src/app/api/escena-ia/route.ts",
             "file:src/lib/ia/guiado/prompt-guiado.ts",
             "file:src/lib/ia/nucleo/python-adapter.ts"
-          ],
-          "justification": "The language must cross from Next to ai-api in the signed context and reach several prompt builders."
+          ]
         },
         "scope": {
           "evidence": [
@@ -11086,7 +11417,8 @@
         "confidence": {
           "evidence": [
             "file:src/lib/ia/omoikane/prompt-sistema.ts",
-            "assumption:ai-api prompt text that sets the reply language lives in a few modules reachable from main.py"
+            "assumption:ai-api prompt text that sets the reply language lives in a few modules reachable from main.py",
+            "file:src/app/api/escena-ia/route.ts"
           ],
           "justification": "The prompt files were located; which ai-api prompts set language is not fully listed."
         }
@@ -11094,13 +11426,15 @@
       "expected_paths": [
         "src/lib/ia/guiado/prompt-guiado.ts",
         "src/lib/ia/omoikane/prompt-sistema.ts",
-        "src/lib/ia/escena/entorno-escena.ts",
         "src/lib/ia/herramientas/herramientas.ts",
         "src/lib/contador/contar.ts",
         "src/lib/ia/nucleo/python-adapter.ts",
         "services/ai-api/app/main.py",
         "scripts/test/test-idioma-respuestas-ia.ts",
-        "services/ai-api/tests/test_idioma_respuesta.py"
+        "services/ai-api/tests/test_idioma_respuesta.py",
+        "src/app/api/escena-ia/route.ts",
+        "src/lib/ia/escena/prompt-escena.ts",
+        "src/lib/idioma/mensajes-ia.ts"
       ],
       "shared_resources": [
         "package.json scripts",
@@ -11108,7 +11442,8 @@
       ],
       "acceptance_criteria": [
         "Every prompt builder that sets the model's reply language (guided chat, plan agent, counter phrase extraction and the Taller scene AI, in Next and in services/ai-api) receives the request's language, and with a stub provider an English request produces an English instruction while a Spanish request produces exactly today's prompt.",
-        "With English input the chat's catalogue tools still search the Spanish catalogue: the tool instructions tell the model to search in Spanish, and a stubbed English conversation calls the search tool with Spanish terms and answers in English with the English product names of SP-9."
+        "With English input the chat's catalogue tools still search the Spanish catalogue: the tool instructions tell the model to search in Spanish, and a stubbed English conversation calls the search tool with Spanish terms and answers in English with the English product names of SP-9.",
+        "With English idioma@1, guided-chat and scene-AI streamed updates, final replies and recoverable user-facing errors render in English; Spanish requests retain their existing wording and machine error codes, tool keys, product ids, numeric counts and prices do not change."
       ],
       "verification": [
         {
@@ -11122,6 +11457,13 @@
           "type": "command",
           "value": "npm run idioma:test-respuestas -- --test-name-pattern=busqueda",
           "purpose": "With English input the chat's catalogue tools still search the Spanish catalogue: the tool instructions tell the model to search in Spanish, and a stubbed English conversation calls the search tool with Spanish terms and answers in English with the English product names of SP-9.",
+          "created_by": "T10.3",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm run idioma:test-respuestas -- --test-name-pattern=errores-y-flujo",
+          "purpose": "With English idioma@1, guided-chat and scene-AI streamed updates, final replies and recoverable user-facing errors render in English; Spanish requests retain their existing wording and machine error codes, tool keys, product ids, numeric counts and prices do not change.",
           "created_by": "T10.3",
           "category": "functional"
         }
@@ -11222,10 +11564,10 @@
       "ui": false
     },
     {
-      "id": "T10.5",
+      "id": "T10.44",
       "milestone_id": "M3",
-      "title": "Browser end-to-end: external screens and one live AI turn in English",
-      "objective": "Real browsers prove every external screen in English, one live chat turn answering in English, and Spanish unchanged.",
+      "title": "Repair evidenced remaining-English translation producers",
+      "objective": "Repair only the existing SP-10 translation producers revealed by snapshot 6c7ef4a2bf8e09e4871bea9b4d9b17ab8f4103ef after T10.4, before full T10.45/T10.5 acceptance. Guided chat has confirmed literal SALUDO and celebration prompt in VistaGuiada.tsx plus feedback/proposal/composer strings: route those through the existing idioma dictionaries without changing conversation semantics or Spanish output. Inspect calculator/account/gallery DOM, actual dictionary module/key and visible/accessible rendered state to classify each failed oracle as harness locator/readiness defect, real missing UI translation or permitted SP-9 catalogue data. Repair only proven missing UI translations in existing components/dictionaries; do not rewrite catalogue translations, user text, SP-9 fallback or approved behavior. Proper names, printed balloon text and Spanish-fallback catalogue names must be compared with their actual SP-9 fixture/oracle, never silently exempted by a blanket gallery/diacritic exclusion. Record each failure class, source line, owning producer and focused proof. Harness locator/accessible-text corrections belong to T10.45; never change a dictionary to satisfy an incorrect oracle. Preserve all roles, mandatory routes, dictionary keys and actual captured provider tool assertions. Author/register idioma:test-reparacion-productores for the evidenced guided-chat regression and any proven calculator/account/gallery UI regression, plus unchanged Spanish and staff exclusions. No paid calls; manual configured-provider observation remains NOT_RUN.",
       "repository": "pictures",
       "after": [
         "T10.4"
@@ -11236,28 +11578,234 @@
       "risk": "medium",
       "coupling": "medium",
       "confidence": "medium",
-      "estimate_rationale": "Agent estimate in minutes: 15 build + 50 two accounts over every external screen and one live turn + 25 evidence = 90.",
+      "estimate_rationale": "Uncalibrated 90 minutes: 20 source classification, 40 bounded implementation, 30 focused positive/negative checks.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "spec:SPEC.md#requirements",
+            "file:src/components/guiado/VistaGuiada.tsx"
+          ],
+          "justification": "Reconcile the evidenced server/client boundary with real-entrypoint behavior and focused regressions."
+        },
+        "scope": {
+          "evidence": [
+            "spec:SPEC.md#requirements",
+            "file:src/components/guiado/VistaGuiada.tsx"
+          ],
+          "justification": "Only the named existing surface, shared resolver or dictionaries and focused harness may change."
+        },
+        "duration": {
+          "evidence": [
+            "spec:SPEC.md#requirements",
+            "file:src/components/guiado/VistaGuiada.tsx"
+          ],
+          "justification": "Provisional 90-minute decomposition; no comparable calibrated history is available."
+        },
+        "risk": {
+          "evidence": [
+            "spec:SPEC.md#requirements",
+            "file:src/components/guiado/VistaGuiada.tsx"
+          ],
+          "justification": "A false positive could hide an untranslated screen or grant unintended account access."
+        },
+        "coupling": {
+          "evidence": [
+            "spec:SPEC.md#requirements",
+            "file:src/components/guiado/VistaGuiada.tsx"
+          ],
+          "justification": "Existing task predecessors provide the session and language contracts consumed here."
+        },
+        "confidence": {
+          "evidence": [
+            "spec:SPEC.md#requirements",
+            "file:src/components/guiado/VistaGuiada.tsx"
+          ],
+          "justification": "Concrete snapshot evidence establishes the defect, while neighboring failures require classification before edits."
+        }
+      },
+      "expected_paths": [
+        "src/components/guiado/VistaGuiada.tsx",
+        "src/components/guiado/textos/chat-guiado.ts",
+        "src/components/guiado/Compositor.tsx",
+        "src/components/herramientas/CalculadoraCostos.tsx",
+        "src/components/cuentas/textos-cuenta.ts",
+        "src/app/cuenta/page.tsx",
+        "src/components/tres-d/galeria/textos-galeria.ts",
+        "scripts/test/test-reparacion-productores-idioma.ts"
+      ],
+      "shared_resources": [
+        "package.json scripts"
+      ],
+      "acceptance_criteria": [
+        "The literal Spanish guided-chat greeting and associated controls render using existing English dictionaries for an English account and retain Spanish behavior for Spanish; each calculator/account/gallery finding is classified with source/DOM evidence and every proven UI translation defect is repaired with focused regression coverage, without altering catalogue data/fallback or weakening the exhaustive acceptance matrix."
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npm run idioma:test-reparacion-productores",
+          "purpose": "The literal Spanish guided-chat greeting and associated controls render using existing English dictionaries for an English account and retain Spanish behavior for Spanish; each calculator/account/gallery finding is classified with source/DOM evidence and every proven UI translation defect is repaired with focused regression coverage, without altering catalogue data/fallback or weakening the exhaustive acceptance matrix.",
+          "created_by": "T10.44",
+          "category": "integration",
+          "requires": [
+            "PICTURES_REQ021_DATABASE_URL"
+          ]
+        }
+      ],
+      "covers": [
+        "R12"
+      ],
+      "kind": "implement",
+      "subplan_id": "SP-10",
+      "ui": false
+    },
+    {
+      "id": "T10.45",
+      "milestone_id": "M3",
+      "title": "Implement the remaining-English browser verification harness",
+      "objective": "Repair only scripts/test/test-integracion-idioma-resto.ts, scripts/test/test-harness-idioma-resto.ts and their package script wiring, after translation producer T10.44. Start real production Next and controlled local Python against disposable REQ-021 fixtures; deterministic execution makes no paid calls. Register idioma:test-integracion-resto and idioma:test-harness-resto. Enforce the complete frozen T10.5 matrix: English Designer Plus uses home, guided chat, counter, calculator and account; Master Designer opens gallery, saved projects and personal library. Record actual role/route, imported dictionary module/keys/values, meaningful visible readiness, rendered-language scan and result for every entry. Fail on omissions, wrong roles, redirects, empty/stale/partial evidence or untranslated interface text; catalogue visits never replace required screens. Capture an actual provider-emitted Spanish catalogue-search tool call correlated with an English guided-chat conversation, plus reply-language instructions and rendered response. A hard-coded direct catalogue request proves nothing. Negative regressions remove each matrix entry, substitute wrong roles/text, omit calls and emit English search arguments; all must fail. CG-10 mode additionally proves its frozen composed flow and unchanged Spanish behavior. Correct demonstrated locator/oracle defects with appropriate DOM-visible, accessible-name or placeholder assertions while preserving dictionary expectations. Classify harness_oracle_failure, product_translation_failure and candidate_identity_failure separately, never as success. Preserve SP-9 data/fallback and staff exclusions. T10.5 remains command-only; real configured-provider EN/ES observation stays NOT_RUN until genuine authorized observation, never satisfied by fixtures.\nFor gitless M6, read only SYSTEM /run/bt-m6/snapshot.json, schema m6.snapshot-context/1: snapshot_sha, base_sha, manifest_sha256, content_sha256, files. The envelope is generated after M3 provenance/commit/materialized-tree validation and read-only mounted outside writable workspace. Validate schema, field types and digest syntax. files is a canonical sorted relative-path map to {kind:file,sha256:<bytes SHA256>} or {kind:symlink,target:<exact target>}; reject absolute/traversal paths. Recompute content_sha256 as SHA256 of UTF-8 JSON(files, sorted keys, compact separators, ensure_ascii=false). Compare declared original source entries and both harness byte hashes; do not include generated build/evidence outputs or follow links outside the tree. Keep exact snapshot/base/manifest identities separate from content/harness digests. Never use env/repo input, agent HEAD or invented SHA as captured-snapshot authority. Standalone Git mode may identify verified HEAD plus dirty content explicitly. Test trusted gitless identity and missing/malformed/tampered envelope, source, harness and symlink cases. Absent D-205 metadata is a precise system prerequisite; product code must not patch methodology runtime. D-205 deployment/full regression is owned separately by solver.\nValidate identity before createIsolatedTestDatabase or mkdtemp. Establish try/finally cleanup before the first resource allocation and register ownership immediately, covering partial setup, readiness, provider/browser failures and success. Test early identity rejection and partial allocation leaks. Release only invocation-owned fixture databases, directories and child servers; never drop user/existing databases or infer ownership from name prefixes. Preserve the primary failure while reporting cleanup errors. Bind fresh SP-10/CG-10 evidence to exact verifier candidate, content, harness version/digests, coverage and captured requests.",
+      "repository": "pictures",
+      "after": [
+        "T10.44"
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 60,
+      "risk": "medium",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "Provisional agent estimate: 60 minutes for the bounded integration harness using existing SP-8/SP-9 helpers, including red/green harness regressions. Comparable historical duration and retries remain unknown.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "task:T10.4",
+            "task:T9.5"
+          ],
+          "justification": "The English-screen harness coordinates browser locale, real Next/Python startup and injected failure cases using existing session helpers."
+        },
+        "scope": {
+          "evidence": [
+            "task:T10.4",
+            "task:T9.5"
+          ],
+          "justification": "Adds only the remaining-English browser harness, its focused regressions and package scripts."
+        },
+        "duration": {
+          "evidence": [
+            "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind implement -> status unknown, no comparable samples"
+          ],
+          "justification": "A provisional 60-minute agent estimate covers harness construction and red/green checks; comparable history is unknown."
+        },
+        "risk": {
+          "evidence": [
+            "task:T10.4",
+            "task:T9.5"
+          ],
+          "justification": "The English-screen harness must reject missing translations instead of reporting green results from stubs alone."
+        },
+        "coupling": {
+          "evidence": [
+            "task:T10.4",
+            "task:T9.5"
+          ],
+          "justification": "The English-screen harness consumes the completed T10.1-T10.4 language changes and SP-9 English names."
+        },
+        "confidence": {
+          "evidence": [
+            "task:T10.4",
+            "task:T9.5"
+          ],
+          "justification": "Earlier SP-8 and SP-9 helpers constrain the English-screen harness, but its new failure injection remains unimplemented."
+        }
+      },
+      "expected_paths": [
+        "scripts/test/test-integracion-idioma-resto.ts",
+        "scripts/test/test-harness-idioma-resto.ts"
+      ],
+      "shared_resources": [
+        "package.json scripts:idioma:test-integracion-resto",
+        "package.json scripts:idioma:test-harness-resto"
+      ],
+      "acceptance_criteria": [
+        "The English-screen harness starts the real production entrypoints with controlled providers and fails on injected Spanish labels, incorrect response-language instructions or a catalogue query translated away from Spanish; its deterministic mode makes no paid AI call.",
+        "The repaired harness rejects any omitted required T10.5 screen, wrong assigned role, missing dictionary oracle or absent captured controlled-provider catalogue tool call; an English catalogue-search argument or injected untranslated label fails. Its SP-10 and CG-10 evidence identifies the exact candidate and harness, records all required coverage and observed tool arguments, and deterministic checks make no paid AI call or manual-provider attestation.",
+        "The harness operates on a gitless verifier snapshot using an exact verifier-bound identity validated against its content, rejects missing/mismatched/tampered identity, and distinguishes proven UI translation failures from harness oracle/readiness failures without dropping required coverage, changing dictionary expectations or accepting invented candidate SHAs."
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npm run idioma:test-harness-resto",
+          "purpose": "The English-screen harness starts the real production entrypoints with controlled providers and fails on injected Spanish labels, incorrect response-language instructions or a catalogue query translated away from Spanish; its deterministic mode makes no paid AI call.",
+          "created_by": "T10.45",
+          "category": "functional",
+          "requires": [
+            "PICTURES_REQ021_DATABASE_URL"
+          ]
+        },
+        {
+          "type": "command",
+          "value": "npm run idioma:test-harness-resto",
+          "purpose": "The repaired harness rejects any omitted required T10.5 screen, wrong assigned role, missing dictionary oracle or absent captured controlled-provider catalogue tool call; an English catalogue-search argument or injected untranslated label fails. Its SP-10 and CG-10 evidence identifies the exact candidate and harness, records all required coverage and observed tool arguments, and deterministic checks make no paid AI call or manual-provider attestation.",
+          "created_by": "T10.45",
+          "category": "functional",
+          "requires": [
+            "PICTURES_REQ021_DATABASE_URL"
+          ]
+        },
+        {
+          "type": "command",
+          "value": "npm run idioma:test-harness-resto",
+          "purpose": "The harness operates on a gitless verifier snapshot using an exact verifier-bound identity validated against its content, rejects missing/mismatched/tampered identity, and distinguishes proven UI translation failures from harness oracle/readiness failures without dropping required coverage, changing dictionary expectations or accepting invented candidate SHAs.",
+          "created_by": "T10.45",
+          "category": "functional",
+          "requires": [
+            "PICTURES_REQ021_DATABASE_URL"
+          ]
+        }
+      ],
+      "covers": [
+        "R12"
+      ],
+      "kind": "implement",
+      "subplan_id": "SP-10",
+      "ui": false
+    },
+    {
+      "id": "T10.5",
+      "milestone_id": "M3",
+      "title": "Browser end-to-end: external screens and one live AI turn in English",
+      "objective": "Run the existing idioma:test-integracion-resto harness on the exact candidate with controlled local providers and record actual outcomes. Do not write or repair the harness in this command-only task. Record a real configured-model English reply separately as an owner/operator manual observation; absent external access is not a pass. Rerun after the T10.45 repair on the new exact candidate; require complete screen/role/dictionary and actual controlled-provider tool-call evidence, rejecting missing or stale/partial coverage. Preserve both frozen acceptance criteria and their checks verbatim; the configured-provider EN/ES manual observation remains NOT_RUN until actually observed and cannot be waived by command success.",
+      "repository": "pictures",
+      "after": [
+        "T10.45"
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 30,
+      "risk": "medium",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "Provisional agent estimate: 30 minutes to execute the already implemented browser flow and record outcomes; local provider fixtures avoid live-call latency and comparable historical duration remains unknown.",
       "classification_evidence": {
         "complexity": {
           "evidence": [
             "task:T10.1",
             "task:T10.3"
           ],
-          "justification": "Scans every external page and runs one paid model turn with a language check."
+          "justification": "Runs the established English-screen harness and records language outcomes without authoring tests or choosing a provider."
         },
         "scope": {
           "evidence": [
             "task:T10.2",
             "spec:SPEC.md#requirements"
           ],
-          "justification": "Adds the remaining-screens Playwright script and SP-10 evidence only."
+          "justification": "Writes only the SP-10 integration evidence; harness source belongs to implementation T10.45."
         },
         "duration": {
           "evidence": [
             "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind test -> status unknown, no comparable samples",
             "task:T10.2"
           ],
-          "justification": "Fifteen, fifty and twenty-five minutes make ninety."
+          "justification": "A provisional 30-minute agent estimate covers the established deterministic English flow and evidence, not unknown manual/live waiting time."
         },
         "risk": {
           "evidence": [
@@ -11278,29 +11826,38 @@
             "task:T8.7",
             "task:T1.6"
           ],
-          "justification": "Reuses the SP-8 integration helpers."
+          "justification": "The English-screen command is created by T10.45 and uses existing SP-8/SP-9 fixtures; live observation remains manual."
         }
       },
       "expected_paths": [
-        "scripts/test/test-integracion-idioma-resto.ts",
         ".evidence/REQ-021/SP-10.integration.json"
       ],
       "shared_resources": [
-        "package.json scripts"
+        "candidate:SP-10",
+        "contract:idioma"
       ],
       "acceptance_criteria": [
-        "On a production build, with expected texts taken from the dictionaries, an English Designer Plus account uses the home, the guided chat, the counter and the calculator, and a Master Designer opens the gallery and a saved project, all in English; one live chat turn on the cheapest configured model answers in English; and a scan of each rendered page finds no Spanish string outside staff screens."
+        "On a local production build against the REQ-021 test database with expected texts taken from the dictionaries, an English Designer Plus account uses the home, guided chat, counter, calculator and account, and a Master Designer opens the gallery, saved projects and personal library, all in English; controlled providers preserve Spanish catalogue queries and a rendered-page scan finds no Spanish interface string outside the explicit staff exclusions.",
+        "A separate manual local observation using the already configured AI provider confirms an English conversation receives an English reply and a Spanish conversation a Spanish reply; record the actual provider and outcome without secrets or exact free-text assertions, and never substitute stub evidence for this observation."
       ],
       "verification": [
         {
           "type": "command",
           "value": "npm run idioma:test-integracion-resto",
-          "purpose": "On a production build, with expected texts taken from the dictionaries, an English Designer Plus account uses the home, the guided chat, the counter and the calculator, and a Master Designer opens the gallery and a saved project, all in English; one live chat turn on the cheapest configured model answers in English; and a scan of each rendered page finds no Spanish string outside staff screens.",
-          "created_by": "T10.5",
+          "purpose": "On a local production build against the REQ-021 test database with expected texts taken from the dictionaries, an English Designer Plus account uses the home, guided chat, counter, calculator and account, and a Master Designer opens the gallery, saved projects and personal library, all in English; controlled providers preserve Spanish catalogue queries and a rendered-page scan finds no Spanish interface string outside the explicit staff exclusions.",
+          "created_by": "T10.45",
           "category": "integration",
           "requires": [
             "PICTURES_REQ021_DATABASE_URL"
           ]
+        },
+        {
+          "type": "manual",
+          "value": "Owner or operator observes the configured local chat in English and Spanish",
+          "purpose": "A separate manual local observation using the already configured AI provider confirms an English conversation receives an English reply and a Spanish conversation a Spanish reply; record the actual provider and outcome without secrets or exact free-text assertions, and never substitute stub evidence for this observation.",
+          "expected": "A separate manual local observation using the already configured AI provider confirms an English conversation receives an English reply and a Spanish conversation a Spanish reply; record the actual provider and outcome without secrets or exact free-text assertions, and never substitute stub evidence for this observation.",
+          "category": "product",
+          "environment": "human_attestation"
         }
       ],
       "covers": [
@@ -11313,7 +11870,7 @@
       "id": "T10.6",
       "milestone_id": "M3",
       "title": "SP-10 audit: external screens and AI replies in English",
-      "objective": "An independent read-only review confirms SP-10 against R12 and records each confirmed defect with the task to redo.",
+      "objective": "An independent read-only review confirms SP-10 against R12 and records each confirmed defect with the task to redo. Consume only the repaired T10.5 evidence for the exact candidate: independently check the full assigned-role screen matrix, dictionary oracles, captured provider tool requests and separate genuine manual EN/ES observation; reject old partial evidence or a zero exit code without coverage.",
       "repository": "pictures",
       "after": [
         "T10.5"
@@ -11398,10 +11955,10 @@
       "id": "T11.1",
       "milestone_id": "M4",
       "title": "Optional spacing and thickness in the quartet engine and the scene schema",
-      "objective": "Columns, arches and garlands accept their own spacing and thickness, counts follow the spacing, and pieces without them stay exactly as today.",
+      "objective": "Columns, arches and garlands accept their own spacing and thickness, counts follow the spacing, and pieces without them stay exactly as today. Persist optional dimensionless separacion and grosor on column/arch and nested OpcionesGuirnalda in formas-escena.ts, thread them through every relevant generator into armarTrenza and preserve legacy output when absent. grosor is the radial centre offset divided by balloon diameter (default 0.62), not the full outside width. Keep centreline dimensions fixed; do not require an unchanged balloon bounding box when spacing changes. Validate finite values and inclusive ranges, including direct engine callers; test endpoints, omitted/default equality, short paths, rounding thresholds, straight/curved garlands and all colour patterns. Existing other trenza consumers keep their defaults.",
       "repository": "pictures",
       "after": [
-        "T100"
+        "T99"
       ],
       "complexity": "medium",
       "scope": "small_change",
@@ -11459,15 +12016,16 @@
         "src/lib/globos3d/piezas.ts",
         "src/lib/globos3d/esquema-escena.ts",
         "src/lib/globos3d/hoja-armado-estructura.ts",
-        "scripts/test/test-trenza-separacion.ts"
+        "scripts/test/test-trenza-separacion.ts",
+        "src/lib/globos3d/formas-escena.ts"
       ],
       "shared_resources": [
-        "package.json scripts",
+        "package.json scripts:trenza:test-separacion",
         "contract:taller-scene"
       ],
       "acceptance_criteria": [
         "Columns, arches and garlands built from quartets accept an optional spacing between quartets of 0.6 to 1.2 balloon diameters and an optional thickness of 0.5 to 0.8 diameters; without them every existing piece, count and golden scene is byte-identical, and values outside the range are refused by the scene schema.",
-        "Changing the spacing of a column, arch or garland changes its number of quartets as height or length divided by the spacing, and the balloon counts, the shopping list and the assembly sheet change accordingly, while changing only the thickness changes no count."
+        "With D = inflated balloon diameter in cm, s = separacion or 0.8 and L = centreline path length in cm, column levels are max(1, round(L/(D*s))) and arch/garland levels are max(2, round(L/(D*s))+1), with four balloons per level; counts, shopping list and assembly sheet agree. Changing only grosor changes no count."
       ],
       "verification": [
         {
@@ -11480,7 +12038,7 @@
         {
           "type": "command",
           "value": "npm run trenza:test-separacion -- --test-name-pattern=conteos",
-          "purpose": "Changing the spacing of a column, arch or garland changes its number of quartets as height or length divided by the spacing, and the balloon counts, the shopping list and the assembly sheet change accordingly, while changing only the thickness changes no count.",
+          "purpose": "With D = inflated balloon diameter in cm, s = separacion or 0.8 and L = centreline path length in cm, column levels are max(1, round(L/(D*s))) and arch/garland levels are max(2, round(L/(D*s))+1), with four balloons per level; counts, shopping list and assembly sheet agree. Changing only grosor changes no count.",
           "created_by": "T11.1",
           "category": "functional"
         }
@@ -11496,18 +12054,18 @@
       "id": "T11.2",
       "milestone_id": "M4",
       "title": "Spacing and thickness controls in the column, arch and garland editor",
-      "objective": "A person moves two controls in the existing editor and sees the structure, counts and shopping list change, with undo and a reset.",
+      "objective": "A person moves two controls in the existing editor and sees the structure, counts and shopping list change, with undo and a reset. Apply controls to EditorTrenzaCompleto AND the separate guirnalda branch. Display spacing as D*separacion cm and thickness as radial centre offset D*grosor cm with an explicit label; changing inflation preserves the ratios and updates the readout. Reset removes the optional fields. Update only the selected piece, retain grouped undo, translated accessible labels and keyboard operation. Author and register scripts/test/test-integracion-separacion-trenza.ts here, including SP-11 and CG-11 modes, separate browser contexts, project and personal-decoration round trips, all three piece types, exact materials and assembly-sheet checks, legacy fixtures and GLB comparison against current rendered geometry; compare stored centreline dimensions rather than assuming spacing preserves the balloon bounding box. Use the local REQ-021 test database only and no paid AI calls.",
       "repository": "pictures",
       "after": [
         "T11.1"
       ],
       "complexity": "low",
       "scope": "small_change",
-      "estimated_minutes": 75,
+      "estimated_minutes": 120,
       "risk": "low",
       "coupling": "medium",
       "confidence": "high",
-      "estimate_rationale": "Agent estimate in minutes: 30 two sliders with centimetre readout and reset + 15 bilingual strings + 30 tests = 75.",
+      "estimate_rationale": "Agent estimate in minutes: 30 controls + 15 bilingual strings + 30 focused checks + 45 integration harness authoring = 120; uncalibrated.",
       "classification_evidence": {
         "complexity": {
           "evidence": [
@@ -11555,10 +12113,12 @@
       "expected_paths": [
         "src/components/tres-d/ParametrosPieza.tsx",
         "src/components/tres-d/textos/taller-edicion.ts",
-        "scripts/test/test-ui-separacion-trenza.ts"
+        "scripts/test/test-ui-separacion-trenza.ts",
+        "scripts/test/test-integracion-separacion-trenza.ts"
       ],
       "shared_resources": [
-        "package.json scripts"
+        "package.json scripts:trenza:test-ui",
+        "package.json scripts:trenza:test-integracion"
       ],
       "acceptance_criteria": [
         "Selecting a column, arch or garland shows spacing and thickness controls in its editor with the current value in centimetres and a reset to the default; moving them updates the scene, the counts and the shopping list, and undo restores the previous values.",
@@ -11594,7 +12154,7 @@
       "id": "T11.3",
       "milestone_id": "M4",
       "title": "Browser end-to-end: edit spacing and thickness, save, reopen and export",
-      "objective": "Real browsers prove the edit, the updated counts, the saved values across browsers and the GLB export together.",
+      "objective": "Real browsers prove the edit, the updated counts, the saved values across browsers and the GLB export together. Run the harness authored by T11.2 and record evidence only; no harness creation belongs to this test task.",
       "repository": "pictures",
       "after": [
         "T11.2"
@@ -11619,7 +12179,7 @@
             "task:T11.2",
             "spec:SPEC.md#requirements"
           ],
-          "justification": "Adds the spacing Playwright script and SP-11 evidence only."
+          "justification": "Runs the existing spacing Playwright harness and writes SP-11 evidence only."
         },
         "duration": {
           "evidence": [
@@ -11651,21 +12211,20 @@
         }
       },
       "expected_paths": [
-        "scripts/test/test-integracion-separacion-trenza.ts",
         ".evidence/REQ-021/SP-11.integration.json"
       ],
       "shared_resources": [
-        "package.json scripts"
+        "contract:taller-scene"
       ],
       "acceptance_criteria": [
-        "On a production build against the REQ-021 database, a Master Designer edits the spacing and thickness of a column and an arch, sees the counts and shopping list change, saves the project, reopens it in another browser with the same values, and exports a GLB whose column height is unchanged."
+        "On a production build against the REQ-021 database, a Master Designer edits the spacing and thickness of a column and an arch, sees the counts and shopping list change, saves the project, reopens it in another browser with the same values, and exports a GLB matching the edited rendered geometry while the stored centreline dimensions remain unchanged."
       ],
       "verification": [
         {
           "type": "command",
           "value": "npm run trenza:test-integracion",
-          "purpose": "On a production build against the REQ-021 database, a Master Designer edits the spacing and thickness of a column and an arch, sees the counts and shopping list change, saves the project, reopens it in another browser with the same values, and exports a GLB whose column height is unchanged.",
-          "created_by": "T11.3",
+          "purpose": "On a production build against the REQ-021 database, a Master Designer edits the spacing and thickness of a column and an arch, sees the counts and shopping list change, saves the project, reopens it in another browser with the same values, and exports a GLB matching the edited rendered geometry while the stored centreline dimensions remain unchanged.",
+          "created_by": "T11.2",
           "category": "integration",
           "requires": [
             "PICTURES_REQ021_DATABASE_URL"
@@ -11770,7 +12329,7 @@
       "objective": "The repository holds the exact owner-approved chat-a-3d@v1 contract before the recommendation cards are built.",
       "repository": "pictures",
       "after": [
-        "T101"
+        "T99"
       ],
       "complexity": "low",
       "scope": "isolated_fix",
@@ -11851,10 +12410,10 @@
       "id": "T12.2",
       "milestone_id": "M4",
       "title": "Deterministic 3D decoration recommender and its guided-chat tool",
-      "objective": "The guided chat can ask for two or three gallery decorations that fit the brief and can only present what the recommender returned.",
+      "objective": "The guided chat can ask for two or three gallery decorations that fit the brief and can only present what the recommender returned. Integrate with the actual SSE text and fin paths in api/asistente-guiado/route.ts, not just the final-text sanitizer. Buffer or deterministically render recommendation assertions until validated; preserve unrelated chat streaming. Test adversarial split chunks, fabricated ids/counts, no-match, Spanish/English output and provider failure with deterministic fixtures. Resolve gallery metadata server-side; never trust client/model names, image URLs or counts. Keep scene opening behind the existing server permission guard.",
       "repository": "pictures",
       "after": [
-        "T101"
+        "T99"
       ],
       "complexity": "medium",
       "scope": "small_change",
@@ -11914,12 +12473,12 @@
         "scripts/test/test-recomendaciones-3d.ts"
       ],
       "shared_resources": [
-        "package.json scripts",
+        "package.json scripts:recomendaciones:test",
         "contract:galeria-index"
       ],
       "acceptance_criteria": [
         "Given a brief with event type, approximate size and colours, the recommender returns two or three existing gallery decorations ranked by occasion, colour match and size, each with its id, name, preview image and total balloon count taken from the decoration's own shopping list, and returns none rather than a weak match when nothing fits.",
-        "Within at most three customer messages the guided chat collects the brief and calls the recommendation tool; its reply names only the decorations the tool returned, and a stubbed model that tries to name another decoration or another count is corrected by the final-text guard."
+        "Within at most three customer messages the guided chat collects the brief and calls the recommendation tool; only returned decoration names and engine counts reach the customer in streamed text, final replies and cards. A stubbed model inventing a name or count, including across split chunks, cannot expose it before final correction."
       ],
       "verification": [
         {
@@ -11932,7 +12491,7 @@
         {
           "type": "command",
           "value": "npm run recomendaciones:test -- --test-name-pattern=herramienta",
-          "purpose": "Within at most three customer messages the guided chat collects the brief and calls the recommendation tool; its reply names only the decorations the tool returned, and a stubbed model that tries to name another decoration or another count is corrected by the final-text guard.",
+          "purpose": "Within at most three customer messages the guided chat collects the brief and calls the recommendation tool; only returned decoration names and engine counts reach the customer in streamed text, final replies and cards. A stubbed model inventing a name or count, including across split chunks, cannot expose it before final correction.",
           "created_by": "T12.2",
           "category": "functional"
         }
@@ -11948,7 +12507,7 @@
       "id": "T12.3",
       "milestone_id": "M4",
       "title": "Recommendation cards in the guided chat with a plan-gated open button",
-      "objective": "Every plan sees the recommended decorations as cards, and only accounts with the explorer open them in the Taller.",
+      "objective": "Every plan sees the recommended decorations as cards, and only accounts with the explorer open them in the Taller. Author and register scripts/test/test-integracion-recomendaciones-3d.ts here, with SP-12 and CG-12 modes, deterministic provider fixtures and the local REQ-021 database; no paid AI calls. Test Entusiasta, Master Designer and staff, English cards, new-unsaved-project opening, save, no-match and permission-denied cases through real entrypoints.",
       "repository": "pictures",
       "after": [
         "T12.1",
@@ -11956,11 +12515,11 @@
       ],
       "complexity": "low",
       "scope": "small_change",
-      "estimated_minutes": 75,
+      "estimated_minutes": 120,
       "risk": "medium",
       "coupling": "medium",
       "confidence": "medium",
-      "estimate_rationale": "Agent estimate in minutes: 35 card with preview, name and count + 10 bilingual strings + 30 tests = 75.",
+      "estimate_rationale": "Agent estimate in minutes: 35 card with preview, name and count + 10 bilingual strings + 30 tests = 75. Additional 45 uncalibrated minutes for integration harness authoring, including CG-12 mode.",
       "classification_evidence": {
         "complexity": {
           "evidence": [
@@ -11981,7 +12540,7 @@
             "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind implement -> status unknown, no comparable samples",
             "task:T12.2"
           ],
-          "justification": "Thirty-five, ten and thirty minutes make seventy-five."
+          "justification": "Thirty-five, ten and thirty minutes make seventy-five. Includes 45 additional minutes for integration harness authoring."
         },
         "risk": {
           "evidence": [
@@ -12008,10 +12567,12 @@
       "expected_paths": [
         "src/components/guiado/TarjetaRecomendacion3D.tsx",
         "src/components/guiado/textos/recomendaciones-3d.ts",
-        "scripts/test/test-ui-recomendaciones-3d.ts"
+        "scripts/test/test-ui-recomendaciones-3d.ts",
+        "scripts/test/test-integracion-recomendaciones-3d.ts"
       ],
       "shared_resources": [
-        "package.json scripts",
+        "package.json scripts:recomendaciones:test-ui",
+        "package.json scripts:recomendaciones:test-integracion",
         "contract:permission-map"
       ],
       "acceptance_criteria": [
@@ -12040,7 +12601,7 @@
       "id": "T12.4",
       "milestone_id": "M4",
       "title": "Browser end-to-end: recommendations for two plans and opening one in the Taller",
-      "objective": "Real browsers prove the two-message brief, the cards for a plan without the Taller and the open-and-save path for Master Designer.",
+      "objective": "Real browsers prove the two-message brief, the cards for a plan without the Taller and the open-and-save path for Master Designer. Execute the harness authored by T12.3 and write evidence only; do not author the harness in this test task.",
       "repository": "pictures",
       "after": [
         "T12.3"
@@ -12097,11 +12658,10 @@
         }
       },
       "expected_paths": [
-        "scripts/test/test-integracion-recomendaciones-3d.ts",
         ".evidence/REQ-021/SP-12.integration.json"
       ],
       "shared_resources": [
-        "package.json scripts"
+        "contract:galeria-index"
       ],
       "acceptance_criteria": [
         "On a production build, with expected results written from the SPEC, an Entusiasta describes a birthday in two messages and gets two or three recommendation cards without an open button, and a Master Designer gets the same cards, opens one in the Taller as a new unsaved project and saves it."
@@ -12111,7 +12671,7 @@
           "type": "command",
           "value": "npm run recomendaciones:test-integracion",
           "purpose": "On a production build, with expected results written from the SPEC, an Entusiasta describes a birthday in two messages and gets two or three recommendation cards without an open button, and a Master Designer gets the same cards, opens one in the Taller as a new unsaved project and saves it.",
-          "created_by": "T12.4",
+          "created_by": "T12.3",
           "category": "integration",
           "requires": [
             "PICTURES_REQ021_DATABASE_URL"
@@ -13114,7 +13674,7 @@
       "id": "T93",
       "milestone_id": "M2",
       "title": "Composition check CG-3: accounts and saved projects",
-      "objective": "The integrated candidate passes account-scoped project save/reopen with every table type and every Backing prop, staff read/copy, conflict rejection and account deletion refusal.",
+      "objective": "The integrated candidate passes account-scoped project save/reopen with every table type and every Backing prop, staff read/copy, conflict rejection and account deletion refusal. Before accepting this gate, run the migration dry-run against the isolated local candidate database with DATABASE_URL set from PICTURES_REQ021_DATABASE_URL; record the actual result and fail on any collision. Never target production or silently skip the check.",
       "repository": "pictures",
       "after": [
         "T92",
@@ -13181,7 +13741,8 @@
         "candidate:CG-3"
       ],
       "acceptance_criteria": [
-        "The integrated candidate passes account-scoped project save/reopen with every table type and every Backing prop, staff read/copy, conflict rejection and account deletion refusal."
+        "The integrated candidate passes account-scoped project save/reopen with every table type and every Backing prop, staff read/copy, conflict rejection and account deletion refusal.",
+        "On this exact integrated candidate, npm run rag:migrate:check succeeds against an isolated local database and rejects duplicate migration numbers; failure prevents composition acceptance and publication of a Probar version."
       ],
       "verification": [
         {
@@ -13189,6 +13750,15 @@
           "value": "npm run proyectos:test-composicion",
           "purpose": "The integrated candidate passes account-scoped project save/reopen with every table type and every Backing prop, staff read/copy, conflict rejection and account deletion refusal.",
           "created_by": "T4.6",
+          "category": "integration",
+          "requires": [
+            "PICTURES_REQ021_DATABASE_URL"
+          ]
+        },
+        {
+          "type": "command",
+          "value": "npm run rag:migrate:check",
+          "purpose": "On this exact integrated candidate, npm run rag:migrate:check succeeds against an isolated local database and rejects duplicate migration numbers; failure prevents composition acceptance and publication of a Probar version.",
           "category": "integration",
           "requires": [
             "PICTURES_REQ021_DATABASE_URL"
@@ -13311,7 +13881,7 @@
       "id": "T95",
       "milestone_id": "M2",
       "title": "Composition check CG-5: saved decorations on the integrated candidate",
-      "objective": "On the integrated candidate of SP-1, SP-2, SP-14, SP-3, SP-4 and SP-5, run the SP-5 integration mode (authored by T5.4) and record .evidence/REQ-021/CG-5.integration.json with personal-library persistence, placement into a project and ownership results.",
+      "objective": "On the integrated candidate of SP-1, SP-2, SP-14, SP-3, SP-4 and SP-5, run the SP-5 integration mode (authored by T5.4) and record .evidence/REQ-021/CG-5.integration.json with personal-library persistence, placement into a project and ownership results. Before accepting this gate, run the migration dry-run against the isolated local candidate database with DATABASE_URL set from PICTURES_REQ021_DATABASE_URL; record the actual result and fail on any collision. Never target production or silently skip the check.",
       "repository": "pictures",
       "after": [
         "T93",
@@ -13377,7 +13947,8 @@
         "db:personal-decorations"
       ],
       "acceptance_criteria": [
-        "The integrated candidate passes account-owned saved-decoration persistence across browsers, placement into a project, staff read-only access and owner-only mutation and cross-account denial."
+        "The integrated candidate passes account-owned saved-decoration persistence across browsers, placement into a project, staff read-only access and owner-only mutation and cross-account denial.",
+        "On this exact integrated candidate, npm run rag:migrate:check succeeds against an isolated local database and rejects duplicate migration numbers; failure prevents composition acceptance and publication of a Probar version."
       ],
       "verification": [
         {
@@ -13385,6 +13956,15 @@
           "value": "npm run decoraciones:test-integracion",
           "purpose": "The integrated candidate passes account-owned saved-decoration persistence across browsers, placement into a project, staff read-only access and owner-only mutation and cross-account denial.",
           "created_by": "T5.4",
+          "category": "integration",
+          "requires": [
+            "PICTURES_REQ021_DATABASE_URL"
+          ]
+        },
+        {
+          "type": "command",
+          "value": "npm run rag:migrate:check",
+          "purpose": "On this exact integrated candidate, npm run rag:migrate:check succeeds against an isolated local database and rejects duplicate migration numbers; failure prevents composition acceptance and publication of a Probar version.",
           "category": "integration",
           "requires": [
             "PICTURES_REQ021_DATABASE_URL"
@@ -13401,7 +13981,7 @@
       "id": "T96",
       "milestone_id": "M2",
       "title": "Composition check CG-6: AI spend per account on the integrated candidate",
-      "objective": "On the integrated candidate of SP-1, SP-2, SP-14, SP-3, SP-4, SP-5 and SP-6, run the SP-6 integration mode (authored by T6.5) and record .evidence/REQ-021/CG-6.integration.json with account/session spend attribution, rollups and staff-only access results.",
+      "objective": "On the integrated candidate of SP-1, SP-2, SP-14, SP-3, SP-4, SP-5 and SP-6, run the SP-6 integration mode (authored by T6.5) and record .evidence/REQ-021/CG-6.integration.json with account/session spend attribution, rollups and staff-only access results. Before accepting this gate, run the migration dry-run against the isolated local candidate database with DATABASE_URL set from PICTURES_REQ021_DATABASE_URL; record the actual result and fail on any collision. Never target production or silently skip the check.",
       "repository": "pictures",
       "after": [
         "T95",
@@ -13467,7 +14047,8 @@
         "db:ai-usage"
       ],
       "acceptance_criteria": [
-        "The integrated candidate records account/session-attributed usage for representative text and image calls from Next and ai-api; project calls roll up under the project with conversation detail, known billable provider-error usage is partial/error, staff see totals, and Usuario is denied."
+        "The integrated candidate records account/session-attributed usage for representative text and image calls from Next and ai-api; project calls roll up under the project with conversation detail, known billable provider-error usage is partial/error, staff see totals, and Usuario is denied.",
+        "On this exact integrated candidate, npm run rag:migrate:check succeeds against an isolated local database and rejects duplicate migration numbers; failure prevents composition acceptance and publication of a Probar version."
       ],
       "verification": [
         {
@@ -13475,6 +14056,15 @@
           "value": "npm run gasto:test-integracion",
           "purpose": "The integrated candidate records account/session-attributed usage for representative text and image calls from Next and ai-api; project calls roll up under the project with conversation detail, known billable provider-error usage is partial/error, staff see totals, and Usuario is denied.",
           "created_by": "T6.5",
+          "category": "integration",
+          "requires": [
+            "PICTURES_REQ021_DATABASE_URL"
+          ]
+        },
+        {
+          "type": "command",
+          "value": "npm run rag:migrate:check",
+          "purpose": "On this exact integrated candidate, npm run rag:migrate:check succeeds against an isolated local database and rejects duplicate migration numbers; failure prevents composition acceptance and publication of a Probar version.",
           "category": "integration",
           "requires": [
             "PICTURES_REQ021_DATABASE_URL"
@@ -13492,7 +14082,7 @@
       "id": "T97",
       "milestone_id": "M2",
       "title": "Composition check CG-7: chat tools and gallery on the integrated candidate",
-      "objective": "On the integrated candidate with SP-7, run the CG-7 mode of the SP-7 integration script and record .evidence/REQ-021/CG-7.integration.json: tool gating, gallery-to-saved-project and per-tool spend in the staff view.",
+      "objective": "On the integrated candidate with SP-7, run the CG-7 mode of the SP-7 integration script and record .evidence/REQ-021/CG-7.integration.json: tool gating, gallery-to-saved-project and per-tool spend in the staff view. Before accepting this gate, run the migration dry-run against the isolated local candidate database with DATABASE_URL set from PICTURES_REQ021_DATABASE_URL; record the actual result and fail on any collision. Never target production or silently skip the check.",
       "repository": "pictures",
       "after": [
         "T96",
@@ -13556,7 +14146,8 @@
         "candidate:CG-7"
       ],
       "acceptance_criteria": [
-        "On the integrated candidate with SP-7, an Entusiasta counts a decoration without prices and is refused the calculator, a Master Designer opens a gallery decoration as a new project and saves it as a project, and each tool's paid calls appear under its own tag in the staff spend view."
+        "On the integrated candidate with SP-7, an Entusiasta counts a decoration without prices and is refused the calculator, a Master Designer opens a gallery decoration as a new project and saves it as a project, and each tool's paid calls appear under its own tag in the staff spend view.",
+        "On this exact integrated candidate, npm run rag:migrate:check succeeds against an isolated local database and rejects duplicate migration numbers; failure prevents composition acceptance and publication of a Probar version."
       ],
       "verification": [
         {
@@ -13564,6 +14155,15 @@
           "value": "npm run herramientas:test-integracion -- --modo CG-7",
           "purpose": "On the integrated candidate with SP-7, an Entusiasta counts a decoration without prices and is refused the calculator, a Master Designer opens a gallery decoration as a new project and saves it as a project, and each tool's paid calls appear under its own tag in the staff spend view.",
           "created_by": "T7.9",
+          "category": "integration",
+          "requires": [
+            "PICTURES_REQ021_DATABASE_URL"
+          ]
+        },
+        {
+          "type": "command",
+          "value": "npm run rag:migrate:check",
+          "purpose": "On this exact integrated candidate, npm run rag:migrate:check succeeds against an isolated local database and rejects duplicate migration numbers; failure prevents composition acceptance and publication of a Probar version.",
           "category": "integration",
           "requires": [
             "PICTURES_REQ021_DATABASE_URL"
@@ -13580,7 +14180,7 @@
       "id": "T98",
       "milestone_id": "M3",
       "title": "Composition check CG-8: English across accounts, saved projects, tools and the Taller",
-      "objective": "On the integrated candidate with SP-8, run the CG-8 mode of the language integration script and record .evidence/REQ-021/CG-8.integration.json.",
+      "objective": "On the integrated candidate with SP-8, run the CG-8 mode of the language integration script and record .evidence/REQ-021/CG-8.integration.json. Before accepting this gate, run the migration dry-run against the isolated local candidate database with DATABASE_URL set from PICTURES_REQ021_DATABASE_URL; record the actual result and fail on any collision. Never target production or silently skip the check.",
       "repository": "pictures",
       "after": [
         "T97",
@@ -13644,7 +14244,8 @@
         "candidate:CG-8"
       ],
       "acceptance_criteria": [
-        "On the integrated candidate with SP-8, an English first visit signs in, opens a saved project and a gallery decoration in the English Taller, counts with the counter, and switching to Spanish is kept on the account in another browser."
+        "On the integrated candidate with SP-8, an English first visit signs in, opens a saved project and a gallery decoration in the English Taller, counts with the counter, and switching to Spanish is kept on the account in another browser.",
+        "On this exact integrated candidate, npm run rag:migrate:check succeeds against an isolated local database and rejects duplicate migration numbers; failure prevents composition acceptance and publication of a Probar version."
       ],
       "verification": [
         {
@@ -13652,6 +14253,15 @@
           "value": "npm run idioma:test-integracion -- --modo CG-8",
           "purpose": "On the integrated candidate with SP-8, an English first visit signs in, opens a saved project and a gallery decoration in the English Taller, counts with the counter, and switching to Spanish is kept on the account in another browser.",
           "created_by": "T8.7",
+          "category": "integration",
+          "requires": [
+            "PICTURES_REQ021_DATABASE_URL"
+          ]
+        },
+        {
+          "type": "command",
+          "value": "npm run rag:migrate:check",
+          "purpose": "On this exact integrated candidate, npm run rag:migrate:check succeeds against an isolated local database and rejects duplicate migration numbers; failure prevents composition acceptance and publication of a Probar version.",
           "category": "integration",
           "requires": [
             "PICTURES_REQ021_DATABASE_URL"
@@ -13667,7 +14277,7 @@
       "id": "T99",
       "milestone_id": "M3",
       "title": "Composition check CG-9: English product and decoration texts across tools and the Taller",
-      "objective": "On the integrated candidate run `npm run textos:test-integracion -- --modo CG-9` and record .evidence/REQ-021/CG-9.integration.json.",
+      "objective": "On the integrated candidate run `npm run textos:test-integracion -- --modo CG-9` and record .evidence/REQ-021/CG-9.integration.json. Before accepting this gate, run the migration dry-run against the isolated local candidate database with DATABASE_URL set from PICTURES_REQ021_DATABASE_URL; record the actual result and fail on any collision. Never target production or silently skip the check.",
       "repository": "pictures",
       "after": [
         "T98",
@@ -13731,7 +14341,8 @@
         "candidate:CG-9"
       ],
       "acceptance_criteria": [
-        "On the integrated candidate with SP-9, an English session sees English product names in the counter's shopping list, the calculator and the Taller library, and a saved project reopens with English names."
+        "On the integrated candidate with SP-9, an English session sees English product names in the counter's shopping list, the calculator and the Taller library, and a saved project reopens with English names.",
+        "On this exact integrated candidate, npm run rag:migrate:check succeeds against an isolated local database and rejects duplicate migration numbers; failure prevents composition acceptance and publication of a Probar version."
       ],
       "verification": [
         {
@@ -13739,6 +14350,15 @@
           "value": "npm run textos:test-integracion -- --modo CG-9",
           "purpose": "On the integrated candidate with SP-9, an English session sees English product names in the counter's shopping list, the calculator and the Taller library, and a saved project reopens with English names.",
           "created_by": "T9.5",
+          "category": "integration",
+          "requires": [
+            "PICTURES_REQ021_DATABASE_URL"
+          ]
+        },
+        {
+          "type": "command",
+          "value": "npm run rag:migrate:check",
+          "purpose": "On this exact integrated candidate, npm run rag:migrate:check succeeds against an isolated local database and rejects duplicate migration numbers; failure prevents composition acceptance and publication of a Probar version.",
           "category": "integration",
           "requires": [
             "PICTURES_REQ021_DATABASE_URL"
@@ -13754,7 +14374,7 @@
       "id": "T100",
       "milestone_id": "M3",
       "title": "Composition check CG-10: the whole external app in English",
-      "objective": "On the integrated candidate run `npm run idioma:test-integracion-resto -- --modo CG-10` and record .evidence/REQ-021/CG-10.integration.json.",
+      "objective": "On the integrated candidate run `npm run idioma:test-integracion-resto -- --modo CG-10` and record .evidence/REQ-021/CG-10.integration.json. Consume the repaired T10.45 harness in CG-10 mode and fresh candidate-bound complete evidence after T10.6; no stale r25 partial result can satisfy this gate, and the separate T10.5 manual criterion must remain independently satisfied. Before accepting this gate, run the migration dry-run against the isolated local candidate database with DATABASE_URL set from PICTURES_REQ021_DATABASE_URL; record the actual result and fail on any collision. Never target production or silently skip the check.",
       "repository": "pictures",
       "after": [
         "T99",
@@ -13818,14 +14438,24 @@
         "candidate:CG-10"
       ],
       "acceptance_criteria": [
-        "On the integrated candidate with SP-10, an English Master Designer goes from sign-in through the home, chat, counter, calculator, gallery, a saved project and the Taller entirely in English, and a Spanish account sees today's Spanish."
+        "On the integrated candidate with SP-10, an English Master Designer goes from sign-in through the home, chat, counter, calculator, gallery, a saved project and the Taller entirely in English, and a Spanish account sees today's Spanish.",
+        "On this exact integrated candidate, npm run rag:migrate:check succeeds against an isolated local database and rejects duplicate migration numbers; failure prevents composition acceptance and publication of a Probar version."
       ],
       "verification": [
         {
           "type": "command",
           "value": "npm run idioma:test-integracion-resto -- --modo CG-10",
           "purpose": "On the integrated candidate with SP-10, an English Master Designer goes from sign-in through the home, chat, counter, calculator, gallery, a saved project and the Taller entirely in English, and a Spanish account sees today's Spanish.",
-          "created_by": "T10.5",
+          "created_by": "T10.45",
+          "category": "integration",
+          "requires": [
+            "PICTURES_REQ021_DATABASE_URL"
+          ]
+        },
+        {
+          "type": "command",
+          "value": "npm run rag:migrate:check",
+          "purpose": "On this exact integrated candidate, npm run rag:migrate:check succeeds against an isolated local database and rejects duplicate migration numbers; failure prevents composition acceptance and publication of a Probar version.",
           "category": "integration",
           "requires": [
             "PICTURES_REQ021_DATABASE_URL"
@@ -13841,9 +14471,10 @@
       "id": "T101",
       "milestone_id": "M4",
       "title": "Composition check CG-11: edited structures in saved projects, decorations and English",
-      "objective": "On the integrated candidate run `npm run trenza:test-integracion -- --modo CG-11` and record .evidence/REQ-021/CG-11.integration.json.",
+      "objective": "On the integrated candidate run `npm run trenza:test-integracion -- --modo CG-11` and record .evidence/REQ-021/CG-11.integration.json. Before accepting this gate, run the migration dry-run against the isolated local candidate database with DATABASE_URL set from PICTURES_REQ021_DATABASE_URL; record the actual result and fail on any collision. Never target production or silently skip the check.",
       "repository": "pictures",
       "after": [
+        "T100",
         "T11.4"
       ],
       "complexity": "medium",
@@ -13904,14 +14535,24 @@
         "candidate:CG-11"
       ],
       "acceptance_criteria": [
-        "On the integrated candidate with SP-11, an edited column saves as a project and as a personal decoration, reopens with the same spacing, and its editor controls read in English for an English account."
+        "On the integrated candidate with SP-11, an edited column saves as a project and as a personal decoration, reopens with the same spacing, and its editor controls read in English for an English account.",
+        "On this exact integrated candidate, npm run rag:migrate:check succeeds against an isolated local database and rejects duplicate migration numbers; failure prevents composition acceptance and publication of a Probar version."
       ],
       "verification": [
         {
           "type": "command",
           "value": "npm run trenza:test-integracion -- --modo CG-11",
           "purpose": "On the integrated candidate with SP-11, an edited column saves as a project and as a personal decoration, reopens with the same spacing, and its editor controls read in English for an English account.",
-          "created_by": "T11.3",
+          "created_by": "T11.2",
+          "category": "integration",
+          "requires": [
+            "PICTURES_REQ021_DATABASE_URL"
+          ]
+        },
+        {
+          "type": "command",
+          "value": "npm run rag:migrate:check",
+          "purpose": "On this exact integrated candidate, npm run rag:migrate:check succeeds against an isolated local database and rejects duplicate migration numbers; failure prevents composition acceptance and publication of a Probar version.",
           "category": "integration",
           "requires": [
             "PICTURES_REQ021_DATABASE_URL"
@@ -13927,9 +14568,10 @@
       "id": "T102",
       "milestone_id": "M4",
       "title": "Composition check CG-12: chat recommendations into saved projects, in both languages",
-      "objective": "On the integrated candidate run `npm run recomendaciones:test-integracion -- --modo CG-12` and record .evidence/REQ-021/CG-12.integration.json.",
+      "objective": "On the integrated candidate run `npm run recomendaciones:test-integracion -- --modo CG-12` and record .evidence/REQ-021/CG-12.integration.json. Before accepting this gate, run the migration dry-run against the isolated local candidate database with DATABASE_URL set from PICTURES_REQ021_DATABASE_URL; record the actual result and fail on any collision. Never target production or silently skip the check.",
       "repository": "pictures",
       "after": [
+        "T101",
         "T12.6"
       ],
       "complexity": "medium",
@@ -13990,14 +14632,24 @@
         "candidate:CG-12"
       ],
       "acceptance_criteria": [
-        "On the integrated candidate with SP-12, an English Master Designer gets English recommendation cards, opens one as a new project, edits a column's spacing and saves it, and the AI spend view shows the chat call under its tag."
+        "On the integrated candidate with SP-12, an English Master Designer gets English recommendation cards, opens one as a new project, edits a column's spacing and saves it, and the AI spend view shows the chat call under its tag.",
+        "On this exact integrated candidate, npm run rag:migrate:check succeeds against an isolated local database and rejects duplicate migration numbers; failure prevents composition acceptance and publication of a Probar version."
       ],
       "verification": [
         {
           "type": "command",
           "value": "npm run recomendaciones:test-integracion -- --modo CG-12",
           "purpose": "On the integrated candidate with SP-12, an English Master Designer gets English recommendation cards, opens one as a new project, edits a column's spacing and saves it, and the AI spend view shows the chat call under its tag.",
-          "created_by": "T12.4",
+          "created_by": "T12.3",
+          "category": "integration",
+          "requires": [
+            "PICTURES_REQ021_DATABASE_URL"
+          ]
+        },
+        {
+          "type": "command",
+          "value": "npm run rag:migrate:check",
+          "purpose": "On this exact integrated candidate, npm run rag:migrate:check succeeds against an isolated local database and rejects duplicate migration numbers; failure prevents composition acceptance and publication of a Probar version.",
           "category": "integration",
           "requires": [
             "PICTURES_REQ021_DATABASE_URL"
@@ -14822,7 +15474,7 @@
       "id": "T103",
       "milestone_id": "M5",
       "title": "Final composition CG-13: pilot candidate and publication identity",
-      "objective": "Run the established pilot rehearsal in CG-13 mode on the final integrated tree; compare the audited release receipt to the same manifest, without production mutation or paid AI.",
+      "objective": "Run the established pilot rehearsal in CG-13 mode on the final integrated tree; compare the audited release receipt to the same manifest, without production mutation or paid AI. Before accepting this gate, run the migration dry-run against the isolated local candidate database with DATABASE_URL set from PICTURES_REQ021_DATABASE_URL; record the actual result and fail on any collision. Never target production or silently skip the check.",
       "repository": "pictures",
       "after": [
         "T13.8"
@@ -14842,7 +15494,8 @@
         "contract:pilot-release"
       ],
       "acceptance_criteria": [
-        "The final cumulative pilot candidate passes the local invite-to-save-and-GLB integration with role denials and truthful fixture spend, and its release manifest matches the independently audited production receipt; no cut is inferred from a missing task or failed check."
+        "The final cumulative pilot candidate passes the local invite-to-save-and-GLB integration with role denials and truthful fixture spend, and its release manifest matches the independently audited production receipt; no cut is inferred from a missing task or failed check.",
+        "On this exact integrated candidate, npm run rag:migrate:check succeeds against an isolated local database and rejects duplicate migration numbers; failure prevents composition acceptance and publication of a Probar version."
       ],
       "verification": [
         {
@@ -14850,6 +15503,15 @@
           "value": "npm run piloto:ensayo -- --modo CG-13",
           "purpose": "The final cumulative pilot candidate passes the local invite-to-save-and-GLB integration with role denials and truthful fixture spend, and its release manifest matches the independently audited production receipt; no cut is inferred from a missing task or failed check.",
           "created_by": "T13.3",
+          "category": "integration",
+          "requires": [
+            "PICTURES_REQ021_DATABASE_URL"
+          ]
+        },
+        {
+          "type": "command",
+          "value": "npm run rag:migrate:check",
+          "purpose": "On this exact integrated candidate, npm run rag:migrate:check succeeds against an isolated local database and rejects duplicate migration numbers; failure prevents composition acceptance and publication of a Probar version.",
           "category": "integration",
           "requires": [
             "PICTURES_REQ021_DATABASE_URL"

@@ -1,10 +1,10 @@
 # Index — metodologia
 
-_Generated 2026-10-28 19:43 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-29 17:18 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/metodologia) · [graph](http://127.0.0.1:8765/p/metodologia/graph)  
-**Last activity:** 2026-10-28
+**Last activity:** 2026-10-29
 
 ## Workspace
 
@@ -44,6 +44,7 @@ _Generated 2026-10-28 19:43 by `bitacora.py index`. Do not edit by hand._
 | [REQ-028](requirements/REQ-028-per-run-integration-branch-and-remediati/SPEC.md) | Per-run integration branch and remediation tasks: audit findings stop cascading rebuilds | `in-progress` | — |  |
 | [REQ-029](requirements/REQ-029-autonomous-recovery-from-repeated-audit/SPEC.md) | Autonomous recovery from repeated audit and integration failures | `done` | — |  |
 | [REQ-030](requirements/REQ-030-operation-metamorfosis-durable-self-heal/SPEC.md) | Operation Metamorfosis: durable, self-healing, Linux-native execution engine | `in-progress` | — | report ✓ |
+| [REQ-031](requirements/REQ-031-solucionador-a-full-access-agent-that-fi/SPEC.md) | Solucionador: a full-access agent that fixes blocked runs at their origin | `ready` | [in-progress](requirements/REQ-031-solucionador-a-full-access-agent-that-fi/PLAN.md) |  |
 
 ## Top pending (urgency, then complexity)
 
@@ -57,11 +58,11 @@ _Generated 2026-10-28 19:43 by `bitacora.py index`. Do not edit by hand._
 
 ## Recent decisions
 
-- D-143 — Build order follows consumption: a consumer builds on the audited producer
-- D-142 — The owner manages execution and tests from the Plan tab
-- D-141 — Stage readiness is a standing gate, not a button surprise
-- D-140 — The system asks pending Planner assumptions and applies the answer; Planners survive a reboot
-- D-139 — The failure analyst never judges an audit that rejects, and checks may inherit the environment
+- D-168 — Task sessions never do the bitácora's chores
+- D-167 — The durable engine heals its runs' decisions
+- D-166 — Reconfirming a running subplan approves its stage again
+- D-165 — Dependencies are typed when the plan is written
+- D-164 — Subplan lines settle conflicts like the composer
 
 ## Artifacts
 
@@ -78,7 +79,7 @@ _Generated 2026-10-28 19:43 by `bitacora.py index`. Do not edit by hand._
 ## Timeline
 
 - **2026-10** — [month summary](2026-10/MONTH.md)
-  - [W5](2026-10/W5/WEEK.md): [28](2026-10/W5/2026-10-28.md), [27](2026-10/W5/2026-10-27.md), [26](2026-10/W5/2026-10-26.md)
+  - [W5](2026-10/W5/WEEK.md): [29](2026-10/W5/2026-10-29.md), [28](2026-10/W5/2026-10-28.md), [27](2026-10/W5/2026-10-27.md), [26](2026-10/W5/2026-10-26.md)
   - [W4](2026-10/W4/WEEK.md): [25](2026-10/W4/2026-10-25.md), [24](2026-10/W4/2026-10-24.md), [23](2026-10/W4/2026-10-23.md), [22](2026-10/W4/2026-10-22.md), [21](2026-10/W4/2026-10-21.md), [20](2026-10/W4/2026-10-20.md), [19](2026-10/W4/2026-10-19.md)
   - [W3](2026-10/W3/WEEK.md): [18](2026-10/W3/2026-10-18.md), [17](2026-10/W3/2026-10-17.md), [16](2026-10/W3/2026-10-16.md), [15](2026-10/W3/2026-10-15.md), [14](2026-10/W3/2026-10-14.md), [13](2026-10/W3/2026-10-13.md), [12](2026-10/W3/2026-10-12.md)
   - [W2](2026-10/W2/WEEK.md): [10](2026-10/W2/2026-10-10.md), [09](2026-10/W2/2026-10-09.md), [08](2026-10/W2/2026-10-08.md)
