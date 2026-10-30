@@ -7,6 +7,7 @@ from __future__ import annotations
 import subprocess
 import sys
 import tempfile
+import time
 import unittest
 from unittest import mock
 from pathlib import Path
@@ -128,6 +129,7 @@ class Integrate(unittest.TestCase):
         self.live_bitacora_intact()
         self.assertFalse(self.wt.exists())                                       # clean and merged: cleaned up
         self.assertEqual(sh(self.live, "branch", "--list", "fix"), "")
+        self.assertEqual(sh(self.live, "branch", "--list", "deploy-fix"), "")                # D-220
         entry = self.log.read_text()
         for text in (f"previous main: {self.previous}", "/backups/bt_durable-1.dump 10 abc",
                      "regression: 2 files, only baseline failures (test_known_red)", "rollback: git revert the "
@@ -404,6 +406,112 @@ class Staged(unittest.TestCase):
         self.assertEqual(bt_regress.estimate(seconds, seconds, workers=2), 10 + 30 + 100)   # a, c | b
         self.assertEqual(bt_regress.estimate(seconds, ["test_a", "test_b"], workers=2), 10)
 
+
+
+class Hygiene(unittest.TestCase):
+    """D-220: merged deploy-* branches piled up, and full regressions ran three at a time."""
+
+    def test_two_full_regressions_never_run_at_once(self):
+        import threading
+        with tempfile.TemporaryDirectory() as tmp:
+            inside, overlap = [], []
+
+            def staged(*args, **kwargs):
+                inside.append(1)
+                if len(inside) > 1:
+                    overlap.append(1)
+                time.sleep(0.2)
+                inside.pop()
+                return "ok"
+            with mock.patch.object(integ, "lock_file", return_value=Path(tmp) / "integrate.lock"), \
+                    mock.patch("bt_regress.staged", side_effect=staged):
+                threads = [threading.Thread(target=integ.Services().regress, args=(Path(tmp), Path(tmp), Path(tmp) / "o"))
+                           for _ in range(3)]
+                for thread in threads:
+                    thread.start()
+                for thread in threads:
+                    thread.join()
+            self.assertEqual(overlap, [])
+
+
+class Detached(unittest.TestCase):
+    """D-225: an integration re-runs itself in its own unit; the caller follows its log and returns its exit code."""
+
+    def run_detached(self, unit_states, write_rc=True):
+        import io
+        with tempfile.TemporaryDirectory() as tmp:
+            deploy = Path(tmp) / "deploy"
+            calls = []
+
+            def fake_run(argv, **kwargs):
+                calls.append(argv)
+                if argv[0] == "systemd-run":
+                    log = Path(next(a for a in argv if a.startswith("--property=StandardOutput=append:")).split(":", 1)[1])
+                    rc = Path(next(a for a in argv if a.startswith("--setenv=BT_INTEGRATE_RC=")).split("=", 2)[2])
+                    log.write_text("preflight ok\nmain is now abc\n")
+                    if write_rc:
+                        rc.write_text("0\n")
+                    return subprocess.CompletedProcess(argv, 0, "", "")
+                return subprocess.CompletedProcess(argv, 0, unit_states.pop(0) if unit_states else "inactive", "")
+            out = io.StringIO()
+            with mock.patch.object(integ, "DEPLOY", deploy), mock.patch.object(integ.subprocess, "run", side_effect=fake_run):
+                code = integ.detached(["--branch", "x", "--title", "t"], "x", poll=0.0, out=out)
+            return code, out.getvalue(), calls
+
+    def test_the_caller_prints_the_units_log_and_returns_its_code(self):
+        code, shown, calls = self.run_detached([])
+        self.assertEqual(code, 0)
+        self.assertIn("main is now abc", shown)
+        start = calls[0]
+        self.assertEqual(start[:2], ["systemd-run", "--user"])
+        self.assertIn("--setenv=BT_INTEGRATE_DETACHED=1", start)
+        self.assertEqual(start[-4:], ["--branch", "x", "--title", "t"])
+
+    def test_a_unit_that_ends_without_an_exit_code_is_reported(self):
+        code, shown, _ = self.run_detached(["inactive", "inactive"], write_rc=False)
+        self.assertEqual(code, 4)
+        self.assertIn("without an exit code", shown)
+
+
+class FairLock(unittest.TestCase):
+    """D-230: waiters get the machine lock in arrival order; a dead waiter's ticket never blocks the queue."""
+
+    def test_waiters_are_served_in_arrival_order(self):
+        import threading
+        with tempfile.TemporaryDirectory() as tmp:
+            lock, order = Path(tmp) / "integrate.lock", []
+            holding = threading.Event()
+
+            def holder():
+                with integ.machine_lock(lock, 5, poll=0.01):
+                    holding.set()
+                    time.sleep(0.3)
+
+            def waiter(name):
+                with integ.machine_lock(lock, 10, poll=0.01):
+                    order.append(name)
+                    time.sleep(0.05)
+            first = threading.Thread(target=holder)
+            first.start()
+            holding.wait()
+            threads = []
+            for name in ("a", "b", "c"):
+                threads.append(threading.Thread(target=waiter, args=(name,)))
+                threads[-1].start()
+                time.sleep(0.05)                          # arrival order a, b, c
+            for thread in [first, *threads]:
+                thread.join()
+            self.assertEqual(order, ["a", "b", "c"])
+
+    def test_a_dead_waiters_ticket_is_skipped(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            lock = Path(tmp) / "integrate.lock"
+            queue = lock.with_name("integrate.lock.queue")
+            queue.mkdir()
+            (queue / f"{0:020d}-999999999").touch()       # a waiter that died long ago
+            with integ.machine_lock(lock, 2, poll=0.01):
+                pass
+            self.assertEqual(list(queue.iterdir()), [])
 
 
 class Drain(unittest.TestCase):
