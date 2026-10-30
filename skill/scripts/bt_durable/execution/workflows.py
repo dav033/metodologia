@@ -343,8 +343,15 @@ def _incarnation(workflow_id: str, run: RunRef) -> int:
     return int(suffix[1:]) if suffix.startswith("@") and suffix[1:].isdigit() else 1
 
 
-def _step_error(error: Exception) -> str:
-    return f"{type(error).__name__}: {error}"[:500]
+def _step_error(error: Exception, limit: int = 500) -> str:
+    """The error as a fact, with the cause a spent step hides: DBOSMaxStepRetriesExceeded only says the step ran out of
+    retries, so pictures REQ-021 r25's gate CG-7 was rejected as «COMPOSE_FAILED 3 turns: … bt.compose has exceeded its
+    maximum of 3 retries» without the GitCommandError that caused it (2026-10-29). Text only: no step changes."""
+    text = f"{type(error).__name__}: {error}"
+    errors = getattr(error, "errors", None) if isinstance(error, DBOSMaxStepRetriesExceeded) else None
+    if errors:
+        text += f" (last: {type(errors[-1]).__name__}: {errors[-1]})"
+    return text[:limit]
 
 
 def _stale_command(command: RunCommand, paused: bool, rounds: dict[str, int]) -> str:
@@ -659,7 +666,7 @@ def _enqueue(queue: str, workflow_id: str, func, *args) -> dict:
     try:
         return handle.get_result()
     except Exception as error:  # noqa: BLE001 - classified as an internal failure with its message as evidence
-        return {"internal_error": f"{type(error).__name__}: {error}"[:2000]}
+        return {"internal_error": _step_error(error, 2000)}
 
 
 def _route_key(route: Route) -> str:

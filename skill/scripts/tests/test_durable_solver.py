@@ -261,6 +261,18 @@ class SolverTests(unittest.TestCase):
         self.assertIn("GitCommandError", brief)
         self.assertNotIn("CG-1", brief)                  # another run's gate
 
+    def test_a_spent_step_reports_its_cause(self):
+        """The reason the run records (gate_compose_failed, the rejected gate, a child's internal_error) is what the
+        brief shows: r25's said only that bt.compose ran out of retries, not why."""
+        import pickle
+
+        from bt_durable.execution import steps, workflows
+        from dbos._error import DBOSMaxStepRetriesExceeded
+        spent = DBOSMaxStepRetriesExceeded("bt.compose", 3, [steps.StepFailure("GitCommandError: app/[locale]/page.tsx")])
+        for error in (spent, pickle.loads(pickle.dumps(spent))):          # as raised, and as DBOS replays it
+            self.assertIn("GitCommandError: app/[locale]/page.tsx", workflows._step_error(error))
+        self.assertEqual(workflows._step_error(RuntimeError("x")), "RuntimeError: x")
+
     def test_a_paused_run_a_live_task_or_a_change_is_not_stalled(self):
         run = type("R", (), {"run_id": "proj:REQ-900:r1"})()
         cfg, state = solver.settings(), {}
