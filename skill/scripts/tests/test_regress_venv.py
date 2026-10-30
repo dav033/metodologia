@@ -1,6 +1,8 @@
-"""bt_regress creates the worktree's uv venv once when a suite needs it (an integration's worktree is a fresh checkout)."""
+"""bt_regress creates the worktree's uv venv once when a suite needs it (an integration's worktree is a fresh checkout),
+and every suite starts with the job-control signals at their default (D-227, D-229)."""
 from __future__ import annotations
 
+import signal
 import subprocess
 import sys
 import tempfile
@@ -55,6 +57,29 @@ class Venv(unittest.TestCase):
         line = bt_regress.run_suite(self.worktree, scratch, suite)
         self.assertEqual(line.split()[:2], ["test_durable_x", "125"])
         self.assertIn("lock file out of date", (scratch / "logs" / "test_durable_x.log").read_text(encoding="utf-8"))
+
+
+class Signals(unittest.TestCase):
+    def test_a_suite_does_not_inherit_ignored_job_control_signals(self):
+        temp = tempfile.TemporaryDirectory()
+        self.addCleanup(temp.cleanup)
+        worktree = Path(temp.name) / "wt"
+        tests = worktree / "skill" / "scripts" / "tests"
+        tests.mkdir(parents=True)
+        suite = tests / "test_job_signals.py"
+        suite.write_text("import signal, unittest\n"
+                         "class T(unittest.TestCase):\n"
+                         "    def test_default(self):\n"
+                         "        for s in (signal.SIGTTIN, signal.SIGTTOU, signal.SIGTSTP):\n"
+                         "            self.assertEqual(signal.getsignal(s), signal.SIG_DFL)\n", encoding="utf-8")
+        before = {s: signal.signal(s, signal.SIG_IGN) for s in (signal.SIGTTIN, signal.SIGTTOU, signal.SIGTSTP)}
+        try:                                       # as when the regression runs from a background shell
+            line = bt_regress.run_suite(worktree, Path(temp.name) / "scratch", suite)
+        finally:
+            for s, handler in before.items():
+                signal.signal(s, handler)
+        self.assertEqual(line.split()[:2], ["test_job_signals", "0"],
+                         (Path(temp.name) / "scratch" / "logs" / "test_job_signals.log").read_text(encoding="utf-8"))
 
 
 if __name__ == "__main__":

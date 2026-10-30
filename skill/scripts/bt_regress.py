@@ -91,6 +91,16 @@ def allowed_failures() -> tuple[str, ...]:
     return tuple(value) if isinstance(value, list) else BASELINE
 
 
+# `python -m unittest <name>` with the job-control signals back at their default first. A disposition of SIG_IGN is
+# inherited through exec, and a regression started from a background shell (an agent's tool, `cmd &`) ignores SIGTTIN,
+# SIGTTOU and SIGTSTP: a suite child reading the tty from the background then gets EIO instead of stopping, and
+# test_orchestration_terminal failed every time, alone too, in the integrations of 2026-10-30 12:33 and 13:02 (D-229).
+UNITTEST = ("import signal\n"
+            "for name in ('SIGTTIN', 'SIGTTOU', 'SIGTSTP'):\n"
+            "    signal.signal(getattr(signal, name), signal.SIG_DFL)\n"
+            "import sys, unittest\n"
+            "unittest.main(module=None, argv=['python -m unittest', sys.argv[1]])\n")
+
 _VENVS: dict[Path, tuple[str, str]] = {}
 _VENV_LOCK = threading.Lock()
 
@@ -139,7 +149,7 @@ def run_suite(worktree: Path, scratch: Path, path: Path, tag: str = "") -> str:
         log.write_text(why, encoding="utf-8")
         return f"{name} 125 {round(time.monotonic() - started)} venv"
     try:
-        done = subprocess.run([interpreter, "-m", "unittest", name], cwd=tests, env=env, capture_output=True,
+        done = subprocess.run([interpreter, "-c", UNITTEST, name], cwd=tests, env=env, capture_output=True,
                               text=True, timeout=TIMEOUT)
         code = done.returncode
         log.write_text(done.stdout + done.stderr, encoding="utf-8")
