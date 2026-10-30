@@ -38,7 +38,7 @@ from bt_contracts.owner import RunCommand
 from bt_durable import projection
 from bt_durable.execution.workflows import _stale_command
 from bt_durable.settings import Settings
-from durable_support import SYSTEMD, Lab, engine_client, task, wait_until
+from durable_support import SYSTEMD, Lab, engine_client, export_engine, task, wait_until
 
 FAST = Settings(max_parallel=2, poll_seconds=0.5, run_poll_seconds=5, owner_wait_seconds=5)
 ONE_ATTEMPT = FAST.model_copy(update={"budget": FAST.budget.model_copy(update={"max_attempts": 1})})
@@ -295,9 +295,7 @@ class OldCommandReplay(unittest.TestCase):
         self.addCleanup(self.lab.cleanup)
         self.old = self.lab.root / "recorded-by"
         self.old.mkdir()
-        archive = subprocess.run(["git", "-C", str(REPO), "archive", RECORDED_BY, "skill/scripts"],
-                                 capture_output=True, check=True).stdout
-        subprocess.run(["tar", "-x", "-C", str(self.old)], input=archive, check=True)
+        export_engine(RECORDED_BY, self.old)                       # its kill list kept to its own processes
 
     def spawn_old(self) -> subprocess.Popen:
         scripts = self.old / "skill" / "scripts"

@@ -137,7 +137,7 @@ def _launch_past_manager(ref: AttemptRef, prepared: Prepared, limits: dict) -> P
     while True:
         try:
             return engine.ports().runtime.launch(ref, prepared, limits)
-        except Exception as error:  # noqa: BLE001 - only an unanswered manager is looked at again
+        except Exception as error:      # only an unanswered manager is looked at again; the rest is raised
             if getattr(error, "code", "") != "MANAGER_UNAVAILABLE" or waited >= UNKNOWN_GRACE_SECONDS:
                 raise
         time.sleep(delay)
