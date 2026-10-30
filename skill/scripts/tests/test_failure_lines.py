@@ -108,6 +108,20 @@ class DecisiveLineSurvives(unittest.TestCase):
         self.assertIn("page.goto: Protocol error (Page.navigate): Cannot navigate to invalid URL", note)
         self.assertIn('navigating to "/admin/accounts", waiting until "load"', note)
 
+    def test_uvs_hardlink_warning_is_never_the_decisive_line(self):
+        """D-236: pictures REQ-021 T10.45 a2/a3 — the agent was told uv's warning instead of the snapshot mismatch."""
+        out = ("warning: Failed to hardlink files; falling back to full copy. This may lead to degraded performance.\n"
+               "         If the cache and target directories are on different filesystems, hardlinking may not be supported.\n"
+               "         If this is intentional, set `export UV_LINK_MODE=copy` or use `--link-mode=copy` to suppress this warning.\n"
+               "INFO:     127.0.0.1:5000 - GET /healthz 200\n"
+               "CG-10: candidate_identity_failure: snapshot source bytes match: .evidence/REQ-021/SP-10.integration.json\n"
+               "+ actual - expected\n\n+ 'bcee9ac5'\n- '9a380a32'\n")
+        from bitacora_platform import failure_lines
+        got = failure_lines.decisive_excerpt(out)
+        self.assertNotIn("hardlink", got)
+        self.assertIn("candidate_identity_failure", got)
+        self.assertIn("+ actual - expected", got)
+
     def test_a_short_output_still_gets_its_decisive_section(self):
         note = digest(DB_URL)
         self.assertIn("Decisive lines", note)
