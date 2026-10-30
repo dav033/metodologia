@@ -355,6 +355,77 @@ class SolverTests(unittest.TestCase):
         self.assertFalse(solver.Solver._current(self.state()["triggers"][session["triggers"][0]], {},
                                                 self.client.runs[run_id]))
 
+    def held_audit(self, round_no=1, reason=None):
+        """pictures REQ-021 r27, 2026-10-30 14:49: the run, still PENDING and running other tasks, held audit T2.7
+        `blocked` with no decision to answer; no trigger saw it."""
+        run_id = "proj:REQ-900:r1"
+        reason = reason or ("blocking findings that cannot be repaired automatically (remediation off, or a finding "
+                            "names no task of the plan): audit gate: 1 open blocking finding(s): F8 (high)")
+        self.client.runs[run_id] = {
+            "run_id": run_id, "workflow_id": f"bt:{run_id}", "workflow_status": "PENDING",
+            "summary": {"status": "running", "tasks": {"T2.7": "blocked", "T3.1": "running"},
+                        "results": {"T2.7": {"status": "blocked", "audit": reason}}, "gates": {"composed": {}, "rejected": {}}},
+            "tasks": {"T2.7": {"workflow_id": f"bt:{run_id}:T2.7:k{round_no}", "workflow_status": "SUCCESS",
+                               "state": {"state": "completed"}, "decision": None},
+                      "T3.1": {"workflow_id": f"bt:{run_id}:T3.1:k1", "workflow_status": "PENDING",
+                               "state": {"state": "running", "attempt": "a1"}, "decision": None}}}
+        return self.client.runs[run_id]
+
+    def test_a_task_the_run_holds_blocked_while_it_goes_on_reaches_the_solver_once(self):
+        self.held_audit()
+        self.solver().run_pass([])                                       # a grace for the owner's own retry-task
+        self.clock[0] += 299
+        self.solver().run_pass([])
+        self.assertEqual(self.terminal.started, [])
+        self.clock[0] += 2
+        self.solver().run_pass([])
+        session = self.session()
+        self.assertEqual((session["kind"], session["task"]), ("blocked", "T2.7"))
+        self.assertIn("F8 (high)", session["reason"])
+        brief = (Path(session["dir"]) / "BRIEF.md").read_text()
+        self.assertIn("bt-durable retry-task proj REQ-900 T2.7", brief)
+        self.assertIn("F8 (high)", brief)
+        (Path(session["dir"]) / "result.json").write_text(json.dumps({"outcome": "fixed", "summary": "rerun"}))
+        for _ in range(3):                                              # once per block, also after its session ended
+            self.clock[0] += 600
+            self.solver().run_pass([])
+        self.assertEqual(len(self.state()["sessions"]), 1)
+        self.assertEqual([t["kind"] for t in self.state()["triggers"].values()], ["blocked"])
+        self.assertEqual(self.notified, [])                              # the activity feed says it; no desktop noise
+        self.assertEqual(sum("pasa al Solucionador" in line for line in self.activity), 1)
+        self.held_audit(round_no=2)                                     # retried, held again: a new block
+        self.solver().run_pass([])
+        self.clock[0] += 301
+        self.solver().run_pass([])
+        self.assertEqual([s["kind"] for s in self.state()["sessions"]], ["blocked", "blocked"])
+
+    def test_a_block_already_handed_over_is_not_given_again_by_stalled_or_ended(self):
+        status = self.held_audit()
+        run = type("R", (), {"run_id": "proj:REQ-900:r1"})()
+        cfg, state = solver.settings(), {}
+        self.assertEqual(solver.blocked_triggers(run, status, state, 0.0, cfg), [])
+        found = solver.blocked_triggers(run, status, state, 301.0, cfg)
+        self.assertEqual(found[0]["key"], solver.blocked_key(run.run_id, "T2.7", found[0]["block"]))
+        self.assertEqual(solver.handed_blocks(run, status, state), set())
+        state["triggers"] = {found[0]["key"]: {**found[0], "status": "fixed"}}
+        self.assertEqual(solver.handed_blocks(run, status, state), {"T2.7"})
+        idle = {**status, "summary": {**status["summary"], "tasks": {"T2.7": "blocked", "T3.1": "completed"}},
+                "tasks": {"T2.7": status["tasks"]["T2.7"]}}
+        later = 46 * 60.0
+        solver.stalled_triggers(run, idle, state, 0.0, cfg, {"T2.7"})
+        self.assertEqual(solver.stalled_triggers(run, idle, state, later, cfg, {"T2.7"}), [])
+        self.assertEqual(solver.stalled_triggers(run, idle, state, later, cfg)[0]["kind"], "stalled")
+        ended = {**idle, "workflow_status": "SUCCESS", "summary": {**idle["summary"], "status": "blocked"}}
+        self.assertEqual(solver.ended_triggers(run, ended, set(), {"T2.7"}), [])
+        self.assertEqual(solver.ended_triggers(run, ended, set())[0]["blocked"], ["T2.7"])
+        self.assertTrue(solver.Solver._current(found[0], ended["tasks"], ended))   # a pending one survives the end
+        # a paused run, a task retried (its round runs), a decision's stop: none is a hold
+        paused = {**status, "summary": {**status["summary"], "status": "paused"}}
+        self.assertEqual(solver.blocked_triggers(run, paused, {}, 0.0, cfg) +
+                         solver.blocked_triggers(run, paused, {}, 999.0, cfg), [])
+        stopped = {**status, "summary": {**status["summary"], "results": {"T2.7": {"status": "blocked"}}}}
+        self.assertEqual(solver.run_holds(stopped), {})
+
     def test_a_run_the_owner_stopped_is_not_a_block_for_the_solver(self):
         run = type("R", (), {"run_id": "proj:REQ-900:r1"})()
         ended = {"workflow_id": "bt:proj:REQ-900:r1", "workflow_status": "SUCCESS",

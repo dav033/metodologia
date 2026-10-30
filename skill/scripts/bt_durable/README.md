@@ -201,7 +201,8 @@ uv run bt-durable join pictures REQ-021              # joined | waiting | refuse
 The maintenance pass answers an open decision with the diagnosing model's `retry`/`retry_with_note` once per failure
 signature (`healing.py`). What it leaves for a person, a signature that comes back, a task that does not move, a run
 that waits for nothing (`stalled`: nothing live, nothing to answer, not paused), a run that ended blocked by a rejected
-gate or a task the owner did not stop (`ended`) and a run workflow in ERROR start the Solucionador (`solver.py`): one full-access Claude Opus session per run in tmux
+gate or a task the owner did not stop (`ended`), a task the run holds blocked while it goes on (`blocked`, an audit
+no round cleared, after `solver.blocked_after_seconds`, once per block, D-235) and a run workflow in ERROR start the Solucionador (`solver.py`): one full-access Claude Opus session per run in tmux
 (`tmux -L bitacora attach -t bit-<project>-<REQ>-solver`), with its brief in `<rdir>/RUN.solver/<id>/`, which integrates
 metodologia fixes only through `skill/scripts/bt_integrate.py`. Switch: `bitacora.py config set solver.enabled false`.
 The `solver.max_minutes` watchdog and the account move never cut a session's own integration (`bt_integrate.py --session
