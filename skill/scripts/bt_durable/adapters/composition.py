@@ -61,9 +61,10 @@ class CompositionComposer:
         plan = self.plan_for(run)
         gate = next(item for item in plan.composition_gates if item.id == gate_id)
         role = plan.task(gate.task).repository
-        engine, _store = self._engine(run, role)
+        engine, store = self._engine(run, role)
         repo = self.lines._repo(role)
         base = self.lines.line_base(run, role)
+        built = [c for c in store.list_candidates(self.plan_id(run)) if c.state != "rejected" and c.integrated_commit]
         versions, previous = {}, ""
         for subplan_id in _composition_order(plan, gate):
             tip = self.lines._tip(repo, self.lines.subplan_ref(run, role, subplan_id))
@@ -73,7 +74,9 @@ class CompositionComposer:
             # often contains an earlier one (pictures REQ-021: SP-2 ⊇ SP-1). Folded as a delta from the run line's
             # base, the shared work would be applied twice and conflict with itself; measured from its merge base with
             # the member folded just before it, a member brings only what it adds (the run line's base otherwise).
-            own_base = _own_work_base(repo, tip, evidence.get(subplan_id, ())) or _merge_base(repo, tip, previous) or base
+            own_base = (_prior_candidate(repo, tip, built, set(versions))
+                        or _own_work_base(repo, tip, evidence.get(subplan_id, ())) or _merge_base(repo, tip, previous)
+                        or base)
             previous = tip
             items = [{"task_id": item["task_id"], "kind": item["kind"], "verdict_id": item["verdict_id"],
                       "tree_digest": _tree(repo, item.get("snapshot") or tip), "environment": VERIFIER}
@@ -165,6 +168,21 @@ def _own_work_base(repo: Path, tip: str, items) -> str:
         if not inside or snapshot == boundary:
             return ""
     return boundary
+
+
+def _prior_candidate(repo: Path, tip: str, built, folded: set[str]) -> str:
+    """The commit of an earlier candidate the member's line already holds, whose members are all folded before it (the
+    largest such): the member then brings only what its line added on top. Gate tasks integrate into their members'
+    lines, so a later member's line holds the earlier gates' candidates (pictures REQ-021 r25: SP-7's line held CG-6's
+    C3; folded from where SP-7's own snapshots start it re-applied SP-3..SP-6 and CG-7 conflicted in 13 files, D-187).
+    "" when there is none."""
+    fitting = [c for c in built if c.members and set(c.members) <= folded]
+    for candidate in sorted(fitting, key=lambda c: (len(c.members), int(c.id.rsplit("C", 1)[-1] or 0)), reverse=True):
+        inside = subprocess.run(["git", "-C", str(repo), "merge-base", "--is-ancestor", candidate.integrated_commit, tip],
+                                capture_output=True, check=False).returncode == 0
+        if inside:
+            return candidate.integrated_commit
+    return ""
 
 
 def _merge_base(repo: Path, tip: str, other: str) -> str:

@@ -136,7 +136,7 @@ class GitSubprocessPort:
 
     def _text_at(self, revision: str, path: str) -> str | None:
         """The file at `revision` as text; None when it is missing or not UTF-8 text."""
-        shown = self._run_bytes("show", f"{revision}:{path}", check=False)
+        shown = self._run_bytes("cat-file", "blob", f"{revision}:{path}", check=False)
         if shown.returncode or b"\0" in shown.stdout:
             return None
         try:
@@ -182,8 +182,12 @@ class GitSubprocessPort:
         return self._with_blobs(tree, blobs), tuple(path for path in conflicts if path not in blobs)
 
     def _blob_id(self, revision: str, path: str) -> str:
-        found = self._run("rev-parse", f"{revision}:{path}", check=False)
-        return found.stdout.strip() if found.returncode == 0 else "-"
+        """The blob id of `path` at `revision`, "-" when it is missing. `--verify`: without it git takes a missing
+        Next.js path such as `app/[id]/page.tsx` for a pathspec, exits 0 and echoes the argument as if it were an id
+        (pictures REQ-021 r25: gate CG-7 failed to compose on every turn, D-186)."""
+        found = self._run("rev-parse", "--verify", "--quiet", "--end-of-options", f"{revision}:{path}", check=False)
+        oid = found.stdout.strip()
+        return oid if found.returncode == 0 and re.fullmatch(r"[0-9a-f]{40}|[0-9a-f]{64}", oid) else "-"
 
     def _diff3(self, path: str, ids: list[str]) -> str:
         with tempfile.TemporaryDirectory(prefix="bt-compose-diff3-") as scratch:
@@ -211,15 +215,15 @@ class GitSubprocessPort:
             merged, clashes = merge_json(docs[0] if docs[0] is not None else {}, docs[1], docs[2])
             if clashes:
                 continue
-            text = json.dumps(merged, indent=_json_indent(self._run("show", f"{ours}:{path}").stdout), ensure_ascii=False)
+            text = json.dumps(merged, indent=_json_indent(self._run("cat-file", "blob", f"{ours}:{path}").stdout), ensure_ascii=False)
             blobs[path] = self._run_input(text + "\n", "hash-object", "-w", "--stdin").stdout.strip()
         if not blobs:
             return tree, conflicts
         return self._with_blobs(tree, blobs), tuple(path for path in conflicts if path not in blobs)
 
     def _json_at(self, revision: str, path: str) -> object | None:
-        shown = self._run("show", f"{revision}:{path}", check=False)
-        if shown.returncode:
+        shown = self._run("cat-file", "blob", f"{revision}:{path}", check=False)   # `show` prints the commit for a
+        if shown.returncode:                                                         # missing bracketed path (D-186)
             return None
         try:
             return json.loads(shown.stdout)
