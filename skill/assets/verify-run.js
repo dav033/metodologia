@@ -6,8 +6,55 @@
   "use strict";
   if (window.__btVerifyRun) return;                   // loaded by several cards on one page: one listener
   window.__btVerifyRun = true;
+  // «copiar puente»: the SSH bridge command of the version to the clipboard (D-201)
+  document.addEventListener("click", function (ev) {
+    var b = ev.target && ev.target.closest ? ev.target.closest("button.pp-vcopy") : null;
+    if (!b) return;
+    var text = b.dataset.copy || "";
+    var done = function () { var was = b.textContent; b.textContent = "copiado ✓"; setTimeout(function () { b.textContent = was; }, 1500); };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, function () { window.prompt("Copia el puente:", text); });
+    } else {
+      window.prompt("Copia el puente:", text);
+    }
+  });
+
+  // «en mi computador ↗»: the Windows opener (bitacora://) bridges the port and opens the page on the owner's computer.
+  // A version that is not running is restarted clean here first (the same form, sent in the background), and the
+  // opener is called once every server answers (D-201).
+  document.addEventListener("click", function (ev) {
+    var a = ev.target && ev.target.closest ? ev.target.closest("a.pp-vwin") : null;
+    if (!a || ev.button !== 0) return;
+    var box = a.closest(".pp-vtry");
+    if (!box || box.dataset.state === "ready") return;  // running: the opener link works as it is
+    var form = document.getElementById(a.dataset.vstart);
+    if (!form) return;
+    ev.preventDefault();
+    var status = box.querySelector(".pp-vstatus");
+    var data = new FormData(form);
+    data.set("path", a.dataset.path || "/");
+    var sp = data.get("anchor");
+    var poll = form.action.replace(/\/verify-run$/, "/verify-run") + "?format=json&sp=" + encodeURIComponent(sp);
+    if (status) { status.textContent = "Arrancando la versión desde cero…"; status.className = "pp-vstatus warn"; }
+    fetch(form.action, { method: "POST", body: new URLSearchParams(data), credentials: "same-origin" })
+      .then(function () {
+        (function tick() {
+          fetch(poll, { cache: "no-store" }).then(function (r) { return r.json(); }).then(function (s) {
+            if (status) {
+              status.textContent = s.state === "ready" ? "Lista: abriendo en tu computador…" :
+                s.state === "failed" ? "No pude arrancar la versión. " + (s.step || "") : "Arrancando: " + (s.step || "…");
+              status.className = "pp-vstatus " + (s.state === "ready" ? "ok" : s.state === "failed" ? "bad" : "warn");
+            }
+            if (s.state === "ready") { box.dataset.state = "ready"; window.location.href = a.href; return; }
+            if (s.state !== "failed") setTimeout(tick, 2000);
+          }).catch(function () { setTimeout(tick, 3000); });
+        })();
+      });
+  });
+
   document.addEventListener("click", function (ev) {
     var a = ev.target && ev.target.closest ? ev.target.closest("a[data-vstart]") : null;
+    if (a && a.classList.contains("pp-vwin")) return;    // handled above
     if (!a || ev.button !== 0 || ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.altKey) return;
     var box = a.closest(".pp-vtry");
     if (box && box.dataset.state === "ready") return;  // running: the link opens the page as it is (D-200)

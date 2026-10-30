@@ -291,6 +291,30 @@ class Panel(unittest.TestCase):
         self.assertIn('data-state="ready"', html)                               # a running version: the link opens as is
         self.assertIn("Detener servidores", html)
 
+    def test_each_link_has_its_bridge_and_opens_on_the_owners_computer(self):
+        """D-201: the owner works from a Windows computer through an SSH tunnel: next to each link, «en mi computador ↗»
+        (the bitacora:// opener) and the SSH bridge command to copy."""
+        import bt_page_verification as page
+        rows = page.link_items("http://localhost:3002", "3002", ["/", "/login"], "vstart-SP-8")
+        self.assertIn('href="http://localhost:3002/login"', rows)
+        self.assertIn('href="bitacora://open/?port=3002&amp;path=/login"', rows)
+        self.assertIn('class="pp-vwin"', rows)
+        self.assertIn('data-copy="ssh -N -L 3002:127.0.0.1:3002 -J root@185.147.157.25 -p 2222 david@127.0.0.1"', rows)
+        self.assertEqual(rows.count("copiar puente"), 2)
+        help_ = page.remote_help("3002")
+        self.assertIn("/static/bitacora-opener.ps1", help_)
+        self.assertIn("ssh -N -L 3002:127.0.0.1:3002", help_)
+        self.assertEqual(page.opener_url("3002", "/a b"), "bitacora://open/?port=3002&path=/a%20b")
+        assets = Path(__file__).resolve().parents[2] / "assets"
+        script = (assets / "verify-run.js").read_text()
+        self.assertIn('closest("a.pp-vwin")', script)
+        self.assertIn('closest("button.pp-vcopy")', script)
+        opener = (assets / "bitacora-opener.ps1").read_text()
+        self.assertIn(r"HKCU:\Software\Classes\bitacora", opener)
+        self.assertIn("'^/[A-Za-z0-9_\\-./\\[\\]]*$'", opener)                      # only a local path, never a host
+        self.assertIn("-lt 1024", opener)
+        self.assertNotIn("$Home =", opener)                                       # $HOME is read-only in PowerShell
+
     def test_the_waiting_tab_follows_the_restart_and_goes_to_the_url_itself(self):
         import bt_page_verify_run as wait
         failed = {"state": "failed", "step": "Falló la preparación: npm run rag:migrate", "url": "http://localhost:3002/",

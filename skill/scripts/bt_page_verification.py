@@ -113,14 +113,11 @@ def _servers(ctx: dict, row: dict, paths: list[str]) -> str:
         said += " " + now["step"]
     origin = (re.match(r"https?://[^/]+", url or "") or [""])[0]
     pages = ["/"] + [p for p in paths if p != "/"]
-    links = "".join(f'<li><a class="pp-vurl" href="{e(origin + p)}" target="_blank" rel="noopener" data-vstart="{e(form_id)}"'
-                    f' data-path="{e(p)}">{e(origin + p)}</a></li>' for p in pages) if origin else ""
+    web = (re.search(r":(\d+)", url or "") or [None, ""])[1]
+    links = link_items(origin, web, pages, form_id)
     session = servers.session_name(ctx["project"], ctx["rdir"], row["id"], row["version"])
     port_list = ", ".join(f"{n} {p}" for n, p in (ports or {}).items())
-    web = (re.search(r":(\d+)", url or "") or [None, ""])[1]
-    remote = (f'<details class="pp-vremote"><summary>¿Desde otro computador?</summary><p class="pp-meta">Abre un túnel al '
-              f'puerto de la versión y usa la misma dirección: <code>ssh -L {e(web)}:127.0.0.1:{e(web)} usuario@esta-máquina</code>'
-              f'</p></details>' if web else "")
+    remote = remote_help(web)
     how = ("Está en marcha: cada enlace se abre directamente." if now["state"] == "ready" else
            "Al abrir un enlace detengo todo lo de esta versión (sesión <code>" + e(session) + "</code> y sus procesos; nunca los "
            "de otra versión ni otros servicios), la arranco desde cero en el commit <code>" + e(str(row["commit"])[:10]) +
@@ -128,6 +125,54 @@ def _servers(ctx: dict, row: dict, paths: list[str]) -> str:
     return (f'<div class="pp-vtry" data-state="{e(now["state"])}"><span class="pp-vlabel">Dónde probarlo</span>'
             f'<ul class="pp-vlinks">{links}</ul><p class="pp-vstatus {cls}" role="status">{e(said)}</p>'
             f'<p class="pp-meta">{how}</p><div class="pp-vtry-row">{start}{stop}</div>{remote}</div>')
+
+
+def tunnel_command(port: str) -> str:
+    """The SSH bridge from the owner's own computer to this machine's port, through AdvIn's reverse tunnel (the way the
+    owner reaches the panel); `BITACORA_TUNNEL_TARGET` in the panel's environment changes the destination."""
+    import os
+    target = os.environ.get("BITACORA_TUNNEL_TARGET") or DEFAULT_TUNNEL_TARGET
+    return f"ssh -N -L {port}:127.0.0.1:{port} {target}"
+
+
+DEFAULT_TUNNEL_TARGET = "-J root@185.147.157.25 -p 2222 david@127.0.0.1"
+
+
+def opener_url(port: str, page: str) -> str:
+    """`bitacora://open/?port=…&path=…`: the Windows opener (assets/bitacora-opener.ps1) bridges the port over SSH when it
+    is not open yet and opens http://localhost:<port><page> in that computer's browser."""
+    return f"bitacora://open/?port={quote(str(port))}&path={quote(page, safe='/')}"
+
+
+def link_items(origin: str, port: str, pages: list[str], form_id: str) -> str:
+    """One row per page: the plain link (this machine, or a computer whose bridge is open), «en mi computador» (the
+    opener: bridge and browser on the owner's computer) and the bridge command to copy. Owner, 2026-10-30, working from
+    a Windows computer through an SSH tunnel: «al lado de cada link salga el comando para hacer el puente por ssh… y que
+    se mande el comando en el computador que estoy usando» (D-201)."""
+    if not origin:
+        return ""
+    command = tunnel_command(port) if port else ""
+    rows = []
+    for p in pages:
+        mine = (f' <a class="pp-vwin" href="{e(opener_url(port, p))}" data-vstart="{e(form_id)}" data-path="{e(p)}" '
+                f'title="Abre el puente SSH (si falta) y la página en el computador que estás usando">en mi computador ↗</a>'
+                f' <button type="button" class="pp-vcopy secondary" data-copy="{e(command)}" title="{e(command)}">copiar puente</button>'
+                if port else "")
+        rows.append(f'<li><a class="pp-vurl" href="{e(origin + p)}" target="_blank" rel="noopener" data-vstart="{e(form_id)}"'
+                    f' data-path="{e(p)}">{e(origin + p)}</a>{mine}</li>')
+    return "".join(rows)
+
+
+def remote_help(port: str) -> str:
+    """The bridge for every link of the version, and the one-time opener for Windows."""
+    if not port:
+        return ""
+    return (f'<div class="pp-vremote"><span class="pp-vlabel">Desde otro computador</span><p class="pp-meta">Puente SSH '
+            f'(en una terminal de ese computador): <code>{e(tunnel_command(port))}</code></p><p class="pp-meta">«en mi '
+            f'computador ↗» lo hace solo en Windows: instala una vez el abridor (<a href="/static/bitacora-opener.ps1" '
+            f'download>bitacora-opener.ps1</a>; en PowerShell: <code>powershell -ExecutionPolicy Bypass -File '
+            f'bitacora-opener.ps1</code>). Desde entonces el enlace abre el puente (si falta) y la página en tu navegador.</p>'
+            f'</div>')
 
 
 def _guide(ctx: dict, row: dict, url: str) -> str:
