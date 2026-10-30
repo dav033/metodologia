@@ -108,7 +108,9 @@ class SolverTests(unittest.TestCase):
         return solver.Solver(self.root, self.client, terminal=self.terminal, route_for=self.route_for,
                              notify=lambda title, text: self.notified.append(text),
                              record=lambda rdir, text: self.activity.append(text), now=lambda: self.clock[0],
-                             work=self.base / "work")
+                             work=self.base / "work", integrating=lambda sid: list(self.integrating.get(sid, [])))
+
+    integrating: dict = {}
 
     def state(self, req="REQ-900"):
         return solver.load(self.rdirs[req])
@@ -182,6 +184,71 @@ class SolverTests(unittest.TestCase):
         self.terminal.live.clear()                                           # the agent's shell is gone
         self.solver().run_pass([])
         self.assertEqual(self.state()["sessions"][1]["summary"], "la sesión terminó sin escribir result.json")
+
+    def test_the_watchdog_waits_for_the_sessions_own_integration_within_a_grace(self):
+        """2026-10-30 11:52: session 20261030-100736-d494 was 105 min into its 120 while its `bt_integrate --session
+        20261030-100736-d494` (a child of its agent in tmux) ran the regression; the watchdog would have killed the tmux
+        session, and the integration with it, mid-run."""
+        self.solver().run_pass([self.open_decision()])
+        sid = self.session()["id"]
+        self.integrating = {sid: [4242]}
+        self.clock[0] += 121 * 60
+        said = self.solver().run_pass([])
+        self.assertEqual(self.terminal.killed, [], said)
+        self.assertEqual(self.session()["status"], "running")
+        self.assertTrue(any("integrando" in line for line in self.activity))
+        self.integrating = {}                                                # the integration ended
+        self.solver().run_pass([])
+        self.assertEqual(self.state()["sessions"][0]["status"], "gave_up")
+        self.assertIn("bit-proj-REQ-900-solver", self.terminal.killed)
+
+    def test_the_integration_grace_is_bounded(self):
+        self.solver().run_pass([self.open_decision()])
+        sid = self.session()["id"]
+        self.integrating = {sid: [4242]}
+        self.clock[0] += (120 + 120 + 1) * 60
+        self.solver().run_pass([])
+        session = self.state()["sessions"][0]
+        self.assertEqual(session["status"], "gave_up")
+        self.assertIn("gracia", session["summary"])
+
+    def test_a_spent_account_does_not_move_a_session_that_is_integrating(self):
+        self.solver().run_pass([self.open_decision()])
+        self.integrating = {self.session()["id"]: [4242]}
+        self.terminal.shown = "You've hit your weekly limit · resets 3pm"
+        self.solver().run_pass([])
+        self.assertEqual((self.terminal.killed, len(self.terminal.started)), ([], 1))
+        self.integrating = {}
+        self.solver().run_pass([])
+        self.assertEqual(len(self.terminal.started), 2)                      # moved once the integration ended
+
+    def test_a_session_whose_run_was_superseded_is_told_once_and_kept(self):
+        """pictures REQ-021, 2026-10-30 11:18: a stage join moved r26 to r27 while the session started for r26's
+        T10.45:d1 was integrating a fix of the verifier; the decision went with r26."""
+        self.solver().run_pass([self.open_decision()])
+        rdir = self.rdirs["REQ-900"]
+        data = json.loads((rdir / "RUN.durable-run.json").read_text())
+        (rdir / "RUN.durable-run.json").write_text(json.dumps({**data, "revision": 2}))
+        self.solver().run_pass([])
+        self.solver().run_pass([])
+        told = [text for _name, text in self.terminal.sent if "no longer the requirement's run" in text]
+        self.assertEqual(len(told), 1)
+        self.assertIn("Do not answer it", told[0])
+        self.assertIn("proj:REQ-900:r2", told[0])
+        self.assertEqual((self.session()["status"], self.terminal.killed), ("running", []))
+        inbox = (Path(self.session()["dir"]) / "inbox.jsonl").read_text()
+        self.assertIn('"superseded"', inbox)
+
+    def test_integrations_reads_the_sessions_own_bt_integrate_processes(self):
+        proc = self.base / "proc"
+        for pid, args in ((11, ["python3", "/x/bt_integrate.py", "--branch", "b", "--session", "S1"]),
+                          (12, ["python3", "/x/bt_integrate.py", "--post-merge", "abc", "--session", "S1"]),
+                          (13, ["python3", "/x/bt_integrate.py", "--session", "S2"]),
+                          (14, ["python3", "other.py", "--session", "S1"])):
+            (proc / str(pid)).mkdir(parents=True)
+            (proc / str(pid) / "cmdline").write_bytes(b"\0".join(a.encode() for a in args) + b"\0")
+        self.assertEqual(solver.integrations("S1", proc), [11])
+        self.assertEqual(solver.integrations("S3", proc), [])
 
     def test_a_spent_account_moves_the_session_and_keeps_its_conversation(self):
         self.solver().run_pass([self.open_decision()])

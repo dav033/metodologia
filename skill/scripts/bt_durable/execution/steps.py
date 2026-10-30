@@ -177,11 +177,18 @@ def integrate(run: dict, task_id: str, snapshot: dict) -> dict:
     ref = RunRef.model_validate(run)
     lines = subplans.lines_of(plan(ref), task_id)
     integrated, conflict, *rest = _port(lambda: engine.ports().integrator.integrate(
-        ref, frontier.task(plan(ref), task_id), Snapshot.model_validate(snapshot), lines=lines))
+        ref, frontier.task(plan(ref), task_id), Snapshot.model_validate(snapshot), lines=lines,
+        home=subplans.home(plan(ref), task_id)))
     note = rest[0] if rest else ""
+    left = {str(k): str(v)[:500] for k, v in (rest[1] if len(rest) > 1 else {}).items()}
     if note:                                         # inside the step: the workflow's sequence of steps is unchanged
         engine.ports().telemetry.emit("run_line_conflict", run_id=ref.run_id, task_id=task_id, conflict=note[:500])
-    return {"ref": integrated, "conflict": conflict, **({"run_line_conflict": note[:500]} if note else {})}
+    if left:                                         # other subplans' lines left out: the gates composing both meet it
+        engine.ports().telemetry.emit("subplan_line_conflict", run_id=ref.run_id, task_id=task_id, lines=left,
+                                      reason=f"{task_id} is accepted in its own subplan line; left out of "
+                                             + ", ".join(f"{sp} ({text[:200]})" for sp, text in left.items()))
+    return {"ref": integrated, "conflict": conflict, **({"run_line_conflict": note[:500]} if note else {}),
+            **({"subplan_line_conflicts": left} if left else {})}
 
 
 @DBOS.step(name="bt.sync_lines", retries_allowed=True, max_attempts=3, interval_seconds=2)

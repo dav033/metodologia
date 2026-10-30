@@ -28,7 +28,9 @@ machine and `solver.max_per_task` per task; a trigger that finds its run's sessi
 `inbox.jsonl` and typed into it. A session gets a brief and a context bundle in `<rdir>/RUN.solver/<id>/`, runs on the
 account `role_route(..., "solver")` picks (Claude Opus high, unattended, with quota; Codex otherwise), is moved to
 another account when its own runs out, and is closed when it writes `result.json`, when its tmux session is gone, or
-after `solver.max_minutes` (then `gave_up`, and the trigger is the owner's). State: `<rdir>/RUN.solver/state.json`
+after `solver.max_minutes` (then `gave_up`, and the trigger is the owner's). A session whose own integration
+(`bt_integrate.py --session <id>`) is running is neither stopped nor moved to another account until it ends, for at most
+`solver.integrate_grace_minutes` more; a session whose run a stage join superseded is told once and kept. State: `<rdir>/RUN.solver/state.json`
 (the panel reads it). Nothing here claims a session runs exactly once: a crash between a launch and the state write
 can start a second one on the next pass, which then finds the same tmux name taken and does not start.
 """
@@ -69,7 +71,7 @@ def enabled() -> bool:
 def settings() -> dict[str, int]:
     import bt_config
     defaults = {"max_concurrent": 1, "max_per_task": 3, "max_minutes": 120, "stuck_minutes": 45,
-                "resolution_after_seconds": 120}
+                "resolution_after_seconds": 120, "integrate_grace_minutes": 120}
     out = {}
     for name, default in defaults.items():
         value = bt_config.get(f"solver.{name}", default)
@@ -233,6 +235,25 @@ def stuck_triggers(run, status: dict, state: dict, now: float, cfg: dict) -> lis
     return found
 
 
+def integrations(session_id: str, proc: Path = Path("/proc")) -> list[int]:
+    """Live `bt_integrate.py` processes a session started (`--session <id>`, which the brief tells it to pass); the
+    post-merge regression runs in its own systemd unit and is left out. A session's integration is a child of its agent
+    in tmux: killing the session (watchdog, account move) kills it mid-run."""
+    found = []
+    for entry in proc.glob("[0-9]*"):
+        try:
+            args = (entry / "cmdline").read_bytes().split(b"\0")
+        except OSError:
+            continue
+        words = [a.decode("utf-8", "replace") for a in args if a]
+        if not any(w.endswith("bt_integrate.py") for w in words) or "--post-merge" in words:
+            continue
+        if any(w == "--session" and i + 1 < len(words) and words[i + 1] == session_id or w == f"--session={session_id}"
+               for i, w in enumerate(words)):
+            found.append(int(entry.name))
+    return sorted(found)
+
+
 class Solver:
     """One maintenance pass over every durable run. Everything that touches the world is injected: `terminal` (tmux:
     exists/start/screen/send/kill, `bt_agent_terminal` by default), `route_for(project, avoid)` (the account), `notify`
@@ -240,9 +261,11 @@ class Solver:
 
     def __init__(self, root: Path, client, *, terminal=None, route_for: Callable | None = None,
                  notify: Callable | None = None, record: Callable | None = None, now: Callable[[], float] = time.time,
-                 work: Path | None = None, state_dir: Path | None = None):
+                 work: Path | None = None, state_dir: Path | None = None,
+                 integrating: Callable[[str], list] | None = None):
         import bt_agent_terminal
         self.root, self.client, self.now = Path(root), client, now
+        self.integrating = integrating or integrations
         self.state_dir = Path(state_dir or Path(root) / ".state" / "durable")
         self.resolutions = self.state_dir / "composition" / "resolutions"
         self.terminal = terminal or bt_agent_terminal
@@ -455,11 +478,25 @@ class Solver:
         result = read_result(Path(session["dir"]))
         if result is not None:
             return self._finish(run, rdir, state, session, result)
-        if self.now() - float(session.get("started") or 0) > cfg["max_minutes"] * 60:
-            return self._finish(run, rdir, state, session, {
-                "outcome": "gave_up", "summary": f"pasó {cfg['max_minutes']} min sin escribir result.json; detenido"})
+        said = self._superseded(run, rdir, state, session)
+        elapsed = self.now() - float(session.get("started") or 0)
+        # a session's own integration (bt_integrate, a child of its agent in tmux) is never cut by the watchdog or an
+        # account move: killing the session mid-run could leave a merge half done; it gets a bounded grace instead
+        busy = elapsed > cfg["max_minutes"] * 60 or self._limited(session)
+        integrating = self.integrating(session["id"]) if busy and self.terminal.exists(session["name"]) else []
+        if integrating and elapsed <= (cfg["max_minutes"] + cfg["integrate_grace_minutes"]) * 60:
+            if not session.get("integrating"):
+                session["integrating"] = self.now()
+                self.record(rdir, f"{session['task']}: el Solucionador está integrando su arreglo; se le espera "
+                            f"(hasta {cfg['integrate_grace_minutes']} min más) antes de detenerlo o cambiarlo de cuenta")
+            return said + [f"{run.run_id}: solver {sid} integrating (pid {', '.join(map(str, integrating))}): waited for"]
+        if elapsed > cfg["max_minutes"] * 60:
+            extra = (f" (y {cfg['integrate_grace_minutes']} min de gracia de su integración)" if integrating else "")
+            return said + self._finish(run, rdir, state, session, {
+                "outcome": "gave_up", "summary": f"pasó {cfg['max_minutes']} min sin escribir result.json{extra}; "
+                                                 "detenido"})
         if not self.terminal.exists(session["name"]):
-            return self._finish(run, rdir, state, session, {
+            return said + self._finish(run, rdir, state, session, {
                 "outcome": "gave_up", "summary": "la sesión terminó sin escribir result.json"})
         import bt_agent_terminal
         shown = self.terminal.screen(session["name"], 20)
@@ -475,8 +512,46 @@ class Solver:
                 return self._finish(run, rdir, state, session, {"outcome": "gave_up",
                                                                 "summary": f"no pudo cambiar de cuenta: {error}"})
             self.record(rdir, f"{session['task']}: el Solucionador cambió de cuenta (la anterior se quedó sin cuota)")
-            return [f"{run.run_id}: solver {sid} moved off {left or 'its account'}"]
-        return []
+            return said + [f"{run.run_id}: solver {sid} moved off {left or 'its account'}"]
+        return said
+
+    def _limited(self, session: dict) -> bool:
+        """The session's screen asks for an account move (a spent quota, a prompt only the owner may answer)."""
+        import bt_agent_terminal
+        if not self.terminal.exists(session["name"]):
+            return False
+        shown = self.terminal.screen(session["name"], 20)
+        return bool(bt_agent_terminal.LIMITED.search(shown) or bt_agent_terminal.OWNER_PROMPT.search(shown))
+
+    def _superseded(self, run, rdir, state, session: dict) -> list[str]:
+        """A session started for a run the requirement no longer points at (a stage join moved it on: pictures REQ-021
+        r26 -> r27, 2026-10-30 11:18, while 20261030-100736-d494 worked on r26's T10.45:d1). Its decision went with the
+        cancelled run, but the origin it is fixing is usually the system's and still worth integrating, so the session
+        is not stopped: it is told once that the run moved on, that the old decision must not be answered, and that it
+        checks its fix against the current run before it writes result.json."""
+        if session.get("superseded"):
+            return []
+        triggers = state.get("triggers", {})
+        origins = {str((triggers.get(key) or {}).get("run_id") or "") for key in session.get("triggers", [])} - {""}
+        if not origins or run.run_id in origins:
+            return []
+        session["superseded"] = run.run_id
+        text = (f"[Automatic notice from the engine, not typed by the owner] The run you were started for "
+                f"({', '.join(sorted(origins))}) is no longer the requirement's run: a stage join moved it to {run.run_id} "
+                "and cancelled the old run's workflows, so its decision is gone. Do not answer it. If you are fixing an "
+                "origin in metodologia or the environment, finish and integrate it; then check the current run "
+                f"(`bt-durable status {run.project} {run.req}`) for the same block and handle it there only if it is "
+                "open. Then write result.json.")
+        with (Path(session["dir"]) / "inbox.jsonl").open("a", encoding="utf-8") as stream:
+            stream.write(json.dumps({"kind": "superseded", "run_id": run.run_id, "from": sorted(origins),
+                                     "at": _iso(self.now())}, ensure_ascii=False) + "\n")
+        try:
+            self.terminal.send(session["name"], text)
+        except Exception:  # noqa: BLE001 - the inbox file is what counts; typing it is a courtesy
+            pass
+        self.record(rdir, f"{session['task']}: el run del Solucionador pasó a {run.run_id}; se le avisó que no responda "
+                    "la decisión anterior")
+        return [f"{run.run_id}: solver {session['id']} told its run {', '.join(sorted(origins))} was superseded"]
 
     def _finish(self, run, rdir, state, session: dict, result: dict) -> list[str]:
         outcome = result.get("outcome") if result.get("outcome") in OUTCOMES else "gave_up"

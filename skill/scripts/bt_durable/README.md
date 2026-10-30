@@ -108,7 +108,10 @@ engine (`bt_composition`, through `bt_composition_adapter`).
   subplan's line; an accepted snapshot is merged (CAS, all merges computed before any ref moves, one `update-ref --stdin`
   transaction) into the run line and into every existing subplan line whose scope holds it. A member that conflicts
   only on the run line (another subplan changed the same lines) is still accepted, as in the legacy
-  `SubplanLineRouter`: the conflict is reported (`run_line_conflict`) and left to the composition gates. The run
+  `SubplanLineRouter`: the conflict is reported (`run_line_conflict`) and left to the composition gates. The same holds
+  for another subplan's line in the member's scope (a member that a later stage made an ancestor of that subplan's
+  accepted work): once its own line takes it, that line is left as it was and reported (`subplan_line_conflict`), since a
+  rebuild from its own line could never hold that line's work. The run
   workflow seeds and catches the lines up from the accepted snapshots (migrated runs and joined stages included).
 - Line merges settle conflicts as the composer does (D-164): `package.json` merged by key and the recorded resolutions
   in `<state>/composition/resolutions`; a criss-cross history is merged against a virtual base built with the same
@@ -201,6 +204,9 @@ that waits for nothing (`stalled`: nothing live, nothing to answer, not paused),
 gate or a task the owner did not stop (`ended`) and a run workflow in ERROR start the Solucionador (`solver.py`): one full-access Claude Opus session per run in tmux
 (`tmux -L bitacora attach -t bit-<project>-<REQ>-solver`), with its brief in `<rdir>/RUN.solver/<id>/`, which integrates
 metodologia fixes only through `skill/scripts/bt_integrate.py`. Switch: `bitacora.py config set solver.enabled false`.
+The `solver.max_minutes` watchdog and the account move never cut a session's own integration (`bt_integrate.py --session
+<id>`, a child of its agent in tmux): they wait for it, at most `solver.integrate_grace_minutes` (120) more. A session
+whose run a stage join superseded is told once (its old decision is gone; finish and integrate the fix) and kept.
 Details: `references/modules.md` §Solver.
 
 ## Recovery and rollback

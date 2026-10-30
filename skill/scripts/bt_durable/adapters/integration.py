@@ -197,17 +197,26 @@ class GitLineIntegrator:
                           env=IDENT).stdout.strip()
         return merged
 
-    def integrate(self, run: RunRef, task: TaskSpec, snapshot: Snapshot, *,
-                  lines: tuple[str, ...] = ()) -> tuple[str | None, str, str]:
-        """Into the run line and the existing subplan lines named in `lines`: (new tip, conflict, run-line note).
+    def integrate(self, run: RunRef, task: TaskSpec, snapshot: Snapshot, *, lines: tuple[str, ...] = (),
+                  home: str = "") -> tuple[str | None, str, str, dict[str, str]]:
+        """Into the run line and the existing subplan lines named in `lines`: (new tip, conflict, run-line note, other
+        subplan lines left out: subplan id -> conflict).
 
         A subplan member counts as integrated once its subplan lines take it, as in the legacy runtime, where the line of
         a 1.3.0 run IS the subplan router (`bt_integration_line.SubplanLineRouter`): work of different subplans meets at
         a composition gate. The run line takes the member too when it merges cleanly; when it does not (another subplan
         changed the same lines, pictures REQ-021 package.json), the member is still accepted and the run-line conflict
-        is returned as a note: retrying could never fix it, the member starts from its own line every time."""
+        is returned as a note: retrying could never fix it, the member starts from its own line every time.
+
+        `home` (`control.subplans.home`) is the member's own subplan. Once its own line takes it, a conflict on ANOTHER
+        subplan's line is not the member's failure either: it starts from its own line, which never holds that line's
+        work, so every retry meets the same conflict (pictures REQ-021 r27, 2026-10-30: T2.55, added to SP-2 by a later
+        stage and so an ancestor of SP-14's accepted tasks, conflicted on SP-14's line in MenuCuenta.tsx and was rebuilt
+        on the same SP-2 tip). The legacy router applies a member to its own line only and leaves the others' clash to a
+        resolution; here that line is left out and reported, as `sync` does, and the gates that compose both subplans
+        meet the conflict where it is resolved."""
         if not snapshot.snapshot_sha:
-            return None, "nothing to integrate: the attempt left no snapshot", ""
+            return None, "nothing to integrate: the attempt left no snapshot", "", {}
         repo = self._repo(task.repository)
         targets = [(self.line_ref(run, task.repository), self.base_ref(run, task), "")]
         for subplan_id in lines:
@@ -215,16 +224,21 @@ class GitLineIntegrator:
             tip = self._tip(repo, ref)
             if tip:                                     # a line that does not exist yet is seeded by `sync`
                 targets.append((ref, tip, subplan_id))
-        moves, note = [], ""
+        moves, note, left = [], "", {}
         member = len(targets) > 1                       # at least one of its subplan lines exists
+        # the member's own line exists: only that line (and nothing else) must take it
+        own = home if home and not home.startswith("gate:") and any(scope == home for _, _, scope in targets) else ""
         for ref, tip, scope in targets:
             new, conflict = self._merge(repo, tip, snapshot.snapshot_sha,
                                         f"bt: integrate {task.id} into {run.run_id}" + (f" ({scope})" if scope else ""))
             if conflict and not scope and member:
                 note = conflict                         # the run line only: left to the composition gates
                 continue
+            if conflict and own and scope != own:
+                left[scope] = conflict                  # another subplan's line: left to the gates that compose both
+                continue
             if conflict:
-                return None, conflict + (f" (line of {scope})" if scope else ""), ""
+                return None, conflict + (f" (line of {scope})" if scope else ""), "", {}
             moves.append((ref, new or tip, tip))
         changed = [(ref, new, old) for ref, new, old in moves if new != old]
         if changed:                                     # all lines or none: each `update` checks its old value
@@ -233,7 +247,7 @@ class GitLineIntegrator:
             if moved.returncode:
                 raise LineMoved(f"{', '.join(ref for ref, _, _ in changed)} moved while integrating {task.id}: "
                                 f"{moved.stderr.strip()[:300]}")
-        return moves[0][1], "", note
+        return moves[0][1], "", note, left
 
     def sync(self, run: RunRef, role: str, items: Mapping[str, list[tuple[str, str]]]) -> dict[str, dict]:
         """Seed/catch up each subplan line with its accepted snapshots `(task, snapshot)` in plan order. A snapshot
