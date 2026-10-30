@@ -51,7 +51,22 @@ uv run bt-durable status pictures REQ-031         # summary, task states, open d
 uv run bt-durable answer pictures REQ-031 T2 T2:d1 retry_with_note --note "…"   # stale request ids are refused
 uv run bt-durable pause|resume|cancel pictures REQ-031
 uv run bt-durable retry-task pictures REQ-031 T2 --note "…"
+uv run bt-durable answer pictures REQ-031 T2 T2:d1 reverify      # verify the same snapshot again, no agent run
+uv run bt-durable attest pictures REQ-031 T2 --request T2:d1 --evidence "what was done and seen"   # receipt + reverify
 ```
+
+- **Pause** stops every new agent attempt: the run starts no task, and a running task workflow waits before routing a
+  retry (its state shows `paused`); verifications and agents already running finish.
+- **Briefs** carry what the legacy owner puts in them (`adapters/briefs.py`, built by the legacy `owner_notes` and
+  `contract_notes`): the owner's indications (`RUN.notes/<task>.md`), the audit's findings, the attempt history (legacy
+  M1 document of a migrated run plus `RUN.notes/<task>.history.jsonl`, which the durable verifier appends to), the
+  failure analysis, the last verification failure (left out when the workflow hands the agent that same failure as its
+  note), the audit ledger help and the UI contract with its approval state; a retry from a snapshot is told so.
+- **Manual checks** (`type: manual`): M6 accepts a coordinator receipt (`bt_attestation`, the same one the legacy owner
+  uses) for its own check only. Without one, the task does not fail: it opens a decision `MANUAL_EVIDENCE_REQUIRED`
+  with its request id, the attempt the receipt must be bound to (`verify_attempt`) and the `bt-durable attest` command;
+  `reverify` then verifies the same snapshot again (a migrated task's legacy snapshot included). A reconciled legacy
+  task whose only doubt is manual evidence or a permission asks the owner first instead of launching an agent.
 
 ## Panels and remote control (M7)
 
@@ -81,6 +96,34 @@ fields (every message recorded before M7) take exactly their old path.
 (`provider:profile:model[:effort]`, in order) the allowed routes; `execution.agent_concurrency` / `verify_concurrency`
 the queue sizes. An existing run never changes owner implicitly: `RUN.owner.json` decides, and the legacy owner refuses a
 run owned by the durable runtime (`OWNED_BY_DBOS`).
+
+## Subplans and composition gates (plan 1.3.0)
+
+The legacy definitions are reused as they are: `Plan.subplans`/`composition_gates` (parsed by the core), the scope of
+a subplan line (`bt_integration_line.scoped_task_ids`: members plus their frozen-plan ancestors) and the composition
+engine (`bt_composition`, through `bt_composition_adapter`).
+
+- Each subplan has its line `refs/bt/subplan/<project>/<req>/r<rev>/<role>/<SP>`, started at the run line's base pin
+  (`refs/bt/line/…/<role>-base`, created with the run line in one ref transaction). A member task starts from its
+  subplan's line; an accepted snapshot is merged (CAS, all merges computed before any ref moves, one `update-ref --stdin`
+  transaction) into the run line and into every existing subplan line whose scope holds it. A member that conflicts
+  only on the run line (another subplan changed the same lines) is still accepted, as in the legacy
+  `SubplanLineRouter`: the conflict is reported (`run_line_conflict`) and left to the composition gates. The run
+  workflow seeds and catches the lines up from the accepted snapshots (migrated runs and joined stages included).
+- Line merges settle conflicts as the composer does (D-164): `package.json` merged by key and the recorded resolutions
+  in `<state>/composition/resolutions`; a criss-cross history is merged against a virtual base built with the same
+  rules (D-169, D-174). An open resolution request (no `.resolved` file) starts the Solucionador after
+  `solver.resolution_after_seconds` (D-175).
+- A gate task starts only when every member subplan is complete (members, UI design and visual review tasks, audit):
+  the run workflow publishes each member's line tip as a subplan version (`refs/subplans/<req>.bt-r<rev>/<SP>/v<N>`)
+  and builds the candidate (`refs/compositions/<req>.bt-r<rev>/candidates/C<N>`). The gate task runs on that candidate
+  caught up with the newer work of the subplan lines it will be integrated into (a line that conflicts with it is left
+  out, D-173), and nothing after the gate starts before the gate task is accepted. A text conflict between members, or
+  a composition that fails `COMPOSE_TURNS` turns, is a rejected candidate: the gate task is held and the run summary
+  says why (`gates.rejected`); the owner's `retry-task` of the gate task composes the gate again.
+- Not ported: the legacy owner publishes a composition only with an M6 proof bound to the candidate's exact tree; here
+  the gate passes when the gate task is accepted on a snapshot built on the candidate. The durable composition store
+  and refs are namespaced and never touch the legacy owner's.
 
 ## Routing
 
@@ -159,8 +202,14 @@ Details: `references/modules.md` §Solver.
 
 ## Recovery and rollback
 
+- Engine stop: SIGTERM ends the loop, DBOS is destroyed and the process exits at once (`service.exit_now`) instead of
+  waiting for workflow threads blocked in `DBOS.recv` or a long step; steps that had not recorded their result run
+  again after recovery, as after a kill. A verification an engine stop cut short is queued again once at the next
+  start (D-171); a second interruption of the same request is a review for the owner.
 - Engine crash/kill: systemd restarts it; DBOS recovers this executor's PENDING workflows. An agent that kept running
-  in its unit is adopted (the launch step is idempotent per attempt key), never started twice.
+  in its unit is adopted (the launch step is idempotent per attempt key), never started twice. `bt.run` and `bt.task`
+  have no `max_recovery_attempts` (DBOS counts every recovery and would dead-letter a run after 100 deploys); the
+  agent, verify and integrate children keep DBOS's default.
 - Database outage: DBOS retries its connections; the run continues when the database is back (tested with PostgreSQL).
 - Cancel: workflows are cancelled with their children; the engine's reaper terminates any unit whose workflow is
   terminal and the supervisor proves no marked process remains (otherwise the attempt stays busy).
@@ -174,10 +223,21 @@ workflows). A change to a workflow's sequence of steps goes behind `if DBOS.patc
 before a plain step, never right before `DBOS.recv`, `DBOS.sleep`, `get_result` or `set_event`**: a workflow blocked in
 such a wait has no checkpoint at the patch position yet, takes the patch, and its next step lands where the wait's own
 records are (`DBOSUnexpectedStepError`, reproduced on DBOS 3.3.0 and 3.4.0). `tests/test_durable_versioning.py` is the
-template for proving an upgrade. When no workflow can still be on the old path, `deprecate_patch`, then remove it.
+template for proving an upgrade, and `tests/test_durable_upgrade.py` proves a real one: a run started by the previous
+engine code (exported with `git archive`) is recovered by the current code from the same database. When no workflow can
+still be on the old path, `deprecate_patch`, then remove it.
 
-Patches in use: `bt-run-subplans`, `bt-run-audit-remediation`, `bt-run-survives-step-failures` (run workflow);
-`bt-task-respects-pause`, `bt-task-owner-reverify`, `bt-task-reconcile-asks-owner` (task workflow).
+Patches in use: `bt-run-subplans`, `bt-run-audit-remediation`, `bt-run-survives-step-failures`, `bt-run-reopened`,
+`bt-run-recompose-gate` (run workflow); `bt-task-respects-pause`, `bt-task-owner-reverify`,
+`bt-task-reconcile-asks-owner` (task workflow). A workflow body reads the plan only through `steps.workflow_plan()`:
+the `bt.plan_text` step must run (or replay) every time, or a run recovered after another workflow warmed the process
+cache skips its first step. The control plane (`control/`: frontier, policy, classifier, subplan scopes) decides what a
+workflow does next from recorded step results, so a change to its decisions is a sequence change too.
+
+A run line created before the base pin existed (pictures REQ-021 r15, 2026-10-28) has no `<line>-base`: until it is
+pinned the run reports `subplan_lines_unavailable` and goes on without subplan lines. Pin where the line began:
+`git -C <repo> update-ref refs/bt/line/<project>/<req>/r<rev>/<role>-base <commit>`. Lines created since get their pin
+in the same transaction, and a stage join copies the pins with the lines.
 
 Steps the run workflow calls itself (`bt.sync_lines`, `bt.compose`, `bt.audit_gate`) must not end the run when their
 retries are spent: DBOS never recovers a workflow in ERROR. Behind `bt-run-survives-step-failures` such a failure is
@@ -220,6 +280,10 @@ such guard: `_enqueue` turns a child's failure into an `internal_error` fact.
 - The panels show durable runs from a projection refreshed every few seconds: they can lag DBOS by one refresh, which
   is why every command is checked against a fresh build first. Route pins, cancel-attempt, revise and edit-brief are
   not offered for durable runs (refused with a reason); cancelling a durable run stays `bt-durable cancel`.
+- After an escalation, an owner `retry` starts from the base the task's last automatic retry chose (the snapshot a
+  `retry`, remediation or other-route retry continued from; a reconciled task's legacy snapshot), or from the
+  run/subplan line when there was none; it does not continue from the escalated attempt's own snapshot (only
+  automatic retries do).
 - The process-group fallback enforces only the runtime limit (see `bt_supervisor/README.md`).
 - Real provider CLIs were not run under the durable runtime during REQ-030 (the lab uses a fake `claude` through the real
   driver); the first real run should be a small plan.
