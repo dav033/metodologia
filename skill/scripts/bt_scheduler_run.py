@@ -295,6 +295,26 @@ def _stage_note(rdir: Path) -> str:
     return f" (etapa {', '.join(held)}; faltan {len(missing)} subplanes por aprobar)" if missing else ""
 
 
+def _owner_pass(owner_composition) -> bool:
+    """One owner reconciliation pass over M1's current state; True when it published or reserved anything.
+
+    M6 verdicts land from their own threads, so a task can become accepted after this pass read M1 and before the
+    loop takes the snapshot it judges the run by. Under load (6 suites in parallel) the last member's verdict of a
+    subplan landed in that window: the snapshot read `blocked` (the gate waits for a candidate that needs the
+    unpublished subplan) and the owner stopped with the subplan accepted but never published; the same window let a
+    run end `completed` with its composition still a candidate. A terminal snapshot has no running attempt left, so
+    one more pass after it settles the owner's work for that exact state before the run may end.
+    """
+    progress = bool(owner_composition.reserve_candidates())
+    progress = bool(owner_composition.reconcile_subplans()) or progress
+    progress = bool(owner_composition.reserve_candidates()) or progress
+    progress = bool(owner_composition.reconcile_compositions()) or progress
+    owner_composition.reconcile_propagation()
+    for identity, reason in owner_composition.drain_attentions():
+        print(f"OWNER_COMPOSITION_ATTENTION: {identity}: {reason}", file=sys.stderr)
+    return progress
+
+
 def _notify_terminal(rdir: Path, req: str, status: str, run_id: str, generation: int) -> None:
     if status not in {"blocked", "completed", "cancelled"}:
         return
@@ -403,13 +423,7 @@ def run(project: str, req: str, rdir: Path, *, resume: bool, no_autostart: bool 
                     owner_progress = bool(owner_composition.reserve_candidates())
                 report = scheduler.step()
                 if owner_composition is not None:
-                    owner_progress = bool(owner_composition.reserve_candidates()) or owner_progress
-                    owner_progress = bool(owner_composition.reconcile_subplans()) or owner_progress
-                    owner_progress = bool(owner_composition.reserve_candidates()) or owner_progress
-                    owner_progress = bool(owner_composition.reconcile_compositions()) or owner_progress
-                    owner_composition.reconcile_propagation()
-                    for identity, reason in owner_composition.drain_attentions():
-                        print(f"OWNER_COMPOSITION_ATTENTION: {identity}: {reason}", file=sys.stderr)
+                    owner_progress = _owner_pass(owner_composition) or owner_progress
                 steps += 1
                 recovery_tick = getattr(wiring.recovery, "tick_diagnostic_recovery", None)
                 if callable(recovery_tick):
@@ -446,9 +460,13 @@ def run(project: str, req: str, rdir: Path, *, resume: bool, no_autostart: bool 
                     # an audit's findings become new plan tasks: the watcher applies them with this owner stopped
                     adapter.write_projection(rdir, scheduler)
                     return 0
-                _notify_terminal(rdir, req, snap.status, run_id, _notification_generation(scheduler))
                 terminal_run = (snap.status in {"completed", "cancelled"} or
                                 (not owner_progress and adapter.is_stalled(scheduler, snap)))
+                settled = True
+                if terminal_run and owner_composition is not None and _owner_pass(owner_composition):
+                    terminal_run = settled = False   # the owner still had work on the state this snapshot shows
+                if settled:                      # a blocked run still waiting (not stalled) is told as before
+                    _notify_terminal(rdir, req, snap.status, run_id, _notification_generation(scheduler))
                 if terminal_run and not m4_runtime.has_pending_streams(wiring) \
                         and not m4_runtime.has_pending_incidents(wiring):
                     _remove_autostart(project, req)
