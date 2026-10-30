@@ -344,16 +344,16 @@ class Staged(unittest.TestCase):
             (tests / f"{name}.py").write_text("", encoding="utf-8")
         self.ran: list[str] = []
 
-    def suite(self, red=()):
+    def suite(self, red=(), flaky=()):
         def run(worktree, scratch, path, tag=""):
             self.ran.append(path.stem + tag)
-            return f"{path.stem} {1 if path.stem in red else 0} 2 python3"
+            return f"{path.stem} {1 if path.stem in red or (path.stem in flaky and not tag) else 0} 2 python3"
         return run
 
-    def staged(self, mode, selection, red=()):
+    def staged(self, mode, selection, red=(), flaky=()):
         out = self.base / "results.txt"
         result = bt_regress.staged(self.base, self.base / "scratch", out, selection=selection, mode=mode, allowed=(),
-                                   suite=self.suite(red))
+                                   suite=self.suite(red, flaky))
         return result, out.read_text()
 
     def selection(self, **extra):
@@ -369,11 +369,18 @@ class Staged(unittest.TestCase):
         self.assertIn("[staged: selected 2 in 0m00s, then the rest 2 in 0m00s]", result.summary())
         self.assertIn("#   test_b: imports bt_b", text)
 
-    def test_a_red_selection_stops_before_the_rest(self):
+    def test_a_red_selection_stops_at_its_first_failure(self):
         result, text = self.staged("staged", self.selection(), red=("test_b",))
-        self.assertEqual(self.ran, ["test_b", "test_durable_d", "test_b.rerun"])
+        self.assertEqual(self.ran, ["test_b", "test_b.rerun"])                      # test_durable_d never started
         self.assertEqual((result.real, result.stopped), (["test_b"], "selected"))
         self.assertIn("stopped at the selected suites", text)
+
+    def test_a_flake_that_stopped_the_selection_early_runs_what_was_left_with_the_rest(self):
+        result, _ = self.staged("staged", self.selection(), flaky=("test_b",))
+        self.assertTrue(result.ok)
+        self.assertEqual(result.flaky, ["test_b"])
+        self.assertEqual(sorted(line.split()[0] for line in result.lines),
+                         ["test_a", "test_b", "test_c", "test_durable_d"])
 
     def test_selective_runs_the_selection_alone_and_an_untrusted_one_runs_everything(self):
         result, _ = self.staged("selective", self.selection())

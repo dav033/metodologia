@@ -26,6 +26,7 @@ import os
 import re
 import subprocess
 import sys
+import threading
 import time
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
@@ -163,15 +164,25 @@ def write(out: Path, result: Result, rerun_lines: list[str]) -> None:
 
 
 def _execute(worktree: Path, scratch: Path, only: Iterable[str] | None, workers: int, allowed: Iterable[str] | None,
-             suite: Callable[..., str]) -> tuple[Result, list[str]]:
+             suite: Callable[..., str], stop_early: bool = False) -> tuple[Result, list[str]]:
+    """Run the suites (light ones in parallel, then the heavy ones one at a time) and judge them. `stop_early`: after
+    the first failing suite no new one starts (the ones running finish); the caller runs what was left."""
     files = suites(worktree, only)
     heavy = [f for f in files if HEAVY.match(f.stem)]
     light = [f for f in files if not HEAVY.match(f.stem)]
-    lines: list[str] = []
+    stop = threading.Event()
+
+    def one(f: Path) -> str:
+        if stop.is_set():
+            return ""
+        line = suite(worktree, scratch, f)
+        if stop_early and line.split()[1] != "0":
+            stop.set()
+        return line
+
     with cf.ThreadPoolExecutor(workers) as pool:
-        lines += list(pool.map(lambda f: suite(worktree, scratch, f), light))
-    for f in heavy:
-        lines.append(suite(worktree, scratch, f))
+        lines = [line for line in pool.map(one, light) if line]
+    lines += [line for line in (one(f) for f in heavy) if line]
     by_name = {f.stem: f for f in files}
     rerun_lines: list[str] = []
 
@@ -186,7 +197,7 @@ def _execute(worktree: Path, scratch: Path, only: Iterable[str] | None, workers:
 def staged(worktree: Path, scratch: Path, out: Path | None = None, *, selection=None, mode: str = "staged",
            workers: int = 6, allowed: Iterable[str] | None = None, suite: Callable[..., str] = run_suite) -> Result:
     """The regression by `mode` over a `bt_regress_select.Selection`: `staged` runs the selected suites, stops when
-    they are red, then runs the rest; `selective` runs the selected ones alone; `full` (or no selection) runs
+    they are red (no new suite starts after the first failure), then runs the rest; `selective` runs the selected ones alone; `full` (or no selection) runs
     everything at once. A selection that is not trusted runs staged whatever the mode: its first phase (the always-run,
     changed and directly reached suites) first, then everything else."""
     worktree, scratch = Path(worktree), Path(scratch)
@@ -204,7 +215,7 @@ def staged(worktree: Path, scratch: Path, out: Path | None = None, *, selection=
     head = set(selection.first)
     chosen = [name for name in everything if name in head]
     started = time.monotonic()
-    first, reruns = _execute(worktree, scratch, chosen, workers, allowed, suite)
+    first, reruns = _execute(worktree, scratch, chosen, workers, allowed, suite, stop_early=mode == "staged")
     first.mode, first.selection = mode, described
     first.phases = [("selected" if selection.trusted else "first", len(first.lines), time.monotonic() - started)]
     if not first.ok or mode == "selective":
@@ -213,7 +224,8 @@ def staged(worktree: Path, scratch: Path, out: Path | None = None, *, selection=
             write(out, first, reruns)
         return first
     started = time.monotonic()
-    rest, more = _execute(worktree, scratch, [n for n in everything if n not in head], workers, allowed, suite)
+    done = {line.split()[0] for line in first.lines}          # a flake stopped the first phase early: the rest
+    rest, more = _execute(worktree, scratch, [n for n in everything if n not in done], workers, allowed, suite)
     merged = Result(lines=sorted(first.lines + rest.lines), failed=first.failed + rest.failed,
                     allowed=first.allowed + rest.allowed, flaky=first.flaky + rest.flaky, real=first.real + rest.real,
                     mode=mode, selection=described,
