@@ -116,8 +116,8 @@ class _ProjectIntegrator:
     def base_ref(self, run, task, *, home="", lines=()):
         return self._for(run.project).base_ref(run, task, home=home, lines=lines)
 
-    def integrate(self, run, task, snapshot, *, lines=()):
-        return self._for(run.project).integrate(run, task, snapshot, lines=lines)
+    def integrate(self, run, task, snapshot, *, lines=(), home=""):
+        return self._for(run.project).integrate(run, task, snapshot, lines=lines, home=home)
 
     def sync(self, run, role, items):
         return self._for(run.project).sync(run, role, items)
