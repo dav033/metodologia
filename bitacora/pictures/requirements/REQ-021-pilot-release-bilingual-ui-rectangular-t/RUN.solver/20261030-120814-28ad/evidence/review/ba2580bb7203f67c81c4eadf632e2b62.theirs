@@ -1,0 +1,38 @@
+import "server-only";
+
+import { headers } from "next/headers";
+import { VERSION_AVISO_DATOS } from "./aviso-datos";
+import { resolveServerRequestSession } from "./sesion-servidor";
+import { createAccountPool } from "./pool";
+import { createAccountService, type OwnAccountRecord } from "./servicio";
+
+let accounts: ReturnType<typeof createAccountService> | undefined;
+
+function accountService() {
+  accounts ??= createAccountService(createAccountPool(), process.env.DATA_NOTICE_VERSION ?? "v1");
+  return accounts;
+}
+
+export type CurrentAccount = OwnAccountRecord & { permissions: readonly string[] };
+
+export async function getCurrentAccount(): Promise<CurrentAccount | null> {
+  const session = await resolveServerRequestSession();
+  if (!session) return null;
+  if (session.accountId === "administrador-local") {
+    return {
+      id: session.accountId,
+      email: session.email,
+      displayName: "Administrador local",
+      roles: session.roles,
+      dataNoticeVersion: VERSION_AVISO_DATOS,
+      dataNoticeAcceptedAt: null,
+      permissions: session.permissions,
+    };
+  }
+  const account = await accountService().getOwnAccount(session.accountId);
+  return account ? { ...account, permissions: session.permissions } : null;
+}
+
+export async function getAccountLanguage(): Promise<"es" | "en"> {
+  return (await headers()).get("accept-language")?.toLowerCase().startsWith("en") ? "en" : "es";
+}

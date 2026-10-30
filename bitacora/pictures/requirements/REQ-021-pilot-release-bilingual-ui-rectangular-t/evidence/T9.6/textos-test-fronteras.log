@@ -1,0 +1,17 @@
+
+> demo-decoracion@0.1.0 textos:test-fronteras
+> tsx --conditions=react-server --test scripts/test/test-textos-fronteras.ts
+
+✔ English output translates catalog, option and ready-made decoration names and rejects stale source text (1.989116ms)
+✔ Spanish output is byte-for-byte the source text and performs no translation query (0.294669ms)
+✔ chat candidates and the Taller shopping list receive translated product and option names (0.996497ms)
+✔ the Taller library translates only matching factory decoration names and preserves personal names (0.485631ms)
+✔ the gallery index translates each ready-made decoration name at the page boundary (12.29215ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1330.266211

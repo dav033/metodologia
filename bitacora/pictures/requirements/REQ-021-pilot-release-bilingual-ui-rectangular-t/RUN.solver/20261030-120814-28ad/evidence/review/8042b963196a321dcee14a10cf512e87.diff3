@@ -1,0 +1,731 @@
+<<<<<<< ours (scripts/test/test-integracion-decoraciones-personales.ts)
+import assert from "node:assert/strict";
+import { spawn, spawnSync, type ChildProcess } from "node:child_process";
+import { createServer } from "node:net";
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
+import { setTimeout as delay } from "node:timers/promises";
+import { chromium, type Browser, type BrowserContext, type Page } from "playwright";
+import { VERSION_AVISO_DATOS } from "../../src/lib/cuentas/aviso-datos";
+import { createAccountService } from "../../src/lib/cuentas/servicio";
+import { ESCENAS_PREDEFINIDAS } from "../../src/lib/globos3d/escenas-presets";
+import { itemDeEscena } from "../../src/lib/globos3d/biblioteca";
+import type { Escena } from "../../src/lib/globos3d/escena";
+import { createIsolatedTestDatabase, resolveTestDatabaseTarget } from "./lib/base-prueba";
+
+const ROOT = process.cwd();
+const EVIDENCE_PATH = path.join(ROOT, ".evidence/REQ-021/SP-5.integration.json");
+const PASSWORD = "REQ021-Personal-Library-Password";
+const LEGACY_KEY = "taller3d:biblioteca-propia:v1";
+const PROJECT_KEY = "taller3d:escena:v1";
+const LEGACY_NAME = "Decoración antigua local REQ-021";
+const SAVED_NAME = "Composición persistente REQ-021";
+const MAX_LOG_BYTES = 10_000;
+
+type Account = { accountId: string; email: string; roleId: string };
+type Child = ChildProcess;
+
+function appendTail(previous: string, chunk: Buffer): string {
+  return `${previous}${chunk.toString("utf8")}`.slice(-MAX_LOG_BYTES);
+}
+
+function redact(value: string): string {
+  return value
+    .replace(/postgres(?:ql)?:\/\/[^\s"']+/gi, "[redacted-db-url]")
+    .replace(/([?&]token=)[^&\s"']+/gi, "$1[redacted]")
+    .replace(/(session=)[^;\s]+/gi, "$1[redacted]")
+    .replace(/[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}/g, "[redacted-email]");
+}
+
+function run(command: string, args: string[], env: NodeJS.ProcessEnv): { status: number | null; output: string } {
+  const result = spawnSync(command, args, { cwd: ROOT, env, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
+  if (result.error) throw result.error;
+  return { status: result.status, output: `${result.stdout}\n${result.stderr}` };
+}
+
+async function availablePort(): Promise<number> {
+  const listener = createServer();
+  await new Promise<void>((resolve, reject) => {
+    listener.once("error", reject);
+    listener.listen(0, "127.0.0.1", resolve);
+  });
+  const address = listener.address();
+  assert.ok(address && typeof address !== "string");
+  const port = address.port;
+  await new Promise<void>((resolve, reject) => listener.close((error) => error ? reject(error) : resolve()));
+  return port;
+}
+
+function buildEnvironment(home: string): NodeJS.ProcessEnv {
+  const env: NodeJS.ProcessEnv = {
+    PATH: process.env.PATH,
+    HOME: home,
+    CI: "true",
+    APP_ENV: "test",
+    NODE_ENV: "production",
+    NODE_OPTIONS: "--max-old-space-size=4096",
+    NEXT_TELEMETRY_DISABLED: "1",
+    CAPTURA_RENDERS_ENABLED: "1",
+    VERCEL: "1",
+  };
+  assert.equal(env.DATABASE_URL, undefined);
+  assert.equal(env.PICTURES_REQ021_DATABASE_URL, undefined);
+  return env;
+}
+
+async function waitForServer(origin: string, child: Child, logs: { stdout: string; stderr: string }): Promise<void> {
+  const deadline = Date.now() + 60_000;
+  while (Date.now() < deadline) {
+    if (child.exitCode !== null) throw new Error(`next start exited before /3d became available. ${redact(`${logs.stdout}\n${logs.stderr}`)}`);
+    try {
+      const response = await fetch(`${origin}/3d`, { signal: AbortSignal.timeout(2_000), redirect: "manual" });
+      if (response.status < 500) return;
+    } catch {
+      // Keep polling while next start initializes.
+    }
+    await delay(500);
+  }
+  throw new Error(`next start did not become ready within 60 seconds. ${redact(`${logs.stdout}\n${logs.stderr}`)}`);
+}
+
+async function newContext(browser: Browser): Promise<BrowserContext> {
+  return browser.newContext({ locale: "es-CO", viewport: { width: 1440, height: 1100 } });
+}
+
+async function signIn(page: Page, origin: string, account: Account): Promise<void> {
+  await page.goto(`${origin}/login`);
+  await page.getByLabel("Correo electrónico", { exact: true }).fill(account.email);
+  await page.getByLabel("Contraseña", { exact: true }).fill(PASSWORD);
+  const login = page.waitForResponse((response) => response.url().endsWith("/api/login") && response.request().method() === "POST");
+  await page.getByRole("button", { name: "Entrar", exact: true }).click();
+  const response = await login;
+  assert.equal(response.status(), 200, `Seeded ${account.roleId} account can authenticate`);
+  const loginBody: unknown = await response.json();
+  assert.ok(typeof loginBody === "object" && loginBody !== null && "permissions" in loginBody && Array.isArray(loginBody.permissions));
+  const permissions = loginBody.permissions.filter((value): value is string => typeof value === "string");
+  assert.ok(permissions.includes("taller_3d"), `Seeded ${account.roleId} has the Taller permission needed by the library API`);
+  await page.waitForURL((url) => url.pathname === (account.roleId === "entusiasta" ? "/asistente" : "/3d"));
+}
+
+async function openLibrary(page: Page): Promise<void> {
+  await page.goto(new URL("/3d", page.url()).toString());
+  await page.getByRole("region", { name: "Biblioteca personal", exact: true }).waitFor({ timeout: 60_000 });
+  await page.getByRole("button", { name: "En mi cuenta", exact: true }).waitFor();
+  await page.getByRole("button", { name: "Guardar toda la escena", exact: true }).waitFor();
+}
+
+function initialProjectScene(): Escena {
+  const preset = ESCENAS_PREDEFINIDAS.find((item) => item.id === "arco_organico_columnas_guirnalda");
+  assert.ok(preset, "SPEC scenario uses a real scene as the starting project");
+  return structuredClone(preset.escena);
+}
+
+function legacyBrowserItem(scene: Escena): string {
+  const item = itemDeEscena({ id: "legacy:req021:local-only", nombre: LEGACY_NAME, ocasiones: ["general"], escena: scene });
+  assert.ok(item, "Legacy browser fixture is a serializable scene item");
+  return JSON.stringify([{ ...item, propio: true }]);
+}
+
+async function installBrowserFixtures(context: BrowserContext, origin: string, scene: Escena, legacy: string): Promise<void> {
+  await context.addInitScript(({ appOrigin, initialScene, legacyValue, legacyKey, projectKey }) => {
+    if (window.location.origin !== appOrigin) return;
+    if (window.localStorage.getItem(projectKey) === null) {
+      window.localStorage.setItem(projectKey, JSON.stringify({ nombre: "Proyecto REQ-021", escena: initialScene, version: 2 }));
+    }
+    if (window.localStorage.getItem(legacyKey) === null) window.localStorage.setItem(legacyKey, legacyValue);
+  }, { appOrigin: origin, initialScene: scene, legacyValue: legacy, legacyKey: LEGACY_KEY, projectKey: PROJECT_KEY });
+}
+
+async function storedProjectNodeCount(page: Page): Promise<number> {
+  return page.evaluate((key) => {
+    const raw = localStorage.getItem(key);
+    if (!raw) return 0;
+    const saved: unknown = JSON.parse(raw);
+    if (typeof saved !== "object" || saved === null || !("escena" in saved) || typeof saved.escena !== "object" || saved.escena === null || !("nodos" in saved.escena) || !Array.isArray(saved.escena.nodos)) return 0;
+    return saved.escena.nodos.length;
+  }, PROJECT_KEY);
+}
+
+async function waitForNodeCount(page: Page, expected: number): Promise<void> {
+  await page.waitForFunction(({ key, count }) => {
+    const raw = localStorage.getItem(key);
+    if (!raw) return false;
+    try {
+      const saved: unknown = JSON.parse(raw);
+      return typeof saved === "object" && saved !== null && "escena" in saved && typeof saved.escena === "object" && saved.escena !== null && "nodos" in saved.escena && Array.isArray(saved.escena.nodos) && saved.escena.nodos.length >= count;
+    } catch { return false; }
+  }, { key: PROJECT_KEY, count: expected }, { timeout: 20_000 });
+}
+
+async function runFlow(): Promise<void> {
+  const target = resolveTestDatabaseTarget(process.env);
+  const database = await createIsolatedTestDatabase(target.connectionString);
+  const home = await mkdtemp(path.join(os.tmpdir(), "req021-decoraciones-home-"));
+  const browsers: Browser[] = [];
+  let child: Child | undefined;
+  const logs = { stdout: "", stderr: "" };
+  const evidence: Record<string, unknown> = {
+    schemaVersion: 1,
+    check: "REQ-021 SP-5 saved decorations production browser integration",
+    status: "running",
+    runtime: "next build + next start",
+    databaseSource: target.source,
+    browser: "Chromium with independent browser profiles",
+    expectedResults: {
+      saveAndReload: "owner's confirmed account decoration survives reload",
+      crossBrowser: "same account reads the saved composition in a separate browser profile",
+      placement: "Add to my scene increases the open project's persisted node count",
+      staff: "employee_internal reads the owner's item; direct PUT and DELETE are denied",
+      isolation: "a second master_designer Usuario has an empty account list and cannot read the owner's item by id",
+      legacy: "legacy item remains in this browser's local library and is absent from account storage",
+    },
+  };
+
+  try {
+    for (const migration of ["037_cuentas.sql", "038_cuentas_datos_administracion.sql", "039_decoraciones_personales.sql"]) {
+      await database.pool.query(await readFile(path.join(ROOT, "scripts/migrations", migration), "utf8"));
+    }
+    const accountService = createAccountService(database.pool, VERSION_AVISO_DATOS);
+    const accounts = await accountService.seedTestAccounts(PASSWORD);
+    const owner = accounts.find((account) => account.roleId === "master_designer");
+    const administrator = accounts.find((account) => account.roleId === "administrador");
+    const staff = accounts.find((account) => account.roleId === "empleado_interno");
+    assert.ok(owner && administrator && staff, "isolated REQ-021 database has owner, administrator and staff accounts");
+    const invitedOther = await accountService.invite({
+      actorAccountId: administrator.accountId,
+      email: `req021-other-${crypto.randomUUID()}@example.test`,
+      roleId: "master_designer",
+    });
+    const activatedOther = await accountService.activate({ token: invitedOther.token, password: PASSWORD, acceptDataNotice: true });
+    const other: Account = { accountId: invitedOther.accountId, email: activatedOther.email, roleId: "master_designer" };
+
+    const build = run("npm", ["run", "build"], buildEnvironment(home));
+    assert.equal(build.status, 0, `Production build succeeds without database credentials. ${redact(build.output.slice(-3_000))}`);
+
+    const port = await availablePort();
+    const scopedDatabaseUrl = new URL(target.connectionString);
+    scopedDatabaseUrl.searchParams.set("options", `-c search_path=${database.schema},public`);
+    const origin = `http://localhost:${port}`;
+    child = spawn(process.execPath, ["node_modules/next/dist/bin/next", "start", "--hostname", "127.0.0.1", "--port", String(port)], {
+      cwd: ROOT,
+      env: {
+        PATH: process.env.PATH,
+        HOME: home,
+        APP_ENV: "test",
+        DATABASE_URL: scopedDatabaseUrl.toString(),
+        DATA_NOTICE_VERSION: VERSION_AVISO_DATOS,
+        CAPTURA_RENDERS_ENABLED: "1",
+        NODE_ENV: "production",
+        NEXT_TELEMETRY_DISABLED: "1",
+        VERCEL: "1",
+        PORT: String(port),
+        HOSTNAME: "127.0.0.1",
+      },
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+    child.stdout?.on("data", (chunk: Buffer) => { logs.stdout = appendTail(logs.stdout, chunk); });
+    child.stderr?.on("data", (chunk: Buffer) => { logs.stderr = appendTail(logs.stderr, chunk); });
+    await waitForServer(origin, child, logs);
+
+    const ownerBrowser = await chromium.launch({ headless: true, args: ["--no-sandbox", "--disable-dev-shm-usage"] });
+    const secondBrowser = await chromium.launch({ headless: true, args: ["--no-sandbox", "--disable-dev-shm-usage"] });
+    const staffBrowser = await chromium.launch({ headless: true, args: ["--no-sandbox", "--disable-dev-shm-usage"] });
+    browsers.push(ownerBrowser, secondBrowser, staffBrowser);
+    const ownerContext = await newContext(ownerBrowser);
+    const secondContext = await newContext(secondBrowser);
+    const staffContext = await newContext(staffBrowser);
+    const scene = initialProjectScene();
+    const legacy = legacyBrowserItem(scene);
+    await installBrowserFixtures(ownerContext, origin, scene, legacy);
+    const ownerPage = await ownerContext.newPage();
+    await signIn(ownerPage, origin, owner);
+    await openLibrary(ownerPage);
+    const startingNodeCount = await storedProjectNodeCount(ownerPage);
+    assert.ok(startingNodeCount > 0, "owner opens a populated project before saving its composition");
+
+    await ownerPage.getByRole("button", { name: "Guardar toda la escena", exact: true }).click();
+    await ownerPage.getByLabel("Nombre", { exact: true }).fill(SAVED_NAME);
+    const saveResponse = ownerPage.waitForResponse((response) => response.url().endsWith("/api/decoraciones-personales") && response.request().method() === "POST");
+    await ownerPage.getByRole("button", { name: "Guardar", exact: true }).click();
+    const saved = await saveResponse;
+    const savedBody: unknown = await saved.json();
+    assert.equal(saved.status(), 201, `composition is persisted through the production API (${JSON.stringify(savedBody)})`);
+    await ownerPage.getByRole("status").getByText("Guardado en mi cuenta", { exact: true }).waitFor();
+    assert.ok(typeof savedBody === "object" && savedBody !== null && "decoracion" in savedBody && typeof savedBody.decoracion === "object" && savedBody.decoracion !== null && "id" in savedBody.decoracion && typeof savedBody.decoracion.id === "string");
+    const decorationId = savedBody.decoracion.id;
+    const stored = await database.pool.query<{ cuenta_id: string; nombre: string; composicion: Escena }>(
+      "SELECT cuenta_id, nombre, composicion FROM decoraciones_personales WHERE id = $1",
+      [decorationId],
+    );
+    assert.equal(stored.rowCount, 1);
+    assert.equal(stored.rows[0]?.cuenta_id, owner.accountId);
+    assert.equal(stored.rows[0]?.nombre, SAVED_NAME);
+    assert.equal(stored.rows[0]?.composicion.nodos.length, startingNodeCount);
+
+    await ownerPage.reload();
+    await ownerPage.getByRole("region", { name: "Biblioteca personal", exact: true }).waitFor();
+    await ownerPage.getByRole("button", { name: new RegExp(SAVED_NAME) }).waitFor();
+    const accountRows = await ownerPage.evaluate(async () => {
+      const response = await fetch("/api/decoraciones-personales", { cache: "no-store" });
+      const body: unknown = await response.json();
+      if (!response.ok || typeof body !== "object" || body === null || !("decoraciones" in body) || !Array.isArray(body.decoraciones)) return [];
+      return body.decoraciones.map((record) => typeof record === "object" && record !== null && "nombre" in record ? record.nombre : null);
+    });
+    assert.deepEqual(accountRows, [SAVED_NAME], "account storage contains the saved item, not the legacy browser item");
+
+    await ownerPage.getByRole("button", { name: "En este navegador", exact: true }).click();
+    await ownerPage.getByRole("button", { name: new RegExp(LEGACY_NAME) }).waitFor();
+    const legacyAfter = await ownerPage.evaluate((key) => localStorage.getItem(key), LEGACY_KEY);
+    assert.equal(legacyAfter, legacy, "the pre-existing browser item stays byte-for-byte in local storage");
+    await ownerContext.close();
+
+    const secondPage = await secondContext.newPage();
+    await signIn(secondPage, origin, owner);
+    await openLibrary(secondPage);
+    const remoteRecord = secondPage.getByRole("button", { name: new RegExp(SAVED_NAME) });
+    await remoteRecord.waitFor();
+    await remoteRecord.click();
+    const beforePlacement = await storedProjectNodeCount(secondPage);
+    await secondPage.getByRole("button", { name: "Añadir a mi escena", exact: true }).click();
+    await waitForNodeCount(secondPage, beforePlacement + startingNodeCount);
+    const placedNodeCount = await storedProjectNodeCount(secondPage);
+    assert.equal(placedNodeCount, beforePlacement + startingNodeCount, "saved composition is placed into the second browser's open project");
+    await secondContext.close();
+
+    const staffPage = await staffContext.newPage();
+    await signIn(staffPage, origin, staff);
+    await openLibrary(staffPage);
+    const ownerInput = staffPage.locator("#biblioteca-cuenta-ajena");
+    assert.equal(await ownerInput.count(), 1, "employee staff sees the owner selector in their personal library");
+    await ownerInput.fill(owner.accountId);
+    await staffPage.getByRole("button", { name: "Ver cuenta", exact: true }).click();
+    await staffPage.getByRole("button", { name: new RegExp(SAVED_NAME) }).waitFor();
+    await staffPage.getByRole("button", { name: new RegExp(SAVED_NAME) }).click();
+    await staffPage.getByText("Solo lectura", { exact: true }).first().waitFor();
+    assert.equal(await staffPage.getByRole("button", { name: "Renombrar", exact: true }).count(), 0);
+    assert.equal(await staffPage.getByRole("button", { name: "Editar", exact: true }).count(), 0);
+    assert.equal(await staffPage.getByRole("button", { name: "Quitar de mi biblioteca", exact: true }).count(), 0);
+    const directMutation = await staffPage.evaluate(async ({ id, composition }) => {
+      const body = JSON.stringify({ nombre: "Staff no autorizado", ocasion: "general", miniatura: "data:image/png;base64,aGVsbG8=", composicion: composition });
+      const update = await fetch(`/api/decoraciones-personales/${id}`, { method: "PUT", headers: { "content-type": "application/json" }, body });
+      const remove = await fetch(`/api/decoraciones-personales/${id}`, { method: "DELETE" });
+      return { put: update.status, delete: remove.status };
+    }, { id: decorationId, composition: stored.rows[0]!.composicion });
+    assert.ok([403, 404].includes(directMutation.put), `Staff direct PUT is refused (HTTP ${directMutation.put})`);
+    assert.ok([403, 404].includes(directMutation.delete), `Staff direct DELETE is refused (HTTP ${directMutation.delete})`);
+    const unchangedAfterStaff = await database.pool.query<{ nombre: string }>("SELECT nombre FROM decoraciones_personales WHERE id = $1", [decorationId]);
+    assert.equal(unchangedAfterStaff.rows[0]?.nombre, SAVED_NAME, "staff mutations do not change or delete the owner's record");
+    await staffContext.close();
+
+    const otherContext = await newContext(secondBrowser);
+    const otherPage = await otherContext.newPage();
+    await signIn(otherPage, origin, other);
+    await openLibrary(otherPage);
+    await otherPage.getByText("Tu biblioteca está vacía", { exact: true }).waitFor();
+    assert.equal(await otherPage.getByRole("button", { name: new RegExp(SAVED_NAME) }).count(), 0);
+    const otherRead = await otherPage.evaluate(async (id) => (await fetch(`/api/decoraciones-personales/${id}`, { cache: "no-store" })).status, decorationId);
+    assert.equal(otherRead, 404, "another Usuario cannot read the owner's item by id");
+    await otherContext.close();
+
+    evidence.status = "passed";
+    evidence.owner = { role: owner.roleId, saveStatus: saved.status(), reloadRetainedRecord: true, browserLocalLegacyRetained: true };
+    evidence.secondBrowser = { account: "same owner", role: owner.roleId, placedNodes: startingNodeCount, projectNodesBefore: beforePlacement, projectNodesAfter: placedNodeCount };
+    evidence.staff = { role: staff.roleId, readOnlyUi: true, directPutStatus: directMutation.put, directDeleteStatus: directMutation.delete, ownerRecordUnchanged: true };
+    evidence.otherUsuario = { role: other.roleId, collectionEmpty: true, directItemStatus: otherRead };
+    await mkdir(path.dirname(EVIDENCE_PATH), { recursive: true });
+    await writeFile(EVIDENCE_PATH, `${JSON.stringify(evidence, null, 2)}\n`, "utf8");
+    process.stdout.write("test-integracion-decoraciones-personales: PASS\n");
+  } catch (error) {
+    process.stderr.write(`${error instanceof Error ? error.stack ?? error.message : "Integration failed."}\n`);
+    if (logs.stdout || logs.stderr) process.stderr.write(`${redact(`${logs.stdout}\n${logs.stderr}`)}\n`);
+    throw error;
+  } finally {
+    await Promise.all(browsers.map((browser) => browser.close().catch(() => undefined)));
+    if (child && child.exitCode === null) {
+      child.kill("SIGTERM");
+      await Promise.race([new Promise<void>((resolve) => child?.once("exit", () => resolve())), delay(5_000)]);
+      if (child.exitCode === null) child.kill("SIGKILL");
+    }
+    await database.drop();
+    await rm(home, { recursive: true, force: true });
+  }
+}
+
+runFlow().catch((error: unknown) => {
+  process.stderr.write(`${error instanceof Error ? error.message : "Production integration failed."}\n`);
+  process.exitCode = 1;
+});
+||||||| base
+=======
+import assert from "node:assert/strict";
+import { spawn, spawnSync, type ChildProcess } from "node:child_process";
+import { createServer } from "node:net";
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
+import { setTimeout as delay } from "node:timers/promises";
+import { chromium, type Browser, type BrowserContext, type Page } from "playwright";
+import { VERSION_AVISO_DATOS } from "../../src/lib/cuentas/aviso-datos";
+import { createAccountService } from "../../src/lib/cuentas/servicio";
+import { ESCENAS_PREDEFINIDAS } from "../../src/lib/globos3d/escenas-presets";
+import { itemDeEscena } from "../../src/lib/globos3d/biblioteca";
+import type { Escena } from "../../src/lib/globos3d/escena";
+import { createIsolatedTestDatabase, resolveTestDatabaseTarget } from "./lib/base-prueba";
+
+const ROOT = process.cwd();
+const EVIDENCE_PATH = path.join(ROOT, ".evidence/REQ-021/CG-5.integration.json");
+const PASSWORD = "REQ021-Personal-Library-Password";
+const LEGACY_KEY = "taller3d:biblioteca-propia:v1";
+const PROJECT_KEY = "taller3d:escena:v1";
+const LEGACY_NAME = "Decoración antigua local REQ-021";
+const SAVED_NAME = "Composición persistente REQ-021";
+const MAX_LOG_BYTES = 10_000;
+
+type Account = { accountId: string; email: string; roleId: string };
+type Child = ChildProcess;
+
+function appendTail(previous: string, chunk: Buffer): string {
+  return `${previous}${chunk.toString("utf8")}`.slice(-MAX_LOG_BYTES);
+}
+
+function redact(value: string): string {
+  return value
+    .replace(/postgres(?:ql)?:\/\/[^\s"']+/gi, "[redacted-db-url]")
+    .replace(/([?&]token=)[^&\s"']+/gi, "$1[redacted]")
+    .replace(/(session=)[^;\s]+/gi, "$1[redacted]")
+    .replace(/[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}/g, "[redacted-email]");
+}
+
+function run(command: string, args: string[], env: NodeJS.ProcessEnv): { status: number | null; output: string } {
+  const result = spawnSync(command, args, { cwd: ROOT, env, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
+  if (result.error) throw result.error;
+  return { status: result.status, output: `${result.stdout}\n${result.stderr}` };
+}
+
+async function availablePort(): Promise<number> {
+  const listener = createServer();
+  await new Promise<void>((resolve, reject) => {
+    listener.once("error", reject);
+    listener.listen(0, "127.0.0.1", resolve);
+  });
+  const address = listener.address();
+  assert.ok(address && typeof address !== "string");
+  const port = address.port;
+  await new Promise<void>((resolve, reject) => listener.close((error) => error ? reject(error) : resolve()));
+  return port;
+}
+
+function buildEnvironment(home: string): NodeJS.ProcessEnv {
+  const env: NodeJS.ProcessEnv = {
+    PATH: process.env.PATH,
+    HOME: home,
+    CI: "true",
+    APP_ENV: "test",
+    NODE_ENV: "production",
+    NODE_OPTIONS: "--max-old-space-size=4096",
+    NEXT_TELEMETRY_DISABLED: "1",
+    CAPTURA_RENDERS_ENABLED: "1",
+    VERCEL: "1",
+  };
+  assert.equal(env.DATABASE_URL, undefined);
+  assert.equal(env.PICTURES_REQ021_DATABASE_URL, undefined);
+  return env;
+}
+
+async function waitForServer(origin: string, child: Child, logs: { stdout: string; stderr: string }): Promise<void> {
+  const deadline = Date.now() + 60_000;
+  while (Date.now() < deadline) {
+    if (child.exitCode !== null) throw new Error(`next start exited before /3d became available. ${redact(`${logs.stdout}\n${logs.stderr}`)}`);
+    try {
+      const response = await fetch(`${origin}/3d`, { signal: AbortSignal.timeout(2_000), redirect: "manual" });
+      if (response.status < 500) return;
+    } catch {
+      // Keep polling while next start initializes.
+    }
+    await delay(500);
+  }
+  throw new Error(`next start did not become ready within 60 seconds. ${redact(`${logs.stdout}\n${logs.stderr}`)}`);
+}
+
+async function newContext(browser: Browser): Promise<BrowserContext> {
+  return browser.newContext({ locale: "es-CO", viewport: { width: 1440, height: 1100 } });
+}
+
+async function signIn(page: Page, origin: string, account: Account): Promise<void> {
+  await page.goto(`${origin}/login`);
+  await page.getByLabel("Correo electrónico", { exact: true }).fill(account.email);
+  await page.getByLabel("Contraseña", { exact: true }).fill(PASSWORD);
+  const login = page.waitForResponse((response) => response.url().endsWith("/api/login") && response.request().method() === "POST");
+  await page.getByRole("button", { name: "Entrar", exact: true }).click();
+  const response = await login;
+  assert.equal(response.status(), 200, `Seeded ${account.roleId} account can authenticate`);
+  const loginBody: unknown = await response.json();
+  assert.ok(typeof loginBody === "object" && loginBody !== null && "permissions" in loginBody && Array.isArray(loginBody.permissions));
+  const permissions = loginBody.permissions.filter((value): value is string => typeof value === "string");
+  assert.ok(permissions.includes("taller_3d"), `Seeded ${account.roleId} has the Taller permission needed by the library API`);
+  await page.waitForURL((url) => url.pathname === (account.roleId === "entusiasta" ? "/asistente" : "/3d"));
+}
+
+async function openLibrary(page: Page): Promise<void> {
+  await page.goto(new URL("/3d", page.url()).toString());
+  await page.getByRole("tab", { name: "Pieza", exact: true }).click();
+  await page.getByRole("button", { name: "Abrir biblioteca personal", exact: true }).click();
+  await page.getByRole("dialog", { name: "Biblioteca del Taller", exact: true }).waitFor({ timeout: 60_000 });
+  await page.getByRole("button", { name: "En mi cuenta", exact: true }).waitFor();
+  await page.getByRole("button", { name: "Guardar toda la escena", exact: true }).first().waitFor();
+}
+
+function initialProjectScene(): Escena {
+  const preset = ESCENAS_PREDEFINIDAS.find((item) => item.id === "arco_organico_columnas_guirnalda");
+  assert.ok(preset, "SPEC scenario uses a real scene as the starting project");
+  return structuredClone(preset.escena);
+}
+
+function legacyBrowserItem(scene: Escena): string {
+  const item = itemDeEscena({ id: "legacy:req021:local-only", nombre: LEGACY_NAME, ocasiones: ["general"], escena: scene });
+  assert.ok(item, "Legacy browser fixture is a serializable scene item");
+  return JSON.stringify([{ ...item, propio: true }]);
+}
+
+async function installBrowserFixtures(context: BrowserContext, origin: string, scene: Escena, legacy: string): Promise<void> {
+  await context.addInitScript(({ appOrigin, initialScene, legacyValue, legacyKey, projectKey }) => {
+    if (window.location.origin !== appOrigin) return;
+    if (window.localStorage.getItem(projectKey) === null) {
+      window.localStorage.setItem(projectKey, JSON.stringify({ nombre: "Proyecto REQ-021", escena: initialScene, version: 2 }));
+    }
+    if (window.localStorage.getItem(legacyKey) === null) window.localStorage.setItem(legacyKey, legacyValue);
+  }, { appOrigin: origin, initialScene: scene, legacyValue: legacy, legacyKey: LEGACY_KEY, projectKey: PROJECT_KEY });
+}
+
+async function storedProjectNodeCount(page: Page): Promise<number> {
+  return page.evaluate((key) => {
+    const workingKey = "taller3d:escena:trabajo:v1";
+    for (const storageKey of [workingKey, key]) {
+      const raw = localStorage.getItem(storageKey);
+      if (!raw) continue;
+      try {
+        const saved: unknown = JSON.parse(raw);
+        if (typeof saved === "object" && saved !== null && "escena" in saved && typeof saved.escena === "object" && saved.escena !== null && "nodos" in saved.escena && Array.isArray(saved.escena.nodos)) return saved.escena.nodos.length;
+      } catch { /* The workshop falls back to the untouched source when its working copy is invalid. */ }
+    }
+    return 0;
+  }, PROJECT_KEY);
+}
+
+async function waitForNodeCount(page: Page, expected: number): Promise<void> {
+  await page.waitForFunction(({ key, count }) => {
+    const workingKey = "taller3d:escena:trabajo:v1";
+    for (const storageKey of [workingKey, key]) {
+      const raw = localStorage.getItem(storageKey);
+      if (!raw) continue;
+      try {
+        const saved: unknown = JSON.parse(raw);
+        if (typeof saved === "object" && saved !== null && "escena" in saved && typeof saved.escena === "object" && saved.escena !== null && "nodos" in saved.escena && Array.isArray(saved.escena.nodos)) return saved.escena.nodos.length >= count;
+      } catch { /* The workshop falls back to the untouched source when its working copy is invalid. */ }
+    }
+    return false;
+  }, { key: PROJECT_KEY, count: expected }, { timeout: 20_000 });
+}
+
+async function runFlow(): Promise<void> {
+  const target = resolveTestDatabaseTarget(process.env);
+  const database = await createIsolatedTestDatabase(target.connectionString);
+  const home = await mkdtemp(path.join(os.tmpdir(), "req021-decoraciones-home-"));
+  const browsers: Browser[] = [];
+  let child: Child | undefined;
+  const logs = { stdout: "", stderr: "" };
+  const evidence: Record<string, unknown> = {
+    schemaVersion: 1,
+    check: "REQ-021 SP-5 saved decorations production browser integration",
+    status: "running",
+    runtime: "next build + next start",
+    databaseSource: target.source,
+    browser: "Chromium with independent browser profiles",
+    expectedResults: {
+      saveAndReload: "owner's confirmed account decoration survives reload",
+      crossBrowser: "same account reads the saved composition in a separate browser profile",
+      placement: "Add to my scene increases the open project's persisted node count",
+      staff: "employee_internal reads the owner's item; direct PUT and DELETE are denied",
+      isolation: "a second master_designer Usuario has an empty account list and cannot read the owner's item by id",
+      legacy: "legacy item remains in this browser's local library and is absent from account storage",
+    },
+  };
+
+  try {
+    for (const migration of ["037_cuentas.sql", "038_cuentas_datos_administracion.sql", "039_decoraciones_personales.sql"]) {
+      await database.pool.query(await readFile(path.join(ROOT, "scripts/migrations", migration), "utf8"));
+    }
+    const accountService = createAccountService(database.pool, VERSION_AVISO_DATOS);
+    const accounts = await accountService.seedTestAccounts(PASSWORD);
+    const owner = accounts.find((account) => account.roleId === "master_designer");
+    const administrator = accounts.find((account) => account.roleId === "administrador");
+    const staff = accounts.find((account) => account.roleId === "empleado_interno");
+    assert.ok(owner && administrator && staff, "isolated REQ-021 database has owner, administrator and staff accounts");
+    const invitedOther = await accountService.invite({
+      actorAccountId: administrator.accountId,
+      email: `req021-other-${crypto.randomUUID()}@example.test`,
+      roleId: "master_designer",
+    });
+    const activatedOther = await accountService.activate({ token: invitedOther.token, password: PASSWORD, acceptDataNotice: true });
+    const other: Account = { accountId: invitedOther.accountId, email: activatedOther.email, roleId: "master_designer" };
+
+    const build = run("npm", ["run", "build"], buildEnvironment(home));
+    assert.equal(build.status, 0, `Production build succeeds without database credentials. ${redact(build.output.slice(-3_000))}`);
+
+    const port = await availablePort();
+    const scopedDatabaseUrl = new URL(target.connectionString);
+    scopedDatabaseUrl.searchParams.set("options", `-c search_path=${database.schema},public`);
+    const origin = `http://localhost:${port}`;
+    child = spawn(process.execPath, ["node_modules/next/dist/bin/next", "start", "--hostname", "127.0.0.1", "--port", String(port)], {
+      cwd: ROOT,
+      env: {
+        PATH: process.env.PATH,
+        HOME: home,
+        APP_ENV: "test",
+        DATABASE_URL: scopedDatabaseUrl.toString(),
+        DATA_NOTICE_VERSION: VERSION_AVISO_DATOS,
+        CAPTURA_RENDERS_ENABLED: "1",
+        NODE_ENV: "production",
+        NEXT_TELEMETRY_DISABLED: "1",
+        VERCEL: "1",
+        PORT: String(port),
+        HOSTNAME: "127.0.0.1",
+      },
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+    child.stdout?.on("data", (chunk: Buffer) => { logs.stdout = appendTail(logs.stdout, chunk); });
+    child.stderr?.on("data", (chunk: Buffer) => { logs.stderr = appendTail(logs.stderr, chunk); });
+    await waitForServer(origin, child, logs);
+
+    const ownerBrowser = await chromium.launch({ headless: true, args: ["--no-sandbox", "--disable-dev-shm-usage"] });
+    const secondBrowser = await chromium.launch({ headless: true, args: ["--no-sandbox", "--disable-dev-shm-usage"] });
+    const staffBrowser = await chromium.launch({ headless: true, args: ["--no-sandbox", "--disable-dev-shm-usage"] });
+    browsers.push(ownerBrowser, secondBrowser, staffBrowser);
+    const ownerContext = await newContext(ownerBrowser);
+    const secondContext = await newContext(secondBrowser);
+    const staffContext = await newContext(staffBrowser);
+    const scene = initialProjectScene();
+    const legacy = legacyBrowserItem(scene);
+    await installBrowserFixtures(ownerContext, origin, scene, legacy);
+    const ownerPage = await ownerContext.newPage();
+    await signIn(ownerPage, origin, owner);
+    await openLibrary(ownerPage);
+    const startingNodeCount = await storedProjectNodeCount(ownerPage);
+    assert.ok(startingNodeCount > 0, "owner opens a populated project before saving its composition");
+
+    await ownerPage.getByRole("button", { name: "Guardar toda la escena", exact: true }).click();
+    await ownerPage.getByLabel("Nombre", { exact: true }).fill(SAVED_NAME);
+    const saveResponse = ownerPage.waitForResponse((response) => response.url().endsWith("/api/decoraciones-personales") && response.request().method() === "POST");
+    await ownerPage.getByLabel("Guardar en mi biblioteca").getByRole("button", { name: "Guardar", exact: true }).click();
+    const saved = await saveResponse;
+    const savedBody: unknown = await saved.json();
+    assert.equal(saved.status(), 201, `composition is persisted through the production API (${JSON.stringify(savedBody)})`);
+    await ownerPage.getByRole("status").getByText("Guardado en mi cuenta", { exact: true }).waitFor();
+    assert.ok(typeof savedBody === "object" && savedBody !== null && "decoracion" in savedBody && typeof savedBody.decoracion === "object" && savedBody.decoracion !== null && "id" in savedBody.decoracion && typeof savedBody.decoracion.id === "string");
+    const decorationId = savedBody.decoracion.id;
+    const stored = await database.pool.query<{ cuenta_id: string; nombre: string; composicion: Escena }>(
+      "SELECT cuenta_id, nombre, composicion FROM decoraciones_personales WHERE id = $1",
+      [decorationId],
+    );
+    assert.equal(stored.rowCount, 1);
+    assert.equal(stored.rows[0]?.cuenta_id, owner.accountId);
+    assert.equal(stored.rows[0]?.nombre, SAVED_NAME);
+    assert.equal(stored.rows[0]?.composicion.nodos.length, startingNodeCount);
+
+    await ownerPage.reload();
+    await ownerPage.getByRole("tab", { name: "Pieza", exact: true }).click();
+    await ownerPage.getByRole("button", { name: "Abrir biblioteca personal", exact: true }).click();
+    await ownerPage.getByRole("dialog", { name: "Biblioteca del Taller", exact: true }).waitFor();
+    await ownerPage.getByRole("button", { name: new RegExp(SAVED_NAME) }).waitFor();
+    const accountRows = await ownerPage.evaluate(async () => {
+      const response = await fetch("/api/decoraciones-personales", { cache: "no-store" });
+      const body: unknown = await response.json();
+      if (!response.ok || typeof body !== "object" || body === null || !("decoraciones" in body) || !Array.isArray(body.decoraciones)) return [];
+      return body.decoraciones.map((record) => typeof record === "object" && record !== null && "nombre" in record ? record.nombre : null);
+    });
+    assert.deepEqual(accountRows, [SAVED_NAME], "account storage contains the saved item, not the legacy browser item");
+
+    await ownerPage.getByRole("button", { name: "En este navegador", exact: true }).click();
+    await ownerPage.getByRole("button", { name: new RegExp(LEGACY_NAME) }).waitFor();
+    const legacyAfter = await ownerPage.evaluate((key) => localStorage.getItem(key), LEGACY_KEY);
+    assert.equal(legacyAfter, legacy, "the pre-existing browser item stays byte-for-byte in local storage");
+    await ownerContext.close();
+
+    const secondPage = await secondContext.newPage();
+    await signIn(secondPage, origin, owner);
+    await openLibrary(secondPage);
+    const remoteRecord = secondPage.getByRole("button", { name: new RegExp(SAVED_NAME) });
+    await remoteRecord.waitFor();
+    await remoteRecord.click();
+    const beforePlacement = await storedProjectNodeCount(secondPage);
+    await secondPage.getByRole("button", { name: "Añadir a mi escena", exact: true }).click();
+    await waitForNodeCount(secondPage, beforePlacement + startingNodeCount);
+    const placedNodeCount = await storedProjectNodeCount(secondPage);
+    assert.equal(placedNodeCount, beforePlacement + startingNodeCount, "saved composition is placed into the second browser's open project");
+    await secondContext.close();
+
+    const staffPage = await staffContext.newPage();
+    await signIn(staffPage, origin, staff);
+    await openLibrary(staffPage);
+    const ownerInput = staffPage.locator("#biblioteca-cuenta-ajena");
+    assert.equal(await ownerInput.count(), 1, "employee staff sees the owner selector in their personal library");
+    await ownerInput.fill(owner.accountId);
+    await staffPage.getByRole("button", { name: "Ver cuenta", exact: true }).click();
+    await staffPage.getByRole("button", { name: new RegExp(SAVED_NAME) }).waitFor();
+    await staffPage.getByRole("button", { name: new RegExp(SAVED_NAME) }).click();
+    await staffPage.getByText("Solo lectura", { exact: true }).first().waitFor();
+    assert.equal(await staffPage.getByRole("button", { name: "Renombrar", exact: true }).count(), 0);
+    assert.equal(await staffPage.getByRole("button", { name: "Editar", exact: true }).count(), 0);
+    assert.equal(await staffPage.getByRole("button", { name: "Quitar de mi biblioteca", exact: true }).count(), 0);
+    const directMutation = await staffPage.evaluate(async ({ id, composition }) => {
+      const body = JSON.stringify({ nombre: "Staff no autorizado", ocasion: "general", miniatura: "data:image/png;base64,aGVsbG8=", composicion: composition });
+      const update = await fetch(`/api/decoraciones-personales/${id}`, { method: "PUT", headers: { "content-type": "application/json" }, body });
+      const remove = await fetch(`/api/decoraciones-personales/${id}`, { method: "DELETE" });
+      return { put: update.status, delete: remove.status };
+    }, { id: decorationId, composition: stored.rows[0]!.composicion });
+    assert.ok([403, 404].includes(directMutation.put), `Staff direct PUT is refused (HTTP ${directMutation.put})`);
+    assert.ok([403, 404].includes(directMutation.delete), `Staff direct DELETE is refused (HTTP ${directMutation.delete})`);
+    const unchangedAfterStaff = await database.pool.query<{ nombre: string }>("SELECT nombre FROM decoraciones_personales WHERE id = $1", [decorationId]);
+    assert.equal(unchangedAfterStaff.rows[0]?.nombre, SAVED_NAME, "staff mutations do not change or delete the owner's record");
+    await staffContext.close();
+
+    const otherContext = await newContext(secondBrowser);
+    const otherPage = await otherContext.newPage();
+    await signIn(otherPage, origin, other);
+    await openLibrary(otherPage);
+    await otherPage.getByText("Tu biblioteca está vacía", { exact: true }).waitFor();
+    assert.equal(await otherPage.getByRole("button", { name: new RegExp(SAVED_NAME) }).count(), 0);
+    const otherRead = await otherPage.evaluate(async (id) => (await fetch(`/api/decoraciones-personales/${id}`, { cache: "no-store" })).status, decorationId);
+    assert.equal(otherRead, 404, "another Usuario cannot read the owner's item by id");
+    await otherContext.close();
+
+    evidence.status = "passed";
+    evidence.owner = { role: owner.roleId, saveStatus: saved.status(), reloadRetainedRecord: true, browserLocalLegacyRetained: true };
+    evidence.secondBrowser = { account: "same owner", role: owner.roleId, placedNodes: startingNodeCount, projectNodesBefore: beforePlacement, projectNodesAfter: placedNodeCount };
+    evidence.staff = { role: staff.roleId, readOnlyUi: true, directPutStatus: directMutation.put, directDeleteStatus: directMutation.delete, ownerRecordUnchanged: true };
+    evidence.otherUsuario = { role: other.roleId, collectionEmpty: true, directItemStatus: otherRead };
+    await mkdir(path.dirname(EVIDENCE_PATH), { recursive: true });
+    await writeFile(EVIDENCE_PATH, `${JSON.stringify(evidence, null, 2)}\n`, "utf8");
+    process.stdout.write("test-integracion-decoraciones-personales: PASS\n");
+  } catch (error) {
+    process.stderr.write(`${error instanceof Error ? error.stack ?? error.message : "Integration failed."}\n`);
+    if (logs.stdout || logs.stderr) process.stderr.write(`${redact(`${logs.stdout}\n${logs.stderr}`)}\n`);
+    throw error;
+  } finally {
+    await Promise.all(browsers.map((browser) => browser.close().catch(() => undefined)));
+    if (child && child.exitCode === null) {
+      child.kill("SIGTERM");
+      await Promise.race([new Promise<void>((resolve) => child?.once("exit", () => resolve())), delay(5_000)]);
+      if (child.exitCode === null) child.kill("SIGKILL");
+    }
+    await database.drop();
+    await rm(home, { recursive: true, force: true });
+  }
+}
+
+runFlow().catch((error: unknown) => {
+  process.stderr.write(`${error instanceof Error ? error.message : "Production integration failed."}\n`);
+  process.exitCode = 1;
+});
+>>>>>>> theirs

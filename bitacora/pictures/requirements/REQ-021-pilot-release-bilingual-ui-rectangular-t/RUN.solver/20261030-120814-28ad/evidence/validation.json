@@ -1,0 +1,35 @@
+{
+  "system_commits": [
+    "88a7fd02",
+    "df426432"
+  ],
+  "D-221": {
+    "seam_regression_before_fix": "exit 1, repaired observation remained NEEDS_REVIEW; recorded in NOTES.md from actual tool output",
+    "final_tests": 5,
+    "exit_code": 0,
+    "legacy_engine_upgrade_exit_code": 0
+  },
+  "D-228": {
+    "ignored_caller_before_fix": 1,
+    "new_regression_before_fix": 1,
+    "final_tests": 19,
+    "exit_code": 0
+  },
+  "focused_control_and_composition": {
+    "tests": 37,
+    "exit_code": 0
+  },
+  "recorded_unions": {
+    "count": 17,
+    "ts_syntax_count": 16,
+    "orientation_runs": 6,
+    "reviewed_replay_exit_code": 0,
+    "baseline_replay_exit_code": 1,
+    "whole_disposable_tree_tsc_exit_code": 0,
+    "old_fold_remaining_unassigned_conflicts": 7
+  },
+  "integration": {
+    "status": "running",
+    "result": "not yet known"
+  }
+}

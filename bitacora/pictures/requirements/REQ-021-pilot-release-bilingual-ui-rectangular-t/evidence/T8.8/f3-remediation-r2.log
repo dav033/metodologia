@@ -1,0 +1,13 @@
+
+> demo-decoracion@0.1.0 idioma:test-f3
+> tsx --test src/components/tres-d/idioma-f3.test.tsx
+
+✔ English add/search and mobile Taller entry points render translated copy while Spanish remains intact (828.083741ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3278.526047

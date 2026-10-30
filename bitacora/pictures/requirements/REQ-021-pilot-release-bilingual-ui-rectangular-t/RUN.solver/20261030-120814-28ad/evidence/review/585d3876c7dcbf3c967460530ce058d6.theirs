@@ -1,0 +1,12 @@
+import { Suspense } from "react";
+import InicioCliente from "@/components/InicioCliente";
+import { resolveServerSession } from "@/lib/cuentas/sesion-servidor";
+
+export default function HomePage() {
+  return <Suspense fallback={null}><InicioAutenticado /></Suspense>;
+}
+
+async function InicioAutenticado() {
+  const session = await resolveServerSession();
+  return <InicioCliente permissions={session?.permissions ?? []} />;
+}

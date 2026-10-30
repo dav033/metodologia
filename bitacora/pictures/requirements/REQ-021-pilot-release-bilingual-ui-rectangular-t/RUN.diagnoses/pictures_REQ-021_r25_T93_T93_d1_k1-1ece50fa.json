@@ -1,0 +1,23 @@
+{
+ "request": "pictures:REQ-021:r25:T93:T93:d1@k1",
+ "state": "done",
+ "kind": "conflict",
+ "label": "Conflicto entre tareas",
+ "tone": "warn",
+ "headline": "T93 choca con SP-7 en package.json y además falla el typecheck del harness de test",
+ "origin": "El fallo actual es INTEGRATION_CONFLICT: T93 entra en conflicto con el trabajo ya aceptado de SP-7 en package.json (línea de SP-7), y el conflicto se repite entre rondas. Antes, en los intentos r24 y r25 (a3 y a99), la verificación falló porque `npm run proyectos:test-composicion` no pasa el type check: `scripts/test/test-harness-taller-esenciales.ts` líneas 12 y 14 pasan objetos de entorno (`{}` y `{ BLENDER_EXECUTABLE: string }`) donde se exige `ProcessEnv`, que requiere `NODE_ENV` (TS2345). Es un error de código en el harness, no del entorno ni de la sandbox. No consta en la evidencia si el intento actual ya corrigió ese error.",
+ "steps": [
+  "Edita package.json añadiendo solo el script proyectos:test-composicion junto a las entradas de SP-7, sin reescribir ni reordenar sus líneas.",
+  "En scripts/test/test-harness-taller-esenciales.ts (líneas 12 y 14), incluye NODE_ENV en el objeto de entorno (p. ej. NODE_ENV: 'test') o tipa el objeto como Partial<NodeJS.ProcessEnv> para que cumpla ProcessEnv.",
+  "Ejecuta el type check y `npm run proyectos:test-composicion` en local; el check de integración necesita PICTURES_REQ021_DATABASE_URL, que debe venir del verifier env file.",
+  "Antes de cerrar, confirma que el diff de package.json solo añade líneas y no pierde ninguna entrada de SP-7."
+ ],
+ "option": "retry_with_note",
+ "note": "Fix the TS2345 errors in scripts/test/test-harness-taller-esenciales.ts lines 12 and 14: the env objects must satisfy NodeJS.ProcessEnv (include NODE_ENV: 'test', or type them as Partial<NodeJS.ProcessEnv> with a cast). Then add only the proyectos:test-composicion script to package.json, keeping every existing SP-7 entry and line order intact so the integration conflict with SP-7 is resolved. Run the typecheck and npm run proyectos:test-composicion locally before finishing.",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-29T18:17:40",
+ "seconds": 19.0
+}

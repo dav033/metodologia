@@ -1,0 +1,16 @@
+
+> demo-decoracion@0.1.0 idioma:test-mensajes
+> tsx --test scripts/test/test-idioma-mensajes-taller.ts
+
+✔ Taller AI copy selects the request language and keeps Spanish as the default (1.561002ms)
+✔ Taller glossary notes and vocabulary use the requested language (5.842728ms)
+✔ tool notices and server errors can be rendered in the requested language (1.004772ms)
+✔ all Taller AI panel files pass the TypeScript literal coverage guard (136.08094ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1475.721658

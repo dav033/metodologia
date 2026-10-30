@@ -1,0 +1,5 @@
+
+> demo-decoracion@0.1.0 textos:test-integracion
+> tsx --conditions=react-server scripts/test/test-integracion-textos-ingles.ts
+
+Production browser integration passed for English catalogue, Workshop library and gallery, administrator corrections, repeat seeding, and Spanish source names.

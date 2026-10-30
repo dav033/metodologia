@@ -1,0 +1,23 @@
+{
+ "request": "pictures:REQ-021:r25:T10.5:T10.5:d1@k1",
+ "state": "done",
+ "kind": "manual",
+ "label": "Comprobación manual",
+ "tone": "lav",
+ "headline": "Falta la evidencia manual del chat con el proveedor de IA (inglés y español)",
+ "origin": "El fallo es de proceso, no de código: la decisión T10.5:d1 exige una observación manual del chat local con el proveedor de IA ya configurado, y no hay evidencia (NOT_RUN). La evidencia no muestra el resultado de `npm run idioma:test-integracion-resto`, así que no consta que se ejecutara. Un agente no puede hacer esta observación y no debe sustituirla por evidencia simulada.",
+ "steps": [
+  "Como owner u operador, levanta el build local con el proveedor de IA ya configurado, abre una conversación en inglés y otra en español, y comprueba que cada una recibe respuesta en su idioma. Anota proveedor y resultado en la bitácora, sin secretos ni texto literal.",
+  "Atestigua esa observación manual en la bitácora de REQ-021 (la evidencia no indica el comando exacto de atestación).",
+  "Ejecuta `npm run idioma:test-integracion-resto` con PICTURES_REQ021_DATABASE_URL definido, para confirmar la parte automatizada.",
+  "Con la atestación hecha, decide: `python ~/.claude/skills/metodologia/scripts/bitacora.py --project pictures scheduler-op REQ-021 decide T10.5:d1 reverify --reason 'Observación manual atestiguada'`."
+ ],
+ "option": "reverify",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-30T06:17:43",
+ "seconds": 19.1
+}

@@ -1,0 +1,26 @@
+import { Suspense } from "react";
+import { headers } from "next/headers";
+import { InterruptorTema } from "@/components/ui/interruptor-tema";
+import { LoginForm } from "./LoginForm";
+import { idiomaAcceso } from "@/components/cuentas/textos-acceso";
+import { redirect } from "next/navigation";
+import { resolveServerRequestSession } from "@/lib/cuentas/sesion-servidor";
+import { destinoSolicitado } from "@/lib/auth/destino-por-defecto";
+
+export const instant = false;
+
+export default async function LoginPage() {
+  const [requestHeaders, session] = await Promise.all([headers(), resolveServerRequestSession()]);
+  if (session) redirect(destinoSolicitado("/", session.permissions));
+  const language = idiomaAcceso(requestHeaders.get("accept-language") ?? "es");
+  return (
+    <main className="relative flex min-h-dvh items-center justify-center bg-fondo px-4">
+      <div className="absolute right-3 top-3">
+        <InterruptorTema />
+      </div>
+      <Suspense>
+        <LoginForm language={language} />
+      </Suspense>
+    </main>
+  );
+}

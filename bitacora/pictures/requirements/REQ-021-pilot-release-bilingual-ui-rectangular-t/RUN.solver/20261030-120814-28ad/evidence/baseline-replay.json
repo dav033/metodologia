@@ -1,0 +1,128 @@
+[
+  {
+    "commits": {
+      "base": "217e5e5053d0497c4867ff21dae3c33e3fd8170a",
+      "ours": "56f02a46dc6f0d169f587f41889681745874023c",
+      "theirs": "c09fc4edda7a6699dec6af4bc7ea9e7786588193"
+    },
+    "left": "ours",
+    "right": "theirs",
+    "tree": "11c5618b7144597a59f818668be568290cfa4afd",
+    "conflicts": [
+      ".evidence/REQ-021/CG-2.integration.json",
+      "scripts/test/test-harness-taller-esenciales.ts",
+      "scripts/test/test-integracion-decoraciones-personales.ts",
+      "scripts/test/test-integracion-proyectos.ts",
+      "src/app/3d/Taller3DConPermisoPersonal.tsx",
+      "src/app/3d/page.tsx",
+      "src/app/proyectos/[id]/page.tsx",
+      "src/components/proyectos/ConflictoProyecto.tsx",
+      "src/components/proyectos/ListaProyectos.tsx",
+      "src/components/proyectos/textos-proyectos.ts",
+      "src/components/tres-d/Taller3D.tsx",
+      "src/components/tres-d/biblioteca/textos-biblioteca.ts",
+      "src/lib/cuentas/consulta-cuenta-propia.ts"
+    ],
+    "files": {}
+  },
+  {
+    "commits": {
+      "base": "217e5e5053d0497c4867ff21dae3c33e3fd8170a",
+      "ours": "56f02a46dc6f0d169f587f41889681745874023c",
+      "theirs": "c09fc4edda7a6699dec6af4bc7ea9e7786588193"
+    },
+    "left": "theirs",
+    "right": "ours",
+    "tree": "dd2cd5bc4409c89e6450d18fae2a195c847d6a33",
+    "conflicts": [
+      ".evidence/REQ-021/CG-2.integration.json",
+      "scripts/test/test-harness-taller-esenciales.ts",
+      "scripts/test/test-integracion-decoraciones-personales.ts",
+      "scripts/test/test-integracion-proyectos.ts",
+      "src/app/3d/Taller3DConPermisoPersonal.tsx",
+      "src/app/3d/page.tsx",
+      "src/app/proyectos/[id]/page.tsx",
+      "src/components/proyectos/ConflictoProyecto.tsx",
+      "src/components/proyectos/ListaProyectos.tsx",
+      "src/components/proyectos/textos-proyectos.ts",
+      "src/components/tres-d/Taller3D.tsx",
+      "src/components/tres-d/biblioteca/textos-biblioteca.ts",
+      "src/lib/cuentas/consulta-cuenta-propia.ts"
+    ],
+    "files": {}
+  },
+  {
+    "commits": {
+      "base": "b3f997fe050f00d031f8ff7103d279b1f33f08c5",
+      "ours": "4a51d40d934170de8275f4e709cdf5f840eded91",
+      "theirs": "88d643b5be177e0ba03178d7fddd523b9ba7f5c7"
+    },
+    "left": "ours",
+    "right": "theirs",
+    "tree": "79aec014b6f968974d73f072f4cf11e2aa71a5f0",
+    "conflicts": [
+      "src/app/asistente/page.tsx",
+      "src/app/login/page.tsx",
+      "src/app/page.tsx",
+      "src/components/guiado/VistaGuiada.tsx",
+      "src/components/ui/shell/CabeceraApp.tsx",
+      "src/lib/cuentas/cuenta-actual.ts"
+    ],
+    "files": {}
+  },
+  {
+    "commits": {
+      "base": "b3f997fe050f00d031f8ff7103d279b1f33f08c5",
+      "ours": "4a51d40d934170de8275f4e709cdf5f840eded91",
+      "theirs": "88d643b5be177e0ba03178d7fddd523b9ba7f5c7"
+    },
+    "left": "theirs",
+    "right": "ours",
+    "tree": "bf7257d4bb1c9db09094c58fc039eb59b02cbd86",
+    "conflicts": [
+      "src/app/asistente/page.tsx",
+      "src/app/login/page.tsx",
+      "src/app/page.tsx",
+      "src/components/guiado/VistaGuiada.tsx",
+      "src/components/ui/shell/CabeceraApp.tsx",
+      "src/lib/cuentas/cuenta-actual.ts"
+    ],
+    "files": {}
+  },
+  {
+    "commits": {
+      "base": "b3f997fe050f00d031f8ff7103d279b1f33f08c5",
+      "ours": "4a51d40d934170de8275f4e709cdf5f840eded91",
+      "theirs": "e3dfac3eea2f350c12d5e22981e3189361214203"
+    },
+    "left": "ours",
+    "right": "theirs",
+    "tree": "9dd886de7450d554e1fc46ee1520d1f1fb368573",
+    "conflicts": [
+      "src/app/asistente/page.tsx",
+      "src/app/login/page.tsx",
+      "src/app/page.tsx",
+      "src/components/ui/shell/CabeceraApp.tsx",
+      "src/lib/cuentas/cuenta-actual.ts"
+    ],
+    "files": {}
+  },
+  {
+    "commits": {
+      "base": "b3f997fe050f00d031f8ff7103d279b1f33f08c5",
+      "ours": "4a51d40d934170de8275f4e709cdf5f840eded91",
+      "theirs": "e3dfac3eea2f350c12d5e22981e3189361214203"
+    },
+    "left": "theirs",
+    "right": "ours",
+    "tree": "a68cdf3638ee1582c3b727651163d9054133c6dc",
+    "conflicts": [
+      "src/app/asistente/page.tsx",
+      "src/app/login/page.tsx",
+      "src/app/page.tsx",
+      "src/components/ui/shell/CabeceraApp.tsx",
+      "src/lib/cuentas/cuenta-actual.ts"
+    ],
+    "files": {}
+  }
+]

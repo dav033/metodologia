@@ -1,0 +1,8 @@
+import { Taller3D } from "@/components/tres-d/Taller3D";
+import { getAccountLanguage, getCurrentAccount } from "@/lib/cuentas/cuenta-actual";
+
+export async function Taller3DConPermisoPersonal() {
+  const [account, language] = await Promise.all([getCurrentAccount(), getAccountLanguage()]);
+  const canViewOtherAccounts = account?.roles.some((role) => role === "empleado_interno" || role === "administrador") ?? false;
+  return <Taller3D canViewOtherAccounts={canViewOtherAccounts} language={language} />;
+}

@@ -1,0 +1,89 @@
+[
+ {
+  "kind": "resolution",
+  "key": "pictures:REQ-021:r26:resolution:33917a4fe713f9d06f614144e4061848",
+  "run_id": "pictures:REQ-021:r26",
+  "task_id": "CG-9",
+  "request_id": "",
+  "round": null,
+  "reason": "the conflict in src/app/admin/gasto/page.tsx waits for a recorded resolution since 2026-10-30T08:51:42; no retry can settle it",
+  "resolution": {
+   "key": "33917a4fe713f9d06f614144e4061848",
+   "path": "src/app/admin/gasto/page.tsx",
+   "blobs": {
+    "base": "-",
+    "ours": "5727c71fa02fff8bfdf1c8c5958840f74a0bf749",
+    "theirs": "605541d53a00f832c1e64303a7364e01b4e60e1a"
+   },
+   "commits": {
+    "base": "7042b3ba371b48ba11ce556009d7b489c478b25e",
+    "ours": "7514afd0c0904f5e33ccccfb9746e9b322215e2c",
+    "theirs": "217e5e5053d0497c4867ff21dae3c33e3fd8170a"
+   },
+   "json": "/home/david/bitacora/.state/durable/composition/resolutions/33917a4fe713f9d06f614144e4061848.json",
+   "diff3": "/home/david/bitacora/.state/durable/composition/resolutions/33917a4fe713f9d06f614144e4061848.diff3",
+   "resolved": "/home/david/bitacora/.state/durable/composition/resolutions/33917a4fe713f9d06f614144e4061848.resolved",
+   "since": 1793368302.6028366
+  },
+  "status": "pending",
+  "at": "2026-10-30T08:53:58"
+ },
+ {
+  "kind": "resolution",
+  "key": "pictures:REQ-021:r26:resolution:95e324edf1c0f6a2dfa846402a03e8fd",
+  "run_id": "pictures:REQ-021:r26",
+  "task_id": "CG-9",
+  "request_id": "",
+  "round": null,
+  "reason": "the conflict in src/components/admin/GastoIa.tsx waits for a recorded resolution since 2026-10-30T08:51:42; no retry can settle it",
+  "resolution": {
+   "key": "95e324edf1c0f6a2dfa846402a03e8fd",
+   "path": "src/components/admin/GastoIa.tsx",
+   "blobs": {
+    "base": "-",
+    "ours": "9856947de225967b82fb683e650c75bec615d674",
+    "theirs": "3866455db8f69e49fa93f97ccf6b38cffbdd4280"
+   },
+   "commits": {
+    "base": "7042b3ba371b48ba11ce556009d7b489c478b25e",
+    "ours": "7514afd0c0904f5e33ccccfb9746e9b322215e2c",
+    "theirs": "217e5e5053d0497c4867ff21dae3c33e3fd8170a"
+   },
+   "json": "/home/david/bitacora/.state/durable/composition/resolutions/95e324edf1c0f6a2dfa846402a03e8fd.json",
+   "diff3": "/home/david/bitacora/.state/durable/composition/resolutions/95e324edf1c0f6a2dfa846402a03e8fd.diff3",
+   "resolved": "/home/david/bitacora/.state/durable/composition/resolutions/95e324edf1c0f6a2dfa846402a03e8fd.resolved",
+   "since": 1793368302.614249
+  },
+  "status": "pending",
+  "at": "2026-10-30T08:53:58"
+ },
+ {
+  "kind": "resolution",
+  "key": "pictures:REQ-021:r26:resolution:ae405794f9e8c98682e388a7740da9f6",
+  "run_id": "pictures:REQ-021:r26",
+  "task_id": "CG-9",
+  "request_id": "",
+  "round": null,
+  "reason": "the conflict in src/lib/ia/nucleo/python-adapter.ts waits for a recorded resolution since 2026-10-30T08:51:42; no retry can settle it",
+  "resolution": {
+   "key": "ae405794f9e8c98682e388a7740da9f6",
+   "path": "src/lib/ia/nucleo/python-adapter.ts",
+   "blobs": {
+    "base": "d6383c58f0f2254a314a6ee7d7a4728057a2a38b",
+    "ours": "a10c17c6cb9d2f08ce6816f8a023c06a6c38fc2d",
+    "theirs": "9af991f967284fc706fe0d3b7703b8b2f417fe84"
+   },
+   "commits": {
+    "base": "7042b3ba371b48ba11ce556009d7b489c478b25e",
+    "ours": "7514afd0c0904f5e33ccccfb9746e9b322215e2c",
+    "theirs": "217e5e5053d0497c4867ff21dae3c33e3fd8170a"
+   },
+   "json": "/home/david/bitacora/.state/durable/composition/resolutions/ae405794f9e8c98682e388a7740da9f6.json",
+   "diff3": "/home/david/bitacora/.state/durable/composition/resolutions/ae405794f9e8c98682e388a7740da9f6.diff3",
+   "resolved": "/home/david/bitacora/.state/durable/composition/resolutions/ae405794f9e8c98682e388a7740da9f6.resolved",
+   "since": 1793368302.631505
+  },
+  "status": "pending",
+  "at": "2026-10-30T08:53:58"
+ }
+]

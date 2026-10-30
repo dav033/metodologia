@@ -1,0 +1,59 @@
+{
+ "tasks": {
+  "T93": {
+   "signatures": {
+    "21c3a088ccf94d29": {
+     "at": "2026-10-29T18:17:51",
+     "option": "retry_with_note",
+     "request": "pictures:REQ-021:r25:T93:T93:d1@k1"
+    }
+   }
+  },
+  "T95": {
+   "signatures": {
+    "a05c515a062dd955": {
+     "at": "2026-10-29T18:53:00",
+     "option": "retry_with_note",
+     "request": "pictures:REQ-021:r25:T95:T95:d2@k1"
+    },
+    "20fb91cda650d301": {
+     "at": "2026-10-29T19:50:07",
+     "option": "retry_with_note",
+     "request": "pictures:REQ-021:r25:T95:T95:d3@k1"
+    }
+   }
+  },
+  "T10.5": {
+   "signatures": {}
+  },
+  "T10.45": {
+   "signatures": {
+    "2a70e1105388a109": {
+     "at": "2026-10-30T16:30:52",
+     "option": "retry_with_note",
+     "request": "pictures:REQ-021:r27:T10.45:T10.45:d1@k1"
+    },
+    "f9b26f27fd953c34": {
+     "at": "2026-10-30T16:58:05",
+     "option": "retry_with_note",
+     "request": "pictures:REQ-021:r27:T10.45:T10.45:d2@k1"
+    }
+   }
+  },
+  "T2.55": {
+   "signatures": {}
+  }
+ },
+ "seen": [
+  "pictures:REQ-021:r25:T93:T93:d1@k1",
+  "pictures:REQ-021:r25:T95:T95:d2@k1",
+  "pictures:REQ-021:r25:T95:T95:d3@k1",
+  "pictures:REQ-021:r25:T10.5:T10.5:d1@k1",
+  "pictures:REQ-021:r26:T10.45:T10.45:d1@k1",
+  "pictures:REQ-021:r27:T2.55:T2.55:d1@k1",
+  "pictures:REQ-021:r27:T2.55:T2.55:d2@k1",
+  "pictures:REQ-021:r27:T10.45:T10.45:d1@k1",
+  "pictures:REQ-021:r27:T10.45:T10.45:d2@k1"
+ ],
+ "actions": 5
+}

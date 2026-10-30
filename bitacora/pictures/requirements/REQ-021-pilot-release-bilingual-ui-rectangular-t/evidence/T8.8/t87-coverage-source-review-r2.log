@@ -1,0 +1,3 @@
+68:async function renderedEnglishTaller(page: Page): Promise<{ text: string[]; spanish: string[] }> {
+225:    const rendered = await renderedEnglishTaller(firstPage);
+228:    evidence.assertions = { ...(evidence.assertions as Record<string, unknown>), englishWorkshop: { title: workshop.workshop, menuItems: menuItemNames, scannedRenderedStrings: rendered.text.length, spanishStrings: rendered.spanish, controlsFit: true, responsiveWidths: VIEWPORTS } };

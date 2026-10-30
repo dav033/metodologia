@@ -1,0 +1,13 @@
+{
+  "outcome": "fixed",
+  "summary": "Resueltos tres conflictos; CG-6 a CG-9 recompuestas sin conflictos. Regla D-079; T95 continúa.",
+  "handled": [
+    "pictures:REQ-021:r26:resolution:33917a4fe713f9d06f614144e4061848",
+    "pictures:REQ-021:r26:resolution:95e324edf1c0f6a2dfa846402a03e8fd",
+    "pictures:REQ-021:r26:resolution:ae405794f9e8c98682e388a7740da9f6"
+  ],
+  "decision": "",
+  "question": "",
+  "commits": [],
+  "rule": "D-079"
+}

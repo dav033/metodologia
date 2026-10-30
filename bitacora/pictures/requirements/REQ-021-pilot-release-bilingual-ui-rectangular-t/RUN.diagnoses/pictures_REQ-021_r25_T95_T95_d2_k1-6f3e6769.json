@@ -1,0 +1,22 @@
+{
+ "request": "pictures:REQ-021:r25:T95:T95:d2@k1",
+ "state": "done",
+ "kind": "environment",
+ "label": "Entorno",
+ "tone": "info",
+ "headline": "Falla CG-5: la prueba de integración de decoraciones agotó 20 s esperando nodos",
+ "origin": "`npm run decoraciones:test-integracion` falló en ambos intentos (a1 y d2) con `page.waitForFunction: Timeout 20000ms exceeded.` en `scripts/test/test-integracion-decoraciones-personales.ts:153` (`waitForNodeCount`). Los logs muestran que `/api/taller/hoja-armado` respondió 200 con `\"activa\":false,\"fuente\":\"defecto\"`, es decir, la app sirvió la configuración por defecto y no datos guardados. Eso encaja con que la sandbox del verificador no reciba `PICTURES_REQ021_DATABASE_URL` (la verificación no tiene variables de entorno del dueño salvo las de su archivo env), pero la salida no muestra un error explícito de URL ausente, así que es una inferencia y no está probado.",
+ "steps": [
+  "Revisa el archivo de entorno del verificador (config `verifier.env_file`, p. ej. `~/.config/metodologia/verifier-pictures.env`) y confirma que contiene `PICTURES_REQ021_DATABASE_URL` apuntando a una base de prueba accesible desde la sandbox; si falta, añádela tú.",
+  "Si la variable está, revisa `scripts/test/test-integracion-decoraciones-personales.ts` antes de la línea 153: que el seed de la decoración guardada se escriba en esa base y que la espera use el selector correcto.",
+  "Tras corregir, vuelve a verificar con la misma snapshot solo después de atestiguar los checks manuales (`reverify`), o relanza la tarea si cambiaste código."
+ ],
+ "option": "retry_with_note",
+ "note": "Before the waitForNodeCount call at scripts/test/test-integracion-decoraciones-personales.ts:153, make the test fail fast with an explicit message if PICTURES_REQ021_DATABASE_URL is unset or the database cannot be reached. Log the response of /api/taller/hoja-armado: the previous run got activa:false and fuente:defecto, meaning saved data was not served. Verify the seeded saved decoration is present in the database before waiting for nodes. Do not change the checks, acceptance criteria or the plan.",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-29T18:52:50",
+ "seconds": 20.4
+}

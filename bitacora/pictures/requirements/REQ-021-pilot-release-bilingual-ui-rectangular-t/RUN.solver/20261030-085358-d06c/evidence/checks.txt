@@ -1,0 +1,17 @@
+Reproduction (before publication):
+uv run --project /home/david/dev/metodologia python <session>/verify_resolutions.py
+Exit 1: Original r26 composition conflict reproduced; exactly the three triggered paths in both orientations.
+
+Reviewed resolution:
+uv run --project /home/david/dev/metodologia python <session>/verify_resolutions.py --reviewed
+Exit 0: both orientations yield tree 0f7d76ca15c92532aef0213e5f74980c81de63c8, zero conflicts, exact reviewed blobs.
+
+Existing composition regression:
+uv run --project /home/david/dev/metodologia python -m unittest discover -s /home/david/dev/metodologia/skill/scripts/tests -p test_compose_conflicts.py -q
+Exit 0: Ran 20 tests in 1.686s; OK.
+
+TypeScript createSourceFile parsing of the three reviewed contents:
+Exit 0: zero syntax diagnostics (syntax.json).
+
+Live composition store (read-only SQLite) and immutable Git blob validation:
+Exit 0: C7, C8, C9, C10 are candidates with zero conflicts and all three reviewed blobs unchanged (candidate-validation.json).

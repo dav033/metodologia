@@ -1,0 +1,417 @@
+import assert from "node:assert/strict";
+import { spawn, spawnSync, type ChildProcess } from "node:child_process";
+import { createServer } from "node:net";
+import { mkdtemp, readFile, rm } from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
+import { setTimeout as delay } from "node:timers/promises";
+import { chromium, type Browser, type BrowserContext, type Page } from "playwright";
+import { VERSION_AVISO_DATOS } from "../../src/lib/cuentas/aviso-datos";
+import { createAccountService } from "../../src/lib/cuentas/servicio";
+import { IDS_BACKING } from "../../src/lib/globos3d/backing";
+import { SALA_INICIAL } from "../../src/lib/globos3d/escena";
+import { TIPOS_MESA } from "../../src/lib/globos3d/mobiliario-conjunto-tipos";
+import { createIsolatedTestDatabase, resolveTestDatabaseTarget } from "./lib/base-prueba";
+import { deniedMutations, freshContextReopen, legacyImportAndAccountSwitch, staffReadAndCopy } from "./lib/proyectos-integracion-casos";
+
+const ROOT = process.cwd();
+const PASSWORD = "REQ021-Proyectos-Password";
+const PAGE_SIZE = 50;
+const COMPOSITION = process.argv.includes("--composicion");
+const DENIALS_ONLY = process.argv.slice(2).join(" ") === "--solo denegaciones";
+type Child = ChildProcess;
+type ProjectDocument = { schemaVersion: 1; nombre: string; escena: ReturnType<typeof scene> };
+let origin = "";
+let browser: Browser | undefined;
+let child: Child | undefined;
+
+function scene() {
+  return {
+    sala: { ...SALA_INICIAL, tonos: { ...SALA_INICIAL.tonos }, mostrar: { ...SALA_INICIAL.mostrar } },
+    nodos: [] as Array<{ id: string; nombre: string; pieza: Record<string, unknown>; colocacion: Record<string, unknown> }>,
+  };
+}
+
+function documentFor(name: string, nodes = scene().nodos): ProjectDocument {
+  return { schemaVersion: 1, nombre: name, escena: { ...scene(), nodos: nodes } };
+}
+
+function registryDocument(): ProjectDocument {
+  const nodes = scene().nodos;
+  for (const type of TIPOS_MESA) nodes.push({
+    id: "table-" + type,
+    nombre: "Mesa " + type,
+    pieza: { tipo: "escenografia", elementos: [], mueble: { id: "mesa_param", mesa: { tipo: type, anchoCm: 100, fondoCm: 100, altoCm: 75, mantel: "piso", colorMantel: "#ffffff", colorPatas: "#ffffff", camino: null } } },
+    colocacion: { en: "piso", xCm: 0, zCm: 0, giroGrados: 0 },
+  });
+  for (const id of IDS_BACKING) nodes.push({
+    id: "backing-" + id,
+    nombre: "Backing " + id,
+    pieza: { tipo: "escenografia", elementos: [], mueble: { id } },
+    colocacion: { en: "piso", xCm: 0, zCm: 0, giroGrados: 0 },
+  });
+  return documentFor("REQ-021 scene registry composition", nodes);
+}
+
+function redact(value: string): string {
+  return value.replace(/postgres(?:ql)?:\/\/[^\s"']+/gi, "[redacted-db-url]")
+    .replace(/([?&]token=)[^&\s"']+/gi, "$1[redacted]")
+    .replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi, "[redacted-email]");
+}
+
+function run(command: string, args: string[], env: NodeJS.ProcessEnv): { status: number | null; output: string } {
+  const result = spawnSync(command, args, { cwd: ROOT, env, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
+  if (result.error) throw result.error;
+  return { status: result.status, output: result.stdout + "\n" + result.stderr };
+}
+
+async function freePort(): Promise<number> {
+  const server = createServer();
+  await new Promise<void>((resolve, reject) => {
+    server.once("error", reject);
+    server.listen(0, "127.0.0.1", resolve);
+  });
+  const address = server.address();
+  assert.ok(address && typeof address !== "string");
+  const port = address.port;
+  await new Promise<void>((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
+  return port;
+}
+
+function tail(previous: string, chunk: Buffer): string {
+  return (previous + chunk.toString("utf8")).slice(-8_000);
+}
+
+async function waitForServer(logs: { stdout: string; stderr: string }): Promise<void> {
+  const deadline = Date.now() + 60_000;
+  while (Date.now() < deadline) {
+    if (child?.exitCode !== null) throw new Error("next start exited early: " + redact(logs.stdout + "\n" + logs.stderr));
+    try {
+      const response = await fetch(origin + "/proyectos", { signal: AbortSignal.timeout(2_000), redirect: "manual" });
+      if (response.status < 500) return;
+    } catch { /* Poll until the real entrypoint is ready. */ }
+    await delay(500);
+  }
+  throw new Error("next start did not become ready: " + redact(logs.stdout + "\n" + logs.stderr));
+}
+
+async function newPage(): Promise<{ context: BrowserContext; page: Page }> {
+  assert.ok(browser);
+  const context = await browser.newContext({ locale: "es-CO" });
+  const page = await context.newPage();
+  page.setDefaultTimeout(20_000);
+  return { context, page };
+}
+
+async function login(page: Page, email: string): Promise<void> {
+  await page.goto(origin + "/login");
+  await page.getByLabel("Correo electrónico", { exact: true }).fill(email);
+  await page.getByLabel("Contraseña", { exact: true }).fill(PASSWORD);
+  const pending = page.waitForResponse((response) => response.url().endsWith("/api/login") && response.request().method() === "POST");
+  await page.getByRole("button", { name: "Entrar", exact: true }).click();
+  assert.equal((await pending).status(), 200);
+  await page.waitForURL((url) => url.pathname === "/asistente" || url.pathname === "/3d");
+}
+
+async function api<T>(page: Page, pathname: string, init?: { method?: string; body?: unknown; key?: string }): Promise<{ status: number; body: T }> {
+  return page.evaluate(async (input) => {
+    const headers: Record<string, string> = {};
+    if (input.body !== undefined) headers["content-type"] = "application/json";
+    if (input.key) headers["idempotency-key"] = input.key;
+    const response = await fetch(input.pathname, {
+      method: input.method ?? "GET", headers,
+      ...(input.body === undefined ? {} : { body: JSON.stringify(input.body) }),
+      credentials: "same-origin", cache: "no-store",
+    });
+    return { status: response.status, body: await response.json() as T };
+  }, { pathname, method: init?.method, body: init?.body, key: init?.key });
+}
+
+function record(value: unknown): asserts value is Record<string, unknown> {
+  assert.ok(typeof value === "object" && value !== null && !Array.isArray(value));
+}
+
+async function createProject(page: Page, name: string, document = documentFor(name)): Promise<{ id: string; ownerId: string }> {
+  const result = await api<unknown>(page, "/api/proyectos", { method: "POST", body: { documento: document }, key: crypto.randomUUID() });
+  assert.equal(result.status, 201, "browser saves project " + name + " (HTTP " + result.status + ", " + JSON.stringify(result.body) + ")");
+  record(result.body);
+  record(result.body.proyecto);
+  assert.equal(result.body.proyecto.nombre, name);
+  assert.equal(typeof result.body.proyecto.id, "string");
+  assert.equal(typeof result.body.proyecto.ownerId, "string");
+  return { id: result.body.proyecto.id as string, ownerId: result.body.proyecto.ownerId as string };
+}
+
+async function persistenceAndDenial(owner: Page, outsider: Page): Promise<{ id: string; ownerId: string }> {
+  const saved = await createProject(owner, "REQ-021 owner persistence");
+  const reopened = await api<unknown>(owner, "/api/proyectos/" + saved.id);
+  assert.equal(reopened.status, 200);
+  record(reopened.body);
+  record(reopened.body.proyecto);
+  assert.equal(reopened.body.proyecto.id, saved.id);
+  const denied = await api<unknown>(outsider, "/api/proyectos/" + saved.id);
+  assert.equal(denied.status, 404);
+  record(denied.body);
+  assert.equal(denied.body.code, "PROYECTO_NO_DISPONIBLE");
+  const ownList = await api<unknown>(outsider, "/api/proyectos");
+  assert.equal(ownList.status, 200);
+  record(ownList.body);
+  assert.deepEqual(ownList.body.items, [], "unauthorized browser receives no foreign project metadata");
+  const deniedFilter = await api<unknown>(outsider, "/api/proyectos?propietarioId=" + saved.ownerId);
+  assert.equal(deniedFilter.status, 403, "owner filtering requires permission");
+  record(deniedFilter.body);
+  assert.deepEqual(Object.keys(deniedFilter.body).sort(), ["code"]);
+  return saved;
+}
+
+async function conflict(first: Page, second: Page, id: string): Promise<void> {
+  const update = (name: string) => ({ expectedRevision: 1, documento: documentFor(name) });
+  const winner = await api<unknown>(first, "/api/proyectos/" + id, { method: "PUT", body: update("REQ-021 conflict winner"), key: crypto.randomUUID() });
+  assert.equal(winner.status, 200);
+  const stale = await api<unknown>(second, "/api/proyectos/" + id, { method: "PUT", body: update("REQ-021 conflict loser"), key: crypto.randomUUID() });
+  assert.equal(stale.status, 409, "the second context cannot overwrite a stale revision");
+  record(stale.body);
+  assert.equal(stale.body.code, "REVISION_CONFLICTO");
+}
+
+async function seedMany(page: Page): Promise<{ ownerId: string; targetId: string; count: number }> {
+  const target = await createProject(page, "REQ-021 deep page match");
+  let count = 1;
+  for (let index = 1; index <= 54; index += 1) {
+    await createProject(page, "REQ-021 pagination seed " + String(index).padStart(2, "0"));
+    count += 1;
+  }
+  return { ownerId: target.ownerId, targetId: target.id, count };
+}
+
+async function pagination(page: Page, ownerId: string, targetId: string, expectedCount: number): Promise<void> {
+  let cursor: string | null = null;
+  let pages = 0;
+  let targetIndex = -1;
+  let itemCount = 0;
+  do {
+    const params = new URLSearchParams();
+    if (cursor) params.set("cursor", cursor);
+    const response = await api<unknown>(page, "/api/proyectos" + (params.size ? "?" + params.toString() : ""));
+    assert.equal(response.status, 200);
+    record(response.body);
+    assert.ok(Array.isArray(response.body.items));
+    for (const item of response.body.items) {
+      record(item);
+      assert.equal(item.ownerId, ownerId);
+      if (item.id === targetId) targetIndex = itemCount;
+      itemCount += 1;
+    }
+    cursor = typeof response.body.nextCursor === "string" ? response.body.nextCursor : null;
+    pages += 1;
+  } while (cursor);
+  assert.ok(pages >= 2, "more than fifty projects span multiple pages");
+  assert.equal(itemCount, expectedCount);
+  assert.ok(targetIndex >= PAGE_SIZE, "matching saved project is beyond the first page");
+  await page.goto(origin + "/proyectos");
+  await page.getByLabel("Buscar por nombre", { exact: true }).fill("REQ-021 deep page match");
+  await page.getByRole("heading", { name: "REQ-021 deep page match", exact: true }).waitFor();
+}
+
+async function nextPageRetry(page: Page): Promise<void> {
+  let failed = false;
+  await page.route("**/api/proyectos?*", async (route) => {
+    const url = new URL(route.request().url());
+    if (!url.searchParams.has("cursor") || failed) { await route.continue(); return; }
+    failed = true;
+    await route.fulfill({ status: 503, contentType: "application/json", body: JSON.stringify({ code: "PROYECTO_NO_DISPONIBLE" }) });
+  });
+  await page.goto(origin + "/proyectos");
+  await page.getByRole("button", { name: "Cargar más", exact: true }).click();
+  await page.getByRole("alert").getByRole("button", { name: "Reintentar", exact: true }).click();
+  await page.getByRole("heading", { name: "REQ-021 pagination seed 04", exact: true }).waitFor();
+  assert.equal(failed, true);
+  await page.unrouteAll();
+}
+
+async function staleSearch(page: Page): Promise<void> {
+  let release: (() => void) | undefined;
+  const started = new Promise<void>((resolve) => { release = resolve; });
+  let staleRoute: import("playwright").Route | undefined;
+  await page.route("**/api/proyectos?*", async (route) => {
+    const url = new URL(route.request().url());
+    if (url.searchParams.get("nombre") === "REQ-021 slow search") {
+      staleRoute = route;
+      release?.();
+      return;
+    }
+    await route.continue();
+  });
+  await page.goto(origin + "/proyectos");
+  const input = page.getByLabel("Buscar por nombre", { exact: true });
+  await input.fill("REQ-021 slow search");
+  await started;
+  await input.fill("REQ-021 pagination seed 54");
+  await page.getByRole("heading", { name: "REQ-021 pagination seed 54", exact: true }).waitFor();
+  assert.ok(staleRoute);
+  await staleRoute!.fulfill({
+    status: 200, contentType: "application/json",
+    body: JSON.stringify({ items: [{ id: "00000000-0000-4000-8000-000000000001", ownerId: "00000000-0000-4000-8000-000000000002", ownerName: "foreign metadata", nombre: "REQ-021 slow search", revision: 1 }], nextCursor: null }),
+  });
+  await delay(200);
+  assert.equal(await page.getByRole("heading", { name: "REQ-021 pagination seed 54", exact: true }).count(), 1);
+  assert.equal(await page.getByText("foreign metadata", { exact: true }).count(), 0);
+  await page.unrouteAll();
+}
+
+async function authorizedOwnerFilter(page: Page, adminId: string, memberId: string): Promise<void> {
+  for (const id of [adminId, memberId]) {
+    const result = await api<unknown>(page, "/api/proyectos?propietarioId=" + id);
+    assert.equal(result.status, 200, "administrator may filter by an authorized owner");
+    record(result.body);
+    assert.ok(Array.isArray(result.body.items));
+    for (const item of result.body.items) {
+      record(item);
+      assert.equal(item.ownerId, id);
+    }
+  }
+}
+
+async function composition(page: Page): Promise<void> {
+  const document = registryDocument();
+  const saved = await createProject(page, document.nombre, document);
+  await page.goto(origin + "/proyectos/" + saved.id);
+  await page.getByRole("heading", { name: document.nombre, exact: true }).waitFor();
+  await page.getByText("Consultar todos los datos de la escena", { exact: true }).click();
+  const raw = await page.locator("pre").textContent();
+  assert.ok(raw);
+  const reopened: unknown = JSON.parse(raw);
+  record(reopened);
+  assert.ok(Array.isArray(reopened.nodos));
+  const tables: unknown[] = [];
+  const backings: unknown[] = [];
+  for (const node of reopened.nodos) {
+    record(node);
+    record(node.pieza);
+    if (node.pieza.tipo !== "escenografia" || node.pieza.mueble === undefined) continue;
+    record(node.pieza.mueble);
+    if ("mesa" in node.pieza.mueble) tables.push(node.pieza.mueble.mesa);
+    else backings.push(node.pieza.mueble.id);
+  }
+  assert.equal(tables.length, TIPOS_MESA.length);
+  assert.equal(backings.length, IDS_BACKING.length);
+  assert.deepEqual(tables.map((table) => { record(table); return table.tipo; }).sort(), [...TIPOS_MESA].sort());
+  assert.deepEqual(backings.sort(), [...IDS_BACKING].sort());
+}
+
+async function close(database: Awaited<ReturnType<typeof createIsolatedTestDatabase>>, home: string): Promise<void> {
+  await browser?.close();
+  if (child && child.exitCode === null) {
+    child.kill("SIGTERM");
+    await Promise.race([new Promise<void>((resolve) => child?.once("exit", () => resolve())), delay(5_000)]);
+    if (child.exitCode === null) child.kill("SIGKILL");
+  }
+  await database.drop();
+  await rm(home, { recursive: true, force: true });
+}
+
+export async function main(): Promise<void> {
+  const target = resolveTestDatabaseTarget(process.env);
+  const database = await createIsolatedTestDatabase(target.connectionString);
+  const home = await mkdtemp(path.join(os.tmpdir(), "req021-projects-home-"));
+  const logs = { stdout: "", stderr: "" };
+  try {
+    for (const migration of ["037_cuentas.sql", "038_cuentas_datos_administracion.sql", "039_proyectos.sql"]) {
+      await database.pool.query(await readFile(path.join(ROOT, "scripts/migrations", migration), "utf8"));
+    }
+    const accountService = createAccountService(database.pool, VERSION_AVISO_DATOS);
+    const accounts = await accountService.seedTestAccounts(PASSWORD);
+    const byRole = new Map(accounts.map((account) => [account.roleId, account]));
+    const admin = byRole.get("administrador");
+    const owner = byRole.get("master_designer");
+    const employee = byRole.get("empleado_interno");
+    assert.ok(admin && owner && employee, "isolated schema has owner, employee and administrator accounts");
+    const otherEmail = "req021-second-owner@example.test";
+    const invitation = await accountService.invite({
+      actorAccountId: admin.accountId,
+      email: otherEmail,
+      roleId: "master_designer",
+    });
+    await accountService.activate({ token: invitation.token, password: PASSWORD, acceptDataNotice: true });
+    const other = { accountId: invitation.accountId, email: otherEmail, roleId: "master_designer" };
+    const build = run("npm", ["run", "build"], {
+      PATH: process.env.PATH, HOME: home, CI: "true", APP_ENV: "test", NODE_ENV: "production",
+      NODE_OPTIONS: "--max-old-space-size=4096", NEXT_TELEMETRY_DISABLED: "1", CAPTURA_RENDERS_ENABLED: "1", VERCEL: "1",
+    });
+    assert.equal(build.status, 0, "production build succeeds without database credentials: " + redact(build.output.slice(-3_000)));
+    const port = await freePort();
+    const databaseUrl = new URL(target.connectionString);
+    databaseUrl.searchParams.set("options", "-c search_path=" + database.schema + ",public");
+    origin = "http://localhost:" + port;
+    child = spawn(process.execPath, ["node_modules/next/dist/bin/next", "start", "--hostname", "127.0.0.1", "--port", String(port)], {
+      cwd: ROOT,
+      env: {
+        PATH: process.env.PATH, HOME: home, APP_ENV: "test", DATABASE_URL: databaseUrl.toString(),
+        DATA_NOTICE_VERSION: VERSION_AVISO_DATOS, CAPTURA_RENDERS_ENABLED: "1", NODE_ENV: "production",
+        NEXT_TELEMETRY_DISABLED: "1", VERCEL: "1", PORT: String(port), HOSTNAME: "127.0.0.1",
+      },
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+    child.stdout?.on("data", (part: Buffer) => { logs.stdout = tail(logs.stdout, part); });
+    child.stderr?.on("data", (part: Buffer) => { logs.stderr = tail(logs.stderr, part); });
+    await waitForServer(logs);
+    browser = await chromium.launch({
+      headless: true,
+      ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE } : process.platform === "linux" ? { executablePath: "/usr/bin/chromium" } : {}),
+      args: ["--no-sandbox", "--disable-dev-shm-usage"],
+    });
+    const ownerA = await newPage();
+    const ownerB = await newPage();
+    const freshOwner = await newPage();
+    const otherPage = await newPage();
+    const employeePage = await newPage();
+    const adminPage = await newPage();
+    try {
+      await Promise.all([
+        login(ownerA.page, owner.email), login(ownerB.page, owner.email), login(freshOwner.page, owner.email),
+        login(otherPage.page, other.email), login(employeePage.page, employee.email), login(adminPage.page, admin.email),
+      ]);
+      const saved = await persistenceAndDenial(ownerA.page, otherPage.page);
+      await deniedMutations({ database, user: otherPage.page, staff: employeePage.page, projectId: saved.id, api, documentFor });
+      if (DENIALS_ONLY) {
+        process.stdout.write("test-integracion-proyectos: PASS (production build, Usuario GET/PUT/DELETE=404, staff PUT=403, original row unchanged)\n");
+        return;
+      }
+      await freshContextReopen({ page: freshOwner.page, origin, projectId: saved.id, expectedScene: scene() });
+      await staffReadAndCopy({ page: employeePage.page, origin, staffAccountId: employee.accountId, projectId: saved.id, api });
+      await staffReadAndCopy({ page: adminPage.page, origin, staffAccountId: admin.accountId, projectId: saved.id, api });
+      await conflict(ownerA.page, ownerB.page, saved.id);
+      await legacyImportAndAccountSwitch({ page: ownerA.page, origin, ownerEmail: owner.email, otherEmail: employee.email, api, login, scene });
+      if (COMPOSITION) await composition(ownerA.page);
+      else {
+        const seeded = await seedMany(otherPage.page);
+        await pagination(otherPage.page, seeded.ownerId, seeded.targetId, seeded.count);
+        await nextPageRetry(otherPage.page);
+        await staleSearch(otherPage.page);
+      }
+      await createProject(adminPage.page, "REQ-021 administrator filter fixture");
+      await createProject(otherPage.page, "REQ-021 member filter fixture");
+      await authorizedOwnerFilter(adminPage.page, admin.accountId, other.accountId);
+      process.stdout.write("test-integracion-proyectos: PASS (" + (COMPOSITION
+        ? "fresh-context persistence, access denial, staff/admin read-copy, conflict, import retry/account isolation, registry composition save/reopen"
+        : "fresh-context persistence, access denial, staff/admin read-copy, conflict, import retry/account isolation, 55+ projects, owner filtering, next-page retry, stale search") + ")\n");
+    } finally {
+      await Promise.all([
+        ownerA.context.close(), ownerB.context.close(), freshOwner.context.close(), otherPage.context.close(),
+        employeePage.context.close(), adminPage.context.close(),
+      ]);
+    }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Project integration failed.";
+    throw new Error(redact(message) + "\nServer diagnostic tail:\n" + redact(logs.stdout + "\n" + logs.stderr));
+  } finally {
+    await close(database, home);
+  }
+}
+
+if (process.argv[1]?.endsWith("test-integracion-proyectos.ts")) {
+  main().catch((error: unknown) => {
+    console.error(redact(error instanceof Error ? error.message : "Project integration failed."));
+    process.exitCode = 1;
+  });
+}

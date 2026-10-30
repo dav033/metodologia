@@ -1,0 +1,232 @@
+[
+  {
+    "commits": {
+      "base": "217e5e5053d0497c4867ff21dae3c33e3fd8170a",
+      "ours": "56f02a46dc6f0d169f587f41889681745874023c",
+      "theirs": "c09fc4edda7a6699dec6af4bc7ea9e7786588193"
+    },
+    "left": "ours",
+    "right": "theirs",
+    "tree": "b4ad2d8b590c0d1a39301e1dc900d082cd1442e6",
+    "conflicts": [
+      "src/app/proyectos/[id]/page.tsx",
+      "src/components/proyectos/ConflictoProyecto.tsx",
+      "src/components/proyectos/ListaProyectos.tsx",
+      "src/components/proyectos/textos-proyectos.ts",
+      "src/components/tres-d/Taller3D.tsx",
+      "src/components/tres-d/biblioteca/textos-biblioteca.ts",
+      "src/lib/cuentas/consulta-cuenta-propia.ts"
+    ],
+    "files": {
+      "src/app/3d/Taller3DConPermisoPersonal.tsx": {
+        "sha256": "425b1d0e789d1274698d4b8b98d80da00196d9447a7bcacb78a489cc950324c0",
+        "key": "000cc420754a9d752462160c5452618a"
+      },
+      "scripts/test/test-harness-taller-esenciales.ts": {
+        "sha256": "a047f610d0386daec54dfa9279d283759499e0062f6d25bdac2de930c1420222",
+        "key": "312b5f3cde0689853fe078d348f08bb0"
+      },
+      "src/app/3d/page.tsx": {
+        "sha256": "3b917a1c0c071783f8707564599cff922f0ecd4ed1473cefd3f8dad0eeaf25ba",
+        "key": "67302a71b7947706bdbcbc0d72dbc129"
+      },
+      "scripts/test/test-integracion-decoraciones-personales.ts": {
+        "sha256": "5f54ded9975faa13ca467c3d2ef3f9518531c832dceacd2d693b4ae54079fb59",
+        "key": "8042b963196a321dcee14a10cf512e87"
+      },
+      ".evidence/REQ-021/CG-2.integration.json": {
+        "sha256": "bccb3c7602e57a621b03dfb8a62aaade92abd1cb7978c94a306b42ef84bc930a",
+        "key": "87f60eeb77d9f299cfb7dd9902dd315c"
+      },
+      "scripts/test/test-integracion-proyectos.ts": {
+        "sha256": "207ecaaed08db7191cfbdf76a45bac29c0ca8aa13c45ded7d90da6d0eff5932d",
+        "key": "dd4cc8117603023fa4561e12cdbe7254"
+      }
+    }
+  },
+  {
+    "commits": {
+      "base": "217e5e5053d0497c4867ff21dae3c33e3fd8170a",
+      "ours": "56f02a46dc6f0d169f587f41889681745874023c",
+      "theirs": "c09fc4edda7a6699dec6af4bc7ea9e7786588193"
+    },
+    "left": "theirs",
+    "right": "ours",
+    "tree": "50f9268f0f26801f2d91c48194c6d3f74930ee62",
+    "conflicts": [
+      "src/app/proyectos/[id]/page.tsx",
+      "src/components/proyectos/ConflictoProyecto.tsx",
+      "src/components/proyectos/ListaProyectos.tsx",
+      "src/components/proyectos/textos-proyectos.ts",
+      "src/components/tres-d/Taller3D.tsx",
+      "src/components/tres-d/biblioteca/textos-biblioteca.ts",
+      "src/lib/cuentas/consulta-cuenta-propia.ts"
+    ],
+    "files": {
+      "src/app/3d/Taller3DConPermisoPersonal.tsx": {
+        "sha256": "425b1d0e789d1274698d4b8b98d80da00196d9447a7bcacb78a489cc950324c0",
+        "key": "000cc420754a9d752462160c5452618a"
+      },
+      "scripts/test/test-harness-taller-esenciales.ts": {
+        "sha256": "a047f610d0386daec54dfa9279d283759499e0062f6d25bdac2de930c1420222",
+        "key": "312b5f3cde0689853fe078d348f08bb0"
+      },
+      "src/app/3d/page.tsx": {
+        "sha256": "3b917a1c0c071783f8707564599cff922f0ecd4ed1473cefd3f8dad0eeaf25ba",
+        "key": "67302a71b7947706bdbcbc0d72dbc129"
+      },
+      "scripts/test/test-integracion-decoraciones-personales.ts": {
+        "sha256": "5f54ded9975faa13ca467c3d2ef3f9518531c832dceacd2d693b4ae54079fb59",
+        "key": "8042b963196a321dcee14a10cf512e87"
+      },
+      ".evidence/REQ-021/CG-2.integration.json": {
+        "sha256": "bccb3c7602e57a621b03dfb8a62aaade92abd1cb7978c94a306b42ef84bc930a",
+        "key": "87f60eeb77d9f299cfb7dd9902dd315c"
+      },
+      "scripts/test/test-integracion-proyectos.ts": {
+        "sha256": "207ecaaed08db7191cfbdf76a45bac29c0ca8aa13c45ded7d90da6d0eff5932d",
+        "key": "dd4cc8117603023fa4561e12cdbe7254"
+      }
+    }
+  },
+  {
+    "commits": {
+      "base": "b3f997fe050f00d031f8ff7103d279b1f33f08c5",
+      "ours": "4a51d40d934170de8275f4e709cdf5f840eded91",
+      "theirs": "88d643b5be177e0ba03178d7fddd523b9ba7f5c7"
+    },
+    "left": "ours",
+    "right": "theirs",
+    "tree": "9736067dff9f521553c5e5e2c078a77081c74b56",
+    "conflicts": [],
+    "files": {
+      "src/components/ui/shell/CabeceraApp.tsx": {
+        "sha256": "b7ff279f2af9bbd0da453f209cd7e3913bb65555e0b5838e16242dee8a9069b2",
+        "key": "6df4cea9605036b2ac01269b320741b1"
+      },
+      "src/app/page.tsx": {
+        "sha256": "73f5c4eb2a3385208e6c9a03332090b8259862489ad13f27e7b12d0b0b592af5",
+        "key": "7e0709f8ac37f2164efc6081f259c5df"
+      },
+      "src/components/guiado/VistaGuiada.tsx": {
+        "sha256": "55c9c439c79bc3a1df9442ab7b2fd93bea5abcb0d5092de81b61115bcbdaaadb",
+        "key": "8f4d1b7928b20f9f71fe0b9e76ef136b"
+      },
+      "src/app/login/page.tsx": {
+        "sha256": "9cfd7643f49b468c8003ca0ddfe5d5cdda0b9c04b6347c81ed90876a323ca152",
+        "key": "9d3f9d9ac1350969fd6a4fe71204cd1c"
+      },
+      "src/lib/cuentas/cuenta-actual.ts": {
+        "sha256": "b628f4f3037e3ce17beff4aaa0749e81cb5841c53122c122f1ded5408399a94f",
+        "key": "ba2580bb7203f67c81c4eadf632e2b62"
+      },
+      "src/app/asistente/page.tsx": {
+        "sha256": "2cc4c7d3089da93c0677cc40a1feecc2f738b08537dfb5810c995a9294230980",
+        "key": "deec9ffa25d6d1798fe3f9da9ac100df"
+      }
+    }
+  },
+  {
+    "commits": {
+      "base": "b3f997fe050f00d031f8ff7103d279b1f33f08c5",
+      "ours": "4a51d40d934170de8275f4e709cdf5f840eded91",
+      "theirs": "88d643b5be177e0ba03178d7fddd523b9ba7f5c7"
+    },
+    "left": "theirs",
+    "right": "ours",
+    "tree": "a446f0a01ca422c414f83bca72343bd1d704bd37",
+    "conflicts": [],
+    "files": {
+      "src/components/ui/shell/CabeceraApp.tsx": {
+        "sha256": "b7ff279f2af9bbd0da453f209cd7e3913bb65555e0b5838e16242dee8a9069b2",
+        "key": "6df4cea9605036b2ac01269b320741b1"
+      },
+      "src/app/page.tsx": {
+        "sha256": "73f5c4eb2a3385208e6c9a03332090b8259862489ad13f27e7b12d0b0b592af5",
+        "key": "7e0709f8ac37f2164efc6081f259c5df"
+      },
+      "src/components/guiado/VistaGuiada.tsx": {
+        "sha256": "55c9c439c79bc3a1df9442ab7b2fd93bea5abcb0d5092de81b61115bcbdaaadb",
+        "key": "8f4d1b7928b20f9f71fe0b9e76ef136b"
+      },
+      "src/app/login/page.tsx": {
+        "sha256": "9cfd7643f49b468c8003ca0ddfe5d5cdda0b9c04b6347c81ed90876a323ca152",
+        "key": "9d3f9d9ac1350969fd6a4fe71204cd1c"
+      },
+      "src/lib/cuentas/cuenta-actual.ts": {
+        "sha256": "b628f4f3037e3ce17beff4aaa0749e81cb5841c53122c122f1ded5408399a94f",
+        "key": "ba2580bb7203f67c81c4eadf632e2b62"
+      },
+      "src/app/asistente/page.tsx": {
+        "sha256": "2cc4c7d3089da93c0677cc40a1feecc2f738b08537dfb5810c995a9294230980",
+        "key": "deec9ffa25d6d1798fe3f9da9ac100df"
+      }
+    }
+  },
+  {
+    "commits": {
+      "base": "b3f997fe050f00d031f8ff7103d279b1f33f08c5",
+      "ours": "4a51d40d934170de8275f4e709cdf5f840eded91",
+      "theirs": "e3dfac3eea2f350c12d5e22981e3189361214203"
+    },
+    "left": "ours",
+    "right": "theirs",
+    "tree": "102f34e3d61b732ec737688b2e76669fff665828",
+    "conflicts": [],
+    "files": {
+      "src/app/page.tsx": {
+        "sha256": "e00ad8c2d035fe90983600ffedb92261a57b97d9d62c311a97b4979f72d71fb9",
+        "key": "585d3876c7dcbf3c967460530ce058d6"
+      },
+      "src/components/ui/shell/CabeceraApp.tsx": {
+        "sha256": "300b0de7d6b10011929cb833b066f376ec9a79e15e791f98b202a90f8649a1b3",
+        "key": "6d4aa822010fb3ca2b27ee9dbbdc64e0"
+      },
+      "src/app/asistente/page.tsx": {
+        "sha256": "c83addc9b917ad38bdd8257521bf3619af37a350ed85224bac6f5496f3b83a22",
+        "key": "88054d9772b8651d2e5deb8410a8f05a"
+      },
+      "src/app/login/page.tsx": {
+        "sha256": "48b76950739eba7ccc1a9ed59b2e7cd9fb541eec664f2c6ebac8b6cd25df0fb6",
+        "key": "f97d80d9d2fc59d46ef6cd1c461f869c"
+      },
+      "src/lib/cuentas/cuenta-actual.ts": {
+        "sha256": "8cb2bb35673a1a5c904d7b20e1006a02c7d49d913fc1c3870ee5f8727e3e0c1c",
+        "key": "fbddea742dcfc000eb541a6dcedd0981"
+      }
+    }
+  },
+  {
+    "commits": {
+      "base": "b3f997fe050f00d031f8ff7103d279b1f33f08c5",
+      "ours": "4a51d40d934170de8275f4e709cdf5f840eded91",
+      "theirs": "e3dfac3eea2f350c12d5e22981e3189361214203"
+    },
+    "left": "theirs",
+    "right": "ours",
+    "tree": "102f34e3d61b732ec737688b2e76669fff665828",
+    "conflicts": [],
+    "files": {
+      "src/app/page.tsx": {
+        "sha256": "e00ad8c2d035fe90983600ffedb92261a57b97d9d62c311a97b4979f72d71fb9",
+        "key": "585d3876c7dcbf3c967460530ce058d6"
+      },
+      "src/components/ui/shell/CabeceraApp.tsx": {
+        "sha256": "300b0de7d6b10011929cb833b066f376ec9a79e15e791f98b202a90f8649a1b3",
+        "key": "6d4aa822010fb3ca2b27ee9dbbdc64e0"
+      },
+      "src/app/asistente/page.tsx": {
+        "sha256": "c83addc9b917ad38bdd8257521bf3619af37a350ed85224bac6f5496f3b83a22",
+        "key": "88054d9772b8651d2e5deb8410a8f05a"
+      },
+      "src/app/login/page.tsx": {
+        "sha256": "48b76950739eba7ccc1a9ed59b2e7cd9fb541eec664f2c6ebac8b6cd25df0fb6",
+        "key": "f97d80d9d2fc59d46ef6cd1c461f869c"
+      },
+      "src/lib/cuentas/cuenta-actual.ts": {
+        "sha256": "8cb2bb35673a1a5c904d7b20e1006a02c7d49d913fc1c3870ee5f8727e3e0c1c",
+        "key": "fbddea742dcfc000eb541a6dcedd0981"
+      }
+    }
+  }
+]

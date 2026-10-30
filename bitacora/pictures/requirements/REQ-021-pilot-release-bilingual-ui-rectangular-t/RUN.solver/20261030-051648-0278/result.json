@@ -1,0 +1,12 @@
+{
+  "outcome": "fixed",
+  "summary": "CG-9 desbloqueado: dos resoluciones conservan ambas traducciones; C7 compuesto sin conflictos y T99 en ejecución.",
+  "handled": [
+    "pictures:REQ-021:r25:resolution:4378ebb94f72d6922c89d601ee5db484",
+    "pictures:REQ-021:r25:resolution:cacb3537cd9925be000ff500ae8a572c"
+  ],
+  "decision": "",
+  "question": "",
+  "commits": [],
+  "rule": "D-077"
+}

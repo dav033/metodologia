@@ -1,0 +1,189 @@
+"use client";
+
+import Link from "next/link";
+import { useCallback, useEffect, useMemo, useState } from "react";
+
+type Call = {
+  kind: string; tool: string | null; provider: string | null; model: string | null;
+  inputTokens: string | null; outputTokens: string | null; thoughtTokens: string | null; cacheTokens: string | null;
+  costUsd: string | null; currency: string; status: string; occurredAt: string;
+  session: string; conversation: string; workItem: string; accountName: string;
+};
+type Group = {
+  key: string; title: string; accountName: string; session: string; workItem: string;
+  count: number; costUsd: string | null; callsWithCost: number; calls: Call[];
+};
+type PageData = {
+  summary: { calls: number; accounts: number; sessions: number; costUsd: string | null; callsWithCost: number; inputTokens: string | null; outputTokens: string | null; partialCalls: number; errorCalls: number };
+  users: { id: string; name: string }[]; tools: string[]; groups: Group[]; nextCursor: string | null;
+};
+
+function money(amount: string | null): string {
+  if (amount === null) return "Desconocido";
+  const [whole = "0", fraction = ""] = amount.split(".");
+  let decimals = (fraction + "0000").slice(0, 4);
+  let integer = whole;
+  if ((fraction[4] ?? "0") >= "5") {
+    const rounded = addIntegerStrings(decimals, "1");
+    if (rounded.length > 4) { integer = addIntegerStrings(integer, "1"); decimals = "0000"; }
+    else decimals = rounded.padStart(4, "0");
+  }
+  return `${groupThousands(integer)}.${decimals}`;
+}
+const number = (amount: string | null) => amount === null ? "No informado" : groupThousands(amount);
+const groupThousands = (amount: string) => amount.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+function addIntegerStrings(left: string, right: string): string {
+  let carry = 0;
+  let result = "";
+  let leftIndex = left.length - 1;
+  let rightIndex = right.length - 1;
+  while (leftIndex >= 0 || rightIndex >= 0 || carry) {
+    const sum = Number(left[leftIndex--] ?? "0") + Number(right[rightIndex--] ?? "0") + carry;
+    result = String(sum % 10) + result;
+    carry = Math.floor(sum / 10);
+  }
+  return result.replace(/^0+(?=\d)/, "");
+}
+
+export function GastoIa({ canManageAccounts, canManageRoles }: { canManageAccounts: boolean; canManageRoles: boolean }) {
+  const [user, setUser] = useState("");
+  const [kind, setKind] = useState("");
+  const [tool, setTool] = useState("");
+  const [groupBy, setGroupBy] = useState<"session" | "work" | "user">("session");
+  const [data, setData] = useState<PageData | null>(null);
+  const [groups, setGroups] = useState<Group[]>([]);
+  const [cursor, setCursor] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [activeFilter, setActiveFilter] = useState<"user" | "kind" | "tool" | null>(null);
+  const [error, setError] = useState(false);
+  const [openGroup, setOpenGroup] = useState<string | null>(null);
+
+  const query = useMemo(() => {
+    const params = new URLSearchParams({ groupBy });
+    if (user) params.set("user", user);
+    if (kind) params.set("kind", kind);
+    if (tool) params.set("tool", tool);
+    return params;
+  }, [user, kind, tool, groupBy]);
+
+  const load = useCallback(async (next: string | null, append: boolean) => {
+    setLoading(true);
+    setError(false);
+    if (!append) { setData(null); setGroups([]); setOpenGroup(null); }
+    try {
+      const params = new URLSearchParams(query);
+      if (next) params.set("cursor", next);
+      const response = await fetch(`/api/admin/gasto?${params}`, { cache: "no-store" });
+      if (!response.ok) throw new Error("gasto fetch failed");
+      const result = await response.json() as PageData;
+      setData(result);
+      setGroups((current) => append ? [...current, ...result.groups] : result.groups);
+      setCursor(result.nextCursor);
+      if (!append) setOpenGroup(result.groups[0]?.key ?? null);
+    } catch {
+      setError(true);
+    } finally {
+      setLoading(false);
+      setActiveFilter(null);
+    }
+  }, [query]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => { void load(null, false); }, 0);
+    return () => window.clearTimeout(timer);
+  }, [load]);
+
+  function clearFilters() {
+    setUser(""); setKind(""); setTool("");
+  }
+
+  return (
+    <main className="mx-auto w-full min-w-0 max-w-7xl flex-1 px-5 py-8 sm:px-7 lg:px-10" lang="es">
+      <header className="mb-6 flex flex-wrap items-center justify-between gap-4">
+        <h1 className="text-2xl font-semibold tracking-tight text-texto">Gasto de IA</h1>
+        <Link href="/" className="ui-button-ghost min-h-11 rounded-full px-4">← Volver a herramientas</Link>
+      </header>
+      <nav aria-label="Administración" className="mb-5 flex flex-wrap gap-2 border-b border-borde pb-3 text-sm">
+        {canManageAccounts ? <Link href="/admin/cuentas" className="rounded-full px-4 py-2 text-texto-suave hover:bg-superficie-2">Cuentas</Link> : null}
+        {canManageRoles ? <Link href="/admin/roles" className="rounded-full px-4 py-2 text-texto-suave hover:bg-superficie-2">Roles y permisos</Link> : null}
+        <span aria-current="page" className="rounded-full bg-superficie-2 px-4 py-2 font-medium text-texto">Gasto de IA</span>
+      </nav>
+
+      <section aria-label="Revisión de gasto" aria-busy={loading} className="rounded-[2rem] border border-borde bg-superficie p-5 shadow-sm sm:p-7">
+        <p className="mb-5 text-sm text-texto-suave">Fecha de las llamadas · UTC · Solo metadatos de uso</p>
+        <div aria-label="Filtros" className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-[1fr_1fr_1fr_auto] xl:items-end">
+          <label className="grid gap-2 text-sm font-medium text-texto">Usuario
+            <select value={user} onChange={(event) => { setActiveFilter("user"); setUser(event.target.value); }} disabled={loading && activeFilter !== "user"} className="min-h-11 rounded-full border border-borde bg-background px-4 text-texto focus-visible:outline focus-visible:outline-3 focus-visible:outline-acento">
+              <option value="">Todos</option>{data?.users.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
+            </select>
+          </label>
+          <fieldset className="grid gap-2 text-sm font-medium text-texto"><legend>Tipo de llamada</legend>
+            <div className="grid grid-cols-3 gap-1 rounded-full bg-superficie-2 p-1">
+              {[["", "Todos"], ["text", "Texto"], ["image", "Imagen"]].map(([value, label]) => <button key={value} type="button" aria-pressed={kind === value} onClick={() => { setActiveFilter("kind"); setKind(value!); }} disabled={loading && activeFilter !== "kind"} className="min-h-11 rounded-full px-3 text-sm aria-pressed:bg-superficie aria-pressed:text-texto text-texto-suave">{label}</button>)}
+            </div>
+          </fieldset>
+          <details className="group">
+            <summary className="flex min-h-11 cursor-pointer list-none items-center rounded-full px-4 text-sm font-medium text-texto focus-visible:outline focus-visible:outline-3 focus-visible:outline-acento">Herramienta: {tool || "Todas"}⌄</summary>
+            <label className="mt-2 grid gap-2 text-sm text-texto-suave">Herramienta
+              <select value={tool} onChange={(event) => { setActiveFilter("tool"); setTool(event.target.value); }} disabled={loading && activeFilter !== "tool"} className="min-h-11 rounded-full border border-borde bg-background px-4 text-texto">
+                <option value="">Todas</option>{data?.tools.map((value) => <option key={value} value={value}>{value}</option>)}
+              </select>
+            </label>
+          </details>
+          <button type="button" onClick={clearFilters} disabled={loading || (!user && !kind && !tool)} className="ui-button-ghost min-h-11 rounded-full px-4 disabled:opacity-50">Limpiar filtros</button>
+        </div>
+
+        {error ? <div role="alert" className="rounded-3xl bg-error-suave p-6 text-texto"><h2 className="text-xl font-semibold">No se pudo cargar el gasto</h2><p className="my-3">No se muestran totales sin confirmar. Conservamos los filtros para que puedas reintentar.</p><button className="ui-button-primary min-h-11 rounded-full px-5" onClick={() => void load(null, false)}>Reintentar</button></div> : null}
+        {!error && loading && !data ? <div role="status" className="space-y-3"><p>Cargando gasto…</p>{[0, 1, 2].map((item) => <div key={item} className="h-20 animate-pulse rounded-3xl bg-superficie-2" />)}</div> : null}
+        {!error && !loading && data?.summary.calls === 0 ? <div role="status" className="py-10 text-center"><h2 className="text-xl font-semibold">No hay llamadas para estos filtros</h2><p className="my-3 text-texto-suave">Cambia o limpia los filtros para revisar otras llamadas.</p><button onClick={clearFilters} className="ui-button-primary min-h-11 rounded-full px-5">Limpiar filtros</button></div> : null}
+        {!error && data && data.summary.calls > 0 ? <>
+          <div aria-live="polite" aria-atomic="true" className="mb-7 grid gap-5 rounded-3xl border border-borde p-5 sm:grid-cols-[1.2fr_1fr] sm:p-6">
+            <div><p className="text-sm text-texto-suave">Coste estimado conocido · USD</p><p className="font-mono text-3xl font-semibold tabular-nums text-texto">${money(data.summary.costUsd)}</p><p className="text-sm text-texto-suave">{data.summary.callsWithCost} / {data.summary.calls} llamadas con coste informado</p></div>
+            <div className="text-sm text-texto-suave"><p>{data.summary.calls} llamadas · {data.summary.accounts} cuentas · {data.summary.sessions} sesiones</p><p className="mt-2">Tokens de entrada: {number(data.summary.inputTokens)} · de salida: {number(data.summary.outputTokens)} · totales conocidos: No informado</p><p className="mt-2">Total de todos los resultados filtrados; importes estimados, no factura.</p></div>
+          </div>
+          {data.summary.partialCalls + data.summary.errorCalls > 0 ? <p role="status" className="mb-5 rounded-3xl bg-aviso-suave p-4 text-sm text-aviso">Hay errores del proveedor con uso facturable conocido y metadatos incompletos. El coste conocido se incluye. Lo no informado queda desconocido; no equivale a cero.</p> : null}
+          <nav aria-label="Agrupar gasto" className="mb-5 grid gap-2 sm:flex">
+            {([["session", "Por sesión"], ["work", "Por proyecto o conversación"], ["user", "Por usuario"]] as const).map(([value, label]) => <button key={value} aria-pressed={groupBy === value} onClick={() => setGroupBy(value)} className="min-h-11 rounded-full px-4 text-left text-sm text-texto-suave aria-pressed:bg-superficie-2 aria-pressed:text-texto">{label}</button>)}
+          </nav>
+          <div className="space-y-3">
+            {groups.map((group) => <section key={group.key} className="overflow-hidden rounded-3xl border border-borde">
+              <h2><button type="button" aria-expanded={openGroup === group.key} onClick={() => setOpenGroup(openGroup === group.key ? null : group.key)} className="grid min-h-20 w-full grid-cols-[1fr_auto] items-center gap-3 p-5 text-left focus-visible:outline focus-visible:outline-3 focus-visible:outline-acento sm:grid-cols-[1fr_1fr_auto]">
+                <span><span className="block text-lg font-semibold text-texto">{group.title}</span><span className="block text-sm text-texto-suave">{group.accountName} · {group.count} llamadas · {group.workItem}</span></span>
+                <span className="text-sm text-texto-suave">Sesión …{group.session}</span><span className="font-mono text-texto">{group.costUsd === null ? "Desconocido" : `$${money(group.costUsd)}`}</span>
+              </button></h2>
+              {openGroup === group.key ? <div className="space-y-3 bg-superficie-suave p-4 sm:p-5">
+                <p className="text-sm text-texto-suave">{group.callsWithCost} / {group.count} llamadas con coste informado</p>
+                <div className="grid gap-2 text-sm sm:grid-cols-2">
+                  <div><span className="font-medium text-texto">Por tipo · </span>{Object.entries(group.calls.reduce<Record<string, string[]>>((totals, call) => { if (call.costUsd !== null) (totals[call.kind] ??= []).push(call.costUsd); return totals; }, {})).map(([name, amounts]) => <span key={name} className="mr-3 text-texto-suave">{name}: ${money(sumAmounts(amounts))}</span>)}</div>
+                  <div><span className="font-medium text-texto">Por herramienta · </span>{Object.entries(group.calls.reduce<Record<string, string[]>>((totals, call) => { if (call.costUsd !== null) (totals[call.tool ?? "No informada"] ??= []).push(call.costUsd); return totals; }, {})).map(([name, amounts]) => <span key={name} className="mr-3 text-texto-suave">{name}: ${money(sumAmounts(amounts))}</span>)}</div>
+                </div>
+                {group.calls.map((call, index) => <details key={`${group.key}-${call.occurredAt}-${index}`} className="rounded-2xl border border-borde bg-superficie p-4">
+                  <summary className="flex min-h-11 cursor-pointer flex-wrap items-center justify-between gap-2 font-medium text-texto">{call.kind} · {call.tool ?? "Herramienta no informada"}<span>{call.costUsd === null ? "Desconocido" : `$${money(call.costUsd)}`}</span></summary>
+                  <dl className="mt-3 grid gap-x-5 gap-y-2 text-sm sm:grid-cols-2 lg:grid-cols-3">
+                    {[["Usuario", call.accountName], ["Sesión", `…${call.session}`], ["Proyecto / conversación", `${call.workItem} / …${call.conversation}`], ["Proveedor / modelo", `${call.provider ?? "No informado"} / ${call.model ?? "No informado"}`], ["Tokens de entrada", number(call.inputTokens)], ["Tokens de salida", number(call.outputTokens)], ["Tokens totales informados", "No informado"], ["Fecha · UTC", call.occurredAt], ["Estado", call.status === "completed" ? "Completada" : call.status === "partial" ? "Error del proveedor · uso parcial facturable" : "Error del proveedor · coste desconocido"]].map(([label, value]) => <div key={label}><dt className="text-xs text-texto-suave">{label}</dt><dd className="break-words text-texto">{value}</dd></div>)}
+                  </dl>
+                </details>)}
+              </div> : null}
+            </section>)}
+          </div>
+          <div className="mt-5 flex flex-wrap items-center justify-between gap-3 text-sm text-texto-suave"><p>{groups.length} grupos mostrados · Los totales incluyen todos los resultados.</p>{cursor ? <button disabled={loading} onClick={() => void load(cursor, true)} className="ui-button-primary min-h-11 rounded-full px-5">Cargar más</button> : null}</div>
+          <p className="mt-6 rounded-2xl bg-superficie-2 p-4 text-sm text-texto-suave">Solo metadatos de uso. Sin prompts, respuestas ni contenido generado.</p>
+        </> : null}
+      </section>
+      <footer className="py-6 text-center text-xs text-texto-suave">Pictures · Sempertex</footer>
+    </main>
+  );
+}
+
+function sumAmounts(amounts: string[]): string | null {
+  if (!amounts.length) return null;
+  let whole = "0";
+  let fraction = 0;
+  for (const amount of amounts) {
+    const [itemWhole = "0", itemFraction = ""] = amount.split(".");
+    whole = addIntegerStrings(whole, itemWhole);
+    fraction += Number((itemFraction + "0000000000").slice(0, 10));
+    if (fraction >= 10_000_000_000) { whole = addIntegerStrings(whole, "1"); fraction -= 10_000_000_000; }
+  }
+  return `${whole}.${String(fraction).padStart(10, "0")}`;
+}

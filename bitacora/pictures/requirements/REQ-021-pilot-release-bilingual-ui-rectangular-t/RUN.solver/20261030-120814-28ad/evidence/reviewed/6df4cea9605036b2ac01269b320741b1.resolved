@@ -1,0 +1,122 @@
+"use client";
+
+import type { ReactNode } from "react";
+import { usePathname } from "next/navigation";
+import { AnimatePresence, motion } from "motion/react";
+import { ChartColumn, FlaskConical, ListChecks, Monitor, Moon, Shield, Sun, Trash2 } from "lucide-react";
+import { OPCIONES_TEMA } from "@/lib/tema/tema";
+import { PERMISOS } from "@/lib/cuentas/permisos";
+import { useTema } from "@/lib/tema/use-tema";
+import type { NivelCreatividad } from "@/lib/ia/escena/creatividad";
+import type { ModoVista } from "@/lib/estado/modo-vista";
+import { SwitchModoVista } from "@/components/modo/SwitchModoVista";
+import { InterruptorTema } from "@/components/ui/interruptor-tema";
+import { MenuApp, type ItemMenu } from "./MenuApp";
+import { SelectorCreatividad } from "./SelectorCreatividad";
+import { textosHerramientas } from "@/components/herramientas/textos-herramientas";
+import type { Idioma } from "@/lib/idioma/idioma";
+
+type Props = {
+  language?: Idioma;
+  /** "Cumpleaños · rosa y plata · hasta $ 1.500.000" o null si el brief está vacío. */
+  contexto: string | null;
+  creatividad?: NivelCreatividad;
+  onCreatividad?: (nivel: NivelCreatividad) => void;
+  modoVista: ModoVista;
+  onModoVista: (modo: ModoVista) => void;
+  onLimpiar: () => void;
+  limpiarDeshabilitado: boolean;
+  /** Cómo se llama esa acción en el menú (la guiada: «Empezar de nuevo», que confirma antes); por defecto «Limpiar chat». */
+  etiquetaLimpiar?: string;
+  iconoLimpiar?: ReactNode;
+  /** Abre la hoja de selección manual; undefined cuando no aplica (hay propuesta en modo usuario). */
+  onAbrirSeleccion?: () => void;
+  totalSeleccion: number;
+  /** Controles técnicos: se muestran en una barra aparte solo en modo dev. */
+  barraDev?: ReactNode;
+  /** Vista guiada: sin el interruptor «Modo dev» (el cliente no lo necesita). */
+  ocultarModoDev?: boolean;
+  permisos?: readonly string[];
+};
+
+/** Marca simple de la maqueta: cuadro violeta con un anillo y un punto. */
+function MarcaIcono() {
+  return (
+    <span className="app-marca-icono" aria-hidden="true">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+        <circle cx="8" cy="8" r="5.5" stroke="currentColor" strokeOpacity="0.65" strokeWidth="1.2" />
+        <circle cx="8" cy="8" r="1.8" fill="currentColor" />
+      </svg>
+    </span>
+  );
+}
+
+/**
+ * Cabecera de una sola línea (maquetas Main y EstadoInicial): marca, contexto
+ * del evento al centro, creatividad compacta, tema, "Modo dev" y menú.
+ */
+export function CabeceraApp({ language = "es", contexto, creatividad, onCreatividad, modoVista, onModoVista, onLimpiar, limpiarDeshabilitado, etiquetaLimpiar, iconoLimpiar, onAbrirSeleccion, totalSeleccion, barraDev, ocultarModoDev = false, permisos = [] }: Props) {
+  const pathname = usePathname();
+  const copy = textosHerramientas(language);
+  const esDev = modoVista === "dev";
+  // Vista guiada (pensada para el móvil): tema y menú con el blanco táctil de 44 px.
+  const tactil = pathname === "/asistente";
+  const { preferencia: preferenciaTema, cambiar: cambiarTema } = useTema();
+  const tienePermiso = (permiso: string) => permisos.includes(permiso);
+  const ICONO_TEMA = { light: <Sun className="size-4" />, dark: <Moon className="size-4" />, sistema: <Monitor className="size-4" /> } as const;
+  const items: ItemMenu[] = [
+    ...(onAbrirSeleccion
+      ? [{ tipo: "accion" as const, id: "seleccion", etiqueta: copy.selectSummary(totalSeleccion), onSeleccionar: onAbrirSeleccion, icono: <ListChecks className="size-4" /> }]
+      : []),
+    { tipo: "accion", id: "limpiar", etiqueta: etiquetaLimpiar ?? copy.clearChat, onSeleccionar: onLimpiar, deshabilitado: limpiarDeshabilitado, icono: iconoLimpiar ?? <Trash2 className="size-4" /> },
+    // D10: the header switch flips light/dark quickly; here the customer can also go back to "Sistema".
+    { tipo: "separador", id: "sep-tema" },
+    { tipo: "titulo", id: "titulo-tema", etiqueta: copy.theme },
+    ...OPCIONES_TEMA.map((opcion): ItemMenu => ({ tipo: "opcion", id: `tema-${opcion.valor}`, etiqueta: opcion.valor === "light" ? copy.themeLight : opcion.valor === "dark" ? copy.themeDark : copy.themeSystem, marcado: preferenciaTema === opcion.valor, onSeleccionar: () => cambiarTema(opcion.valor), icono: ICONO_TEMA[opcion.valor] })),
+    ...(esDev
+      ? ([
+          ...(tienePermiso(PERMISOS.herramientas_internas) ? [
+            { tipo: "separador" as const, id: "sep-dev" },
+            { tipo: "enlace" as const, id: "estadisticas", etiqueta: copy.statistics, href: "/estadisticas", icono: <ChartColumn className="size-4" /> },
+            { tipo: "enlace" as const, id: "laboratorio", etiqueta: copy.laboratory, href: "/laboratorio-referencias", icono: <FlaskConical className="size-4" /> },
+            { tipo: "enlace" as const, id: "admin", etiqueta: copy.administration, href: "/admin", icono: <Shield className="size-4" /> },
+          ] : []),
+          ...(tienePermiso(PERMISOS.administracion_usuarios) ? [
+            { tipo: "enlace" as const, id: "admin-cuentas", etiqueta: copy.administration, href: "/admin/cuentas", icono: <Shield className="size-4" /> },
+          ] : []),
+        ] satisfies ItemMenu[])
+      : []),
+  ];
+
+  return (
+    <>
+      <header className="app-header">
+        <div className="app-marca">
+          <MarcaIcono />
+          <h1 tabIndex={-1} className="sr-only truncate text-sm font-semibold tracking-[-0.015em] focus-visible:outline-3 focus-visible:outline-offset-4 focus-visible:outline-acento min-[480px]:not-sr-only">{copy.sceneTitle}</h1>
+        </div>
+        <div className="app-contexto" data-testid="contexto-evento">
+          <AnimatePresence mode="wait" initial={false}>
+            {contexto && (
+              <motion.p key={contexto} className="truncate" title={contexto} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.2 }}>
+                {contexto}
+              </motion.p>
+            )}
+          </AnimatePresence>
+        </div>
+        <div className="app-acciones">
+          {creatividad !== undefined && onCreatividad && <SelectorCreatividad valor={creatividad} onCambiar={onCreatividad} language={language} />}
+          <InterruptorTema className={tactil ? "size-11" : ""} language={language} />
+          {!ocultarModoDev && <SwitchModoVista modo={modoVista} onCambiar={onModoVista} language={language} />}
+          <MenuApp items={items} etiqueta={copy.moreOptions} {...(tactil ? { claseBoton: "ui-icon-button size-11" } : {})} />
+        </div>
+      </header>
+      {contexto && <p className="app-contexto-movil truncate">{contexto}</p>}
+      {esDev && barraDev && (
+        <div className="app-barra-dev" aria-label={copy.developmentControls} role="group">
+          {barraDev}
+        </div>
+      )}
+    </>
+  );
+}

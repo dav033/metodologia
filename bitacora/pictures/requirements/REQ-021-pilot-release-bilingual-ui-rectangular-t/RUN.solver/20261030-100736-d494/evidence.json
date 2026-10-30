@@ -1,0 +1,65 @@
+{
+  "request": "REQ-021:r26:pictures-REQ-021-r26-T10.45-a1-583728bb:verify",
+  "original_reason": "BLOCKED_ENV",
+  "issues": [
+    {
+      "code": "ENGINE_INTERRUPTED",
+      "detail": "M6 stopped before persisting a complete result; commands were not rerun."
+    }
+  ],
+  "classified": {
+    "failure_class": "verification",
+    "code": "ENGINE_INTERRUPTED",
+    "summary": "the engine interrupted verification before a complete verdict was persisted",
+    "signature": "ed4be384f0f9c32b",
+    "evidence": [
+      {
+        "kind": "verify_reason",
+        "ref": "m6://result/b6fa54e88aa445b8479f1cc48998922944445f31a4cbd6834675dd996844e131",
+        "excerpt": "BLOCKED_ENV"
+      },
+      {
+        "kind": "verify_issue",
+        "ref": "m6://result/b6fa54e88aa445b8479f1cc48998922944445f31a4cbd6834675dd996844e131",
+        "excerpt": "ENGINE_INTERRUPTED"
+      }
+    ],
+    "agent_note": ""
+  },
+  "recovery": "repair_environment",
+  "local_commits": [
+    "5c7d4b3e",
+    "3961266e",
+    "b6411acc",
+    "5a52e556"
+  ],
+  "checks": {
+    "restart_unit": 7,
+    "control_unit": 17,
+    "real_restart": 2,
+    "ruff": "pass",
+    "diff_check": "pass",
+    "quality_module": 189,
+    "snapshot_context": 2,
+    "build": "sdist and wheel pass; both new modules packaged"
+  },
+  "integration": "passed",
+  "plan": "SP-2/SP-10 reconfirmation pending; r26 unchanged",
+  "rules": [
+    "D-203",
+    "D-208"
+  ],
+  "snapshot_context": {
+    "schema": "m6.snapshot-context/1",
+    "path": "/run/bt-m6/snapshot.json",
+    "actual_attempt_git_mounts": [],
+    "red": "2 failures exit 1",
+    "green": "2 pass exit 0, real bwrap read-only proof"
+  },
+  "first_integration_regression": "INCOMPLETE: intentionally terminated before merge, not a passing check",
+  "merge": "fff622890f28b8093a9a0afda9c4077d056bea1b",
+  "full_regression": "303 files, no failures",
+  "smoke": "engine and web pass",
+  "decision": "r26 superseded; r27 T2.55:d1@k1 answered reverify; d2 pending",
+  "deferred": 18
+}

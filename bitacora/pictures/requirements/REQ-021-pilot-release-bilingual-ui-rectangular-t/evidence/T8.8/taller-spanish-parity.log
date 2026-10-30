@@ -1,0 +1,5 @@
+
+> demo-decoracion@0.1.0 idioma:test-taller
+> tsx scripts/test/test-idioma-taller.ts edicion
+
+Taller edicion: 45 files covered; 494 strings checked in Spanish and English.

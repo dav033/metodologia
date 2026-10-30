@@ -1,0 +1,39 @@
+import { Suspense } from "react";
+import { InterruptorTema } from "@/components/ui/interruptor-tema";
+import { SelectorIdioma } from "@/lib/idioma/cliente";
+import { getRequestLanguage } from "@/lib/idioma/servidor";
+import { LoginForm } from "./LoginForm";
+<<<<<<< ours (src/app/login/page.tsx)
+||||||| base
+import { idiomaAcceso } from "@/components/cuentas/textos-acceso";
+=======
+import { idiomaAcceso } from "@/components/cuentas/textos-acceso";
+import { redirect } from "next/navigation";
+import { resolveServerRequestSession } from "@/lib/cuentas/sesion-servidor";
+import { destinoSolicitado } from "@/lib/auth/destino-por-defecto";
+>>>>>>> theirs
+
+export const instant = false;
+
+export default async function LoginPage() {
+<<<<<<< ours (src/app/login/page.tsx)
+  const language = await getRequestLanguage();
+||||||| base
+  const language = idiomaAcceso((await headers()).get("accept-language") ?? "es");
+=======
+  const [requestHeaders, session] = await Promise.all([headers(), resolveServerRequestSession()]);
+  if (session) redirect(destinoSolicitado("/", session.permissions));
+  const language = idiomaAcceso(requestHeaders.get("accept-language") ?? "es");
+>>>>>>> theirs
+  return (
+    <main className="relative flex min-h-dvh items-center justify-center bg-fondo px-4">
+      <div className="absolute right-3 top-3 flex items-center gap-2">
+        <SelectorIdioma idioma={language} />
+        <InterruptorTema language={language} />
+      </div>
+      <Suspense>
+        <LoginForm language={language} />
+      </Suspense>
+    </main>
+  );
+}

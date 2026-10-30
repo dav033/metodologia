@@ -1,0 +1,31 @@
+{
+  "commits": {
+    "base": "7042b3ba371b48ba11ce556009d7b489c478b25e",
+    "ours": "7514afd0c0904f5e33ccccfb9746e9b322215e2c",
+    "theirs": "217e5e5053d0497c4867ff21dae3c33e3fd8170a"
+  },
+  "orientations": [
+    {
+      "left": "ours",
+      "right": "theirs",
+      "tree": "8c1a57b7647ce2f5f60d74876b21f32d7f3c9b41",
+      "conflicts": [
+        "src/app/admin/gasto/page.tsx",
+        "src/components/admin/GastoIa.tsx",
+        "src/lib/ia/nucleo/python-adapter.ts"
+      ],
+      "blobs": {}
+    },
+    {
+      "left": "theirs",
+      "right": "ours",
+      "tree": "80dc74b1eec853290877cbecd6fbb86ff7ffc287",
+      "conflicts": [
+        "src/app/admin/gasto/page.tsx",
+        "src/components/admin/GastoIa.tsx",
+        "src/lib/ia/nucleo/python-adapter.ts"
+      ],
+      "blobs": {}
+    }
+  ]
+}

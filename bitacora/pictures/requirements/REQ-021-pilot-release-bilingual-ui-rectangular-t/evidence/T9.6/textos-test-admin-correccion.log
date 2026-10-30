@@ -1,0 +1,14 @@
+
+> demo-decoracion@0.1.0 textos:test-admin
+> tsx --conditions=react-server scripts/test/test-admin-textos-ingles.ts --solo correccion
+
+✔ correccion: permiso dedicado permite corregir y los demás reciben 403 (770.475911ms)
+﹣ fuente-cambio: un cambio de la fuente conserva la traducción y aparece con estado dedicado (0.202325ms) # SKIP
+ℹ tests 2
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 1
+ℹ todo 0
+ℹ duration_ms 10767.427397

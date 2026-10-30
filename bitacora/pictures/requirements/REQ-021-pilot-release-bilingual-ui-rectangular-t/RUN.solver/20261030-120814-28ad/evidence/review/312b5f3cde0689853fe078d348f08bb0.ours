@@ -1,0 +1,50 @@
+import assert from "node:assert/strict";
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
+import { spawnSync } from "node:child_process";
+import { verificarHashArchivo, PINNED_SHA256 } from "../taller/preparar-blender";
+import { construirEvidencia, resolverBlender, tiposElemento } from "./lib/harness-taller";
+
+async function main(): Promise<void> {
+const root = await mkdtemp(path.join(os.tmpdir(), "taller-harness-"));
+try {
+  const noBlender = await resolverBlender({}, root);
+  assert.ok("blocked" in noBlender, "missing ~/.local/opt/blender/current must be blocked");
+  const invalidExecutable = await resolverBlender({ BLENDER_EXECUTABLE: path.join(root, "missing-blender") }, root);
+  assert.ok("blocked" in invalidExecutable, "missing BLENDER_EXECUTABLE must be blocked");
+  const blocked = construirEvidencia("REQ-021 SP-3 integration", { blockedReasons: ["Blender missing"] });
+  assert.equal(blocked.status, "blocked");
+  assert.notEqual(blocked.status, "passed", "missing Blender can never become a pass");
+
+  const bytes = new TextEncoder().encode("archive");
+  assert.throws(() => verificarHashArchivo(bytes, PINNED_SHA256), /SHA-256 no coincide/);
+
+  const expectedPath = path.join(root, "expected.json"), observedPath = path.join(root, "observed.json");
+  const expected = { schemaVersion: 1, elements: [{ type: "mesa-rectangular", objects: [{ name: "table", bounds_m: { min: { x: 0, y: 0, z: 0 }, max: { x: 1, y: 1, z: 1 } }, base_color: [[1, 0.5, 0.5, 1]] }] }] };
+  const observed = structuredClone(expected);
+  observed.elements[0]!.objects[0]!.bounds_m.max.z = 1.01;
+  await writeFile(expectedPath, JSON.stringify(expected));
+  await writeFile(observedPath, JSON.stringify(observed));
+  const compared = spawnSync("python3", ["scripts/test/blender/comparar_glb.py", expectedPath, observedPath], { encoding: "utf8" });
+  assert.equal(compared.status, 1);
+  assert.match(compared.stderr, /mesa-rectangular\.table\.bounds_m\.max\.z/);
+
+  for (const composition of [false, true]) {
+    await (await import("./test-integracion-taller-esenciales")).modoAutoprueba(composition);
+    const evidencePath = path.join(process.cwd(), ".evidence/REQ-021", composition ? "CG-2.integration.json" : "SP-3.integration.json");
+    const evidence = JSON.parse(await readFile(evidencePath, "utf8")) as { status: string; perTypeResults: { type: string; status: string }[] };
+    assert.equal(evidence.status, "blocked");
+    assert.deepEqual(evidence.perTypeResults.map((item) => item.type), tiposElemento());
+    assert.ok(evidence.perTypeResults.every((item) => item.status === "blocked"));
+  }
+
+  const incompleteEvidence = construirEvidencia("REQ-021 SP-3 integration", { perTypeResults: [{ type: "mesa", status: "passed" }], blockedReasons: ["missing app"] });
+  assert.equal(incompleteEvidence.status, "blocked", "blocked reason takes precedence over partial passes");
+  process.stdout.write("test-harness-taller-esenciales: ok (missing prerequisites block; comparison diagnostics; evidence schemas)\n");
+} finally {
+  await rm(root, { recursive: true, force: true });
+}
+}
+
+void main().catch((error: unknown) => { console.error(error); process.exitCode = 1; });

@@ -1,0 +1,13 @@
+
+> demo-decoracion@0.1.0 idioma:test-ui-navegacion
+> tsx scripts/test/test-ui-idioma-navegacion.ts --solo pantallas
+
+
+> @sempertex/agente-core@0.1.0 build
+> tsc -p tsconfig.build.json
+
+
+> @sempertex/happie-package-ia@0.1.0 build
+> tsc -p tsconfig.build.json
+
+test-ui-idioma-navegacion pantallas: ok

@@ -1,0 +1,27 @@
+test_terminal_read_before_json_resumes_after_forced_background_stop (test_orchestration_terminal.ForegroundTests.test_terminal_read_before_json_resumes_after_forced_background_stop) ... FAIL
+
+======================================================================
+FAIL: test_terminal_read_before_json_resumes_after_forced_background_stop (test_orchestration_terminal.ForegroundTests.test_terminal_read_before_json_resumes_after_forced_background_stop)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/david/.local/share/bitacora-solver/pictures/20261030-120814-28ad/wt/skill/scripts/tests/test_orchestration_terminal.py", line 55, in test_terminal_read_before_json_resumes_after_forced_background_stop
+    self.assertEqual(code, 0, output)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+AssertionError: 1 != 0 : x
+Traceback (most recent call last):
+  File "<string>", line 21, in <module>
+    result=t.run_child([sys.executable,os.environ['CHILD']], {}, Path.cwd(),
+                       dict(os.environ), timeout=1, output_bytes=1024)
+  File "/home/david/.local/share/bitacora-solver/pictures/20261030-120814-28ad/wt/skill/scripts/bt_orchestration_terminal.py", line 123, in run_child
+    os.tcsetpgrp(0, child.pid)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "<string>", line 16, in delayed
+    assert state=='T', 'fixture did not force the SIGTTIN startup window'
+           ^^^^^^^^^^
+AssertionError: fixture did not force the SIGTTIN startup window
+
+
+----------------------------------------------------------------------
+Ran 1 test in 0.737s
+
+FAILED (failures=1)

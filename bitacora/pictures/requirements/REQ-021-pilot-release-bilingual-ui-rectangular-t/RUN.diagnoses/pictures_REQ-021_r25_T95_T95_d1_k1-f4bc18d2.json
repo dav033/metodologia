@@ -1,0 +1,23 @@
+{
+ "request": "pictures:REQ-021:r25:T95:T95:d1@k1",
+ "state": "done",
+ "kind": "verifier",
+ "label": "Verificador",
+ "tone": "info",
+ "headline": "La verificación de T95 chocó con otro verificador activo para la misma petición",
+ "origin": "El fallo está en el verificador, no en el código de T95. Al lanzar la verificación de CG-5 (npm run decoraciones:test-integracion), el runtime encontró un verificador aún activo para la misma petición: \"REQUEST_IN_PROGRESS: the same request already has an active verifier\". La evidencia no muestra si ese verificador sigue corriendo o quedó bloqueado, así que el diagnóstico es por regla y no por un resultado de los checks.",
+ "steps": [
+  "Ejecuta `bitacora.py --project pictures scheduler-op REQ-021 status` y confirma que no queda un verificador de T95 en curso. Si sigue activo, espera a que termine.",
+  "Comprueba que ~/.config/metodologia/verifier-pictures.env contiene PICTURES_REQ021_DATABASE_URL, porque el check de integración la necesita y el verificador no hereda el entorno del sistema.",
+  "Si no hay verificador activo, ejecuta `bitacora.py --project pictures scheduler-op REQ-021 decide T95:d1 reverify --reason \"verificador anterior terminado; snapshot sin cambios\"`.",
+  "Si vuelve a aparecer REQUEST_IN_PROGRESS con el verificador terminado, trátalo como bloqueo del runtime y revisa el estado del scheduler antes de reintentar."
+ ],
+ "option": "reverify",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-29T18:45:11",
+ "seconds": 15.8
+}
