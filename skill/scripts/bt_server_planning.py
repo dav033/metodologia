@@ -113,8 +113,8 @@ class PlanningActions:
             msg, sid = "Subplan no válido.", ""
         elif action in ("verify-run", "verify-stop") and self.client_address[0] not in ("127.0.0.1", "::1"):
             msg = "Los servidores de prueba solo se arrancan desde esta máquina."
-        elif action == "verify-run":                  # «Probar esta versión»: start its servers, the new tab waits for them
-            started = servers.start(ROOT, project, rdir, sid)
+        elif action == "verify-run":                  # «Probar»: restart the version clean; the new tab follows it
+            started = servers.begin(ROOT, project, rdir, sid)
             if started["ok"]:
                 return f"{base}/verify-run?sp={quote(sid)}"
             msg = started["message"]
