@@ -16,13 +16,22 @@ the run of the new revision CONTINUES the current one.
 - Then the current run's workflows are cancelled, `RUN.owner.json` and `RUN.durable-run.json` move to the new run by
   compare-and-swap, and the new run starts. Open owner decisions of the current run end with it (the reconciled task
   asks again if it must).
+- `RUN.join.json` is written BEFORE the cancel, whatever started the join, and removed only once the run pointer moved:
+  a join cut between the cancel and the new run's start (the CLI or the web service killed, an engine restart) left the
+  run cancelled with nothing to finish it, and no rung noticed (the Solucionador watches runs in ERROR and PENDING tasks).
+  The engine's `drain` completes it from the marker. Joins of one requirement are serialised by `RUN.join.lock`: the
+  CLI waits for it, the drain skips a requirement whose lock is held (audit of REQ-030, 2026-10-29).
 """
 from __future__ import annotations
 
+import contextlib
+import fcntl
 import hashlib
 import json
+import os
 import subprocess
 import time
+from collections.abc import Iterator
 from pathlib import Path
 
 import bt_run_owner
@@ -37,6 +46,7 @@ from bt_contracts.execution import (
 LIVE = frozenset({"queued", "running", "verifying", "recovering", "waiting_quota"})
 DONE = frozenset({"completed", "inherited"})
 PENDING = "RUN.join.json"
+LOCK = "RUN.join.lock"
 FINGERPRINT = ("objective", "acceptance_criteria", "verification", "expected_paths", "after", "repository")
 
 
@@ -44,6 +54,30 @@ class JoinRefused(RuntimeError):
     def __init__(self, code: str, message: str):
         super().__init__(f"{code}: {message}")
         self.code, self.message = code, message
+
+
+class JoinBusy(RuntimeError):
+    """Another process is joining a stage of this requirement right now."""
+
+
+@contextlib.contextmanager
+def locked(rdir: Path, *, wait: bool = True) -> Iterator[None]:
+    """One join of a requirement at a time (CLI, web and the engine's drain). `wait=False` raises JoinBusy instead."""
+    with open(Path(rdir) / LOCK, "a+") as handle:
+        try:
+            fcntl.flock(handle, fcntl.LOCK_EX | (0 if wait else fcntl.LOCK_NB))
+        except BlockingIOError:
+            raise JoinBusy(str(rdir)) from None
+        yield
+
+
+def _write_pending(rdir: Path, request: dict) -> None:
+    target = Path(rdir) / PENDING
+    tmp = target.with_name(f".{PENDING}.{os.getpid()}.tmp")
+    tmp.write_text(json.dumps(request, indent=1) + "\n", encoding="utf-8")
+    with open(tmp, "rb") as stream:
+        os.fsync(stream.fileno())
+    os.replace(tmp, target)
 
 
 def fingerprint(plan_doc: dict, task_id: str) -> str:
@@ -162,9 +196,20 @@ def copy_lines(repositories, roles, old: RunRef, new: RunRef) -> list[str]:
 
 
 def join(client, rdir: Path, *, state_dir: Path, new: RunRef, repositories, settings=None, confirm: bool = False,
-         dry_run: bool = False, by: str = "bt-durable join", emit=None) -> dict:
+         dry_run: bool = False, by: str = "bt-durable join", emit=None, wait: bool = True) -> dict:
     """Join the frozen stage `new` into the run the durable runtime owns in `rdir` (see the module docstring).
-    `settings`: the new run's; by default the current run's own (the run continues). `emit`: telemetry."""
+    `settings`: the new run's; by default the current run's own (the run continues). `emit`: telemetry. `wait=False`
+    raises JoinBusy when another join of the requirement holds its lock."""
+    if dry_run:
+        return _join(client, rdir, state_dir=state_dir, new=new, repositories=repositories, settings=settings,
+                     confirm=confirm, dry_run=True, by=by, emit=emit)
+    with locked(rdir, wait=wait):
+        return _join(client, rdir, state_dir=state_dir, new=new, repositories=repositories, settings=settings,
+                     confirm=confirm, dry_run=False, by=by, emit=emit)
+
+
+def _join(client, rdir: Path, *, state_dir: Path, new: RunRef, repositories, settings, confirm: bool, dry_run: bool,
+          by: str, emit) -> dict:
     emit = emit or (lambda event, **fields: None)
     owner = bt_run_owner.read(rdir)
     if not owner or owner.get("backend") != "dbos":
@@ -197,16 +242,19 @@ def join(client, rdir: Path, *, state_dir: Path, new: RunRef, repositories, sett
                 "paused": paused,
                 "redone": report["redone"],
                 "tasks": {t["task_id"]: f"{t['verdict']} (was {t['previous'] or 'not started'})" for t in report["tasks"]}}
+    earlier = {k: v for k, v in pending.items() if k != "error"} if isinstance(pending, dict) else {}
+    request = {**earlier, "run": new.model_dump(mode="json"), "by": by,
+               "confirm": confirm, "settings": settings.model_dump(mode="json"), "owner_paused": paused}
+    request.setdefault("since", time.time())
     if report["live"]:
         client.command(old, "pause", request_id=f"join-r{new.revision}-pause", by="stage join")
-        (Path(rdir) / PENDING).write_text(json.dumps({"run": new.model_dump(mode="json"), "since": time.time(), "by": by,
-                                                      "confirm": confirm, "settings": settings.model_dump(mode="json"),
-                                                      "owner_paused": paused},
-                                                     indent=1) + "\n", encoding="utf-8")
+        _write_pending(rdir, {**request, "stage": "waiting"})
         emit("stage_join_waiting", run_id=old.run_id, to=new.run_id, live=report["live"])
         return {"status": "waiting", "run_id": old.run_id, "live": report["live"], "counts": counts}
     roles = {t.get("repository") or "default" for t in json.loads(Path(new.plan_path).read_text())["tasks"]}
     copied = copy_lines(repositories, roles, old, new)
+    # from the cancel on, the old run is gone: the marker lets the engine finish what an interrupted join started
+    _write_pending(rdir, {**request, "stage": "moving"})
     cancelled = client.cancel(old)
     record = OwnerRecord(run_id=new.run_id, backend=Backend.DBOS, workflow_id=f"bt:{new.run_id}", since=time.time(),
                          by=by, migrated_from=f"durable {old.run_id}")
@@ -240,7 +288,10 @@ def drain(root: Path, client, *, state_dir: Path, repositories_for, emit=None) -
             from .settings import Settings
             settings = Settings.model_validate(request["settings"]) if request.get("settings") else None
             out.append(join(client, rdir, state_dir=state_dir, new=new, repositories=repositories_for(project),
-                            settings=settings, confirm=bool(request.get("confirm")), by="engine stage join", emit=emit))
+                            settings=settings, confirm=bool(request.get("confirm")), by="engine stage join", emit=emit,
+                            wait=False))
+        except JoinBusy:
+            out.append({"status": "busy", "rdir": str(rdir)})             # its own process is joining it right now
         except JoinRefused as refused:
             marker.write_text(json.dumps({**request, "error": f"{refused.code}: {refused.message}"}, indent=1) + "\n",
                               encoding="utf-8")

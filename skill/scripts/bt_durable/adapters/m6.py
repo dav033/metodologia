@@ -51,9 +51,10 @@ def sandbox_policy(policy: QualityPolicy) -> QualityPolicy:
     explicitly (`environment`: the project's env file, the plan's `requires`) is kept as it is."""
     from bt_supervisor.model import MANAGER_ENV
 
-    from .m3 import ENGINE_ONLY_PREFIXES
+    from .m3 import ENGINE_INTERPRETER_ENV, ENGINE_ONLY_PREFIXES
     kept = tuple((name, value) for name, value in policy.ambient_environment
-                 if not name.startswith(ENGINE_ONLY_PREFIXES) and name not in MANAGER_ENV and name not in HOST_SESSION_ENV)
+                 if not name.startswith(ENGINE_ONLY_PREFIXES) and name not in MANAGER_ENV and name not in HOST_SESSION_ENV
+                 and name not in ENGINE_INTERPRETER_ENV)
     return policy if kept == policy.ambient_environment else dataclasses.replace(policy, ambient_environment=kept)
 RELAXED_NODE_HEAP_MB = 12288          # twice the sandbox default (sandbox_mounts.NODE_OPTIONS), the repair ceiling
 _HEAP = re.compile(r"--max-old-space-size=(\d+)")
@@ -109,7 +110,7 @@ class M6Verifier:
         # `attestations_for(run)`: the run's coordinator receipts (bt_attestation.lookup of its requirement folder);
         # a valid receipt settles only its own manual check, command checks still have to pass
         self.attestations_for = attestations_for or (lambda run: attestations)
-        # `on_verdict(attempt, outcome)`: the shared notes trail (RUN.notes history and last verification failure)
+        # `on_verdict(attempt, outcome, profile)`: the shared notes trail (RUN.notes history and last verification failure)
         self.on_verdict = on_verdict
         self._engines: dict[tuple[str, str], QualityEngine] = {}
 
@@ -165,7 +166,7 @@ class M6Verifier:
         outcome = outcome_of(result, self.store)
         if self.on_verdict is not None:
             try:
-                self.on_verdict(attempt, outcome)
+                self.on_verdict(attempt, outcome, profile)
             except Exception as error:  # noqa: BLE001 - the notes trail informs; it never changes a verdict
                 LOG.warning("notes for %s not written: %s", attempt.attempt_key, error)
         return outcome

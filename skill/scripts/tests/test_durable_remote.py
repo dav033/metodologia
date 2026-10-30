@@ -324,14 +324,18 @@ class OldCommandReplay(unittest.TestCase):
         legacy_pause = {"kind": "pause", "request_id": "recorded-pause-01", "task_id": None, "note": "", "by": "owner"}
         client.client.send(f"bt:{run.run_id}", legacy_pause, "run", idempotency_key="command:recorded-pause-01")
         wait_until(lambda: (client.summary(run) or {}).get("status") == "paused"
-                   and (client.summary(run) or {}).get("tasks", {}).get("T1") == "completed", 120,
-                   what="the old engine to apply the pause and finish T1")
+                   and (client.summary(run) or {}).get("tasks", {}).get("T1") == "completed", 240,
+                   what="the old engine to apply the pause and finish T1")   # its relaunch waits 30 s (see below)
         os.killpg(old.pid, signal.SIGKILL)                        # interrupted: the history holds the old pause
         old.wait(10)
+        # T1's launches under the old engine: 1, or 2 when an unanswered `systemctl show` under load made that code kill
+        # and relaunch a healthy agent (fixed since in execution/steps.py; stress run of 2026-10-29: 4 of 10)
+        recorded = len(self.lab.launches())
+        self.assertEqual({x["scenario"] for x in self.lab.launches()}, {"slow"})      # T1 only
         engine_client(self, self.lab)                             # this code recovers the run from its history
         time.sleep(4)
         self.assertEqual((client.summary(run) or {}).get("status"), "paused")
-        self.assertEqual(len(self.lab.launches()), 1)             # paused: T2 has not started
+        self.assertEqual(len(self.lab.launches()), recorded)      # paused: T2 has not started
         client.command(run, "resume", request_id="replayed-resume-1", expect_paused=True)
 
         def settled():
@@ -341,7 +345,7 @@ class OldCommandReplay(unittest.TestCase):
         log = (self.lab.root / "engine.log").read_text(errors="replace")
         self.assertNotIn("DBOSUnexpectedStepError", log)
         self.assertEqual((status["workflow_status"], status["summary"]["status"]), ("SUCCESS", "completed"), status)
-        self.assertEqual(len(self.lab.launches()), 2)
+        self.assertEqual(len(self.lab.launches()), recorded + 1)  # this code launched T2 only
 
 
 if __name__ == "__main__":

@@ -51,6 +51,12 @@ class Versioning(unittest.TestCase):
         path = self.dir / "trace.jsonl"
         return [json.loads(line) for line in path.read_text().splitlines()] if path.exists() else []
 
+    @staticmethod
+    def checkpointed(client, workflow: str, step: str) -> None:
+        """Kill only after the step's checkpoint is written: a step killed between its effect and its checkpoint runs
+        again (at least once), which made this test fail under load with ['a', 'a', 'extra', 'b', 'c']."""
+        wait(lambda: any(row["function_name"].endswith(step) for row in client.list_workflow_steps(workflow)))
+
     def test_patch_applies_only_to_workflows_that_had_not_passed_it(self):
         old = self.spawn("v1", "start", "wf-passed")
         wait(lambda: any(t["step"] == "a" for t in self.trace()))
@@ -59,10 +65,12 @@ class Versioning(unittest.TestCase):
         self.addCleanup(client.destroy)
         client.send("wf-passed", "go", "go1")                       # wf-passed goes beyond the patch point (step b)
         wait(lambda: any(t["workflow"] == "wf-passed" and t["step"] == "b" for t in self.trace()))
+        self.checkpointed(client, "wf-passed", "step_b")
         os.killpg(old.pid, signal.SIGKILL)                          # interrupted under v1, waiting for go2
         old.wait(10)
         early = self.spawn("v1", "start", "wf-early")               # a second v1 workflow stops before the point
         wait(lambda: any(t["workflow"] == "wf-early" and t["step"] == "a" for t in self.trace()))
+        self.checkpointed(client, "wf-early", "step_a")
         os.killpg(early.pid, signal.SIGKILL)
         early.wait(10)
         self.spawn("v2", "start", "wf-new")                         # the upgraded engine recovers both
@@ -76,8 +84,8 @@ class Versioning(unittest.TestCase):
         self.assertEqual(steps["wf-passed"], ["a", "b", "c"])       # past the patch point: v1's sequence, kept
         self.assertEqual(steps["wf-early"], ["a", "extra", "b", "c"])   # had not reached it: takes the patch safely
         self.assertEqual(steps["wf-new"], ["a", "extra", "b", "c"])
-        statuses = {w: client.retrieve_workflow(w).get_status().status for w in steps}
-        self.assertEqual(set(statuses.values()), {"SUCCESS"}, statuses)
+        # step c is traced before the workflow records its result: wait for the status, do not sample it
+        wait(lambda: {client.retrieve_workflow(w).get_status().status for w in steps} == {"SUCCESS"})
 
 if __name__ == "__main__":
     unittest.main()

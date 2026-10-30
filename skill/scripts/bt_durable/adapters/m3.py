@@ -10,6 +10,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import sys
 from collections.abc import Callable, Mapping
 from pathlib import Path
 
@@ -33,6 +34,10 @@ from .files import atomic_write
 DEFAULT_TIMEOUT = 2 * 3600
 # the engine's own configuration (the DBOS database URL carries its password) never reaches an agent
 ENGINE_ONLY_PREFIXES = ("BT_DURABLE_", "DBOS_")
+# the engine's own interpreter, which `uv run` (the unit's ExecStart) puts in front of everything: VIRTUAL_ENV and PATH
+# name the live checkout's .venv. An agent that inherited them ran `python`, `pip install` or `uv pip install` in the
+# engine's environment: a product task could change the interpreter of the engine that runs it.
+ENGINE_INTERPRETER_ENV = frozenset({"VIRTUAL_ENV", "VIRTUAL_ENV_PROMPT", "UV_RUN_RECURSION_DEPTH"})
 ENV_NAME = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")       # bt_supervisor.model.ENV_NAME_PATTERN
 PATCH_MAX = 16 << 20
 OUTPUT_READ_MAX = 8 << 20
@@ -97,7 +102,7 @@ class M3Attempts:
         atomic_write(adir / "workspace.json", json.dumps(ws.to_dict(), sort_keys=True).encode(), 0o600)
         launch = self.driver(attempt.run.project).prepare(_m3_route(route), prompt, ws, float(timeout))
         # names a process environment may hold but an agent's cannot (an exported bash function: BASH_FUNC_x%%)
-        env = {k: v for k, v in os.environ.items()
+        env = {k: v for k, v in inherited_env().items()
                if k not in launch.env_remove and not k.startswith(ENGINE_ONLY_PREFIXES) and ENV_NAME.match(k)}
         env.update(test_env)
         env.update(dict(launch.env_set))
@@ -152,6 +157,20 @@ class M3Attempts:
                                      self.telemetry)
         return Snapshot(snapshot_sha=manifest.get("snapshot_sha"), base_sha=prepared.base_sha, changed_paths=changed[:500],
                         manifest_path=prepared.attempt_dir / "handoff" / "manifest.json", oversized=oversized)
+
+
+def inherited_env(environ: Mapping[str, str] | None = None) -> dict[str, str]:
+    """The engine's environment without its own interpreter (`ENGINE_INTERPRETER_ENV`, and the virtual environment's
+    `bin` directories removed from PATH): what an agent may inherit before its driver and the owner add theirs."""
+    environ = dict(os.environ if environ is None else environ)
+    venvs = {environ.get("VIRTUAL_ENV", "")}
+    if sys.prefix != sys.base_prefix:                    # this process runs inside a virtual environment
+        venvs.add(sys.prefix)
+    own = {str(Path(v) / "bin") for v in venvs if v}
+    out = {k: v for k, v in environ.items() if k not in ENGINE_INTERPRETER_ENV}
+    if "PATH" in out:
+        out["PATH"] = os.pathsep.join(p for p in out["PATH"].split(os.pathsep) if p and p.rstrip("/") not in own)
+    return out
 
 
 def _continuation(ws) -> str:

@@ -42,12 +42,11 @@ class EngineCase(unittest.TestCase):
         self.addCleanup(self._stop_engine, self.engine)
         if self.client is None:
             try:
-                wait_until(lambda: (self.lab.state / "dbos.sqlite3").exists() or self.engine.poll() is not None, 60,
-                           what="DBOS database")
+                wait_until(lambda: self.lab.engine_ready(self.engine) or self.engine.poll() is not None, 120,
+                           what="the engine to start")
             finally:
                 if self.engine.poll() is not None:
                     raise AssertionError("engine exited: " + (self.lab.root / "engine.log").read_text()[-3000:])
-            time.sleep(1.0)
             self.client = Client(self.lab.database_url)
             self.addCleanup(self.client.close)
         return self.engine
@@ -189,7 +188,7 @@ class DurableRuns(EngineCase):
             time.sleep(1.0)
             return beat.stat().st_size == size
         wait_until(stopped, 30, interval=0.5, what="the agent to stop writing")   # the reaper terminated its unit
-        alive = [p for p in Path("/proc").iterdir() if p.name.isdigit() and _marked(p, launch["pid"])]
+        alive = [p for p in Path("/proc").iterdir() if p.name.isdigit() and _marked(p, launch["pid"], self.lab)]
         self.assertEqual(alive, [])
 
     def test_a_paused_run_starts_no_retry_until_it_is_resumed(self):
@@ -287,12 +286,15 @@ def _quota_row(profile: str, used: float, reset: float) -> dict:
             "windows": {"five_hour": {"used_percent": used, "resets_at": reset, "window_minutes": 300}}}
 
 
-def _marked(proc: Path, agent_pid: int) -> bool:
-    """A live process of the cancelled attempt: its own pid or one carrying the attempt marker in its environment."""
+def _marked(proc: Path, agent_pid: int, lab: Lab) -> bool:
+    """A live process of the cancelled attempt: its own pid or one carrying the attempt marker in its environment, of
+    THIS lab. Every lab's attempt keys start with proj-REQ-900, so another lab's agent running at the same time (a
+    parallel regression on the machine) counted as a survivor: 12 of 16 runs under stress, 2026-10-29."""
     try:
         if int(proc.name) == agent_pid:
             return True
-        return b"BT_ATTEMPT_KEY=proj-REQ-900" in (proc / "environ").read_bytes()
+        environ = (proc / "environ").read_bytes()
+        return b"BT_ATTEMPT_KEY=proj-REQ-900" in environ and f"FAKE_COUNT={lab.count}\0".encode() in environ
     except OSError:
         return False
 

@@ -120,11 +120,15 @@ class GitLineIntegrator:
         if tip:
             return tip
         head = _git(repo, "rev-parse", "HEAD^{commit}").stdout.strip()
-        # create-only: "" as the old value makes update-ref fail when another writer created the line first
-        created = _git(repo, "update-ref", ref, head, "", check=False)
-        if created.returncode:
+        # the line and its pin (where subplan lines start) in ONE create-only transaction: written by two update-refs,
+        # a crash between them left a line without a pin, and every later sync reported LINE_BASE_UNKNOWN until an
+        # operator pinned it by hand (audit of REQ-030, 2026-10-29). A writer that created the line first wins.
+        script = f"start\ncreate {ref} {head}\ncreate {ref}-base {head}\nprepare\ncommit\n"
+        if _git(repo, "update-ref", "--stdin", check=False, stdin=script).returncode:
+            pin = self._tip(repo, ref + "-base")
+            if not self._tip(repo, ref) and pin:          # a pin without its line: the line starts at the pin
+                _git(repo, "update-ref", ref, pin, "", check=False)
             return _git(repo, "rev-parse", f"{ref}^{{commit}}").stdout.strip()
-        _git(repo, "update-ref", ref + "-base", head, "", check=False)     # the pin subplan lines start from
         return head
 
     def _merge(self, repo: Path, tip: str, snapshot: str, message: str) -> tuple[str | None, str]:

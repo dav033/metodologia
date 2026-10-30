@@ -61,6 +61,12 @@ PATCH_RUN_RECOMPOSE = "bt-run-recompose-gate"
 # ended in ERROR there (never recovered), so no recorded history goes on past such a failure
 RUN_STEP_ERRORS = (steps.StepFailure, DBOSMaxStepRetriesExceeded)
 COMPOSE_TURNS = 3                        # turns a gate's composition may fail before the gate counts as rejected
+# DBOS counts every dispatch of a workflow, each recovery after an engine restart included, never resets the count, and
+# dead-letters the workflow (MAX_RECOVERY_ATTEMPTS_EXCEEDED, never recovered) past `max_recovery_attempts`, 100 by
+# default. The run and task workflows wait for days through every deploy (pictures REQ-021 r25: 7 recoveries in its
+# first day), so they have no such limit; they only orchestrate, and the work that could crash the engine runs in the
+# agent/verify/integrate children, which keep DBOS's poison-workflow limit.
+LONG_LIVED = {"max_recovery_attempts": None}
 
 
 def run_workflow_id(run: RunRef) -> str:
@@ -73,7 +79,7 @@ def task_workflow_id(run: RunRef, task_id: str, round_no: int) -> str:
 
 
 # ---------------------------------------------------------------------------------------------------------- run
-@DBOS.workflow(name="bt.run")
+@DBOS.workflow(name="bt.run", **LONG_LIVED)
 def run_workflow(run_data: dict, settings_data: dict, legacy_data: dict) -> dict:
     """Start every ready task, wait for news, repeat; ends when nothing is left to run. `legacy_data` is the progress
     the migration bridge re-proved (LegacyProgress): inherited snapshots are integrated into the new line first, in
@@ -337,8 +343,15 @@ def _incarnation(workflow_id: str, run: RunRef) -> int:
     return int(suffix[1:]) if suffix.startswith("@") and suffix[1:].isdigit() else 1
 
 
-def _step_error(error: Exception) -> str:
-    return f"{type(error).__name__}: {error}"[:500]
+def _step_error(error: Exception, limit: int = 500) -> str:
+    """The error as a fact, with the cause a spent step hides: DBOSMaxStepRetriesExceeded only says the step ran out of
+    retries, so pictures REQ-021 r25's gate CG-7 was rejected as «COMPOSE_FAILED 3 turns: … bt.compose has exceeded its
+    maximum of 3 retries» without the GitCommandError that caused it (2026-10-29). Text only: no step changes."""
+    text = f"{type(error).__name__}: {error}"
+    errors = getattr(error, "errors", None) if isinstance(error, DBOSMaxStepRetriesExceeded) else None
+    if errors:
+        text += f" (last: {type(errors[-1]).__name__}: {errors[-1]})"
+    return text[:limit]
 
 
 def _stale_command(command: RunCommand, paused: bool, rounds: dict[str, int]) -> str:
@@ -406,7 +419,7 @@ def _line_items(plan, accepted: dict[str, str]) -> dict[str, dict[str, list[list
 
 
 # --------------------------------------------------------------------------------------------------------- task
-@DBOS.workflow(name="bt.task")
+@DBOS.workflow(name="bt.task", **LONG_LIVED)
 def task_workflow(run_data: dict, task_id: str, round_no: int, settings_data: dict, note: str,
                   parent_id: str, legacy_data: dict | None = None) -> dict:
     run, settings = RunRef.model_validate(run_data), Settings.model_validate(settings_data)
@@ -653,7 +666,7 @@ def _enqueue(queue: str, workflow_id: str, func, *args) -> dict:
     try:
         return handle.get_result()
     except Exception as error:  # noqa: BLE001 - classified as an internal failure with its message as evidence
-        return {"internal_error": f"{type(error).__name__}: {error}"[:2000]}
+        return {"internal_error": _step_error(error, 2000)}
 
 
 def _route_key(route: Route) -> str:

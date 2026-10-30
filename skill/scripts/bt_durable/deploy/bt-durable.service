@@ -12,7 +12,8 @@ EnvironmentFile=-%h/.config/bitacora/durable.env
 ExecStart=%h/.local/bin/uv run --project %h/dev/metodologia bt-durable engine
 Restart=always
 RestartSec=5
-# give running steps time to checkpoint; agents live in their own units and survive an engine stop
+# the engine exits within seconds of SIGTERM (service.serve); this bounds a maintenance pass still running.
+# Agents live in their own units and survive an engine stop.
 TimeoutStopSec=60
 KillMode=mixed
 

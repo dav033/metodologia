@@ -12,7 +12,44 @@ def _recent_logs(project_dir: Path, count: int = 2) -> list[Path]:
     return sorted(Path(project_dir).glob("20*/W*/20*.md"))[-count:]
 
 
-def brief(run, rdir: Path, session: dict, items: list[dict], status: dict) -> str:
+GATE_EVENTS = ("gate_compose_failed", "gate_composed", "gate_recompose", "subplan_lines_unavailable",
+               "subplan_line_conflict")
+
+
+def gate_trail(telemetry: Path | None, run_id: str, limit: int = 12) -> list[str]:
+    """The run's last composition-gate and subplan-line events from the engine's telemetry: a composition that fails
+    leaves only these (`gate_compose_failed`: the gate, the turn, the error), while the run waits for nothing visible."""
+    rows = []
+    try:
+        with open(telemetry, encoding="utf-8") as stream:
+            for line in stream:
+                if run_id not in line or not any(event in line for event in GATE_EVENTS):
+                    continue
+                try:
+                    row = json.loads(line)
+                except ValueError:
+                    continue
+                if row.get("run_id") == run_id and row.get("event") in GATE_EVENTS:
+                    rows.append(row)
+    except (OSError, TypeError):
+        return []
+    out = []
+    for row in rows[-limit:]:
+        what = {k: row[k] for k in ("gate", "turn", "state", "candidate_id", "reason", "role", "previous") if k in row}
+        out.append(f"- {row['event']}: {json.dumps(what, ensure_ascii=False, default=str)[:700]}")
+    return out
+
+
+def _gate_tasks(run) -> dict[str, str]:
+    """Composition gate -> its gate task, from the frozen plan the run executes."""
+    try:
+        plan = json.loads(Path(run.plan_path).read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+    return {str(g.get("id")): str(g.get("task")) for g in plan.get("composition_gates") or () if isinstance(g, dict)}
+
+
+def brief(run, rdir: Path, session: dict, items: list[dict], status: dict, *, telemetry: Path | None = None) -> str:
     """Everything an operator would read first, in the order the prompt asks for it."""
     import bt_block_agent
     rdir = Path(rdir)
@@ -48,6 +85,21 @@ def brief(run, rdir: Path, session: dict, items: list[dict], status: dict) -> st
     lines += ["", "## Run status", "", f"Run workflow `{status.get('workflow_id')}`: {status.get('workflow_status')}; "
               f"summary status {summary.get('status')}. Full status: `{Path(session['dir']) / 'status.json'}`.", "",
               *(open_tasks[:40] or ["- every task workflow ended"])]
+    gates = summary.get("gates") if isinstance(summary.get("gates"), dict) else {}
+    trail = gate_trail(telemetry, run.run_id)
+    if gates or trail:
+        lines += ["", "## Composition gates", "",
+                  (f"Composed: `{json.dumps(gates.get('composed') or {}, ensure_ascii=False)}`; rejected: "
+                   f"`{json.dumps(gates.get('rejected') or {}, ensure_ascii=False)[:1500]}`. A composition that fails "
+                   "is tried again on later turns of the run loop (`COMPOSE_TURNS`) before the gate counts as "
+                   "rejected; the owner's `retry-task` of the gate task composes it again."), "",
+                  *(["Last gate and line events (telemetry):", *trail] if trail else [])]
+        tasks_of = _gate_tasks(run)
+        for gate in sorted(gates.get("rejected") or {}):
+            lines += ["", (f"Known case (agents/solver.md): gate {gate} is rejected. Fix the origin of its reason above "
+                           "(the composer, a merge rule, the environment or the plan), integrate the fix, then "
+                           f"`uv run --project ~/dev/metodologia bt-durable retry-task {run.project} {run.req} "
+                           f"{tasks_of.get(gate, '<gate task>')}`: it reopens the ended run and composes {gate} again.")]
     logs = _recent_logs(root / run.project) + _recent_logs(root / "metodologia")
     lines += ["", "## Files", "",
               f"- requirement: `{rdir}` (SPEC.md, PLAN.md, PLAN.json, SPEC.es.md)",

@@ -13,8 +13,10 @@ from __future__ import annotations
 
 import json
 import sys
+import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent))
@@ -132,6 +134,53 @@ class StageJoin(EngineCase):
         status = self.settled(run2, timeout=240)
         self.assertEqual(status["summary"]["status"], "completed", status)
         self.assertEqual(sorted(item["task"] for item in self.lab.launches()), ["T1", "T2", "T2", "T3"])
+    def test_a_join_cut_after_the_cancel_is_finished_by_the_engine(self):
+        """A join killed between the old run's cancel and the new run's start (the CLI or the web service killed, an
+        engine restart) left the run cancelled with no marker: nothing finished it and no rung noticed."""
+        first = [task("T1", scenario="own"), task("T2", scenario="fixlater", after=["T1"])]
+        run1 = self.stage(first, 1)
+        self.lab.own(run1.model_dump(mode="json"))
+        self.start_engine()
+        self.client.start(run1, ONE_ATTEMPT)
+        wait_until(lambda: (self.client.status(run1)["tasks"].get("T2") or {}).get("decision"), 180, interval=0.5,
+                   what="T2 to stop and ask the owner")
+        run2 = self.stage([*first, task("T3", scenario="own", after=["T1"])], 2)
+
+        class Killed(BaseException):
+            pass
+
+        with mock.patch.object(stage_join.bt_run_owner, "write", side_effect=Killed("killed after the cancel")), \
+                self.assertRaises(Killed):
+            self.join(run2, settings=FAST)
+        rows = self.client.workflows(f"bt:{run1.run_id}")
+        self.assertFalse([r.workflow_id for r in rows if r.status in ("PENDING", "ENQUEUED")])   # the old run is gone
+        self.assertEqual(bt_run_owner.read(self.lab.rdir)["run_id"], run1.run_id)
+        self.assertTrue((self.lab.rdir / stage_join.PENDING).is_file(), "the cut join left nothing to finish it")
+
+        wait_until(lambda: bt_run_owner.read(self.lab.rdir)["run_id"] == run2.run_id, 120, interval=1.0,
+                   what="the engine to finish the cut join")
+        self.assertFalse((self.lab.rdir / stage_join.PENDING).exists())
+        status = self.settled(run2, timeout=240)
+        self.assertEqual(status["summary"]["status"], "completed", status)
+        self.assertEqual(sorted(item["task"] for item in self.lab.launches()), ["T1", "T2", "T2", "T3"])
+
+
+class JoinLock(unittest.TestCase):
+    def test_the_drain_skips_a_requirement_another_process_is_joining(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            rdir = Path(tmp) / "proj" / "requirements" / "REQ-900-x"
+            rdir.mkdir(parents=True)
+            run = {"project": "proj", "req": "REQ-900", "plan_id": "REQ-900", "revision": 2, "plan_sha256": "0" * 64,
+                   "plan_path": str(rdir / "plan-revisions" / "PLAN.r2.json")}
+            (rdir / stage_join.PENDING).write_text(json.dumps({"run": run}))
+            client = mock.Mock()
+            with stage_join.locked(rdir):                       # e.g. `bt-durable join` from the web, mid-way
+                out = stage_join.drain(Path(tmp), client, state_dir=Path(tmp) / "state",
+                                       repositories_for=lambda project: {})
+            self.assertEqual([item["status"] for item in out], ["busy"])
+            self.assertEqual(client.mock_calls, [])
+            self.assertNotIn("error", json.loads((rdir / stage_join.PENDING).read_text()))
+
 
 class ProgressInput(unittest.TestCase):
     def test_new_progress_fields_travel_only_when_set(self):

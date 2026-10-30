@@ -1,4 +1,6 @@
 import os
+import shutil
+import subprocess
 import tempfile
 import time
 import unittest
@@ -83,6 +85,31 @@ class ScopedStart(unittest.TestCase):
         self.assertEqual(calls[0], ("/usr/bin/systemd-run", "--user", "--scope", "--quiet", "--collect",
                                     "--unit=bt-solver-x"))
         self.assertEqual(calls[1], ())                       # the scope failed: started as before
+
+
+class SessionEnvironment(unittest.TestCase):
+    @unittest.skipUnless(shutil.which("tmux"), "tmux is not installed")
+    def test_a_server_the_engine_starts_never_carries_its_database_url_or_its_venv(self):
+        """bt-durable.service starts the bitácora tmux server for the Solucionador; every later session on the socket
+        gets the server's environment. Real tmux on a private socket (audit of REQ-030, 2026-10-29)."""
+        with tempfile.TemporaryDirectory() as tmp:
+            out, venv = Path(tmp) / "env.txt", Path(tmp) / "metodologia" / ".venv"
+            engine = {"BITACORA_TMUX_SOCKET": f"bt-test-env-{os.getpid()}",
+                      "BT_DURABLE_DATABASE_URL": "postgresql://postgres:s3cret@127.0.0.1:5435/bt_durable",
+                      "VIRTUAL_ENV": str(venv), "UV_RUN_RECURSION_DEPTH": "1",
+                      "PATH": f"{venv}/bin:{os.environ.get('PATH', '/usr/bin')}"}
+            with patch.dict(os.environ, engine):
+                self.addCleanup(lambda: subprocess.run(["tmux", "-L", engine["BITACORA_TMUX_SOCKET"], "kill-server"],
+                                                       capture_output=True, check=False))
+                terminal.start("bit-p-REQ-1-solver", Path(tmp), f"env > {out}")
+                for _ in range(100):
+                    if out.is_file() and out.read_text():
+                        break
+                    time.sleep(0.05)
+            names = dict(line.split("=", 1) for line in out.read_text().splitlines() if "=" in line)
+            for name in ("BT_DURABLE_DATABASE_URL", "VIRTUAL_ENV", "UV_RUN_RECURSION_DEPTH"):
+                self.assertFalse(name in names, f"{name} reached the session")    # never print the values
+            self.assertNotIn(f"{venv}/bin", names.get("PATH", "").split(os.pathsep))
 
 
 class WebPieces(unittest.TestCase):
