@@ -74,7 +74,7 @@ elif scenario in ("auditk", "auditnever"):       # a read-only audit: its report
     done()
 elif scenario in ("auditself", "auditselfnever"):  # pictures REQ-021 T2.7: a coverage gap that names only the audit
     complete = scenario == "auditself" and "gap in the audit's own coverage" in prompt
-    findings = [{"id": "F2", "severity": "medium", "status": "open", "summary": "a spacing defect", "tasks": ["T1"]}]
+    findings = [{"id": "F2", "severity": "low", "status": "open", "summary": "a spacing defect", "tasks": ["T1"]}]   # informational (D-233)
     if not complete:
         findings.append({"id": "F8", "severity": "high", "status": "open", "tasks": [task_id],
                          "summary": f"the audit lacks fresh evidence for the account route; {task_id} must be rerun",

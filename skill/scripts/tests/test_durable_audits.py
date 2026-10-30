@@ -178,7 +178,7 @@ class RepairCompilation(unittest.TestCase):
         ledger = json.dumps({"schema": "audit-findings/1", "findings": [
             {"id": "F1", "severity": "high", "status": "open", "summary": "s", "tasks": ["TA"]},
             {"id": "F2", "severity": "high", "status": "open", "summary": "s", "tasks": ["TA", "T1"]},   # T1 owns it
-            {"id": "F3", "severity": "medium", "status": "open", "summary": "s", "tasks": ["TA"]},       # not blocking
+            {"id": "F3", "severity": "low", "status": "open", "summary": "s", "tasks": ["TA"]},          # not blocking (D-233: medium blocks)
             {"id": "F4", "severity": "high", "status": "fixed", "summary": "s", "tasks": ["TA"], "evidence": "e"},
             {"id": "F5", "severity": "critical", "status": "open", "summary": "s", "tasks": []},       # no owner at all
             {"id": "F6", "severity": "high", "status": "open", "summary": "s", "tasks": [" TA ", "T404"]}]})
