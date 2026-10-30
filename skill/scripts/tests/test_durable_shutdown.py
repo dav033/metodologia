@@ -55,5 +55,33 @@ class EngineStops(EngineCase):
         self.assertEqual(len(self.lab.launches()), 1, "the agent must be adopted after the restart, not started again")
 
 
+class ManyRestarts(EngineCase):
+    """DBOS counts every dispatch of a workflow, recoveries included, and never resets the count; past
+    `max_recovery_attempts` (100 by default) it dead-letters the workflow. bt.run and bt.task live for days through
+    every deploy (pictures REQ-021 r25 was at 7 after one day, 2026-10-29), so they must not have that limit."""
+
+    def test_a_run_recovered_more_than_a_hundred_times_still_runs(self):
+        run = RunRef.model_validate(self.lab.freeze([task("T1", scenario="slow")]))
+        with mock.patch.dict(os.environ, {"FAKE_SLOW_SECONDS": "10"}):
+            self.start_engine()
+        self.client.start(run, WAITING)
+        wait_until(lambda: len(self.lab.launches()) >= 1, 90, what="the agent to start")
+        self.engine.send_signal(signal.SIGTERM)
+        self.engine.wait(60)
+        import sqlite3
+        with sqlite3.connect(self.lab.state / "dbos.sqlite3") as db:   # as after 150 deploys
+            changed = db.execute("UPDATE workflow_status SET recovery_attempts = 150 WHERE status = 'PENDING' "
+                                 "AND name IN ('bt.run', 'bt.task')").rowcount
+        self.assertEqual(changed, 2)
+        self.start_engine()
+
+        def ended():
+            row = self.client.client.list_workflows(workflow_ids=[f"bt:{run.run_id}"], load_input=False,
+                                                    load_output=False)[0]
+            return row.status if row.status not in ("PENDING", "ENQUEUED") else None
+        self.assertEqual(wait_until(ended, 180, interval=0.5, what="the run to end"), "SUCCESS")
+        self.assertEqual(self.client.status(run)["summary"]["status"], "completed")
+
+
 if __name__ == "__main__":
     unittest.main()
