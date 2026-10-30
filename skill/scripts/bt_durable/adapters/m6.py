@@ -51,9 +51,10 @@ def sandbox_policy(policy: QualityPolicy) -> QualityPolicy:
     explicitly (`environment`: the project's env file, the plan's `requires`) is kept as it is."""
     from bt_supervisor.model import MANAGER_ENV
 
-    from .m3 import ENGINE_ONLY_PREFIXES
+    from .m3 import ENGINE_INTERPRETER_ENV, ENGINE_ONLY_PREFIXES
     kept = tuple((name, value) for name, value in policy.ambient_environment
-                 if not name.startswith(ENGINE_ONLY_PREFIXES) and name not in MANAGER_ENV and name not in HOST_SESSION_ENV)
+                 if not name.startswith(ENGINE_ONLY_PREFIXES) and name not in MANAGER_ENV and name not in HOST_SESSION_ENV
+                 and name not in ENGINE_INTERPRETER_ENV)
     return policy if kept == policy.ambient_environment else dataclasses.replace(policy, ambient_environment=kept)
 RELAXED_NODE_HEAP_MB = 12288          # twice the sandbox default (sandbox_mounts.NODE_OPTIONS), the repair ceiling
 _HEAP = re.compile(r"--max-old-space-size=(\d+)")
