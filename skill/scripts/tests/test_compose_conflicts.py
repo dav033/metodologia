@@ -335,6 +335,25 @@ class BlockedNotice(unittest.TestCase):
         notify.assert_called_once()
         self.assertIn("CG-5 (T95)", record.call_args.args[2])
 
+    def test_an_earlier_run_of_the_requirement_is_never_announced(self):
+        """D-192: every engine start projects each settled run once more; r19's rejections came back while r25 ran."""
+        from types import SimpleNamespace
+        from bt_durable import projection
+        rdir = Path(tempfile.mkdtemp(prefix="bt-blocked-")) / "REQ-021-x"
+        rdir.mkdir()
+        (rdir / "RUN.durable-run.json").write_text(json.dumps({
+            "project": "p", "req": "REQ-021", "plan_id": "REQ-021", "revision": 25, "plan_sha256": "0" * 64,
+            "plan_path": str(rdir / "PLAN.r25.json")}))
+        plan = SimpleNamespace(composition_gates=[SimpleNamespace(id="CG-5", task="T95")])
+        with patch.object(projection, "requirement_dir", return_value=rdir), \
+                patch.object(projection, "_event", return_value={"gates": {"rejected": {"CG-5": "git_text_conflict"}}}), \
+                patch("bt_planning_activity.record") as record, patch("bt_runutil.notify") as notify:
+            projection._announce_blocked(SimpleNamespace(), "wf19", SimpleNamespace(run_id="p:REQ-021:r19"), plan)
+            record.assert_not_called()
+            notify.assert_not_called()
+            projection._announce_blocked(SimpleNamespace(), "wf25", SimpleNamespace(run_id="p:REQ-021:r25"), plan)
+        record.assert_called_once()
+
 
 if __name__ == "__main__":
     unittest.main()

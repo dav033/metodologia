@@ -393,9 +393,19 @@ def _announce(run: RunRef) -> None:
         pass
 
 
+def _current_run_id(rdir: Path) -> str:
+    """The run the requirement points at now (`RUN.durable-run.json`), or "" when it cannot be read."""
+    try:
+        return RunRef.model_validate_json((Path(rdir) / "RUN.durable-run.json").read_text(encoding="utf-8")).run_id
+    except (OSError, ValueError):
+        return ""
+
+
 def _announce_blocked(source, workflow_id: str, run: RunRef, plan) -> None:
     """A run that settled blocked because composition gates were rejected tells the owner once what stopped it and what
-    to press (pictures REQ-021 r19 settled blocked with CG-3, CG-5 and CG-6 rejected and no decision to answer). Never
+    to press (pictures REQ-021 r19 settled blocked with CG-3, CG-5 and CG-6 rejected and no decision to answer). Only for
+    the requirement's current run: every engine start projects each settled run once more, and r19's and r24's old
+    rejections were announced again at each restart of 2026-10-30 while r25 ran with every gate composed (D-192). Never
     fails the pass."""
     try:
         summary = _event(source, workflow_id, "summary") or {}
@@ -403,6 +413,8 @@ def _announce_blocked(source, workflow_id: str, run: RunRef, plan) -> None:
         if not rejected:
             return
         rdir = requirement_dir(run)
+        if _current_run_id(rdir) not in ("", run.run_id):
+            return                       # an earlier run of the requirement: what stopped it is history (D-192)
         marker = rdir / "RUN.blocked-notice.json"
         key = {"run_id": run.run_id, "rejected": rejected}
         try:
