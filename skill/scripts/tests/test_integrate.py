@@ -7,6 +7,7 @@ from __future__ import annotations
 import subprocess
 import sys
 import tempfile
+import time
 import unittest
 from unittest import mock
 from pathlib import Path
@@ -128,6 +129,7 @@ class Integrate(unittest.TestCase):
         self.live_bitacora_intact()
         self.assertFalse(self.wt.exists())                                       # clean and merged: cleaned up
         self.assertEqual(sh(self.live, "branch", "--list", "fix"), "")
+        self.assertEqual(sh(self.live, "branch", "--list", "deploy-fix"), "")                # D-220
         entry = self.log.read_text()
         for text in (f"previous main: {self.previous}", "/backups/bt_durable-1.dump 10 abc",
                      "regression: 2 files, only baseline failures (test_known_red)", "rollback: git revert the "
@@ -404,6 +406,32 @@ class Staged(unittest.TestCase):
         self.assertEqual(bt_regress.estimate(seconds, seconds, workers=2), 10 + 30 + 100)   # a, c | b
         self.assertEqual(bt_regress.estimate(seconds, ["test_a", "test_b"], workers=2), 10)
 
+
+
+class Hygiene(unittest.TestCase):
+    """D-220: merged deploy-* branches piled up, and full regressions ran three at a time."""
+
+    def test_two_full_regressions_never_run_at_once(self):
+        import threading
+        with tempfile.TemporaryDirectory() as tmp:
+            inside, overlap = [], []
+
+            def staged(*args, **kwargs):
+                inside.append(1)
+                if len(inside) > 1:
+                    overlap.append(1)
+                time.sleep(0.2)
+                inside.pop()
+                return "ok"
+            with mock.patch.object(integ, "lock_file", return_value=Path(tmp) / "integrate.lock"), \
+                    mock.patch("bt_regress.staged", side_effect=staged):
+                threads = [threading.Thread(target=integ.Services().regress, args=(Path(tmp), Path(tmp), Path(tmp) / "o"))
+                           for _ in range(3)]
+                for thread in threads:
+                    thread.start()
+                for thread in threads:
+                    thread.join()
+            self.assertEqual(overlap, [])
 
 
 class Drain(unittest.TestCase):

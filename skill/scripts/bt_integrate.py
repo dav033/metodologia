@@ -52,6 +52,7 @@ from pathlib import Path
 LIVE = Path.home() / "dev" / "metodologia"
 DEPLOY = Path.home() / ".local" / "share" / "bitacora-integrate" / "deploy"
 ENGINE_UNIT, WEB_UNIT = "bt-durable.service", "bitacora-web.service"
+REGRESS_SLOT_WAIT = 7200.0                # a full regression is ~30 min; two queued at most
 DRAIN_POLL = 10.0                       # seconds between looks at the running verifications
 WEB_URL = "http://127.0.0.1:8765/"
 STARTED = "bt_durable engine started"
@@ -151,8 +152,12 @@ class Services:
     """What touches the machine beyond git: the regression, the database backup, the units. Tests pass a fake."""
 
     def regress(self, worktree: Path, scratch: Path, out: Path, selection=None, mode: str = "full"):
+        """One full regression at a time on this machine (`<state>/regress-slot.lock`), integrations and post-merge
+        runs alike: on 2026-10-30 three ran at once (a post-merge run took 1 h 40) and the shared load produced the
+        «load flake, passes alone» lines that every integration then had to judge (D-220)."""
         import bt_regress
-        return bt_regress.staged(worktree, scratch, out, selection=selection, mode=mode)
+        with machine_lock(Path(lock_file()).with_name("regress-slot.lock"), REGRESS_SLOT_WAIT):
+            return bt_regress.staged(worktree, scratch, out, selection=selection, mode=mode)
 
     def select(self, worktree: Path):
         """The suites the branch's changes can reach (bt_regress_select), diffed against main."""
@@ -357,6 +362,14 @@ def _deploy_merge(req: Request) -> str:
     return git(deploy, "rev-parse", "HEAD")
 
 
+def _drop_branch(req: Request, name: str) -> None:
+    """The deploy worktree's own branch is history once main holds it: detach the worktree on main and delete the
+    branch with -d (never -D). 17 merged deploy-* branches had piled up by 2026-10-30 (D-220)."""
+    deploy = Path(req.deploy)
+    git(deploy, "checkout", "-q", "--detach", "main", check=False)
+    git(req.live, "branch", "-d", "-q", name, check=False)
+
+
 def _fast_forward(req: Request, ref: str) -> bool:
     """`git merge --ff-only` in the live checkout: the only write it ever gets. False when git refused."""
     git(req.live, "merge", "--ff-only", "-q", ref, check=False)
@@ -469,6 +482,7 @@ def _integrate(req: Request, services: Services, note: Callable[[str], None], li
         _append(log, f"result: not integrated ({refused})\n")
         raise
     note(f"main is now {merge[:12]} (merge of {req.branch})")
+    _drop_branch(req, f"deploy-{req.branch}")
     pushed = services.push(req.live)
     note("pushed origin main" if not pushed else f"WARNING push failed (main is integrated locally): {pushed}")
     problems = _restart(services, units, note)
@@ -551,6 +565,7 @@ def _revert(req: Request, merge: str, services: Services, units: list[str], note
     if not _fast_forward(req, f"revert-{req.branch}"):
         raise Refused("the live checkout refused the revert's fast-forward")
     reverted = git(req.live, "rev-parse", "HEAD")
+    _drop_branch(req, f"revert-{req.branch}")
     note(f"main reverted to the previous release by {reverted[:12]}")
     pushed = services.push(req.live)
     if pushed:
