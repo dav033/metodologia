@@ -38,7 +38,7 @@ if [ "$2" = "show" ] && [ -e "{flag}" ] && echo "$*" | grep -q "{prefix}" \\
 fi
 exec {real} "$@"
 """
-OUTAGE_SECONDS = 10.0          # longer than DBOS's 3 tries of the step, shorter than the 30 s grace (D-188)
+OUTAGE_SECONDS = 15.0          # longer than DBOS's 3 tries of the step, shorter than the 30 s grace (D-188)
 
 
 def agent_rows(db: Path) -> list[tuple[str, str]]:
@@ -62,7 +62,7 @@ class LaunchHiccup(EngineCase):
         shim.chmod(shim.stat().st_mode | stat.S_IXUSR)
         flag.write_text("1")
         run = RunRef.model_validate(self.lab.freeze([task("T1", scenario="slow")]))
-        with mock.patch.dict(os.environ, {"FAKE_SLOW_SECONDS": "30"}):
+        with mock.patch.dict(os.environ, {"FAKE_SLOW_SECONDS": "35"}):
             self.start_engine()
         self.client.start(run, WAITING)
         wait_until(lambda: len(self.lab.launches()) >= 1, 90, what="the agent to start")
