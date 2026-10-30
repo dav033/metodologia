@@ -79,6 +79,8 @@ class PlanListActions:
                    "decide": lambda p, r: api.decide(ROOT, p, r, form.get("request", ""), form.get("option", ""),
                                                      form.get("reason", "")),
                    "diagnose": lambda p, r: api.diagnose(ROOT, p, r, form.get("request", "")),
+                   "attest": lambda p, r: api.attest(ROOT, p, r, form.get("task", ""), form.get("request", ""),
+                                                     form.get("evidence", ""), by="owner"),
                    "recovery": lambda p, r: api.recovery_control(ROOT, p, r, form.get("action", ""), form.get("preview", ""),
                                                                  form.get("stop_generation", "")),
                    "heal": lambda p, r: api.heal_control(ROOT, p, r, form.get("action", ""), form.get("case", "")),

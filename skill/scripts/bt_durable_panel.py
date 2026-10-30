@@ -197,8 +197,25 @@ def decisions(rdir: Path | str) -> list[dict[str, Any]]:
                     "error": str(failure.get("summary") or "")[:2000] or None, "evidence": evidence,
                     "you_can": [OPTIONS[o][0] for o in options],
                     "options": [{"id": o, "label": OPTIONS[o][0], "consequence": OPTIONS[o][1]} for o in options],
-                    "recommended": None, "unskippable": False, "revision": item.get("seq")})
+                    "recommended": None, "unskippable": False, "revision": item.get("seq"),
+                    "manual": manual_check(item)})
     return out
+
+
+MANUAL_CODES = ("MANUAL_EVIDENCE_REQUIRED", "CRITERION_MANUAL")
+
+
+def manual_check(item: dict) -> dict | None:
+    """What «Probar esto» needs from a decision that waits for the owner's manual evidence (owner, 2026-10-30: «it should
+    open a button that sends me to test that something directly»): the task, the request `bt-durable attest` answers
+    (without its round) and the attempt whose snapshot is tried and the receipt binds to. None for any other decision."""
+    failure = item.get("failure") if isinstance(item.get("failure"), dict) else {}
+    options = item.get("options") or []
+    attempt = item.get("verify_attempt") or item.get("attempt")
+    if failure.get("code") not in MANUAL_CODES or "reverify" not in options or not attempt or not item.get("task_id"):
+        return None
+    return {"task": str(item["task_id"]), "request_id": str(item.get("request_id") or str(item["id"]).split("@")[0]),
+            "attempt": str(attempt), "check": str(failure.get("summary") or "")[:2000]}
 
 
 # ------------------------------------------------------------------------------------------- remote commands

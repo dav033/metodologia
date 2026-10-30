@@ -472,13 +472,29 @@ def _decisions(s: dict, base: str, token: str) -> str:
         rest = [f for f, o in zip(opts, r.get("options") or []) if o["id"] != r.get("recommended")]
         more = f'<details class="dx-more"><summary>Otras opciones ({len(rest)})</summary>{"".join(rest)}</details>' if rest else ""
         code = f' <span class="muted" style="font-weight:400;font-size:12px">· {e(r.get("reason", ""))}</span>' if r.get("reason") else ""
+        manual = _manual(s, r, base, token)
+        if manual:                  # a manual check: try it and answer it here; the plain options stay one click away
+            first, more = [], f'<details class="dx-more"><summary>Otras opciones ({len(opts)})</summary>{"".join(opts)}</details>'
         out.append(f'<div class="ask" id="d-{e(r["id"])}"><h3>{e(r["title"].split(":")[0])}{code}{flag}</h3>{dx.html(r, ask)}'
-                   f'{"".join(first)}{more}</div>')
+                   f'{manual}{"".join(first)}{more}</div>')
     if not out:
         return ""
     waiting = any((r.get("agent") or {}).get("state") == "running" for r in s.get("decisions") or [])
     reload = '<script src="/static/plans-reload.js" data-enabled="1"></script>' if waiting else ""
     return f'<h2 id="asks">Esperando tu decisión</h2><div class="asks">{"".join(out)}</div>{reload}'
+
+def _manual(s: dict, r: dict, base: str, token: str) -> str:
+    """«Probar esto» for a decision that waits for manual evidence (bt_page_manual_check); "" for any other."""
+    if not r.get("manual"):
+        return ""
+    try:
+        import bt_page_manual_check
+        from bt_core import ROOT
+        from bt_plans_api import req_dir
+        project, req = s["project"], s["req_id"]
+        return bt_page_manual_check.block(ROOT, project, req, req_dir(ROOT, project, req), r, base, token)
+    except Exception as exc:  # noqa: BLE001 - the card keeps its options when the snapshot cannot be read
+        return f'<p class="muted">«Probar esto» no está disponible: {e(str(exc)[:200])}</p>'
 
 def _run_form(s: dict, base: str, token: str) -> str:
     act = s.get("run_action")
