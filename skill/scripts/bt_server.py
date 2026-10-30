@@ -16,7 +16,7 @@ import socket
 import subprocess
 import sys
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from urllib.parse import parse_qs, quote, unquote, urlparse
+from urllib.parse import parse_qs, quote, unquote, urlencode, urlparse
 
 import bt_pages as pages
 import bt_rounds as rounds
@@ -81,6 +81,53 @@ class Handler(PlanningActions, PlanListActions, BaseHTTPRequestHandler):
         self.send_header("Cache-Control", "no-store")
         self.end_headers()
         self.wfile.write(data)
+
+    def verify_go(self, project: str, rid: str, q: dict) -> None:
+        """A version link: start the version if it is not running (the waiting tab comes back here), then sign in as the
+        chosen test account and land on the page with that session (D-205). `mode=cookie` only sets the session (the
+        Windows opener then opens the page). The panel token guards it like a form; only from this machine."""
+        import bt_page_verify_run
+        import bt_verify_servers as servers
+        rdir = find_req(ROOT / project, rid)
+        sid, page = q.get("sp", ""), q.get("path", "/") or "/"
+        if rdir is None or not re.fullmatch(r"[A-Za-z0-9_.-]{1,40}", sid) or not hmac.compare_digest(q.get("t", ""), token()):
+            return self.send("Not found", 404, "text/plain")
+        if self.client_address[0] not in ("127.0.0.1", "::1"):
+            return self.send("Solo desde esta máquina.", 403, "text/plain")
+        page = page if re.fullmatch(r"/[A-Za-z0-9_\-./\[\]]{0,200}", page) and "//" not in page else "/"
+        now = servers.status(ROOT, project, rdir, sid)
+        if now["state"] != "ready":
+            if now["state"] != "preparing":
+                servers.begin(ROOT, project, rdir, sid)
+            if q.get("mode") == "cookie":
+                return self.send(json.dumps({"state": "preparing"}), 202, "application/json")
+            back = f"/p/{quote(project)}/req/{quote(rid)}/verify-go?" + urlencode({k: q[k] for k in ("sp", "path", "account", "t") if q.get(k)})
+            return self.send(bt_page_verify_run.page(ROOT, project, rid, rdir, sid, token(), page, next_url=back))
+        minted = servers.mint_session(ROOT, project, rdir, sid, q.get("account", ""))
+        port = (re.search(r":(\d+)/", now.get("url") or "") or [None, ""])[1]
+        host = (self.headers.get("Host") or "localhost").rsplit(":", 1)[0]       # the cookie's host is the panel's: same
+        host = host if host in ("localhost", "127.0.0.1", "[::1]") else "localhost"  # host for the version, any port
+        origin = f"http://{host}:{port}" if port else (re.match(r"https?://[^/]+", now.get("url") or "") or [""])[0]
+        if not minted["ok"]:                          # no automatic sign-in: the page as it is, and why
+            if q.get("mode") == "cookie":
+                return self.send(json.dumps({"state": "ready", "login": False, "message": minted["message"]}), 200, "application/json")
+            return self.redirect(origin + page)
+        cookie = f"{minted['cookie']}={minted['token']}; Path=/; HttpOnly; SameSite=Lax; Max-Age=86400"
+        if q.get("mode") == "cookie":
+            body = json.dumps({"state": "ready", "login": True, "account": minted["account"]}).encode()
+            self.send_response(200)
+            self.send_header("Set-Cookie", cookie)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(body)))
+            self.send_header("Cache-Control", "no-store")
+            self.end_headers()
+            self.wfile.write(body)
+            return
+        self.send_response(303)
+        self.send_header("Set-Cookie", cookie)
+        self.send_header("Location", origin + page)
+        self.send_header("Cache-Control", "no-store")
+        self.end_headers()
 
     def redirect(self, url: str) -> None:
         self.send_response(303)
@@ -189,6 +236,8 @@ class Handler(PlanningActions, PlanListActions, BaseHTTPRequestHandler):
             return self.send(req_page(project, rest[1], q.get("tab", ""), token(), q.get("msg", ""), q))
         if kind == "req" and len(rest) == 3 and rest[2] in ("planning", "mockup"):
             return self.planning_get(project, rest[1], rest[2], q)
+        if kind == "req" and len(rest) == 3 and rest[2] == "verify-go":
+            return self.verify_go(project, rest[1], q)
         if kind == "req" and len(rest) == 3 and rest[2] == "verify-run":
             import bt_page_verify_run
             rdir = find_req(ROOT / project, rest[1])

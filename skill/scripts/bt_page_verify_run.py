@@ -19,7 +19,8 @@ def status_json(root: Path, project: str, rdir: Path, sid: str) -> str:
     return json.dumps(servers.status(root, project, rdir, sid), ensure_ascii=False)
 
 
-def page(root: Path, project: str, rid: str, rdir: Path, sid: str, token: str = "", path: str = "/") -> str:
+def page(root: Path, project: str, rid: str, rdir: Path, sid: str, token: str = "", path: str = "/",
+         next_url: str = "") -> str:
     now = servers.status(root, project, rdir, sid)
     path = path if re.fullmatch(r"/[A-Za-z0-9_\-./\[\]]{0,200}", path or "") and "//" not in path else "/"
     back = (f"/plans/{e(project)}/{e(rid)}" if re.fullmatch(r"T\d+(?:\.\d+)*", sid or "") else
@@ -29,7 +30,8 @@ def page(root: Path, project: str, rid: str, rdir: Path, sid: str, token: str = 
              f'<input type="hidden" name="anchor" value="{e(sid)}"><input type="hidden" name="path" value="{e(path)}"><button type="submit" class="pp-approve">Reintentar desde cero'
              f'</button></form>' if token else "")
     url = now.get("url") or ""
-    body = (f'<section class="pp-vrun" data-sp="{e(sid)}" data-path="{e(path)}"><h1>Probar {e(sid)}</h1>'
+    nxt = next_url if next_url.startswith(f"/p/") else ""          # sign in and land (D-205); never another host
+    body = (f'<section class="pp-vrun" data-sp="{e(sid)}" data-path="{e(path)}" data-next="{e(nxt)}" data-poll="{purl(project, "req", rid, "verify-run")}"><h1>Probar {e(sid)}</h1>'
             f'<p class="pp-vrun-url"><span class="pp-vlabel">Dirección</span><code id="vrun-url">{e(url) or "…"}</code></p>'
             f'<p id="vrun-state" class="pp-vstatus {_cls(now)}" role="status">{e(_said(now))}</p>'
             f'<p id="vrun-step" class="pp-meta">{e(now.get("step") or "")}</p>'
