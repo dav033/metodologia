@@ -61,16 +61,18 @@ class AgentTestEnvironment(unittest.TestCase):
         self.assertIn("Test environment: PICTURES_REQ021_DATABASE_URL is set", prompt)
         self.assertNotIn("s3cret", prompt)
 
-    def test_the_agent_never_inherits_the_engines_interpreter(self):
+    def test_the_agent_never_inherits_the_engines_interpreter_or_database(self):
         """bt-durable.service runs under `uv run`: VIRTUAL_ENV and the head of PATH name the live checkout's .venv. An
         agent with them ran `python`/`pip install`/`uv pip install` in the engine's own environment (audit 2026-10-29)."""
         venv = self.tmp / "metodologia" / ".venv"
         engine = {"VIRTUAL_ENV": str(venv), "UV_RUN_RECURSION_DEPTH": "1", "VIRTUAL_ENV_PROMPT": "metodologia",
-                  "PATH": f"{venv}/bin:{sys.prefix}/bin:/usr/local/bin:/usr/bin"}
+                  "PATH": f"{venv}/bin:{sys.prefix}/bin:/usr/local/bin:/usr/bin",
+                  "BT_DURABLE_DATABASE_URL": URL, "DBOS_SYSTEM_DATABASE_URL": URL}       # 366cbf372, untested until now
         with patch.dict(os.environ, engine):
             prepared = self.prepare(str(self.tmp / "missing-{project}.env"))
         env = json.loads(prepared.env_file.read_text())
-        for name in ("VIRTUAL_ENV", "UV_RUN_RECURSION_DEPTH", "VIRTUAL_ENV_PROMPT"):
+        for name in ("VIRTUAL_ENV", "UV_RUN_RECURSION_DEPTH", "VIRTUAL_ENV_PROMPT", "BT_DURABLE_DATABASE_URL",
+                     "DBOS_SYSTEM_DATABASE_URL"):
             self.assertFalse(name in env, f"{name} reached the agent")      # never print the environment itself
         self.assertEqual(env["PATH"].split(os.pathsep), ["/usr/local/bin", "/usr/bin"])
 
