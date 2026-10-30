@@ -223,8 +223,8 @@ def _join(client, rdir: Path, *, state_dir: Path, new: RunRef, repositories, set
     args = ((rows[0].input or {}).get("args") or ()) if rows else ()
     inherited = LegacyProgress.model_validate(args[2]) if len(args) > 2 else LegacyProgress()
     if settings is None:
-        from .settings import Settings
-        settings = Settings.model_validate(args[1]) if len(args) > 1 else Settings()
+        from .settings import Settings, configured
+        settings = configured(Settings.model_validate(args[1]) if len(args) > 1 else None)   # live knobs (D-239)
     report = plan(state_dir=state_dir, old=old, new=new, status=status, inherited=inherited)
     # the owner's pause carries over; the pause this join itself sent while it waited for live attempts does not
     try:
