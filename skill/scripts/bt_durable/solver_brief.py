@@ -40,6 +40,15 @@ def gate_trail(telemetry: Path | None, run_id: str, limit: int = 12) -> list[str
     return out
 
 
+def _gate_tasks(run) -> dict[str, str]:
+    """Composition gate -> its gate task, from the frozen plan the run executes."""
+    try:
+        plan = json.loads(Path(run.plan_path).read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+    return {str(g.get("id")): str(g.get("task")) for g in plan.get("composition_gates") or () if isinstance(g, dict)}
+
+
 def brief(run, rdir: Path, session: dict, items: list[dict], status: dict, *, telemetry: Path | None = None) -> str:
     """Everything an operator would read first, in the order the prompt asks for it."""
     import bt_block_agent
@@ -85,6 +94,12 @@ def brief(run, rdir: Path, session: dict, items: list[dict], status: dict, *, te
                    "is tried again on later turns of the run loop (`COMPOSE_TURNS`) before the gate counts as "
                    "rejected; the owner's `retry-task` of the gate task composes it again."), "",
                   *(["Last gate and line events (telemetry):", *trail] if trail else [])]
+        tasks_of = _gate_tasks(run)
+        for gate in sorted(gates.get("rejected") or {}):
+            lines += ["", (f"Known case (agents/solver.md): gate {gate} is rejected. Fix the origin of its reason above "
+                           "(the composer, a merge rule, the environment or the plan), integrate the fix, then "
+                           f"`uv run --project ~/dev/metodologia bt-durable retry-task {run.project} {run.req} "
+                           f"{tasks_of.get(gate, '<gate task>')}`: it reopens the ended run and composes {gate} again.")]
     logs = _recent_logs(root / run.project) + _recent_logs(root / "metodologia")
     lines += ["", "## Files", "",
               f"- requirement: `{rdir}` (SPEC.md, PLAN.md, PLAN.json, SPEC.es.md)",

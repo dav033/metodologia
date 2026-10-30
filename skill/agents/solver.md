@@ -61,6 +61,17 @@ union of both sides' intent, never dropping either side's change (when they trul
 Then answer the task's decision with `retry`, or `reverify` when the same snapshot only needs to be integrated again.
 If the conflict is one a merge rule should have settled, also fix the rule in metodologia (D-160, D-164, D-172).
 
+### Known case: a run that ended with a rejected composition gate
+
+A gate whose composition fails `COMPOSE_TURNS` (3) turns, or whose members conflict, is rejected; when nothing else can
+run, the run workflow ends `blocked` with no decision to answer (pictures REQ-021 r25, 2026-10-29 23:19: CG-7
+«COMPOSE_FAILED 3 turns», a GitCommandError on a bracketed Next.js path). Your trigger is `ended` (or `stalled` while
+the run still waited); the brief's «Composition gates» section has each rejected gate's reason and its failed turns from
+the telemetry. Fix the origin (the composer or its git port, a merge rule, the environment, or the plan through the
+Planner) and integrate it; then `uv run --project ~/dev/metodologia bt-durable retry-task <project> <REQ> <gate task>`
+reopens the ended run (`bt:<run>@N`) and composes the gate again (`bt-run-recompose-gate`). A gate rejection is never
+the owner's stop; a task the owner stopped himself (`by: owner`) is not yours to restart.
+
 ## Integrating a metodologia fix
 
 1. In your worktree: a regression test that reproduces the block (red without your fix), the fix, the module's tests.

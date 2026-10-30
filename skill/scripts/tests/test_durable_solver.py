@@ -261,6 +261,49 @@ class SolverTests(unittest.TestCase):
         self.assertIn("GitCommandError", brief)
         self.assertNotIn("CG-1", brief)                  # another run's gate
 
+    def test_a_run_that_ended_with_a_rejected_gate_starts_a_session_at_once(self):
+        """pictures REQ-021 r25, 2026-10-29 23:19: the run workflow ended SUCCESS/blocked with CG-7 rejected after three
+        failed compositions; no decision, no ERROR, RUN.solver/state.json stayed empty."""
+        run_id = "proj:REQ-900:r1"
+        plan = Path(json.loads((self.rdirs["REQ-900"] / "RUN.durable-run.json").read_text())["plan_path"])
+        plan.write_text(json.dumps({"tasks": [{"id": "T97", "title": "Gate"}],
+                                    "composition_gates": [{"id": "CG-7", "subplans": ["SP-7"], "task": "T97"}]}))
+        reason = ("COMPOSE_FAILED 3 turns: DBOSMaxStepRetriesExceeded: DBOS Error 7: Step bt.compose has exceeded its "
+                  "maximum of 3 retries (last: StepFailure: GitCommandError: app/[locale]/page.tsx)")
+        self.client.runs[run_id] = {"run_id": run_id, "workflow_id": f"bt:{run_id}", "workflow_status": "SUCCESS",
+                                    "summary": {"status": "blocked", "tasks": {"T96": "completed"},
+                                                "gates": {"composed": {"CG-6": "C3"}, "rejected": {"CG-7": reason}}},
+                                    "tasks": {}}
+        self.solver().run_pass([])                                       # no wait: nothing will change by itself
+        session = self.session()
+        self.assertEqual(session["kind"], "ended")
+        brief = (Path(session["dir"]) / "BRIEF.md").read_text()
+        self.assertIn("GitCommandError", brief)
+        self.assertIn("bt-durable retry-task proj REQ-900 T97", brief)
+        self.solver().run_pass([])
+        self.assertEqual(len(self.state()["sessions"]), 1)                # once per run workflow and gate set
+        self.client.runs[run_id] = {**self.client.runs[run_id], "workflow_id": f"bt:{run_id}@2",
+                                    "workflow_status": "PENDING"}         # the retry reopened it: the trigger is done
+        self.assertFalse(solver.Solver._current(self.state()["triggers"][session["triggers"][0]], {},
+                                                self.client.runs[run_id]))
+
+    def test_a_run_the_owner_stopped_is_not_a_block_for_the_solver(self):
+        run = type("R", (), {"run_id": "proj:REQ-900:r1"})()
+        ended = {"workflow_id": "bt:proj:REQ-900:r1", "workflow_status": "SUCCESS",
+                 "summary": {"status": "blocked", "tasks": {"T1": "completed", "T2": "blocked"}}}
+        self.assertEqual(solver.ended_triggers(run, ended, {"T2"}), [])            # the owner stopped T2
+        self.assertEqual(solver.ended_triggers(run, ended, set())[0]["blocked"], ["T2"])
+        done = {**ended, "summary": {"status": "completed", "tasks": {"T1": "completed"}}}
+        self.assertEqual(solver.ended_triggers(run, done, set()), [])
+        rdir = self.rdirs["REQ-900"]
+        telemetry = self.base / "telemetry.jsonl"
+        telemetry.write_text(json.dumps({"event": "decision_answered", "run_id": "proj:REQ-900:r1", "task_id": "T2",
+                                         "action": "stop", "by": "owner"}) + "\n" +
+                             json.dumps({"event": "decision_answered", "run_id": "proj:REQ-900:r1", "task_id": "T3",
+                                         "action": "stop", "by": "solver"}) + "\n")
+        (rdir / "RUN.decisions.jsonl").write_text(json.dumps({"task": "T4", "option": "stop", "by": "owner"}) + "\n")
+        self.assertEqual(solver.owner_stops(rdir, telemetry, "proj:REQ-900:r1"), {"T2", "T4"})
+
     def test_a_spent_step_reports_its_cause(self):
         """The reason the run records (gate_compose_failed, the rejected gate, a child's internal_error) is what the
         brief shows: r25's said only that bt.compose ran out of retries, not why."""

@@ -466,7 +466,11 @@ once per signature (D-167) → the Solucionador → the owner, only for what nee
   wait counts from its `until`, a pause or an open decision never); the run workflow in ERROR (`error`); a PENDING,
   unpaused run workflow with no live task workflow and no open decision whose summary and gates did not change for
   `solver.stuck_minutes` (`stalled`: pictures REQ-021 r25 while gate CG-7's composition failed every turn; its brief
-  lists the run's composed and rejected gates and its last `gate_compose_failed`/`gate_composed` telemetry); a composition
+  lists the run's composed and rejected gates and its last `gate_compose_failed`/`gate_composed` telemetry); a run
+  workflow that ended (SUCCESS) with a rejected gate, or `blocked` with a blocked task the owner did not stop himself
+  (`decision_answered` stop by `owner`, or `by: owner` in RUN.decisions.jsonl), fired at once, once per run workflow and
+  gate/task set (`ended`: r25 at 23:19, CG-7 «COMPOSE_FAILED 3 turns»; the brief names the gate task's
+  `bt-durable retry-task`, which reopens the run and recomposes the gate); a composition
   resolution request (`<state>/durable/composition/resolutions/<key>.json` without `<key>.resolved`) older than
   `solver.resolution_after_seconds` (120), given to the run whose open decision names its path or commits, else the one
   run with an open INTEGRATION_CONFLICT decision (`resolution`, `bt_durable/resolutions.py`: its brief carries the

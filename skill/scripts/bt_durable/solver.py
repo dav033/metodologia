@@ -16,6 +16,10 @@ Triggers (`Trigger`), each launched at most once per key:
 - `stalled`: the run workflow is PENDING and not paused, but no task workflow is live (nothing runs, waits for quota or
   recovers) and no decision is open, unchanged for `solver.stuck_minutes`: pictures REQ-021 r25 sat like that while gate
   CG-7's composition failed every turn (a GitCommandError), and no other trigger saw it (2026-10-29);
+- `ended`: the run workflow ended (SUCCESS) with a rejected composition gate, or `blocked` with a blocked task the owner
+  did not stop himself (`decision_answered … stop by owner` in the telemetry, or `by: owner` in RUN.decisions.jsonl):
+  r25 then ended at 23:19 with CG-7 rejected («COMPOSE_FAILED 3 turns»), no decision open and no ERROR. Fired at once,
+  once per run workflow and rejected-gate/blocked-task set;
 - `resolution`: a composition conflict waits in `<state>/composition/resolutions/<key>.json` without `<key>.resolved`
   for `solver.resolution_after_seconds` (`bt_durable.resolutions`): no retry can settle it.
 
@@ -144,6 +148,53 @@ def stalled_triggers(run, status: dict, state: dict, now: float, cfg: dict) -> l
                            f"decision since {_iso(since)}" + (f"; rejected gates: {rejected}" if rejected else ""))]
 
 
+def owner_stops(rdir: Path, telemetry: Path | None, run_id: str) -> set[str]:
+    """Tasks the owner himself stopped: a durable `decision_answered` with action `stop` by `owner` (telemetry), or a
+    `stop` answered `by: owner` in the legacy answers file (RUN.decisions.jsonl)."""
+    out: set[str] = set()
+    sources = [(Path(rdir) / "RUN.decisions.jsonl", None)] + ([(Path(telemetry), run_id)] if telemetry else [])
+    for path, run_filter in sources:
+        try:
+            lines = path.read_text(encoding="utf-8").splitlines()
+        except OSError:
+            continue
+        for line in lines:
+            if "stop" not in line or "owner" not in line:
+                continue
+            try:
+                row = json.loads(line)
+            except ValueError:
+                continue
+            if run_filter is None and row.get("option") == "stop" and row.get("by") == "owner" and row.get("task"):
+                out.add(str(row["task"]))
+            elif run_filter is not None and row.get("run_id") == run_filter and row.get("event") == "decision_answered" \
+                    and row.get("action") == "stop" and row.get("by") == "owner" and row.get("task_id"):
+                out.add(str(row["task_id"]))
+    return out
+
+
+def ended_triggers(run, status: dict, stopped_by_owner: set[str]) -> list[dict]:
+    """A run workflow that ended (SUCCESS) blocked: a rejected composition gate (never the owner's stop), or a blocked
+    task the owner did not stop. Nothing waits in it any more, so no other trigger can see it."""
+    summary = status.get("summary") if isinstance(status.get("summary"), dict) else {}
+    if status.get("workflow_status") != "SUCCESS" or not summary:
+        return []
+    rejected = dict((summary.get("gates") or {}).get("rejected") or {})
+    blocked = sorted(t for t, state in (summary.get("tasks") or {}).items() if state == "blocked")
+    unexplained = [t for t in blocked if t not in stopped_by_owner]
+    if not rejected and not (summary.get("status") == "blocked" and unexplained):
+        return []
+    workflow = status.get("workflow_id") or f"bt:{run.run_id}"
+    basis = json.dumps([workflow, sorted(rejected), unexplained], sort_keys=True)
+    parts = [f"gate {gate} rejected: {str(reason)[:300]}" for gate, reason in sorted(rejected.items())]
+    if unexplained:
+        parts.append("blocked, not stopped by the owner: " + ", ".join(unexplained))
+    item = trigger("ended", f"{run.run_id}:ended:{hashlib.sha256(basis.encode()).hexdigest()[:16]}", run.run_id,
+                   reason=f"the run workflow {workflow} ended {summary.get('status')}: " + "; ".join(parts))
+    item.update(workflow=workflow, gates=sorted(rejected), blocked=unexplained)
+    return [item]
+
+
 def stuck_triggers(run, status: dict, state: dict, now: float, cfg: dict) -> list[dict]:
     """PENDING tasks whose state did not move for `stuck_minutes` beyond their known waits. Updates `state["watch"]`."""
     watch = state.setdefault("watch", {})
@@ -235,7 +286,8 @@ class Solver:
             if status is None:
                 continue
             found = by_run.get(run.run_id, []) + error_triggers(run, status) + \
-                stuck_triggers(run, status, state, self.now(), cfg) + stalled_triggers(run, status, state, self.now(), cfg)
+                stuck_triggers(run, status, state, self.now(), cfg) + stalled_triggers(run, status, state, self.now(), cfg) + \
+                ended_triggers(run, status, owner_stops(rdir, self.state_dir / "telemetry.jsonl", run.run_id))
             for item in found:
                 said += self._register(run, rdir, state, item)
             if state.get("active"):
@@ -257,6 +309,7 @@ class Solver:
         what = {"decision": "la autocuración dejó la decisión para ti", "repeat": "el mismo fallo volvió",
                 "stuck": "la tarea no avanza", "error": "el workflow del run terminó en error",
                 "stalled": "el run no avanza: nada corre y nada espera tu decisión",
+                "ended": "el run terminó bloqueado sin que nadie lo detuviera (una compuerta rechazada o una tarea)",
                 "resolution": "un conflicto de composición espera una resolución"}.get(item["kind"], item["kind"])
         self.record(rdir, f"{item.get('task_id') or 'run'}: {what}; pasa al Solucionador ({item['reason'][:160]})")
         return [f"{item['key']}: {item['kind']} queued for the Solucionador"]
@@ -294,6 +347,8 @@ class Solver:
             return status.get("workflow_status") in ERRORED
         if item["kind"] == "stuck":
             return task.get("workflow_status") == "PENDING"
+        if item["kind"] == "ended":
+            return status.get("workflow_id") == item.get("workflow") and status.get("workflow_status") == "SUCCESS"
         if item["kind"] == "stalled":
             summary = status.get("summary") if isinstance(status.get("summary"), dict) else {}
             return status.get("workflow_status") == "PENDING" and summary.get("status") != "paused" \
@@ -481,5 +536,5 @@ def read_result(folder: Path) -> dict | None:
     return data if isinstance(data, dict) and data.get("outcome") in OUTCOMES else None
 
 
-__all__ = ["Solver", "enabled", "error_triggers", "load", "read_result", "round_of", "settings", "stalled_triggers",
-           "stuck_triggers", "trigger"]
+__all__ = ["Solver", "enabled", "ended_triggers", "error_triggers", "load", "owner_stops", "read_result", "round_of",
+           "settings", "stalled_triggers", "stuck_triggers", "trigger"]
