@@ -161,18 +161,25 @@ class GitLineIntegrator:
         from bt_composition_adapter import GitSubprocessPort
         root = Path(state_dir) / "composition"
         port = GitSubprocessPort(repo, root / "ws")
-        base = bases[0] if len(bases) == 1 else self._virtual_base(repo, GitSubprocessPort(repo, root / "ws"), bases)
+        port.resolutions = root / "resolutions"
+        if len(bases) == 1:
+            base = bases[0]
+        else:
+            quiet = GitSubprocessPort(repo, root / "ws")
+            quiet.resolutions, quiet.request_resolutions = root / "resolutions", False
+            base = self._virtual_base(repo, quiet, bases)
         if not base:
             return "", files
-        port.resolutions = root / "resolutions"
         result = port.merge_tree(base, tip, snapshot)
         return result.tree, list(result.conflicts)
 
     def _virtual_base(self, repo: Path, port, bases: list[str], depth: int = 0) -> str:
-        """The merge bases merged into one commit, recursively, like git's recursive strategy: package.json by key, and a
-        conflict left between bases keeps git's markers in the virtual base (a later merge of that file then conflicts).
-        pictures REQ-021 r25: gate T93 and SP-7's line had both taken SP-3 and SP-4, three bases, and the same
-        package.json conflict came back on every retry. `port` records no resolutions: a base conflict asks nobody."""
+        """The merge bases merged into one commit, recursively, like git's recursive strategy: package.json by key and the
+        recorded resolutions, and a conflict left between bases keeps git's markers in the virtual base (a later merge of
+        that file then conflicts). pictures REQ-021 r25: gate T93 and SP-7's line had both taken SP-3 and SP-4, three
+        bases, and the same package.json conflict came back on every retry (D-169). `port` uses the recorded resolutions
+        but asks for none: without them T95's virtual base kept SP-4 × SP-5's markers in dependientes.ts, already resolved
+        for the composer, and conflicted with SP-8's line on every retry (D-174)."""
         if depth > 3:
             return ""
         merged = bases[0]
