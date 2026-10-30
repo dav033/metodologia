@@ -52,6 +52,7 @@ from pathlib import Path
 LIVE = Path.home() / "dev" / "metodologia"
 DEPLOY = Path.home() / ".local" / "share" / "bitacora-integrate" / "deploy"
 ENGINE_UNIT, WEB_UNIT = "bt-durable.service", "bitacora-web.service"
+DRAIN_POLL = 10.0                       # seconds between looks at the running verifications
 WEB_URL = "http://127.0.0.1:8765/"
 STARTED = "bt_durable engine started"
 ENV_FILE = Path.home() / ".config" / "bitacora" / "durable.env"
@@ -216,6 +217,28 @@ class Services:
         done = subprocess.run(["git", "-C", str(live), "push", "origin", "main"], capture_output=True, text=True,
                               check=False)
         return "" if done.returncode == 0 else (done.stderr or done.stdout).strip()[-300:]
+
+    def verifying(self) -> list[str]:
+        """The verifications the engine is running now: M6 requests in state `running` (read-only, stdlib sqlite)."""
+        import bt_core
+        import sqlite3
+        store = Path(bt_core.STATE) / "durable" / "m6-quality.sqlite3"
+        if not store.is_file():
+            return []
+        try:
+            with sqlite3.connect(f"file:{store}?mode=ro", uri=True, timeout=5) as db:
+                return [row[0] for row in db.execute("SELECT idempotency_key FROM requests WHERE state='running'")]
+        except sqlite3.Error:
+            return []
+
+    def drain(self, timeout: float) -> tuple[float, list[str]]:
+        """Wait until no verification runs (or `timeout`): (seconds waited, verifications still running)."""
+        started = time.monotonic()
+        running = self.verifying()
+        while running and time.monotonic() - started < timeout:
+            time.sleep(DRAIN_POLL)
+            running = self.verifying()
+        return time.monotonic() - started, running
 
     def restart(self, unit: str) -> None:
         done = subprocess.run(["systemctl", "--user", "restart", unit], capture_output=True, text=True, check=False)
@@ -505,6 +528,14 @@ def _clean_up(req: Request, note: Callable[[str], None]) -> None:
 def _restart(services: Services, units: list[str], note: Callable[[str], None]) -> list[str]:
     if not units:
         return []
+    if ENGINE_UNIT in units:                 # a restart cuts a running verification: wait for it (D-204)
+        import bt_config
+        minutes = bt_config.get("integrate.drain_minutes", 20)
+        waited, left = services.drain(60.0 * (minutes if isinstance(minutes, (int, float)) and minutes >= 0 else 20))
+        if waited >= 1 or left:
+            note(f"waited {int(waited)} s for running verifications" + (
+                 f"; restarting with {len(left)} still running (each is recovered once, D-171): {', '.join(left[:3])}"
+                 if left else ""))
     since = time.time() - 1
     for unit in units:
         services.restart(unit)
