@@ -17,7 +17,6 @@ sys.path.insert(0, str(SCRIPTS))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import bt_scheduler_adapter as scheduler_adapter
-import bt_scheduler_core as scheduler_core
 import bt_scheduler_run as scheduler_run
 import bt_config
 import bt_design_approval
@@ -256,7 +255,7 @@ class OwnerSubplanEntryPoint(unittest.TestCase):
         then released from inside `reconcile_compositions` (the pass's last reader) and awaited there.
         """
         held, release, landed, released_in_window = (threading.Event() for _ in range(4))
-        original_submit = scheduler_core.SchedulerCore.submit_verdict
+        original_submit = scheduler_adapter.core.SchedulerCore.submit_verdict
         original_reconcile = OwnerCompositionRuntime.reconcile_compositions
 
         def submit_verdict(core, verdict):
@@ -279,7 +278,7 @@ class OwnerSubplanEntryPoint(unittest.TestCase):
                         released_in_window.set()
             return published
 
-        with patch.object(scheduler_core.SchedulerCore, "submit_verdict", submit_verdict), \
+        with patch.object(scheduler_adapter.core.SchedulerCore, "submit_verdict", submit_verdict), \
                 patch.object(OwnerCompositionRuntime, "reconcile_compositions", reconcile_compositions):
             result, state = self._run_13_owner()
         self.assertTrue(released_in_window.is_set(), f"{held_task}'s verdict never landed inside the window")
