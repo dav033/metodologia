@@ -1,0 +1,22 @@
+{
+ "request": "pictures:REQ-021:r32:T3.91:T3.91:d2@k1",
+ "state": "done",
+ "kind": "plan",
+ "label": "Defecto del plan",
+ "tone": "lav",
+ "headline": "Fallan los chequeos de tipos: error en un archivo de test fuera de la tarea T3.91",
+ "origin": "La verificación falla en el chequeo de tipos, no en el test de arrastre. `tsc --noEmit` reporta `scripts/test/test-harness-taller-esenciales.ts(12,43): error TS2345` y `(14,51)`: `'{}'` y `'{ BLENDER_EXECUTABLE: string; }'` no son asignables a `ProcessEnv` porque falta `NODE_ENV`. Ese archivo no está entre los que T3.91 puede modificar, así que el criterio de tipos estricto del repositorio no puede cumplirse dentro del plan. La build de Next también falla con «Failed to type check», pero la salida no muestra qué archivo falla; probablemente es el mismo error, sin confirmarlo. El fallo se repite con la misma firma en a2, a3 y a4; el error de memoria de a1 fue del entorno del verificador.",
+ "steps": [
+  "Ejecuta `NODE_OPTIONS=--max-old-space-size=4096 npx --no-install tsc --noEmit --incremental false` sobre la base sin los cambios de T3.91 y confirma si los errores de scripts/test/test-harness-taller-esenciales.ts(12,43) y (14,51) ya existían.",
+  "Si ese archivo pertenece a otra tarea, pide que su dueño lo corrija; si debe corregirse en esta tarea, sube `revision` en PLAN.json, ejecuta `bitacora.py --project <project> plan-json freeze REQ-021` y elige la opción `revise`.",
+  "Ejecuta `NODE_OPTIONS=--max-old-space-size=4096 npm run build --workspaces --if-present` y, si la build de Next falla, revisa qué archivo reporta el error de tipos; corrígelo en los archivos propios sin casts ni supresiones."
+ ],
+ "option": "stop",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-31T18:01:03",
+ "seconds": 19.0
+}

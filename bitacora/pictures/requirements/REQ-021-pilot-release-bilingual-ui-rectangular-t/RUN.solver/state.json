@@ -1,16 +1,16 @@
 {
  "watch": {
-  "T2.57": {
-   "fp": "87d8f0be0a7bd87c",
-   "since": 1793484764.8000472,
-   "epoch": "a1d0aaab22074d94965df7449cd27233",
-   "observed_at": 1793484889.2570436
-  },
   "T3.91": {
-   "fp": "20e9c1ef8598d5db",
-   "since": 1793484454.5957174,
-   "epoch": "a1d0aaab22074d94965df7449cd27233",
-   "observed_at": 1793484889.2570436
+   "fp": "2248d42cfd504af9",
+   "since": 1793488189.6019638,
+   "epoch": "840b9e99729d449bb48c851458140f64",
+   "observed_at": 1793488314.6635997
+  },
+  "T2.4": {
+   "fp": "70e00b8df5db9b66",
+   "since": 1793488252.464794,
+   "epoch": "840b9e99729d449bb48c851458140f64",
+   "observed_at": 1793488314.6635997
   }
  },
  "tasks": {
@@ -21,7 +21,8 @@
   "T10.441": 1,
   "SP-2": 1,
   "SP-14": 1,
-  "SP-3": 1
+  "SP-3": 1,
+  "T2.57": 1
  },
  "triggers": {
   "pictures:REQ-021:r25:resolution:4378ebb94f72d6922c89d601ee5db484": {
@@ -1271,6 +1272,42 @@
    "status": "asked_owner",
    "at": "2026-10-31T16:06:21",
    "session": "20261031-160621-4807"
+  },
+  "pictures:REQ-021:r32:T2.57:T2.57:d4@k1": {
+   "kind": "decision",
+   "key": "pictures:REQ-021:r32:T2.57:T2.57:d4@k1",
+   "run_id": "pictures:REQ-021:r32",
+   "task_id": "T2.57",
+   "request_id": "T2.57:d4",
+   "round": 1,
+   "reason": "healing's repair limit is reached",
+   "status": "running",
+   "at": "2026-10-31T17:31:25",
+   "session": "20261031-173125-a2cb"
+  },
+  "pictures:REQ-021:r32:T3.91:T3.91:d1@k1": {
+   "kind": "decision",
+   "key": "pictures:REQ-021:r32:T3.91:T3.91:d1@k1",
+   "run_id": "pictures:REQ-021:r32",
+   "task_id": "T3.91",
+   "request_id": "T3.91:d1",
+   "round": 1,
+   "reason": "the diagnosis is not enough to answer alone (option reverify, confidence media): El verificador se quedó sin memoria al compilar Next; el fallo no es del código.",
+   "status": "queued",
+   "at": "2026-10-31T17:36:08",
+   "session": "20261031-173125-a2cb"
+  },
+  "pictures:REQ-021:r32:T3.91:T3.91:d2@k1": {
+   "kind": "decision",
+   "key": "pictures:REQ-021:r32:T3.91:T3.91:d2@k1",
+   "run_id": "pictures:REQ-021:r32",
+   "task_id": "T3.91",
+   "request_id": "T3.91:d2",
+   "round": 1,
+   "reason": "the diagnosis blames the plan and healing told the Planner: Fallan los chequeos de tipos: error en un archivo de test fuera de la tarea T3.91",
+   "status": "queued",
+   "at": "2026-10-31T18:01:21",
+   "session": "20261031-173125-a2cb"
   }
  },
  "sessions": [
@@ -1625,6 +1662,30 @@
    "summary": "Falta la observación real EN/ES; se solicita autorización para posibles cargos o evidencia del propietario.",
    "question": "¿Autorizas hasta dos turnos locales de texto con el proveedor configurado, uno en inglés y otro en español, que podrían generar cargos de API? Si autorizas, observaré y registraré los resultados reales; si no, proporciona el proveedor, la fecha y el resultado observado en ambos idiomas para comprobar si puede atestiguarse.",
    "report": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/RUN.solver/20261031-160621-4807/REPORT.md"
+  },
+  {
+   "id": "20261031-173125-a2cb",
+   "name": "bit-pictures-REQ-021-solver",
+   "status": "running",
+   "started": 1793485885.2937868,
+   "started_at": "2026-10-31T17:31:25",
+   "triggers": [
+    "pictures:REQ-021:r32:T2.57:T2.57:d4@k1"
+   ],
+   "queued": [
+    "pictures:REQ-021:r32:T3.91:T3.91:d1@k1",
+    "pictures:REQ-021:r32:T3.91:T3.91:d2@k1"
+   ],
+   "restarts": 0,
+   "dir": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/RUN.solver/20261031-173125-a2cb",
+   "cwd": "/home/david/.local/share/bitacora-solver/pictures/20261031-173125-a2cb",
+   "task": "T2.57",
+   "kind": "decision",
+   "reason": "healing's repair limit is reached",
+   "provider": "codex",
+   "model": "gpt-6.1-terra",
+   "home": "/home/david/.codex"
   }
- ]
+ ],
+ "active": "20261031-173125-a2cb"
 }

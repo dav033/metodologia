@@ -179,6 +179,21 @@
    "id": "D-261",
    "by": "metodologia-95: no regression in metodologia integrations until further notice; escaped-defect ledger",
    "at": "2026-10-31T17:06:31"
+  },
+  {
+   "id": "D-262",
+   "by": "metodologia-96: durable UI tasks wait for re-run transitive ancestors; retries catch up with their line; design gate blocks before dispatch",
+   "at": "2026-10-31T17:22:57"
+  },
+  {
+   "id": "D-263",
+   "by": "metodologia-96: iterating a design direction behind a plan change carries the plan delta instead of refusing; owner comments are never dropped",
+   "at": "2026-10-31T17:45:32"
+  },
+  {
+   "id": "D-264",
+   "by": "metodologia-96: bt_integrate --escaped/--post-merge/--revert work without --branch/--title",
+   "at": "2026-10-31T18:08:50"
   }
  ]
 }

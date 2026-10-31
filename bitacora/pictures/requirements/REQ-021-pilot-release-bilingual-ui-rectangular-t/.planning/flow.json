@@ -67,21 +67,20 @@
    "via": "web"
   },
   "SP-3": {
-   "at": "2026-10-31T16:02:54-05:00",
+   "at": "2026-10-31T18:10:58-05:00",
    "by": "policy",
-   "digest": "2e3b30847869eb63",
+   "digest": "c36bdfc891481aa1",
    "policy": {
     "evidence": [
-     "evidence/owner-rejected/SP-3-v3.md"
+     "RUN.notes/T3.91.history.jsonl"
     ],
     "previous": {
-     "at": "2026-10-29T10:23:04-05:00",
-     "by": "owner",
-     "via": "web"
+     "at": "2026-10-31T16:02:54-05:00",
+     "by": "policy",
+     "via": "policy"
     },
     "repair": [
-     "T3.91",
-     "T3.92"
+     "T3.121"
     ],
     "requested_by": "planner",
     "rule": "D-241"

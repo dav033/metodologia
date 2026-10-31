@@ -1,0 +1,23 @@
+{
+ "request": "pictures:REQ-021:r32:T3.91:T3.91:d1@k1",
+ "state": "done",
+ "kind": "environment",
+ "label": "Entorno",
+ "tone": "info",
+ "headline": "El verificador se quedó sin memoria al compilar Next; el fallo no es del código.",
+ "origin": "El check `npx --no-install tsx scripts/test/test-ui-arrastre-mesas-parametricas.ts --suite rectangular-mouse` ejecuta un build de producción de Next que termina con `FATAL ERROR: Ineffective mark-compacts near heap limit Allocation failed - JavaScript heap out of memory`, con el heap en unos 2052 MB, es decir, el límite por defecto de V8. El plan exige `NODE_OPTIONS=--max-old-space-size=4096` solo en el comando de build, y ese valor no llega al proceso hijo del check dentro del sandbox. La causa está en la configuración del entorno de verificación, no en el código de la tarea T3.91, que el propio informe marca como no atribuible a un defecto de producto.",
+ "steps": [
+  "Pedir al dueño que añada `NODE_OPTIONS=--max-old-space-size=4096` al archivo de variables del verificador (verifier.env_file, p. ej. ~/.config/metodologia/verifier-pictures.env) o que suba el límite de memoria del sandbox.",
+  "Confirmar que el valor llega al proceso del check; si el heap sigue en unos 2052 MB, el ajuste no se está aplicando al proceso hijo.",
+  "Si el dueño prefiere cambiarlo en el plan, hacerlo como revisión nueva: subir `revision` en PLAN.json y ejecutar `bitacora.py --project <project> plan-json freeze REQ-021`, luego elegir la opción `revise`.",
+  "Ejecutar `reverify` sobre el mismo snapshot; no tocar el código de producto."
+ ],
+ "option": "reverify",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-31T17:35:49",
+ "seconds": 12.1
+}

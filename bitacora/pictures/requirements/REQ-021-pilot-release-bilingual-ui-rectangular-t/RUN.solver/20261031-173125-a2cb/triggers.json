@@ -1,0 +1,13 @@
+[
+ {
+  "kind": "decision",
+  "key": "pictures:REQ-021:r32:T2.57:T2.57:d4@k1",
+  "run_id": "pictures:REQ-021:r32",
+  "task_id": "T2.57",
+  "request_id": "T2.57:d4",
+  "round": 1,
+  "reason": "healing's repair limit is reached",
+  "status": "pending",
+  "at": "2026-10-31T17:31:25"
+ }
+]

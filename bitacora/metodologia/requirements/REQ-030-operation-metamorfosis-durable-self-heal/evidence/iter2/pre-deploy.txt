@@ -431,3 +431,24 @@ previous main: ccb1d77e4e50cfaead1899b3d5e0304093d57e67
 regression: skipped (D-261: integrate.regression = none)
 rollback: git revert the merge of reject-images on main, restart bt-durable.service and bitacora-web.service
 result: merged babb137e38fa, restarted bt-durable.service, bitacora-web.service, smoke ok
+
+# integration of Iterating a direction after a plan change carries the delta; refusals keep the owner's text (D-263), local restart of engine + web, 2026-10-31 17:52, session metodologia-96
+previous main: 33d94f389c6f8e1711ace0a3e4186fa8a004ebd5
+/home/david/bitacora/.state/durable/backups/bt_durable-20261031-175202.dump 50251769 c6970faa1493ca9cfa4e8d924c39290e2a0ff9ff6abbfcee0ec902cb4abe0995
+regression: skipped (D-261: integrate.regression = none)
+rollback: git revert the merge of iterate-behind on main, restart bt-durable.service and bitacora-web.service
+result: merged e2146bbcd7e8, restarted bt-durable.service, bitacora-web.service, smoke ok
+
+# integration of Durable: transitive readiness, retries catch up, UI contract gate, no-change and heap-limit classification (D-262), local restart of engine + web, 2026-10-31 18:07, session metodologia-96
+previous main: e2146bbcd7e8aac7fcfacca4bde92108495036e7
+/home/david/bitacora/.state/durable/backups/bt_durable-20261031-180702.dump 50536410 9eed0ed6e500d753dd7ca4563ef533f8406a3fbc6f5b9c18d7a71a9c76d2cc4b
+regression: skipped (D-261: integrate.regression = none)
+rollback: git revert the merge of ancestor-gate on main, restart bt-durable.service and bitacora-web.service
+result: merged c87dd0e9a54f, restarted bt-durable.service, bitacora-web.service, smoke ok
+
+# integration of bt_integrate --escaped needs no --branch/--title (D-264), local restart of engine + web, 2026-10-31 18:10, session metodologia-96
+previous main: c87dd0e9a54f16ff32a264d24a945523ff415092
+/home/david/bitacora/.state/durable/backups/bt_durable-20261031-181044.dump 50843630 65ac56199603d6c6b88082387400aaeb10f6ecb479ee68ef949fcdea61957e29
+regression: skipped (D-261: integrate.regression = none)
+rollback: git revert the merge of escaped-args on main, restart bt-durable.service and bitacora-web.service
+result: merged 7e8d4e638d7f, restarted bt-durable.service, bitacora-web.service, smoke ok

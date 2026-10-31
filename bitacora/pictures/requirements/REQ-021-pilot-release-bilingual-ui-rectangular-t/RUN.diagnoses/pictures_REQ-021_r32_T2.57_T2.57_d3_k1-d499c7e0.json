@@ -1,0 +1,23 @@
+{
+ "request": "pictures:REQ-021:r32:T2.57:T2.57:d3@k1",
+ "state": "done",
+ "kind": "code",
+ "label": "Código",
+ "tone": "bad",
+ "headline": "El check de verificación falla: falta el script cuentas:test-ui-redesign en package.json",
+ "origin": "En la copia limpia del verificador, `npm run cuentas:test-ui-redesign -- --suite menu` sale con `npm error Missing script: \"cuentas:test-ui-redesign\"` (exit code 1). Las tentativas a3 a a6 repiten el mismo error, y los checks identidad, acceso, aviso y sesiones de la misma tarea también fallan. La compilación de workspaces sí termina bien, así que el fallo no es de compilación. El script no está registrado en los archivos finales, lo que indica que T2.57 nunca creó scripts/test/test-ui-cuenta-redesign.ts ni añadió la entrada en package.json. Es un fallo de código de la propia tarea, no del plan ni del entorno.",
+ "steps": [
+  "Crear scripts/test/test-ui-cuenta-redesign.ts con los suites menu, identidad, acceso, aviso, sesiones y accesibilidad, usando los controles accesibles aprobados.",
+  "Registrar \"cuentas:test-ui-redesign\" en la sección scripts de package.json, apuntando al archivo anterior, y verificar que el paquete sigue siendo válido.",
+  "Comprobar localmente que `npm run cuentas:test-ui-redesign -- --suite menu` ya no devuelve 'Missing script' antes de entregar, y asegurarse de que package.json y el script están dentro del snapshot (no ignorados).",
+  "No cambiar los checks ni PLAN.json para esquivar el fallo; cualquier cambio de check requiere una nueva revisión."
+ ],
+ "option": "retry_with_note",
+ "note": "The check command `npm run cuentas:test-ui-redesign -- --suite menu` fails with 'Missing script: \"cuentas:test-ui-redesign\"' in every attempt because the script was never registered. Before anything else: (1) create scripts/test/test-ui-cuenta-redesign.ts; (2) add \"cuentas:test-ui-redesign\" to the scripts section of package.json pointing to it; (3) run `npm run cuentas:test-ui-redesign -- --suite menu` locally and confirm it no longer reports 'Missing script'. Do not change PLAN.json checks or criteria. Keep the existing commands and suites unchanged.",
+ "confidence": "alta",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-31T17:25:24",
+ "seconds": 13.7
+}

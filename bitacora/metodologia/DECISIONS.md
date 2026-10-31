@@ -3204,3 +3204,69 @@ Solucionador 20261030-100736-d494 integrated merge fff622890f28b8093a9a0afda9c40
   back on is the owner's call, with that ledger as the evidence.
 - **Evidence:** `test_integrate` (+2: none integrates on the smoke and writes the ledger; a failed smoke is an escaped
   defect), `test_config`: 50 tests OK. Integrated itself with `--no-regression`.
+
+## D-263 — Iterating a direction after a plan change carries the delta; a refused request keeps the owner's text
+
+- **Date:** 2026-10-31 · **Status:** Accepted · **Refines:** D-162 (directions awaiting the owner survive plan changes)
+- **Context:** pictures REQ-021 planes@v2 (SP-14): the owner asked on the web to iterate direction C with written
+  comments; the Planner had updated SP-14 after the directions were drawn, so `bt_design_iterate.iterate` refused
+  («El subplan cambió…») before saving the comments — the text was lost and the refusal showed only as a flash.
+  «Actualizar diseño» (`bt_design_amend`) does not apply to a direction never chosen, so the owner was stuck.
+  Refusals raised inside `drafts._locked` would also have discarded anything they recorded.
+- **Decision:** when the entry is behind the subplan, the owner's iteration builds the plan-delta preamble
+  (`bt_design_amend.delta` + `preamble`, with an iteration lead) and sends it with the comments; the delta is stored
+  on the entry so a retry of a failed iteration still carries it. Refusals are decided under the lock and raised after
+  it: while the Designer works, the comment is kept as direction feedback that `follow()` iterates on; any other
+  refusal keeps the text under the entry's `refused` list (not as pending feedback, which would start work the owner
+  was told did not start) and is logged in the activity as `refused`. `add_feedback` and `sync` route direction
+  comments on a `choosing` entry to the iteration even when it is behind.
+- **Rule:** a plan change never blocks iterating a direction, and an owner's request is never dropped silently.
+- **Evidence:** `test_design_directions` (+4) and `test_design_amend` (+1, one old refusal assertion removed), red on
+  main; design suites (drafts, directions, ui_brief, page_components, planning_flow, amend): 112 tests OK. Built by an
+  Opus subagent (branch `iterate-behind`, `f178ba500`); integrated with `--no-regression` (D-261).
+
+## D-262 — A task starts only when every ancestor is done; retries catch up with their line; a UI task runs no agent without its approved contract; empty attempts and heap caps are classified, not retried blindly
+
+- **Date:** 2026-10-31 · **Status:** Accepted · **Refines:** D-254 (retries build on the latest attempt), D-167 (self-healing)
+- **Context:** pictures REQ-021 r32: T2.57 (ui, SP-2) started at 17:05 while T2.11 (its contract's design task) re-ran
+  and T2.3/T2.4/T2.5 had not started — its direct dependency T2.56 was `inherited` and the frontier read only direct
+  dependencies. a1 started on `6ec74192` without `cuentas-admin@v2.md`; a2..a5 continued that empty snapshot after
+  T2.11 had put the contract on the SP-2 line. The brief said «Approval: hash-mismatch, SHA-256 none» (absent file);
+  the agent refused and changed nothing five times, each judged CHECK_FAILED, and healing answered d1–d3 with the same
+  wrong note about an npm script (each decision had a new signature). T3.91 a1: the task's own harness ran
+  `next build` without NODE_OPTIONS and hit Node's ~2 GB heap; the runtime re-verified with a larger sandbox and asked
+  the owner, the agent never saw it. Owner: «¿esto no es un error que debería poder arreglar el sistema?», «arréglalo
+  para que no vuelva a pasar».
+- **Decision:** the durable frontier counts a dependency only with all its ancestors done (a stopped ancestor behind
+  done tasks makes it unreachable); before another attempt a frontier-started round re-checks its ancestors and hands
+  its task back to the run (keeping no claims). A continuing retry starts from its snapshot merged with its home line's
+  newer work (a conflicting line is left out). `check_tree` reports `missing` (DESIGN_CONTRACT_MISSING); the durable
+  task checks a `ui: true` task's contract on the base before any agent — missing while the design task is pending →
+  back to the run, otherwise an owner decision naming the state. A failed check on an unchanged attempt is
+  AGENT_NO_CHANGE with the agent's reason, to the owner; healing's evidence carries the change count and the agent's
+  final message, and healing does not answer again after its answer was followed by the same failure with no change.
+  A Node heap-limit abort in a check the task created is an implementation failure with a NODE_OPTIONS note; in
+  another check, after one relaxed re-verification, a check problem for the owner; a sandbox memory kill keeps the
+  relaxed repair. All behind `DBOS.patch`: `bt-run-transitive-readiness`, `bt-run-requeues-unready-task`,
+  `bt-task-rechecks-ancestors`, `bt-task-retry-catches-up`, `bt-task-contract-gate`,
+  `bt-task-no-change-is-not-check-failed`, `bt-task-heap-limit-is-not-sandbox-oom`.
+- **Rule:** no agent attempt starts on a base its ancestors or its approved contract have not reached; an attempt that
+  changed nothing, or a heap cap a sandbox cannot raise, goes to the right party, never retried blindly.
+- **Evidence:** unit suites 127 OK (`test_durable_control` +5, `test_durable_line_pin` +4, `test_design_approval` +1,
+  `test_m3_subplan_gates` +1, `test_healing_durable_decisions` +2, …), lab suites `test_durable_e2e`/`_subplans`/
+  `_audits` 42 OK (+7). `test_durable_upgrade` previous-engine assertion fails identically on unmodified main (escaped
+  defect, recorded). Built by an Opus subagent (`199bbe750`, branch `ancestor-gate`); integrated with `--no-regression`
+  (D-261).
+
+## D-264 — `bt_integrate --escaped` needs no --branch/--title; every other path still does
+
+- **Date:** 2026-10-31 · **Status:** Accepted · **Refines:** D-261 (integrations without regression and their ledger)
+- **Context:** the D-261 command `bt_integrate.py --escaped TEXT --merge SHA` (module header, `REGRESSION-OFF.md`)
+  failed with «the following arguments are required: --branch, --title»: both were `required=True` in the parser,
+  although `--escaped` only appends to the ledger (found by the operator recording an escaped defect, 2026-10-31).
+- **Decision:** `--branch`/`--title` are checked after parsing: `--escaped` needs neither; an integration,
+  `--post-merge` and `--revert` still need both (their logs, notices and revert command name the branch and title)
+  and are refused with `parser.error` (exit 2) before anything runs. The detached re-exec passes argv unchanged.
+- **Rule:** a command documented in a decision must work as written; a flag is required only by the actions that use it.
+- **Evidence:** `test_integrate` `Cli` (+3): 41 tests OK, `test_integrate_post_venv` 1 OK. Built by an Opus subagent
+  (branch `escaped-args`, `52d59c8d2`); integrated with `--no-regression` (D-261).

@@ -1,14 +1,4 @@
 {
- "digest": "c5192a02ebc0576466f6f9435513d33f7377fe24356d1fb43b67700b4ae1ab16",
- "rows": [
-  {
-   "subplan": "SP-13",
-   "tasks": 8,
-   "ok": true,
-   "problem": "",
-   "depends_on_unfinished": "",
-   "errors": [],
-   "new_errors": []
-  }
- ]
+ "digest": "c0d6b08e2f30e8a904e2a1bd81b7d9bddf091c2304c35cdfb8549de9433e59b0",
+ "rows": []
 }
