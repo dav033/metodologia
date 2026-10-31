@@ -120,6 +120,13 @@ def _run_button(ctx: dict, s: dict) -> str:
         return (f'<a class="pp-chip info" data-nav href="{e(planning.link(ctx["project"], ctx["rid"], ctx["opts"], view="session"))}">'
                 "Sesión abierta → ver</a>")
     info = stage_info(ctx)
+    import bt_stages
+    if s["id"] in info["held"] and bt_stages.amended(ctx["rdir"], s["id"]):
+        return (f'<form method="post" action="{purl(ctx["project"], "req", ctx["rid"], "stage-run")}" class="pp-inline">'
+                f'<input type="hidden" name="token" value="{e(ctx["token"])}"><input type="hidden" name="anchor" value="{e(s["id"])}">'
+                f'<input type="hidden" name="lang" value="{e(ctx["opts"]["lang"])}"><button type="submit" class="outline" '
+                f'title="Confirmaste cambios de este subplan después de la etapa r{info["revision"]}: aprueba una etapa nueva '
+                'con ellos y el run los ejecuta (D-259)">Ejecutar cambios</button></form>')
     if s["id"] in info["held"]:
         return (f'<a class="pp-chip ok" href="{e(purl(ctx["project"], "req", ctx["rid"]))}?tab=run" '
                 f'title="El Scheduler la ejecuta en la etapa r{info["revision"]}">En ejecución · etapa r{info["revision"]} → ver</a>')
