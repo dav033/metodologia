@@ -164,7 +164,9 @@ def run_workflow(run_data: dict, settings_data: dict, legacy_data: dict) -> dict
                         steps.emit("subplan_line_conflict", {"run_id": run.run_id, "report": report})
                 synced = frozenset(accepted) if complete else frozenset()
             if fresh_on and synced:                     # every line holds every accepted snapshot
-                _refresh_gates(run, plan, states, results, accepted, synced, rounds, settings,
+                # keyed by the snapshots, not only the task ids: a member's new round (an audit's coordinated repair)
+                # changes its line without changing which tasks are accepted
+                _refresh_gates(run, plan, states, results, accepted, frozenset(accepted.items()), rounds, settings,
                                subplans.Gates(composed, rejected), composed, rejected, fresh_seen, fresh_failures)
             for gate in subplans.to_compose(plan, states, subplans.Gates(composed, rejected)):
                 try:
@@ -268,18 +270,18 @@ def run_workflow(run_data: dict, settings_data: dict, legacy_data: dict) -> dict
     return summary
 
 
-def _refresh_gates(run: RunRef, plan, states: dict, results: dict, accepted: dict[str, str], synced: frozenset,
+def _refresh_gates(run: RunRef, plan, states: dict, results: dict, accepted: dict[str, str], seen: frozenset,
                    rounds: dict, settings: Settings, gates: subplans.Gates, composed: dict, rejected: dict,
                    fresh_seen: dict, fresh_failures: dict) -> None:
     """Compose again a passed gate that no later gate supersedes when a member's line holds work its gate task was not
     verified with, and run the gate task again on the new candidate (its checks judge the new combination). Checked
     once per accepted set (`fresh_seen`), so an unchanged run takes no step; deterministic: every input is recorded."""
     due = [gate for gate in subplans.fresh_targets(plan, states, gates)
-           if fresh_seen.get(gate.id) != synced and accepted.get(gate.task)]
+           if fresh_seen.get(gate.id) != seen and accepted.get(gate.task)]
     if not due:
         return
     for gate in due:
-        fresh_seen[gate.id] = synced
+        fresh_seen[gate.id] = seen
     try:
         stale = steps.gate_freshness(run.model_dump(mode="json"), {gate.id: accepted[gate.task] for gate in due})
     except RUN_STEP_ERRORS as error:                # reported; checked again next turn, at most COMPOSE_TURNS times

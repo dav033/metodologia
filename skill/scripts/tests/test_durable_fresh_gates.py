@@ -18,6 +18,7 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent))
 sys.path.insert(0, str(HERE))
 
+import durable_support as lab_support
 from bt_contracts.execution import LegacyProgress, LegacyTask, RunRef
 from durable_support import gate, subplan, task
 from test_durable_e2e import FAST, EngineCase
@@ -72,6 +73,35 @@ class FreshGatesEndToEnd(EngineCase):
         self.assertEqual([(row["gate"], row["members"]) for row in stale], [("CG-1", ["SP-2"])])
         self.assertEqual(status["summary"]["tasks"]["G1"], "completed")
         self.assertEqual(status["summary"]["gates"]["composed"], {"CG-1": "C1"})
+
+
+class FreshGateAfterARepairRound(EngineCase):
+    """The member's line changes WITHOUT a new task: a later audit's coordinated repair is a new round of a member that
+    the gate already passed with (pictures REQ-021 r27: SP-2's T2.3/T2.5/T2.7 rounds after the gates holding SP-2)."""
+
+    def setUp(self):
+        super().setUp()
+        self.lab.configure(gates=lab_support.REAL_AUDIT_POLICY)
+
+    def test_a_new_round_of_a_member_after_the_gate_passed_runs_the_gate_again(self):
+        tasks = [task("T1", scenario="fixk", subplan="SP-1", kind="implement"),
+                 task("G1", scenario="own", kind="test", after=["T1"]),
+                 task("TA", scenario="auditk", kind="audit", after=["G1"], paths=["docs/TA.md", "docs/TA.findings.json"])]
+        run = RunRef.model_validate(self.lab.freeze(tasks, schema="1.3.0", subplans=[subplan("SP-1", "T1", "T1")],
+                                                    composition_gates=[gate("CG-1", ["SP-1"], "G1")]))
+        self.start_engine()
+        self.client.start(run, SERIAL)
+        status = self.settled(run, timeout=420)
+        self.assertEqual(status["summary"]["status"], "completed", status)
+        counts: dict[str, int] = {}
+        for item in self.lab.launches():
+            counts[item["task"]] = counts.get(item["task"], 0) + 1
+        self.assertEqual(counts, {"T1": 2, "G1": 2, "TA": 2})             # the repair, the gate again, the re-audit
+        gate_tree = lab_support.git(self.lab.repo, "ls-tree", "--name-only",
+                                    status["summary"]["results"]["G1"]["snapshot_sha"]).split()
+        self.assertIn("fixed-k.txt", gate_tree)                           # the gate passed on the repaired member
+        rows = [json.loads(line) for line in (self.lab.state / "telemetry.jsonl").read_text().splitlines()]
+        self.assertEqual([(r["gate"], r["members"]) for r in rows if r.get("event") == "gate_stale"], [("CG-1", ["SP-1"])])
 
 
 class FreshTargets(unittest.TestCase):
