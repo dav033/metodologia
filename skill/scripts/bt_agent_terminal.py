@@ -123,10 +123,19 @@ def _wrapper(argv: list[str]) -> bool:
     return " ".join(argv[2:]).endswith(WRAP_TAIL)
 
 
+# an agent the owner started by hand in that shell (`claude --resume …` after attaching): its program or script
+AGENT_PROGRAM = re.compile(r"(?:^|/)(?:claude|codex)[^/]*$|/claude-code/|/@openai/codex/")
+
+
+def _agent_program(argv: list[str]) -> bool:
+    return any(AGENT_PROGRAM.search(arg) for arg in argv[:2])
+
+
 def agent_state(name: str) -> str:
     """Is the agent `start` launched still the pane's program? running (the wrapper is still in the pane's process
-    tree: the agent runs, or is still starting) | gone (the pane is a shell: never type into it) | absent (no session)
-    | unknown (tmux or the process table could not be read: never type either)."""
+    tree: the agent runs, or is still starting; or the owner started an agent by hand in the shell it left) | gone (the
+    pane is a shell: never type into it) | absent (no session) | unknown (tmux or the process table could not be read:
+    never type either)."""
     if not exists(name):
         return "absent"
     try:
@@ -144,16 +153,18 @@ def agent_state(name: str) -> str:
     children: dict[int, list[int]] = {}
     for child, (parent, _argv) in table.items():
         children.setdefault(parent, []).append(child)
-    todo, seen = [int(pid)], set()
+    todo, seen, by_hand = [int(pid)], set(), False
     while todo:
         current = todo.pop()
         if current in seen:
             continue
         seen.add(current)
-        if _wrapper(table.get(current, (0, []))[1]):
+        argv = table.get(current, (0, []))[1]
+        if _wrapper(argv):
             return "running"
+        by_hand = by_hand or (current != int(pid) and _agent_program(argv))
         todo += children.get(current, [])
-    return "gone"
+    return "running" if by_hand else "gone"
 
 
 def alive(name: str) -> bool:

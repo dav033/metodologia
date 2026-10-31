@@ -251,6 +251,18 @@ class DeadPane(DeadPaneBase):
         self.assertEqual(terminal.agent_state("bit-test-REQ-1-none"), "absent")
         self.assertEqual(terminal.send("bit-test-REQ-1-live", "hola"), "Enviado.")
         self.assertIn("MSG:hola", self.log())
+        hand = self.tmp / "bin" / "codex"                 # the owner attaches and starts the agent again by hand
+        hand.parent.mkdir()
+        hand.write_text(Path(fake_agent(self.tmp, exits=False).split()[1]).read_text(), encoding="utf-8")
+        subprocess.run([terminal._tmux_path(), "-L", terminal.socket(), "send-keys", "-t", "=bit-test-REQ-1-gone:",
+                        f"bash {hand}", "Enter"], check=True)
+        for _ in range(30):
+            if terminal.alive("bit-test-REQ-1-gone"):
+                break
+            time.sleep(0.1)
+        self.assertEqual(terminal.agent_state("bit-test-REQ-1-gone"), "running")
+        self.assertFalse(terminal._agent_program(["bash"]) or terminal._agent_program(["-bash", "-l"]))
+        self.assertTrue(terminal._agent_program(["node", "/usr/lib/node_modules/@anthropic-ai/claude-code/cli.js"]))
 
     def test_nothing_is_ever_typed_into_the_shell_an_exited_agent_leaves(self):
         name = "bit-test-REQ-1-shell"
