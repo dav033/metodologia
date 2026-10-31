@@ -8,7 +8,7 @@
  "tasks": {
   "CG-9": 5,
   "T10.5": 1,
-  "T10.45": 2,
+  "T10.45": 3,
   "T2.55": 18,
   "T10.441": 1
  },
@@ -993,9 +993,10 @@
    "request_id": "T10.45:d1",
    "round": 1,
    "reason": "the diagnosis is not enough to answer alone (option stop, confidence media): Falló la verificación del idioma inglés: texto en español y error de build",
-   "status": "gave_up",
+   "status": "running",
    "at": "2026-10-31T08:57:18",
-   "session": "20261031-075511-d592"
+   "session": "20261031-094746-c7c4",
+   "requeued_by": "operator metodologia-95 2026-10-31: session d592 vanished with the shutdown (D-251)"
   }
  },
  "sessions": [
@@ -1223,6 +1224,27 @@
    "summary": "la sesión terminó sin escribir result.json",
    "question": "",
    "report": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/RUN.solver/20261031-075511-d592/REPORT.md"
+  },
+  {
+   "id": "20261031-094746-c7c4",
+   "name": "bit-pictures-REQ-021-solver",
+   "status": "running",
+   "started": 1793458066.0034885,
+   "started_at": "2026-10-31T09:47:46",
+   "triggers": [
+    "pictures:REQ-021:r29:T10.45:T10.45:d1@k1"
+   ],
+   "queued": [],
+   "restarts": 0,
+   "dir": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/RUN.solver/20261031-094746-c7c4",
+   "cwd": "/home/david/.local/share/bitacora-solver/pictures/20261031-094746-c7c4",
+   "task": "T10.45",
+   "kind": "decision",
+   "reason": "the diagnosis is not enough to answer alone (option stop, confidence media): Falló la verificación del idioma inglés: texto en español y error de build",
+   "provider": "codex",
+   "model": "gpt-6.1-sol",
+   "home": "/home/david/.codex"
   }
- ]
+ ],
+ "active": "20261031-094746-c7c4"
 }

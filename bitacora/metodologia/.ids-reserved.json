@@ -124,6 +124,11 @@
    "id": "D-250",
    "by": "machine-responsive subagent: background work yields CPU and keeps test fsyncs off the disk",
    "at": "2026-10-31T08:44:22"
+  },
+  {
+   "id": "D-251",
+   "by": "metodologia-95: a vanished Solucionador session's triggers go back to the queue",
+   "at": "2026-10-31T09:46:08"
   }
  ]
 }
