@@ -42,6 +42,7 @@ class AgentStrip(unittest.TestCase):
 
     def test_a_planner_opened_from_the_web_without_signals_yet_is_not_reported_absent(self):
         with patch("bt_presence.sessions", return_value=[]), patch("bt_agent_terminal.exists", return_value=True), \
+                patch("bt_agent_terminal.agent_state", return_value="running"), \
                 patch("bt_agent_terminal.screen", return_value="leyendo"):
             html = agent.strip(ctx(), NOW)
         self.assertIn("Planner abierto desde la web", html)

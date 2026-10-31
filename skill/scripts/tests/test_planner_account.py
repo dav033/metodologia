@@ -101,7 +101,7 @@ class PlannerAccount(unittest.TestCase):
             (rdir / terminal.RECORD).write_text(json.dumps({"session_id": "sid-1", "config_dir": "/acc/work"}))
             tomorrow = time.strftime("%b %d", time.localtime(time.time() + 86400))
             limited = f"❯ notice\n  ⎿  You've hit your weekly limit · resets {tomorrow}, 6pm\n     /usage-credits to request more"
-            with patch("bt_core.ROOT", Path(tmp)), patch.object(terminal, "exists", return_value=True), \
+            with patch("bt_core.ROOT", Path(tmp)), patch.object(terminal, "exists", return_value=True), patch.object(terminal, "agent_state", return_value="running"), \
                     patch.object(terminal, "screen", return_value=limited), patch.object(terminal, "kill") as kill, \
                     patch.object(terminal, "send") as send, \
                     patch.object(terminal, "start_planner", return_value=(True, "Planner abierto")) as start:
@@ -112,7 +112,7 @@ class PlannerAccount(unittest.TestCase):
             self.assertIn("SP-8 confirmado", start.call_args.kwargs["message"])
 
     def test_a_planner_with_quota_is_simply_told(self):
-        with patch.object(terminal, "exists", return_value=True), patch.object(terminal, "screen", return_value="❯ listo"), \
+        with patch.object(terminal, "exists", return_value=True), patch.object(terminal, "agent_state", return_value="running"), patch.object(terminal, "screen", return_value="❯ listo"), \
                 patch.object(terminal, "send", return_value="Enviado.") as send, patch.object(terminal, "kill") as kill:
             self.assertTrue(terminal.notify_planner("pictures", "REQ-021", "SP-8 confirmado"))
         kill.assert_not_called()
@@ -121,7 +121,7 @@ class PlannerAccount(unittest.TestCase):
     def test_a_planner_waiting_on_the_owners_consent_is_not_typed_into_and_the_owner_is_told_where(self):
         prompt = ("  WARNING: Claude Code running in Bypass Permissions mode\n  ❯ No, exit\n    Yes, I accept\n"
                   "  Enter to confirm · Esc to cancel")
-        with patch.object(terminal, "exists", return_value=True), patch.object(terminal, "screen", return_value=prompt), \
+        with patch.object(terminal, "exists", return_value=True), patch.object(terminal, "agent_state", return_value="running"), patch.object(terminal, "screen", return_value=prompt), \
                 patch.object(terminal, "send") as send, patch.object(terminal, "kill") as kill, \
                 patch("bt_runutil.notify") as notify:
             self.assertFalse(terminal.notify_planner("pictures", "REQ-021", "SP-8 confirmado"))
@@ -146,7 +146,7 @@ class PlannerAccount(unittest.TestCase):
             (rdir / terminal.RECORD).write_text(json.dumps({"provider": "codex", "codex_home": "/acc/codex-luis"}))
             wall.hold(rdir, "[older] SP-7 confirmado", time.time() + 600, "quota")
             limited = terminal.Said.of("El agente no lo leyó: su cuenta se quedó sin cuota.", "limited")
-            with patch("bt_core.ROOT", Path(tmp)), patch.object(terminal, "exists", return_value=True), \
+            with patch("bt_core.ROOT", Path(tmp)), patch.object(terminal, "exists", return_value=True), patch.object(terminal, "agent_state", return_value="running"), \
                     patch.object(terminal, "screen", return_value="› listo"), patch.object(terminal, "kill") as kill, \
                     patch.object(terminal, "send", return_value=limited), patch.object(terminal, "unattended", return_value=True), \
                     patch.object(terminal, "start_planner", return_value=(True, "Planner abierto")) as start:
@@ -161,7 +161,7 @@ class PlannerAccount(unittest.TestCase):
     def test_a_wall_whose_reset_has_passed_is_stale_and_the_notice_is_typed(self):
         past = datetime.fromtimestamp(time.time() - 3600).strftime("%-I:%M %p")
         shown = f"› x\n■ You've hit your usage limit. Upgrade to Pro or try again at {past}.\n› "
-        with patch.object(terminal, "exists", return_value=True), patch.object(terminal, "screen", return_value=shown), \
+        with patch.object(terminal, "exists", return_value=True), patch.object(terminal, "agent_state", return_value="running"), patch.object(terminal, "screen", return_value=shown), \
                 patch.object(terminal, "send", return_value="Enviado.") as send, patch.object(terminal, "kill") as kill:
             self.assertTrue(terminal.notify_planner("pictures", "REQ-021", "SP-8 confirmado"))
         kill.assert_not_called()
@@ -172,7 +172,7 @@ class PlannerAccount(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             rdir = Path(tmp) / "pictures" / "requirements" / "REQ-021-x"
             (rdir / ".planning").mkdir(parents=True)
-            with patch("bt_core.ROOT", Path(tmp)), patch.object(terminal, "exists", return_value=True), \
+            with patch("bt_core.ROOT", Path(tmp)), patch.object(terminal, "exists", return_value=True), patch.object(terminal, "agent_state", return_value="running"), \
                     patch.object(terminal, "screen", return_value=prompt), patch.object(terminal, "send") as send, \
                     patch("bt_runutil.notify") as notify:
                 self.assertEqual(notices.tell("pictures", "REQ-021", "a")[0], "held")

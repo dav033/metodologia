@@ -85,7 +85,8 @@ class WebActions(Base):
         with patch("bt_agent_terminal.exists", return_value=False), patch("bt_agent_terminal.send") as send:
             self.assertFalse(terminal.notify_planner("pictures", "REQ-021", "hi"))
             send.assert_not_called()
-        with patch("bt_agent_terminal.exists", return_value=True), patch("bt_agent_terminal.send", return_value="Enviado.") as send:
+        with patch("bt_agent_terminal.exists", return_value=True), patch("bt_agent_terminal.agent_state", return_value="running"), \
+                patch("bt_agent_terminal.send", return_value="Enviado.") as send:
             self.assertTrue(terminal.notify_planner("pictures", "REQ-021", "hi"))
             self.assertIn("Automatic notice from the web", send.call_args.args[1])
 
