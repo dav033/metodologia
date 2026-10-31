@@ -180,6 +180,7 @@ py-modules = [
   "bt_recovery_export",
   "bt_recovery_oracle",
   "bt_recovery_lineage",
+  "bt_rejection_images",
   "bt_remote_api",
   "bt_remote_commands",
   "bt_remote_edit",
