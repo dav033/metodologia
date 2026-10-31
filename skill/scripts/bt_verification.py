@@ -407,7 +407,12 @@ def decide(project: str, rdir: Path, sid: str, decision: str, note: str = "", by
     """Record the owner's decision on the subplan's current version. A rejection may carry images (D-258):
     `attachments` holds `(client name, bytes)` pairs (the web form) or file paths (the CLI); they are checked by their
     bytes and stored under `<rdir>/evidence/owner-rejected/<SP>-v<N>/` before anything is recorded, and a refusal
-    records nothing."""
+    records nothing.
+
+    A rejection is idempotent: the same version and commit, the same note (whitespace aside) and the same images as the
+    subplan's standing rejection is the same rejection sent twice (a double click or a resubmitted form: pictures REQ-021
+    SP-3 v3, 2026-10-31 15:40:59 and 15:41:03, opened P-212 and P-213). Nothing is rewritten and no second P-item is
+    opened; the answer names the existing one. Another note or other images is a new rejection."""
     if decision not in ("approved", "rejected"):
         return "La decisión debe ser aprobar o rechazar."
     if decision == "rejected" and not note.strip():
@@ -418,16 +423,23 @@ def decide(project: str, rdir: Path, sid: str, decision: str, note: str = "", by
     if row["state"] == "waiting":
         return f"{sid} todavía se está construyendo: aún no hay una versión que probar."
     import bt_rejection_images as images
-    stored: list[dict] = []
+    accepted: list[dict] = []
     if decision == "rejected" and attachments:
         try:
-            items = [a if isinstance(a, tuple) else images.from_paths([a])[0] for a in attachments]
-            stored = images.store(rdir, sid, row["version"], images.accept(items))
+            accepted = images.accept([a if isinstance(a, tuple) else images.from_paths([a])[0] for a in attachments])
         except images.Refused as exc:
             return str(exc)
-    with _locked(rdir) as data:
+    stored: list[dict] = []
+    with _locked(rdir) as data:                 # the check and the write under one lock: two submits race here
+        current = data["subplans"].get(sid) or {}
+        if decision == "rejected" and _same_rejection(current, row, note, accepted):
+            return _repeated(sid, current)
+        try:
+            stored = images.store(rdir, sid, row["version"], accepted)
+        except images.Refused as exc:
+            return str(exc)
         # P-items of rejections no approval has answered yet travel with the subplan's latest decision
-        carried = [p for p in (data["subplans"].get(sid) or {}).get("open_pending") or [] if isinstance(p, str)]
+        carried = [p for p in current.get("open_pending") or [] if isinstance(p, str)]
         data["subplans"][sid] = {"decision": decision, "version": row["version"], "commit": row["commit"], "by": by,
                                  "via": via, "at": _now(), "note": note.strip()[:1000],
                                  "open_pending": [] if decision == "approved" else carried}
@@ -460,6 +472,20 @@ def decide(project: str, rdir: Path, sid: str, decision: str, note: str = "", by
     saved = (f"Tu nota y {'la imagen quedaron guardadas' if len(stored) == 1 else f'las {len(stored)} imágenes quedaron guardadas'}"
              if stored else "Tu nota quedó guardada")
     return f"{sid} rechazado. {saved}" + (f" y abrí el pendiente {pid}" if pid else "") + who + "."
+
+
+def _same_rejection(current: dict, row: dict, note: str, accepted: list[dict]) -> bool:
+    """`current` is already this rejection: same version and commit, note and image digests (in any order)."""
+    import bt_rejection_images as images
+    return (current.get("decision") == "rejected" and (current.get("version"), current.get("commit")) ==
+            (row["version"], row["commit"]) and " ".join(str(current.get("note") or "").split()) ==
+            " ".join(note.strip()[:1000].split()) and images.digests(current) == sorted(a["sha256"] for a in accepted))
+
+
+def _repeated(sid: str, current: dict) -> str:
+    pid = current.get("pending")
+    return (f"{sid} ya estaba rechazado con esta misma nota" + (" e imágenes" if current.get("attachments") else "") +
+            (f": sigue abierto el pendiente {pid}" if pid else "") + ". No abrí otro.")
 
 
 def _solver_takes(rdir: Path) -> bool:

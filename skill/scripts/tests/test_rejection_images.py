@@ -175,6 +175,37 @@ class Decisions(Base):
         self.assertEqual(len({plain, first, other}), 3)
         self.assertTrue(other.startswith(f"owner_rejected:SP-1:v1:{COMMIT[:12]}:"))
 
+    def test_a_double_submitted_rejection_opens_one_p_item(self):
+        """pictures REQ-021 SP-3 v3, 2026-10-31 15:40:59 and 15:41:03: the same note twice opened P-212 and P-213."""
+        first = v.decide("proj", self.rdir, "SP-1", "rejected", "el menú no cierra", attachments=[("a", PNG)])
+        self.assertIn("abrí el pendiente P-001", first)
+        entry, before = self.entry(), (self.pdir / "PENDING.md").read_text(encoding="utf-8")
+        again = v.decide("proj", self.rdir, "SP-1", "rejected", "  el menú\nno cierra ", attachments=[("otra", PNG)])
+        self.assertEqual(again, "SP-1 ya estaba rechazado con esta misma nota e imágenes: sigue abierto el pendiente "
+                                "P-001. No abrí otro.")
+        self.assertEqual(self.entry(), entry)                                   # not rewritten (same «at»)
+        self.assertEqual((self.pdir / "PENDING.md").read_text(encoding="utf-8"), before)
+        self.assertNotIn("P-002", v.decide("proj", self.rdir, "SP-1", "rejected", "el menú no cierra", attachments=[("a", PNG)]))
+        self.assertIn("abrí el pendiente P-002", v.decide("proj", self.rdir, "SP-1", "rejected", "el menú no cierra"))
+        self.assertIn("abrí el pendiente P-003", v.decide("proj", self.rdir, "SP-1", "rejected", "el menú no cierra",
+                                                          attachments=[("b", GIF)]))
+        self.assertIn("abrí el pendiente P-004", v.decide("proj", self.rdir, "SP-1", "rejected", "otra cosa"))
+        self.assertEqual(self.entry()["open_pending"], ["P-001", "P-002", "P-003", "P-004"])
+        self.projection(**{"SP-1": (2, "b" * 40)})                              # a new version: a new rejection
+        self.assertIn("abrí el pendiente P-005", v.decide("proj", self.rdir, "SP-1", "rejected", "otra cosa"))
+
+    def test_two_submits_at_once_open_one_p_item(self):
+        import threading
+        said = []
+        threads = [threading.Thread(target=lambda: said.append(v.decide("proj", self.rdir, "SP-1", "rejected", "falla")))
+                   for _ in range(4)]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+        self.assertEqual(sum("abrí el pendiente" in m for m in said), 1, said)
+        self.assertEqual((self.pdir / "PENDING.md").read_text(encoding="utf-8").count("The owner rejected SP-1"), 1)
+
     def test_an_approval_ignores_attachments(self):
         v.decide("proj", self.rdir, "SP-1", "approved", attachments=[("a", PNG)])
         self.assertNotIn("attachments", self.entry())
