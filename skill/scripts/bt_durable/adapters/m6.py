@@ -168,8 +168,9 @@ class M6Verifier:
                  "acceptance_criteria": list(task.acceptance_criteria), "verification": [dict(v) for v in task.verification]}
         source = SnapshotSource(producer, prepared.repository, prepared.attempt_dir, snapshot.manifest_path,
                                 snapshot.base_sha, snapshot.snapshot_sha, prepared.worktree)
-        result = self._engine(attempt.run, "relaxed" if profile == "relaxed" else "standard").verify(order, source)
-        outcome = outcome_of(result, self.store)
+        engine = self._engine(attempt.run, "relaxed" if profile == "relaxed" else "standard")
+        result = engine.verify(order, source)
+        outcome = outcome_of(result, self.store, policy=engine.policy)
         if self.on_verdict is not None:
             try:
                 self.on_verdict(attempt, outcome, profile)
@@ -178,7 +179,8 @@ class M6Verifier:
         return outcome
 
 
-def outcome_of(result: dict, store) -> VerifyOutcome:
+def outcome_of(result: dict, store, policy: QualityPolicy | None = None) -> VerifyOutcome:
+    """`policy`: the one the checks ran under; the digest names the variables it gave them (D-257)."""
     status = str(result.get("status") or "NEEDS_REVIEW")
     if status not in VerifyStatus.__members__:
         status = "NEEDS_REVIEW"
@@ -191,7 +193,7 @@ def outcome_of(result: dict, store) -> VerifyOutcome:
     digest = ""
     if status != "PASS":
         from bitacora_platform.quality_delivery import QualityDeliveryMethods
-        digest = QualityDeliveryMethods._failure_digest(SimpleNamespace(store=store), result) or ""
+        digest = QualityDeliveryMethods._failure_digest(SimpleNamespace(store=store, policy=policy), result) or ""
     ref = str(result.get("evidence_manifest") or "")
     issues = tuple(dict.fromkeys(str(item.get("code")) for item in result.get("issues") or ()
                                  if isinstance(item, dict) and item.get("code")))

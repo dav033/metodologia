@@ -76,6 +76,33 @@ class AgentTestEnvironment(unittest.TestCase):
             self.assertFalse(name in env, f"{name} reached the agent")      # never print the environment itself
         self.assertEqual(env["PATH"].split(os.pathsep), ["/usr/local/bin", "/usr/bin"])
 
+    def test_the_brief_names_what_the_checks_receive_and_what_they_do_not(self):
+        """pictures REQ-021 r30 T10.45 (D-257): thirteen attempts read that the checks get «none of your environment
+        variables» while the verifier gave them the owner's file and his whole environment; nothing told the agent which
+        names its harness had to pass to the product it starts. The brief names them (never a value)."""
+        from bt_scheduler_quality.policy import QualityPolicy
+        policy = QualityPolicy(environment=(("GEMINI_CHAT_MODEL", "flash-model-value"), ("ASESOR_SESSION_SECRET", "zz-hidden")),
+                               ambient_environment=(("CARGO_HOME", "/x"), ("FNM_DIR", "/y")), secret_values=("zz-hidden",))
+        self.attempts.check_policy_for = lambda run: policy
+        (self.tmp / "agent-proj.env").write_text(f"PICTURES_REQ021_DATABASE_URL={URL}\n")
+        prompt = self.prepare(str(self.tmp / "agent-{project}.env")).prompt_path.read_text()
+        self.assertIn("Check environment:", prompt)
+        self.assertIn("only ASESOR_SESSION_SECRET, GEMINI_CHAT_MODEL from the owner's verifier settings", prompt)
+        self.assertIn("plus 2 variables of the owner's own environment", prompt)
+        self.assertIn("PICTURES_REQ021_DATABASE_URL is NOT among them", prompt)
+        self.assertIn("feature flags and provider switches", prompt)
+        for value in ("flash-model-value", "zz-hidden", "s3cret", "/x"):
+            self.assertNotIn(value, prompt)
+
+    def test_a_policy_that_cannot_be_built_leaves_only_the_test_variables(self):
+        def broken(run):
+            raise ValueError("bad verifier file")
+        self.attempts.check_policy_for = broken
+        (self.tmp / "agent-proj.env").write_text(f"PICTURES_REQ021_DATABASE_URL={URL}\n")
+        prompt = self.prepare(str(self.tmp / "agent-{project}.env")).prompt_path.read_text()
+        self.assertIn("Test environment: PICTURES_REQ021_DATABASE_URL is set", prompt)
+        self.assertNotIn("Check environment:", prompt)
+
     def test_without_the_file_nothing_is_added(self):
         prepared = self.prepare(str(self.tmp / "missing-{project}.env"))
         self.assertNotIn("PICTURES_REQ021_DATABASE_URL", json.loads(prepared.env_file.read_text()))
