@@ -1,0 +1,23 @@
+{
+ "request": "pictures:REQ-021:r30:T10.45:T10.45:d1@k1",
+ "state": "done",
+ "kind": "integrity",
+ "label": "Integridad",
+ "tone": "bad",
+ "headline": "El verificador rechazó la identidad del candidato: el mapa M6 incluye salidas generadas",
+ "origin": "El fallo decisivo es \"candidate_identity_failure: M6 files map includes generated evidence output\", que aparece en los intentos a1 y a4. El mapa de archivos del snapshot M6 (/run/bt-m6/snapshot.json) debe excluir salidas generadas, y el arnés registra salidas de build y evidencia dentro del árbol candidato. En a2 y a3 la identidad sí pasó y el fallo fue de producto: \"product_translation_failure: English screen contains Spanish text: Palo de Rosa, Lila, Frambuesa and Vinotinto Bouquet ... Quinceañera column ... Feliz Cumpleaños\". Las mutaciones del arnés pasaron, pero no prueban la identidad real del candidato. Los cuatro intentos ya se agotaron.",
+ "steps": [
+  "Elimine del árbol final las salidas generadas (.next, dist de tsc y directorios de evidencia de ejecuciones previas) y deje que el arnés no escriba evidencia dentro del candidato.",
+  "Limite el mapa M6 a los archivos de origen y a los dos arneses: scripts/test/test-integracion-idioma-resto.ts y scripts/test/test-harness-idioma-resto.ts; compruebe que no hay rutas absolutas ni enlaces fuera del árbol.",
+  "Cuando la identidad pase, corrija las etiquetas en español de la pantalla en inglés en la traducción de T10.44, sin cambiar las expectativas del diccionario.",
+  "Vuelva a ejecutar npm run idioma:test-harness-resto y revise que no aparezcan candidate_identity_failure ni product_translation_failure."
+ ],
+ "option": "retry_with_note",
+ "note": "Previous verifier runs failed with candidate_identity_failure: M6 files map includes generated evidence output (a1, a4) and product_translation_failure (a2, a3). Before finishing: remove all generated outputs (.next, dist from tsc, evidence/run directories) from the final tree; do not write evidence into the candidate tree; the M6 files map must contain only original source files plus scripts/test/test-integracion-idioma-resto.ts and scripts/test/test-harness-idioma-resto.ts, with no absolute paths, traversal or links outside the tree. Then fix the English-screen translations so these Spanish labels render in English through the dictionary: 'Palo de Rosa, Lila, Frambuesa and Vinotinto Bouquet', 'Palo de Rosa, Vinotinto, Rosado and Arena Bouquet', 'Quinceañera column', 'Pastel Melon Hoop', 'Feliz Cumpleaños'. Do not change the dictionary expectations. Do not use manual or paid provider calls.",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-31T11:15:19",
+ "seconds": 21.3
+}

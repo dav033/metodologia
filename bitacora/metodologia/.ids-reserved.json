@@ -129,6 +129,21 @@
    "id": "D-251",
    "by": "metodologia-95: a vanished Solucionador session's triggers go back to the queue",
    "at": "2026-10-31T09:46:08"
+  },
+  {
+   "id": "D-252",
+   "by": "agent-pane-alive subagent: never type into a pane whose agent exited; restart its Planner",
+   "at": "2026-10-31T10:23:15"
+  },
+  {
+   "id": "D-253",
+   "by": "metodologia-95: Solucionador runs Sonnet high / Terra medium (owner) and the Claude command uses the routed model",
+   "at": "2026-10-31T12:37:21"
+  },
+  {
+   "id": "D-254",
+   "by": "metodologia-95 subagent: retries build on the previous attempt",
+   "at": "2026-10-31T12:38:41"
   }
  ]
 }

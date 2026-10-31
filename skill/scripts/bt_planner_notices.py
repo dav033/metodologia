@@ -27,13 +27,17 @@ def _rdir(project: str, req: str) -> Path | None:
 
 def tell(project: str, req: str, notice: str, *, retry: bool = False) -> tuple[str, str]:
     """Deliver `notice` to the running Planner so it can act on it. Returns (state, Spanish text): sent | moved (its
-    account ran out: started on another one with quota, conversation and notice included) | held (no account has quota,
-    or it waits on the owner: kept and sent again on its own, `deliver_held`) | absent (no Planner runs) | failed.
+    account ran out: started on another one with quota, conversation and notice included) | restarted (its agent had
+    exited and left a shell in the window: nothing typed there, the session killed and the Planner started again with
+    the notice, `after_exit`) | held (no account has quota, or it waits on the owner: kept and sent again on its own,
+    `deliver_held`) | absent (no Planner runs) | failed.
     A wall already on the screen counts unless its reset time has passed; `retry` (a held notice whose time came) types
     anyway and judges only what answers it."""
     name = terminal.name_for(project, req, "planner")
     if not terminal.exists(name):
         return "absent", f"No hay un Planner en marcha para {project} {req}."
+    if terminal.agent_state(name) == "gone":
+        return after_exit(project, req, notice)
     shown = terminal.screen(name, 20)
     if wall.OWNER_PROMPT.search(shown):
         return _wait_owner(project, req, name, notice)
@@ -49,6 +53,8 @@ def tell(project: str, req: str, notice: str, *, retry: bool = False) -> tuple[s
         return "sent", "Enviado al Planner." + extra
     if state == "limited":
         return after_wall(project, req, notice, getattr(said, "until", None))
+    if state == "gone":                                # the agent exited while it was being told: nothing more typed
+        return after_exit(project, req, notice)
     if state == "owner":
         return _wait_owner(project, req, name, notice)
     if state == "blocked":
@@ -83,6 +89,34 @@ def after_wall(project: str, req: str, notice: str, until: float | None) -> tupl
     wall.drop(rdir, [*pending, notice])
     _feed(rdir, "El Planner se quedó sin cuota: lo pasé a otra cuenta con los avisos que no había leído")
     return "moved", f"El Planner se quedó sin cuota: lo pasé a otra cuenta con el mensaje. {message}"
+
+
+def after_exit(project: str, req: str, notice: str) -> tuple[str, str]:
+    """The Planner's agent exited and its window is a shell (pictures REQ-021, 2026-10-31: Codex exited at 09:53 and a
+    plan change request was typed into the prompt at 09:57). Nothing is typed there: the session is killed (a shell with
+    leftover typed text is never cleared line by line) and the Planner started again like an absent one, its
+    conversation, the notices held for it and this one included, on an account with quota (the one it left is avoided
+    when its last screen shows a quota wall). When it cannot start, the notice is held and tried again on its own."""
+    rdir = _rdir(project, req)
+    if rdir is None:
+        return "failed", f"No encuentro el plan {project} {req}."
+    name = terminal.name_for(project, req, "planner")
+    record = terminal._record(rdir)
+    hit, _ = wall.limited(terminal.screen(name, 20))
+    avoid = ""
+    if hit:
+        avoid = record.get("codex_home", "") if record.get("provider") == "codex" else record.get("config_dir", "")
+    pending = [n["text"] for n in wall.held(rdir) if n["text"] != notice]
+    terminal.kill(name)
+    ok, message = terminal.start_planner(Path(rdir).parents[2], project, rdir, avoid=avoid,
+                                         message="\n\n".join([*pending, notice]))
+    if not ok:
+        return _held(project, req, notice, time.time() + 5 * 60, "start",
+                     f"El agente del Planner de {req} había terminado y no pude abrirlo otra vez ({message})")
+    wall.drop(rdir, [*pending, notice])
+    _feed(rdir, "El agente del Planner había terminado (su ventana quedó en una terminal): lo abrí otra vez con los "
+                "avisos que no había leído")
+    return "restarted", f"El agente del Planner había terminado; no escribí en su terminal: lo abrí otra vez con el mensaje. {message}"
 
 
 def _held(project: str, req: str, notice: str, due: float, why: str, said: str) -> tuple[str, str]:

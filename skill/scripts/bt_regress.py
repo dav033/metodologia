@@ -170,7 +170,10 @@ def run_suite(worktree: Path, scratch: Path, path: Path, tag: str = "") -> str:
     root.mkdir(parents=True, exist_ok=True)
     lab = scratch / "lab"
     lab.mkdir(parents=True, exist_ok=True)
-    env = {**os.environ, "BITACORA_ROOT": str(root), "BT_LAB_DIR": str(lab),
+    # a suite never reaches the live tmux socket either: one that half-mocks `bt_agent_terminal` (exists patched, the
+    # tmux calls real) would read, type into or kill the owner's live Planner on `-L bitacora` (D-252)
+    sock = f"btr-{os.getpid()}-{name}{tag}"[:60]
+    env = {**os.environ, "BITACORA_ROOT": str(root), "BT_LAB_DIR": str(lab), "BITACORA_TMUX_SOCKET": sock,
            "PYTHONPATH": f"{worktree / 'skill' / 'scripts'}:{tests}"}
     for leak in ("BITACORA_ATTEMPT", "BITACORA_TASK", "BITACORA_DELEGATION", "BT_DURABLE_DATABASE_URL"):
         env.pop(leak, None)                # a suite must never reach the live engine's database or act as a run
@@ -197,6 +200,8 @@ def run_suite(worktree: Path, scratch: Path, path: Path, tag: str = "") -> str:
         code = 124
         log.write_text("TIMEOUT", encoding="utf-8")
     finally:
+        if tmux := shutil.which("tmux"):              # what the suite left on its own socket
+            subprocess.run([tmux, "-L", sock, "kill-server"], capture_output=True, timeout=15, check=False)
         if tmp:
             shutil.rmtree(tmp, ignore_errors=True)      # RAM: what a suite left behind goes with it
     return f"{name} {code} {round(time.monotonic() - started)} {'venv' if new else 'python3'}"
