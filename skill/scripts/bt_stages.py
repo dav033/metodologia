@@ -252,6 +252,8 @@ def _kept(rdir: Path, add: list[str]) -> list[str]:
     """Approved subplans the Planner changed and the owner has not re-confirmed, outside `add`: the new stage keeps them
     as the latest revision holds them instead of refusing the whole stage (D-259; pictures REQ-021 2026-10-31: SP-2's
     confirmed redesign could not run while SP-14's amendment waited for the owner's design choice)."""
+    if not add:                    # nothing to run: an unconfirmed change is still the owner's (or D-241's) to confirm
+        return []
     st = flow.state(rdir)
     return [sid for sid in approved(rdir) if sid not in add and (st["subplans"].get(sid) or {}).get("state") == "changed"]
 
