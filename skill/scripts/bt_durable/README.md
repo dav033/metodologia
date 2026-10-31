@@ -66,7 +66,13 @@ uv run bt-durable attest pictures REQ-031 T2 --request T2:d1 --evidence "what wa
   `contract_notes`): the owner's indications (`RUN.notes/<task>.md`), the audit's findings, the attempt history (legacy
   M1 document of a migrated run plus `RUN.notes/<task>.history.jsonl`, which the durable verifier appends to), the
   failure analysis, the last verification failure (left out when the workflow hands the agent that same failure as its
-  note), the audit ledger help and the UI contract with its approval state; a retry from a snapshot is told so.
+  note), the audit ledger help and the UI contract with its approval state; a retry from a snapshot is told so (also
+  when that attempt committed its work itself).
+- **Retries build on the latest attempt** (D-254): every new attempt of a task starts from the newest snapshot an
+  earlier attempt of it left (or its reconciled legacy snapshot), whatever decided the retry: an automatic retry, an
+  owner or healing answer (`retry`, `retry_with_note`, `retry_other_route`), a quota wait or a memory raise. An attempt
+  that left no snapshot keeps the earlier one. Only `RECONCILE_INTEGRATION` starts again from the line tip. Behind
+  `bt-task-continues-latest-tree`: a pass recorded before it keeps the base it had.
 - **Manual checks** (`type: manual`): M6 accepts a coordinator receipt (`bt_attestation`, the same one the legacy owner
   uses) for its own check only. Without one, the task does not fail: it opens a decision `MANUAL_EVIDENCE_REQUIRED`
   with its request id, the attempt the receipt must be bound to (`verify_attempt`) and the `bt-durable attest` command;
@@ -254,7 +260,7 @@ still be on the old path, `deprecate_patch`, then remove it.
 
 Patches in use: `bt-run-subplans`, `bt-run-audit-remediation`, `bt-run-survives-step-failures`, `bt-run-reopened`,
 `bt-run-recompose-gate`, `bt-run-fresh-gates` (run workflow); `bt-task-respects-pause`, `bt-task-owner-reverify`,
-`bt-task-reconcile-asks-owner` (task workflow). A workflow body reads the plan only through `steps.workflow_plan()`:
+`bt-task-reconcile-asks-owner`, `bt-task-continues-latest-tree` (task workflow). A workflow body reads the plan only through `steps.workflow_plan()`:
 the `bt.plan_text` step must run (or replay) every time, or a run recovered after another workflow warmed the process
 cache skips its first step. The control plane (`control/`: frontier, policy, classifier, subplan scopes) decides what a
 workflow does next from recorded step results, so a change to its decisions is a sequence change too.
@@ -308,10 +314,6 @@ such guard: `_enqueue` turns a child's failure into an `internal_error` fact.
 - The panels show durable runs from a projection refreshed every few seconds: they can lag DBOS by one refresh, which
   is why every command is checked against a fresh build first. Route pins, cancel-attempt, revise and edit-brief are
   not offered for durable runs (refused with a reason); cancelling a durable run stays `bt-durable cancel`.
-- After an escalation, an owner `retry` starts from the base the task's last automatic retry chose (the snapshot a
-  `retry`, remediation or other-route retry continued from; a reconciled task's legacy snapshot), or from the
-  run/subplan line when there was none; it does not continue from the escalated attempt's own snapshot (only
-  automatic retries do).
 - The process-group fallback enforces only the runtime limit (see `bt_supervisor/README.md`).
 - Real provider CLIs were not run under the durable runtime during REQ-030 (the lab uses a fake `claude` through the real
   driver); the first real run should be a small plan.

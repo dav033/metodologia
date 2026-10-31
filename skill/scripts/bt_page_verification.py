@@ -64,14 +64,14 @@ def _text(value: str) -> str:
 
 
 def _form(ctx: dict, action: str, label: str, sp: str, *, cls: str = "", note: bool = False, danger: bool = False,
-          blank: bool = False, path: bool = False, login: bool = False) -> str:
+          blank: bool = False, path: bool = False, login: bool = False, extra: str = "") -> str:
     field = ('<textarea name="comments" rows="3" required placeholder="Qué falló o qué esperabas ver"></textarea>' if note else "")
     target = ' target="_blank" rel="noopener"' if blank else ""
     page = '<input type="hidden" name="path" value="/">' if path else ""     # the page the new tab lands on (D-200)
     page += '<input type="hidden" name="login" value="1">' if login else ""   # start it as in production (D-202)
     return (f'<form method="post" action="{purl(ctx["project"], "req", ctx["rid"], action)}" class="pp-vform{" note" if note else ""}"{target}>'
             f'<input type="hidden" name="token" value="{e(ctx["token"])}"><input type="hidden" name="anchor" value="{e(sp)}">'
-            f'{page}{field}<button type="submit" class="{e(cls)}{" danger" if danger else ""}">{e(label)}</button></form>')
+            f'{page}{field}{extra}<button type="submit" class="{e(cls)}{" danger" if danger else ""}">{e(label)}</button></form>')
 
 
 def _running(ctx: dict, row: dict) -> dict:
@@ -82,6 +82,10 @@ def _running(ctx: dict, row: dict) -> dict:
         cache[row["id"]] = servers.status(ctx["root"], ctx["project"], ctx["rdir"], row["id"])
     return cache[row["id"]]
 
+
+# approving a version the owner rejected asks for this tick first (D-255); the server refuses the approval without it
+OVER_REJECTION = ('<label class="pp-vconfirm"><input type="checkbox" name="over_rejection" value="1" required> '
+                  'Ya no aplica mi rechazo de esta versión</label>')
 
 test_paths = verification.test_paths        # moved to bt_verification: the Solucionador's trigger uses it
 
@@ -325,7 +329,8 @@ def _actions(ctx: dict, row: dict) -> str:
         opened = (f'<p class="pp-vpath">Abierta en <code>{e(str(target))}</code></p>' + _form(ctx, "verify-close", "Cerrar la copia", sid))
     run = ctx.get("_try", "")
     buttons = (_form(ctx, "verify-open", "Abrir esta versión en local", sid) if not opened and not run else "") + \
-        _form(ctx, "verify-approve", "Aprobar" if row["state"] != "approved" else "Aprobado ✓", sid, cls="pp-approve") + \
+        _form(ctx, "verify-approve", "Aprobar" if row["state"] != "approved" else "Aprobado ✓", sid, cls="pp-approve",
+              extra=OVER_REJECTION if row["state"] == "rejected" else "") + \
         f'<details class="pp-vreject"><summary>Rechazar…</summary>{_form(ctx, "verify-reject", "Rechazar con esta nota", sid, note=True, danger=True)}</details>'
     command = verification.revert_command(root, ctx["project"], rdir, sid) if root else ""
     deps = verification.dependents(rdir, sid)
