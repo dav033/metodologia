@@ -1,0 +1,13 @@
+[
+ {
+  "kind": "stuck",
+  "key": "pictures:REQ-021:r29:T10.441:stuck:dcd70c2e84a2797e",
+  "run_id": "pictures:REQ-021:r29",
+  "task_id": "T10.441",
+  "request_id": "",
+  "round": null,
+  "reason": "state running unchanged since 2026-10-30T20:09:14 while its workflow is PENDING",
+  "status": "pending",
+  "at": "2026-10-31T07:55:11"
+ }
+]

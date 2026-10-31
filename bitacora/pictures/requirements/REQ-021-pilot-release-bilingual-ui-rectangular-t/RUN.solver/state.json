@@ -1,15 +1,16 @@
 {
  "watch": {
   "T10.45": {
-   "fp": "568faf169ff4babb",
-   "since": 1793397516.1621118
+   "fp": "0d8c627a88ad558d",
+   "since": 1793451342.5735607
   }
  },
  "tasks": {
   "CG-9": 5,
   "T10.5": 1,
-  "T10.45": 1,
-  "T2.55": 18
+  "T10.45": 2,
+  "T2.55": 18,
+  "T10.441": 1
  },
  "triggers": {
   "pictures:REQ-021:r25:resolution:4378ebb94f72d6922c89d601ee5db484": {
@@ -959,6 +960,30 @@
    "status": "gave_up",
    "at": "2026-10-30T12:07:13",
    "session": "20261030-120814-28ad"
+  },
+  "pictures:REQ-021:r28:T10.45:T10.45:d1@k1": {
+   "kind": "decision",
+   "key": "pictures:REQ-021:r28:T10.45:T10.45:d1@k1",
+   "run_id": "pictures:REQ-021:r28",
+   "task_id": "T10.45",
+   "request_id": "T10.45:d1",
+   "round": 1,
+   "reason": "the diagnosis is not enough to answer alone (option stop, confidence media): La verificación falla: queda texto de interfaz en inglés en /asistente.",
+   "status": "asked_owner",
+   "at": "2026-10-30T18:36:05",
+   "session": "20261030-183605-d727"
+  },
+  "pictures:REQ-021:r29:T10.441:stuck:dcd70c2e84a2797e": {
+   "kind": "stuck",
+   "key": "pictures:REQ-021:r29:T10.441:stuck:dcd70c2e84a2797e",
+   "run_id": "pictures:REQ-021:r29",
+   "task_id": "T10.441",
+   "request_id": "",
+   "round": null,
+   "reason": "state running unchanged since 2026-10-30T20:09:14 while its workflow is PENDING",
+   "status": "running",
+   "at": "2026-10-31T07:55:11",
+   "session": "20261031-075511-d592"
   }
  },
  "sessions": [
@@ -1134,6 +1159,52 @@
    "summary": "ninguna cuenta con cuota pudo seguir la sesión",
    "question": "",
    "report": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/RUN.solver/20261030-120814-28ad/REPORT.md"
+  },
+  {
+   "id": "20261030-183605-d727",
+   "name": "bit-pictures-REQ-021-solver",
+   "status": "asked_owner",
+   "started": 1793403365.2284002,
+   "started_at": "2026-10-30T18:36:05",
+   "triggers": [
+    "pictures:REQ-021:r28:T10.45:T10.45:d1@k1"
+   ],
+   "queued": [],
+   "restarts": 0,
+   "dir": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/RUN.solver/20261030-183605-d727",
+   "cwd": "/home/david/.local/share/bitacora-solver/pictures/20261030-183605-d727",
+   "task": "T10.45",
+   "kind": "decision",
+   "reason": "the diagnosis is not enough to answer alone (option stop, confidence media): La verificación falla: queda texto de interfaz en inglés en /asistente.",
+   "provider": "codex",
+   "model": "gpt-6.1-sol",
+   "home": "/home/david/.codex",
+   "ended": 1793403881.812345,
+   "ended_at": "2026-10-30T18:44:41",
+   "summary": "Causa reproducida: control de fotos sin traducir; reparación SP-10 preparada y validada, pendiente de reconfirmación del propietario.",
+   "question": "¿Reconfirmas SP-10 con la reparación acotada T10.441 —traducción del control de fotos, regresión EN/ES y corrección del oráculo obsoleto— para congelar e incorporar la revisión y ejecutar el productor antes de T10.45? Con sí se continúa por ese flujo; con no se mantiene r28 y el bloqueo actual. Tu instrucción impide que el Solucionador confirme subplanes por el propietario.",
+   "report": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/RUN.solver/20261030-183605-d727/REPORT.md"
+  },
+  {
+   "id": "20261031-075511-d592",
+   "name": "bit-pictures-REQ-021-solver",
+   "status": "running",
+   "started": 1793451311.5809782,
+   "started_at": "2026-10-31T07:55:11",
+   "triggers": [
+    "pictures:REQ-021:r29:T10.441:stuck:dcd70c2e84a2797e"
+   ],
+   "queued": [],
+   "restarts": 0,
+   "dir": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/RUN.solver/20261031-075511-d592",
+   "cwd": "/home/david/.local/share/bitacora-solver/pictures/20261031-075511-d592",
+   "task": "T10.441",
+   "kind": "stuck",
+   "reason": "state running unchanged since 2026-10-30T20:09:14 while its workflow is PENDING",
+   "provider": "codex",
+   "model": "gpt-6.1-sol",
+   "home": "/home/david/.codex"
   }
- ]
+ ],
+ "active": "20261031-075511-d592"
 }

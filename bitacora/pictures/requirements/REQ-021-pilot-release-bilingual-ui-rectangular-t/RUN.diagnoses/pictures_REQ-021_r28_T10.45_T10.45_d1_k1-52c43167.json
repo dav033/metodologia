@@ -1,0 +1,23 @@
+{
+ "request": "pictures:REQ-021:r28:T10.45:T10.45:d1@k1",
+ "state": "done",
+ "kind": "code",
+ "label": "Código",
+ "tone": "bad",
+ "headline": "La verificación falla: queda texto de interfaz en inglés en /asistente.",
+ "origin": "En las tentativas a2, a3 y a4 el harness `npm run idioma:test-harness-resto` devuelve `product_translation_failure: untranslated English-screen interface text remains on /asistente.`. Esto es un defecto del producto, no del harness: la traducción de la pantalla de asistente está incompleta. Ese código pertenece a T10.44, del que depende T10.45, y T10.45 solo puede editar `scripts/test/test-integracion-idioma-resto.ts`, `scripts/test/test-harness-idioma-resto.ts` y su cableado en package.json. Los autotests del harness sí pasan (\"Remaining-language mutations passed\"), lo que confirma que el detector funciona. La tentativa a1 solo muestra un aviso de uv sobre hardlinks, que no es la causa decisiva.",
+ "steps": [
+  "Detener T10.45 con la decisión existente: `bitacora.py --project <proyecto> scheduler-op REQ-021 decide T10.45:d1 stop --reason \"Defecto de traducción en T10.44 (/asistente)\"`.",
+  "Reabrir T10.44 y localizar el texto en inglés: ejecutar `npm run idioma:test-harness-resto` con PICTURES_REQ021_DATABASE_URL definido y revisar en modo EN la pantalla /asistente, porque el harness no indica la cadena exacta.",
+  "Corregir la cadena sin usar el texto del harness: añadir la traducción en el productor de T10.44 (no en los scripts de test) y verificar que /asistente ya no muestra texto inglés.",
+  "Relanzar T10.45 cuando T10.44 esté corregido, consultando `bitacora.py --project <proyecto> scheduler-op REQ-021 decisions` para la nueva decisión."
+ ],
+ "option": "stop",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-30T18:35:50",
+ "seconds": 16.0
+}

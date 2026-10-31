@@ -1,0 +1,9 @@
+# Default gitleaks rules plus: solver state files hold task ids ("key": MD5 hex), not credentials.
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Durable solver state: task-id keys (hex hashes), rewritten live so line fingerprints drift"
+condition = "AND"
+paths = ['''RUN\.solver/state\.json$''']
+regexes = ['''"key":\s*"[0-9a-f]{32}"''']
