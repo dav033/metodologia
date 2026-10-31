@@ -197,6 +197,127 @@ class AgentWalls(unittest.TestCase):
         self.assertIn("GOT:[Automatic notice", wait_for(name, "GOT:"))
 
 
+def fake_agent(folder: Path, *, exits: bool) -> str:
+    """A stand-in agent: logs its arguments, shows a «› » prompt and logs each message it reads; `exits` quits at once
+    like pictures REQ-021's Planner Codex at 09:53 on 2026-10-31, leaving `start`'s `exec bash` shell in the window."""
+    script = folder / ("gone.sh" if exits else "agent.sh")
+    log = folder / "agent.log"
+    body = ["#!/bin/bash", f'printf "ARGS:%s\\n" "$*" >> {log}']
+    body += ["echo 'agent: session ended'", "exit 0"] if exits else \
+        ["while true; do read -rp '› ' x || exit; echo \"MSG:$x\" >> " + str(log) + "; echo \"GOT:$x\"; done"]
+    script.write_text("\n".join(body) + "\n", encoding="utf-8")
+    return f"bash {script}"
+
+
+class DeadPaneBase(unittest.TestCase):
+    """pictures REQ-021, 2026-10-31: the Planner's Codex exited at 09:53 and its pane fell back to `start`'s shell; at
+    09:57 `tell-planner` printed «Enviado al Planner.» and the plan change request sat typed at the shell prompt, where
+    one more Enter runs it as a command. Real tmux on a private socket, never `-L bitacora`."""
+
+    def setUp(self):
+        self.tmp = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, self.tmp, True)
+        patcher = patch.dict(os.environ, {"BITACORA_TMUX_SOCKET": f"bt-test-dead-{os.getpid()}"})
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        self.addCleanup(lambda: terminal._run("kill-server"))
+        self.pwned = self.tmp / "pwned"
+        self.trap = f"echo PWNED > {self.pwned} #"       # what a shell would do with the text: create this file
+
+    def shell(self, name: str) -> None:
+        terminal.start(name, self.tmp, fake_agent(self.tmp, exits=True))
+        for _ in range(50):
+            if "session ended" in terminal.screen(name):
+                time.sleep(0.5)                           # the interactive shell's prompt, as the owner saw it at 10:12
+                return
+            time.sleep(0.1)
+        self.fail("the fake agent never left its shell: " + terminal.screen(name))
+
+    def log(self) -> list[str]:
+        path = self.tmp / "agent.log"
+        return path.read_text(encoding="utf-8").splitlines() if path.is_file() else []
+
+
+@unittest.skipUnless(terminal._tmux_path(), "tmux is not installed")
+class DeadPane(DeadPaneBase):
+    def test_the_agent_state_tells_a_running_agent_from_the_shell_it_leaves(self):
+        terminal.start("bit-test-REQ-1-live", self.tmp, fake_agent(self.tmp, exits=False))
+        wait_for("bit-test-REQ-1-live", "›")
+        self.assertEqual(terminal.agent_state("bit-test-REQ-1-live"), "running")
+        self.assertTrue(terminal.alive("bit-test-REQ-1-live"))
+        self.shell("bit-test-REQ-1-gone")
+        self.assertTrue(terminal.exists("bit-test-REQ-1-gone"))           # the session is still there: only a shell
+        self.assertFalse(terminal.alive("bit-test-REQ-1-gone"))
+        self.assertEqual(terminal.agent_state("bit-test-REQ-1-none"), "absent")
+        self.assertEqual(terminal.send("bit-test-REQ-1-live", "hola"), "Enviado.")
+        self.assertIn("MSG:hola", self.log())
+
+    def test_nothing_is_ever_typed_into_the_shell_an_exited_agent_leaves(self):
+        name = "bit-test-REQ-1-shell"
+        self.shell(name)
+        said = terminal.send(name, self.trap)
+        time.sleep(0.5)
+        self.assertFalse(self.pwned.exists(), "the text ran as a shell command")
+        self.assertNotIn("PWNED", terminal.screen(name))                   # not even left at the prompt
+        self.assertNotEqual(said, "Enviado.")
+        self.assertEqual(said.state, "gone")
+        self.assertFalse(terminal._keys(name, "Enter"))
+
+    def test_tell_planner_kills_the_shell_and_starts_the_planner_again_with_the_notice(self):
+        import bt_core
+        rdir = self.tmp / "pictures" / "requirements" / "REQ-021-demo"
+        (rdir / ".planning").mkdir(parents=True)
+        (rdir / terminal.RECORD).write_text('{"provider": "codex", "codex_home": "/acc/codex-luis"}')
+        name = terminal.name_for("pictures", "REQ-021", "planner")
+        self.shell(name)
+        real_start = terminal.start
+        agent = fake_agent(self.tmp, exits=False)
+        launched: list[str] = []
+
+        def start(name, cwd, command, env=None, **kw):     # the real tmux start, with the stand-in instead of Codex
+            launched.append(command)
+            return real_start(name, cwd, f"{agent} {shlex.quote(command)}", env)
+        route = {"provider": "codex", "home": str(self.tmp / "codex-work"), "model": "", "effort": "high"}
+        with patch.object(bt_core, "ROOT", self.tmp), patch.object(terminal, "planner_route", return_value=route), \
+                patch.object(terminal, "start", side_effect=start), \
+                patch.object(terminal, "_prompt_file", side_effect=lambda p, n, text: (
+                    self.tmp / f"{n}.prompt.md", (self.tmp / f"{n}.prompt.md").write_text(text))[0]):
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out):
+                code = terminal.main(["tell-planner", "pictures", "REQ-021", self.trap])
+        time.sleep(0.5)
+        self.assertFalse(self.pwned.exists(), "the request ran as a shell command")
+        self.assertNotIn("Enviado", out.getvalue())
+        self.assertEqual(code, 0, out.getvalue())
+        self.assertIn("había terminado", out.getvalue())
+        self.assertEqual(len(launched), 1)
+        self.assertIn(self.trap, (self.tmp / f"{name}.prompt.md").read_text())   # the request goes along on start
+        wait_for(name, "›")
+        self.assertTrue(terminal.alive(name))                              # a new session with a running agent
+        self.assertNotIn("session ended", terminal.screen(name))           # the old shell was killed, not cleared
+        self.assertEqual(terminal.wall.held(rdir), [])
+        self.assertEqual(terminal.main(["tell-planner", "pictures", "REQ-021", "SP-2 ok"]), 0)   # a live one is told
+        self.assertIn("MSG:[Automatic notice, not typed by the owner] SP-2 ok", self.log())
+
+    def test_a_planner_that_cannot_start_again_holds_the_notice_and_types_nothing(self):
+        import bt_core
+        import bt_planner_notices as notices
+        rdir = self.tmp / "pictures" / "requirements" / "REQ-021-demo"
+        (rdir / ".planning").mkdir(parents=True)
+        name = terminal.name_for("pictures", "REQ-021", "planner")
+        self.shell(name)
+        with patch.object(bt_core, "ROOT", self.tmp), \
+                patch.object(terminal, "start_planner", return_value=(False, "sin cuentas")) as start:
+            state, text = notices.tell("pictures", "REQ-021", self.trap)
+        time.sleep(0.5)
+        self.assertFalse(self.pwned.exists(), "the request ran as a shell command")
+        self.assertEqual(state, "held", text)
+        start.assert_called_once()
+        self.assertFalse(terminal.exists(name))                            # the shell is killed either way
+        [kept] = terminal.wall.held(rdir)
+        self.assertEqual(kept["text"], self.trap)
+
+
 class PlannerStart(unittest.TestCase):
     def test_the_planner_prompt_points_to_resume_and_carries_the_owner_brief(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -277,6 +398,7 @@ class WebPieces(unittest.TestCase):
     def test_with_a_planner_the_strip_shows_its_screen_and_the_say_block_has_a_box(self):
         import bt_page_planning_agent as view
         with tempfile.TemporaryDirectory() as tmp, patch("bt_agent_terminal.exists", return_value=True), \
+                patch("bt_agent_terminal.agent_state", return_value="running"), \
                 patch("bt_agent_terminal.screen", return_value="Leyendo <SPEC.md>"), patch("bt_presence.sessions", return_value=[]):
             ctx = self.ctx(tmp)
             html, box = view.strip(ctx), view.say(ctx)
@@ -288,6 +410,9 @@ class WebPieces(unittest.TestCase):
             self.assertIn("<textarea", box)
             self.assertIn("agent-say", box)
             self.assertNotIn("Leyendo", box)                  # the box never changes with the screen, so it is never swapped mid-typing
+        with tempfile.TemporaryDirectory() as tmp, patch("bt_agent_terminal.exists", return_value=True), \
+                patch("bt_agent_terminal.agent_state", return_value="gone"), patch("bt_presence.sessions", return_value=[]):
+            self.assertIn("agent-start", view.strip(self.ctx(tmp)))  # a Planner whose agent exited: offer to open one
 
     def test_the_server_action_types_into_the_right_agent_only_from_loopback(self):
         import bt_server
@@ -312,6 +437,12 @@ class WebPieces(unittest.TestCase):
                 self.assertIn("guardé el mensaje", unquote(call("127.0.0.1", {"kind": "planner", "text": "sigue con SP-2"})))
             after.assert_called_once_with("pictures", "REQ-021", "sigue con SP-2", 1793395920.0)
             self.assertNotIn("sigue con SP-2", (rdir / ".planning" / "activity.jsonl").read_text(encoding="utf-8"))
+            gone = terminal.Said.of(terminal.GONE_TEXT, "gone")
+            with patch.object(bt_server, "ROOT", Path(tmp)), patch("bt_agent_terminal.send", return_value=gone), \
+                    patch("bt_agent_terminal.exists", return_value=True), \
+                    patch("bt_planner_notices.after_exit", return_value=("restarted", "lo abrí otra vez")) as again:
+                self.assertIn("lo abrí otra vez", unquote(call("127.0.0.1", {"kind": "planner", "text": "sigue con SP-3"})))
+            again.assert_called_once_with("pictures", "REQ-021", "sigue con SP-3")
 
 
 if __name__ == "__main__":
