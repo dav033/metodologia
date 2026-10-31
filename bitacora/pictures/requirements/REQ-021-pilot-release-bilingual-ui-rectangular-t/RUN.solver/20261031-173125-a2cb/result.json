@@ -1,0 +1,16 @@
+{
+  "outcome": "asked_owner",
+  "summary": "T2.57 reencolada; la reparación de T3.91 no pudo incorporarse por cambios pendientes de confirmar en SP-14.",
+  "handled": [
+    "pictures:REQ-021:r32:T2.57:T2.57:d4@k1",
+    "pictures:REQ-021:r32:T3.91:T3.91:d1@k1",
+    "pictures:REQ-021:r32:T3.91:T3.91:d2@k1"
+  ],
+  "decision": "T3.91:d2@k1",
+  "question": "¿Quieres reconfirmar los cambios pendientes de SP-14 para incorporarlos con la reparación de SP-3, o prefieres que el Planner aísle la reparación de SP-3 de esos cambios? La incorporación actual fue rechazada porque incluye cambios de SP-14 fuera de la reparación acotada; procederé según tu elección.",
+  "commits": [
+    "199bbe750",
+    "c87dd0e9a54f16ff32a264d24a945523ff415092"
+  ],
+  "rule": "D-262"
+}

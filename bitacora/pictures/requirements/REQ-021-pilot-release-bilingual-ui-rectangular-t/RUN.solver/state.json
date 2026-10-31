@@ -1,16 +1,16 @@
 {
  "watch": {
   "T3.91": {
-   "fp": "2248d42cfd504af9",
-   "since": 1793488189.6019638,
+   "fp": "0bcbcb5ec30074d7",
+   "since": 1793489063.4536214,
    "epoch": "840b9e99729d449bb48c851458140f64",
-   "observed_at": 1793488314.6635997
+   "observed_at": 1793489346.1219862
   },
-  "T2.4": {
-   "fp": "70e00b8df5db9b66",
-   "since": 1793488252.464794,
+  "T2.57": {
+   "fp": "f82f832f52270c20",
+   "since": 1793488752.037575,
    "epoch": "840b9e99729d449bb48c851458140f64",
-   "observed_at": 1793488314.6635997
+   "observed_at": 1793489346.1219862
   }
  },
  "tasks": {
@@ -1281,7 +1281,7 @@
    "request_id": "T2.57:d4",
    "round": 1,
    "reason": "healing's repair limit is reached",
-   "status": "running",
+   "status": "asked_owner",
    "at": "2026-10-31T17:31:25",
    "session": "20261031-173125-a2cb"
   },
@@ -1293,7 +1293,7 @@
    "request_id": "T3.91:d1",
    "round": 1,
    "reason": "the diagnosis is not enough to answer alone (option reverify, confidence media): El verificador se quedó sin memoria al compilar Next; el fallo no es del código.",
-   "status": "queued",
+   "status": "asked_owner",
    "at": "2026-10-31T17:36:08",
    "session": "20261031-173125-a2cb"
   },
@@ -1305,7 +1305,7 @@
    "request_id": "T3.91:d2",
    "round": 1,
    "reason": "the diagnosis blames the plan and healing told the Planner: Fallan los chequeos de tipos: error en un archivo de test fuera de la tarea T3.91",
-   "status": "queued",
+   "status": "asked_owner",
    "at": "2026-10-31T18:01:21",
    "session": "20261031-173125-a2cb"
   }
@@ -1666,7 +1666,7 @@
   {
    "id": "20261031-173125-a2cb",
    "name": "bit-pictures-REQ-021-solver",
-   "status": "running",
+   "status": "asked_owner",
    "started": 1793485885.2937868,
    "started_at": "2026-10-31T17:31:25",
    "triggers": [
@@ -1684,8 +1684,12 @@
    "reason": "healing's repair limit is reached",
    "provider": "codex",
    "model": "gpt-6.1-terra",
-   "home": "/home/david/.codex"
+   "home": "/home/david/.codex",
+   "ended": 1793488376.581941,
+   "ended_at": "2026-10-31T18:12:56",
+   "summary": "T2.57 reencolada; la reparación de T3.91 no pudo incorporarse por cambios pendientes de confirmar en SP-14.",
+   "question": "¿Quieres reconfirmar los cambios pendientes de SP-14 para incorporarlos con la reparación de SP-3, o prefieres que el Planner aísle la reparación de SP-3 de esos cambios? La incorporación actual fue rechazada porque incluye cambios de SP-14 fuera de la reparación acotada; procederé según tu elección.",
+   "report": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/RUN.solver/20261031-173125-a2cb/REPORT.md"
   }
- ],
- "active": "20261031-173125-a2cb"
+ ]
 }

@@ -1,0 +1,36 @@
+{
+  "name": "Cartas al pie — direct manipulation of the existing /planes page",
+  "axes": {
+    "concept": "Four informational peer cards; each carries the owner-requested Escoger / Choose button, which is purely visual: pressing it only plays the press motion and does nothing else.",
+    "layout": "Published ComparadorPlanes shell (masthead, H1 + back link, administrator line, footer) with the comparison tabs and «Ir a un plan» rail removed; four separate peer cards in catalogue order at natural height (align-items:start), identity blocks of equal height so every price sits on one shared line; 4 columns ≥1100px, 2×2 at 640–1099px, one column below 640px.",
+    "navigation": "Existing back link to /login for both session states, language select and unchanged account menu; the card button navigates nowhere; no origin tracking, tabs, index or summary.",
+    "typography": "Product Geist scale: H1 24/600, plan name 18/600, price 30/600 tabular figures with 13px «COP / mes» unit (26px on phones), 12px «Herramientas incluidas» label, 14px tool rows, 12px «aún no disponible» marker.",
+    "density": "Comfortable: 24px card padding (20px phone), 16px gap between cards (12px phone), 6px tool row rhythm, 96px identity block; full cumulative lists always expanded.",
+    "components": "Native language select, back link, ruled cards and Check list, shadcn Button per card with no handler (focusable, plan in accessible name), cuentas-admin@v2 menu and login plans link; no catalogue skeleton or retry.",
+    "colour": "Pictures globals.css tokens in both themes: surface and border for cards, accent for checks, button and focus, warning for unavailable markers; no highlighted card.",
+    "motion": "Tactile press/settle grammar shared with cuentas-admin@v2 dir C: cards drop and settle (translateY 18px, scale .97 → rest, cubic-bezier(.34,1.42,.64,1), 460ms, 70ms stagger in catalogue order), tool rows follow at 35ms; changing Idioma presses the select (scale .92 → 1.04 → 1) and rolls each price vertically (old out up, new in from below on the profile spring) while lists re-settle with no delay; back link compresses to .96 and its chevron nudges −3px; the inert card button compresses to .97 on press (90ms) with no other feedback; reduced motion/Quieto swaps instantly."
+  },
+  "evidence": {
+    "layout": [
+      ".deck",
+      ".plan-card",
+      ".plan-id"
+    ],
+    "navigation": [
+      ".heading-row .back",
+      ".idioma select",
+      ".choose"
+    ],
+    "typography": [
+      ".price .amount",
+      ".plan-id h2",
+      ".tools-heading"
+    ],
+    "motion": [
+      ".plan-card",
+      ".tools li",
+      ".idioma select",
+      ".back"
+    ]
+  }
+}

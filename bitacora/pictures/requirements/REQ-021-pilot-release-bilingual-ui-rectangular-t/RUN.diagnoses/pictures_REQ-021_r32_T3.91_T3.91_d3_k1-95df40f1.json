@@ -1,0 +1,22 @@
+{
+ "request": "pictures:REQ-021:r32:T3.91:T3.91:d3@k1",
+ "state": "done",
+ "kind": "code",
+ "label": "Código",
+ "tone": "bad",
+ "headline": "El smoke de arrastre de mesas falla por un localizador ambiguo en el harness de prueba",
+ "origin": "El fallo viene del propio harness `scripts/test/test-ui-arrastre-mesas-parametricas.ts`, no del producto. El verificador reportó `strict mode violation: getByRole('button', { name: 'Añadir', exact: true }) resolved to 2 elements`. Los intentos anteriores fallaron por otros errores del mismo harness: `waiting for getByRole('tab', { name: 'Añadir' })` y, antes, el type check de Next (`1 !== 0`). El último intento corrigió el selector, pero su propia ejecución se detuvo con `ECONNREFUSED 127.0.0.1:55965` antes de iniciar Next o Chromium, así que la corrección aún no está verificada.",
+ "steps": [
+  "Editar `scripts/test/test-ui-arrastre-mesas-parametricas.ts` para que el botón «Añadir» sea único: acotarlo al riel de la tarjeta o usar el elemento con `title=\"Añadir\"`. «Utilería» es la pestaña; «Añadir» es un botón del riel.",
+  "Confirmar que la base desechable REQ021 de `PICTURES_REQ021_DATABASE_URL` está escuchando. El último intento recibió `ECONNREFUSED 127.0.0.1:55965`.",
+  "Volver a ejecutar `npx --no-install tsx scripts/test/test-ui-arrastre-mesas-parametricas.ts --suite rectangular-mouse` y, si pasa, las demás comprobaciones de la tarea. No modificar checks, criterios ni PLAN.json."
+ ],
+ "option": "retry_with_note",
+ "note": "Fix the ambiguous locator in scripts/test/test-ui-arrastre-mesas-parametricas.ts: getByRole('button', { name: 'Añadir', exact: true }) matches 2 elements (the rail icon button with title/aria-label 'Añadir' and a text button 'Añadir'). Scope it to the rail container or use the element with title='Añadir'. 'Utilería' is the tab, not 'Añadir'. Do not change checks, criteria, PLAN.json or producer files. Before running --suite rectangular-mouse, make sure the disposable REQ021 database at PICTURES_REQ021_DATABASE_URL is listening; the previous attempt got ECONNREFUSED 127.0.0.1:55965 before Next/Chromium started. Report the exact output of the rectangular-mouse run.",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-31T18:23:39",
+ "seconds": 18.4
+}

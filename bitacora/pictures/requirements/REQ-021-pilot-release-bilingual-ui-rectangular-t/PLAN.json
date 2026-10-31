@@ -476,12 +476,6 @@
         "Current-password verification,8–200-character new-password validation, matching confirmation, pending/error recovery, secret clearing after acknowledged success, current-browser session renewal and other-session invalidation remain enforced on the real local production entrypoints."
       ],
       "audit_task": "T2.8",
-      "checkpoints": [
-        {
-          "purpose": "Prove ordinary account integration before the isolated local-session follow-up.",
-          "task": "T2.6"
-        }
-      ],
       "consumes": [
         {
           "contract": "account-service",
@@ -525,49 +519,13 @@
         "version": 2,
         "visual_review_task": "T2.7"
       },
+      "checkpoints": [
+        {
+          "task": "T2.6",
+          "purpose": "Prove ordinary account integration before the isolated local-session follow-up."
+        }
+      ],
       "ui_brief": {
-        "copy_rules": [
-          "Spanish owner-facing preview with English parity. Explicit Nombre/Name and Correo/Email. Catalogue-backed Plan label/name for real plan identities only. Use real role identity for staff/custom accounts without inventing a subscription.",
-          "Email fallback only for null/empty/whitespace name. No invented full name and no claim that the synthetic unnamed account proves loss of an invitation name.",
-          "No data-notice accepted/version/date summary in the ordinary account view. No marketing copy, invented profile editing or new password-policy claims.",
-          "Dropdown Escape returns focus to trigger; repeated-trigger closure leaves focus there; outside-pointer closure preserves focus on the clicked focusable target; Tab/Shift+Tab can leave without trapping focus and closes when focus leaves.",
-          "Resolved existing-owner decisions for finalization: per round15 the language switch belongs in the account menu, and per round10 the public Plans menu entry is available to signed-in staff/custom accounts too. Preserve current theme composition. A chosen direction may not move language out of the account menu or restrict the plans link.",
-          "Name fallback is already owner-confirmed: keep the explicit Name row and email when the stored name is absent, even when email is also separately shown. Translate canonical system-role labels for EN as Administrator and Internal employee; never translate user-authored custom-role names or infer a plan.",
-          "Hints and too-long copy may restate the existing8–200-character rule; no new password policy. Network errors can reuse existing generic change-password failure copy. Service-acknowledged success does not require a new human acknowledgment button. Non-modal popup overlap, initial-only narrow trigger and account/password grouping are visible choices in the mockup; preserve full name in the open popup and profile, accessible trigger name, outside/Escape/focus behavior and existing security.",
-          "Q1–Q4 finalization dispositions are settled: inherit the exact candidate host shell, optional read-only actual company is allowed through the local projection, equivalent disclosure HTML is technical if every required behavior matches, and owner-selected C truncation is accepted with full name in popup/profile/accessible name. No new owner interview for those settled points."
-        ],
-        "criteria": [
-          "Full new /cuenta and password composition, actual identity and correct access label, no consent metadata in ordinary profile, responsive ES/EN, all password states, unchanged security invariants and tested dismissal/focus.",
-          "Only SP-2 changes contract; analyze shared menu composition with SP-8, SP-10 and SP-14, retaining their language/theme/plans controls without blanket contract replacement.",
-          "Password-field aria-describedby references only help/error nodes actually rendered in blank, matching and mismatching states in ES/EN; the final mockup and production target must not retain a demonstrated dangling ARIA reference."
-        ],
-        "existing_surface": {
-          "components": [
-            "MenuCuenta",
-            "CambiarContrasena",
-            "BarraCuenta",
-            "CabeceraCuentas",
-            "NavegacionCuentas"
-          ],
-          "notes": "Read published immutable commit6ec74192eb0175827a9005ae2c152955cb0d220d via /home/david/dev/.pictures-wt/login-redirect; never read/write /home/david/dev/pictures. Extend approved cuentas-admin@v1 (selected Parte de acceso); preserve all views/shell/navigation not affected by the owner request. Preserve every v1 artifact unchanged. Evidence: evidence/owner-rejected/SP-2-v2.md and RUN.solver/20261031-123425-067d/AMENDMENT.md. Owner confirmed behavior at13:08 with Confirmar todo; visual approval remains pending. Existing named-account rendering already falls back to email; current synthetic administrator has no display_name. Show both actual-name and absent-name states; never invent a person name or infer data loss.",
-          "paths": [
-            "src/components/cuentas/MenuCuenta.tsx",
-            "src/app/cuenta/page.tsx",
-            "src/components/cuentas/CambiarContrasena.tsx",
-            "src/components/cuentas/textos-cuenta.ts",
-            "src/components/cuentas/BarraCuenta.tsx",
-            "src/lib/cuentas/cuenta-actual.ts",
-            "src/lib/planes/catalogo.ts"
-          ],
-          "routes": [
-            "/cuenta",
-            "existing shared signed-in account menu"
-          ],
-          "screenshots": [
-            "/home/david/.local/share/bitacora-solver/pictures/20261031-123425-067d/account-open-1280.png",
-            "/home/david/.local/share/bitacora-solver/pictures/20261031-123425-067d/account-open-390.png"
-          ]
-        },
         "flows": [
           {
             "name": "Existing sign-in, activation, reset, mandatory notice and administration",
@@ -595,6 +553,40 @@
             ]
           }
         ],
+        "screens_states": [
+          "Keep unchanged login, activation, reset, mandatory data-notice gate, accounts/invitations and role administration from v1.",
+          "Redesign /cuenta identity and password area as the complete owner-requested new layout within existing Pictures shell/tokens.",
+          "Shared menu closed/open; named/absent-name/long-name/long-email fixtures; each of four plans, administrator, employee, custom role; restricted/no administrator links.",
+          "Password idle, required/short/too-long/mismatch, wrong current password, pending, service/network error, acknowledged success; ES/EN, light/dark, reduced motion.",
+          "390x844 and1280x900 explicit dismissal/focus cases,768px tablet and360px contractual floor; no clipped controls or horizontal page overflow."
+        ],
+        "existing_surface": {
+          "routes": [
+            "/cuenta",
+            "existing shared signed-in account menu"
+          ],
+          "paths": [
+            "src/components/cuentas/MenuCuenta.tsx",
+            "src/app/cuenta/page.tsx",
+            "src/components/cuentas/CambiarContrasena.tsx",
+            "src/components/cuentas/textos-cuenta.ts",
+            "src/components/cuentas/BarraCuenta.tsx",
+            "src/lib/cuentas/cuenta-actual.ts",
+            "src/lib/planes/catalogo.ts"
+          ],
+          "components": [
+            "MenuCuenta",
+            "CambiarContrasena",
+            "BarraCuenta",
+            "CabeceraCuentas",
+            "NavegacionCuentas"
+          ],
+          "screenshots": [
+            "/home/david/.local/share/bitacora-solver/pictures/20261031-123425-067d/account-open-1280.png",
+            "/home/david/.local/share/bitacora-solver/pictures/20261031-123425-067d/account-open-390.png"
+          ],
+          "notes": "Read published immutable commit6ec74192eb0175827a9005ae2c152955cb0d220d via /home/david/dev/.pictures-wt/login-redirect; never read/write /home/david/dev/pictures. Extend approved cuentas-admin@v1 (selected Parte de acceso); preserve all views/shell/navigation not affected by the owner request. Preserve every v1 artifact unchanged. Evidence: evidence/owner-rejected/SP-2-v2.md and RUN.solver/20261031-123425-067d/AMENDMENT.md. Owner confirmed behavior at13:08 with Confirmar todo; visual approval remains pending. Existing named-account rendering already falls back to email; current synthetic administrator has no display_name. Show both actual-name and absent-name states; never invent a person name or infer data loss."
+        },
         "must_not_change": [
           "No new route, product rebrand, new font/palette, self-service profile/plan/role editing, plan purchases or permission policy.",
           "No UI disclosure of accepted-notice version/date in ordinary profile; keep activation/reacceptance text, explicit consent, authoritative version/date storage and route enforcement unchanged.",
@@ -602,12 +594,20 @@
           "Keep every existing sign-in/invitation/reset/admin flow, plan links, permission-scoped navigation and ES/EN composition; no production actions or real personal data.",
           "The new version is a breaking scoped UI/interaction replacement, not a compatible additive change. All SP2 UI tasks bind v2, incorporating unchanged v1 sections by reference. Preserve the exact integrated host shell; do not reintroduce page-level account navigation/header removed by SP8 composition. Theme remains existing shell responsibility; SP10 supplies remaining language composition."
         ],
-        "screens_states": [
-          "Keep unchanged login, activation, reset, mandatory data-notice gate, accounts/invitations and role administration from v1.",
-          "Redesign /cuenta identity and password area as the complete owner-requested new layout within existing Pictures shell/tokens.",
-          "Shared menu closed/open; named/absent-name/long-name/long-email fixtures; each of four plans, administrator, employee, custom role; restricted/no administrator links.",
-          "Password idle, required/short/too-long/mismatch, wrong current password, pending, service/network error, acknowledged success; ES/EN, light/dark, reduced motion.",
-          "390x844 and1280x900 explicit dismissal/focus cases,768px tablet and360px contractual floor; no clipped controls or horizontal page overflow."
+        "copy_rules": [
+          "Spanish owner-facing preview with English parity. Explicit Nombre/Name and Correo/Email. Catalogue-backed Plan label/name for real plan identities only. Use real role identity for staff/custom accounts without inventing a subscription.",
+          "Email fallback only for null/empty/whitespace name. No invented full name and no claim that the synthetic unnamed account proves loss of an invitation name.",
+          "No data-notice accepted/version/date summary in the ordinary account view. No marketing copy, invented profile editing or new password-policy claims.",
+          "Dropdown Escape returns focus to trigger; repeated-trigger closure leaves focus there; outside-pointer closure preserves focus on the clicked focusable target; Tab/Shift+Tab can leave without trapping focus and closes when focus leaves.",
+          "Resolved existing-owner decisions for finalization: per round15 the language switch belongs in the account menu, and per round10 the public Plans menu entry is available to signed-in staff/custom accounts too. Preserve current theme composition. A chosen direction may not move language out of the account menu or restrict the plans link.",
+          "Name fallback is already owner-confirmed: keep the explicit Name row and email when the stored name is absent, even when email is also separately shown. Translate canonical system-role labels for EN as Administrator and Internal employee; never translate user-authored custom-role names or infer a plan.",
+          "Hints and too-long copy may restate the existing8–200-character rule; no new password policy. Network errors can reuse existing generic change-password failure copy. Service-acknowledged success does not require a new human acknowledgment button. Non-modal popup overlap, initial-only narrow trigger and account/password grouping are visible choices in the mockup; preserve full name in the open popup and profile, accessible trigger name, outside/Escape/focus behavior and existing security.",
+          "Q1–Q4 finalization dispositions are settled: inherit the exact candidate host shell, optional read-only actual company is allowed through the local projection, equivalent disclosure HTML is technical if every required behavior matches, and owner-selected C truncation is accepted with full name in popup/profile/accessible name. No new owner interview for those settled points."
+        ],
+        "criteria": [
+          "Full new /cuenta and password composition, actual identity and correct access label, no consent metadata in ordinary profile, responsive ES/EN, all password states, unchanged security invariants and tested dismissal/focus.",
+          "Only SP-2 changes contract; analyze shared menu composition with SP-8, SP-10 and SP-14, retaining their language/theme/plans controls without blanket contract replacement.",
+          "Password-field aria-describedby references only help/error nodes actually rendered in blank, matching and mismatching states in ES/EN; the final mockup and production target must not retain a demonstrated dangling ARIA reference."
         ]
       }
     },
@@ -619,7 +619,10 @@
         "The sign-in screen and the account menu each show one link to the plans section that opens /planes, signed out from the sign-in screen and signed in from the menu.",
         "On a production build started with next start against the REQ-021 test database, a signed-out browser follows the sign-in screen's plans link to the four plans with COP prices, an English browser sees the same plans with USD prices, a signed-in Entusiasta reaches the section from the account menu, and the page fits 390 and 1280 pixel widths without horizontal scrolling with every link reachable by keyboard.",
         "An independent audit of SP-14 records every confirmed defect with the task that must redo it in the SP-14 findings ledger, and the ledger has no open critical or high finding.",
-        "The extra plans view lets a visitor select/highlight any plan for comparison and return to the full comparison; it never changes account assignment, and all tool lists remain visible without an «Ocultar herramientas» control."
+        "The /planes route presents four conventional informational subscription cards in catalogue order, each with plan name, monthly price and full included-tool list; no comparison/selection controls, highlighted/current/recommended plan or card action is rendered, and no hide-tools control is offered.",
+        "Reading the subscription cards and using language or navigation controls, including legacy selection query URLs, never changes the signed-in account assignment or next-request permissions and sends no account or purchase mutation.",
+        "Legacy /planes?vista=seleccionar and obsolete plan-selection query parameters show the same four informational cards without restoring a comparison mode, selection state, pressed plan, highlighted default plan or selection-specific controls.",
+        "The four cards and full cumulative tool lists remain legible in Spanish and English at360,390,768 and1280px without horizontal page scrolling, clipping or collapsed tools, and every remaining language, back and account-menu link works by keyboard."
       ],
       "audit_task": "T14.6",
       "consumes": [
@@ -651,12 +654,12 @@
       "id": "SP-14",
       "integration_test_task": "T14.4",
       "milestone_id": "M1",
-      "outcome": "Anyone, signed in or not, opens the plans section from the sign-in screen or the account menu and compares Entusiasta, Designer, Designer Plus and Master Designer with their monthly price (COP in Spanish, USD in English) and included tools read from the plan catalogue, with the tools not built yet marked «aún no disponible»; a separate view lets visitors select/highlight one plan for comparison only; nothing in it buys, requests, signs up or changes an account’s assigned plan.",
+      "outcome": "Anyone, signed in or not, reads four conventional informational subscription cards for Entusiasta, Designer, Designer Plus and Master Designer in catalogue order, with monthly price (COP in Spanish, USD in English), complete included-tool lists and unavailable-tool markers. There is no comparison/selection mode, highlighted/current/recommended plan, purchase, request, registration or account mutation.",
       "title": "Plans section: the four access plans, public and informative",
       "ui": {
         "contract": "planes",
-        "design_task": "T14.1",
-        "version": 1,
+        "design_task": "T14.11",
+        "version": 2,
         "visual_review_task": "T14.5"
       },
       "ui_brief": {
@@ -668,37 +671,44 @@
           "Tools not built yet say «aún no disponible» (Spanish) and «not available yet» (English)",
           "Chat limits are named without numbers: Entusiasta «con límites» / «with limits», Designer «con límites más altos» / «with higher limits» (owner, 2026-10-27)",
           "The Taller 3D line of Master Designer stands for the whole 3D balloon editor, the ready-made decorations explorer included; no separate explorer line (owner-confirmed 2026-10-27)",
-          "If the section says how a plan is obtained, it says only that an administrator assigns it"
+          "If the section says how a plan is obtained, it says only that an administrator assigns it",
+          "Use the heading Planes / Plans and ordinary subscription-card hierarchy: plan name,price/currency per month,full included tools. Remove Comparar planes,Seleccionar para comparar,Ir a un plan,Plan resaltado,selection-summary and return-to-comparison copy.",
+          "No recommended/popular/best-value/current-plan badges,discounts,testimonials or invented marketing claims. All four cards are peers and no card is selected/highlighted by default.",
+          "If explanatory access copy is useful,retain only the existing factual administrator-assignment statement; do not introduce a purchase/request action.",
+          "Finalization dispositions from existing authority/code facts: preserve catalogue text including punctuation; any optional tool count is derived from visible catalogue entries,not a quota/limit. Card heights/spacing/decorative markers are part of the selected visual composition,not a new requirements round. Unavailable text must stay explicit and must not imply availability. The plans-page language control remains available under round15,with the signed-in menu language pair following the same existing idioma mechanism. Retain current host back-navigation behavior/target with truthful copy; do not add history/origin tracking as an unrelated feature."
         ],
         "existing_surface": {
-          "components": [
-            "LoginForm",
-            "CabeceraApp",
-            "MenuApp",
-            "MenuCuenta (planned by SP-2 T2.4, not on main yet)"
-          ],
-          "notes": "The sign-in screen and the account menu are redesigned by SP-2 (cuentas-admin@v1, owner-chosen direction «Parte de acceso»); planes@v1 only adds one plans link in each and follows that direction and the tokens of src/app/globals.css. The page data comes only from the plan catalogue (src/lib/planes/catalogo.ts, SP-1 T1.2).",
-          "paths": [
-            "src/app/login/page.tsx",
-            "src/app/login/LoginForm.tsx",
-            "src/app/globals.css",
-            "src/app/layout.tsx",
-            "src/components/ui/shell/CabeceraApp.tsx",
-            "src/components/ui/shell/MenuApp.tsx"
-          ],
           "routes": [
-            "/login",
-            "/planes (new)"
-          ]
+            "/planes",
+            "/planes?vista=seleccionar (legacy query only; no separate mode after amendment)",
+            "existing plans link in /login and shared signed-in account menu"
+          ],
+          "paths": [
+            "src/app/planes/page.tsx",
+            "src/components/planes/ComparadorPlanes.tsx",
+            "src/components/planes/comparador-planes.module.css",
+            "src/components/planes/textos-planes.ts",
+            "src/lib/planes/catalogo.ts",
+            "src/components/cuentas/MenuCuenta.tsx",
+            "src/app/globals.css"
+          ],
+          "components": [
+            "ComparadorPlanes (legacy filename/export may remain; behavior becomes informational cards)",
+            "MenuCuenta (preserve active SP2 contract,including chosen cuentas-admin@v2 when composed)"
+          ],
+          "screenshots": [
+            "/home/david/.local/share/bitacora-solver/pictures/20261031-153033-1a41/planes.png",
+            "/home/david/.local/share/bitacora-solver/pictures/20261031-153033-1a41/seleccionar.png"
+          ],
+          "notes": "Owner P211 explicitly replaces comparison/selection with conventional subscription cards. Read exact published commit0715a331b72111afe085e35d773b284764924fe4 through git show in /home/david/dev/.pictures-wt/login-redirect; never read/write /home/david/dev/pictures. Reproduction evidence/owner-rejected/SP-14-v2.md. Approved planes@v1 is immutable history,not the new design; new planes@v2 is a breaking scoped presentation/interaction revision. Keep actual Pictures shell/tokens/fonts and approved sibling account-menu composition. SP2 chosen-C correction is independent; do not redesign its account/password surface or create a new login/menu layout."
         },
         "flows": [
           {
-            "name": "Signed-out visitor compares the plans",
+            "name": "Signed-out visitor reads the plan cards",
             "steps": [
-              "Opens the sign-in screen",
-              "Follows its plans link",
-              "Reads the four plans in order with name, monthly price and included tools",
-              "Goes back to the sign-in screen"
+              "Open sign-in and follow its existing plans link.",
+              "Read four conventional subscription cards in catalogue order with name, monthly price and full included tools.",
+              "Return through the existing back navigation without selecting or requesting a plan."
             ]
           },
           {
@@ -707,7 +717,7 @@
               "Opens the account menu on any signed-in page",
               "Follows its plans entry",
               "Reads the four plans",
-              "Returns to the page they came from"
+              "Use the existing host back/account navigation; introduce no new origin-tracking or signed-in return feature in the card amendment."
             ]
           },
           {
@@ -716,23 +726,37 @@
               "Opens /planes with an English browser",
               "Sees the same four plans and tools in English with prices in USD per month"
             ]
+          },
+          {
+            "name": "Legacy plan-selection URL",
+            "steps": [
+              "Open /planes?vista=seleccionar or an obsolete selected-plan query.",
+              "Read the same informational cards; no comparison, selection or highlighting mode appears and no account changes."
+            ]
           }
         ],
         "must_not_change": [
-          "The sign-in screen and account menu layout, copy and behavior defined by cuentas-admin@v1, except one plans link in each",
-          "No purchase, subscription, request, contact or sign-up action anywhere in the section",
-          "No limit values, counters or limit messages",
-          "Custom roles, staff roles and permission keys are never shown in the section"
+          "Four catalogue plans/order,canonical names,monthly COP/ES versus USD/EN prices,full cumulative tools,unavailable markers and existing chat-limit copy without numeric limits.",
+          "Public informational /planes route and existing sign-in/account-menu entry links for every signed-in role; no authentication/permission/role/catalogue/business contract change.",
+          "No buying,paying,requesting,contacting,signing up,changing plans or marking the current account plan. Cards are informational articles,not selection controls; do not add disabled or decorative purchase CTA.",
+          "Preserve exact current host shell/account-menu behavior and SP2 contract,including dismissal/focus/name/plan identity. No new theme,language placement,font,palette,brand,marketing badge or invented benefit.",
+          "Remove only owner-superseded comparison/selection features. Do not remove unrelated language,accessibility,responsive,public-route,entry-link or authorization regression coverage.",
+          "The catalogue is currently a static import validated by validarCatalogoPlanes(PLANES) at module load; malformed/missing catalogue fields fail existing validation/build. Do not invent a catalogue HTTP request,loading/empty success state or no-op Retry CTA. Preserve any actual host loading/error handling; catalogue-specific runtime loading/retry is inapplicable unless the existing architecture actually provides it."
         ],
         "screens_states": [
-          "/planes in Spanish: Entusiasta, Designer, Designer Plus and Master Designer in that order, prices in COP per month, Entusiasta free",
-          "/planes in English: Enthusiast, Designer, Designer Plus and Master Designer with prices in USD per month",
-          "Cumulative plans: each plan includes everything of the plan before it; the contract decides whether a plan lists all its tools or what it adds",
-          "Chat lines without numbers: Entusiasta «Chat con límites» / «Chat with limits»; Designer «Chat con límites más altos» / «Chat with higher limits»",
-          "Tools not built yet (extended chat, structure detection, advanced balloon detection) shown under Designer Plus and Master Designer as «aún no disponible» / «not available yet»",
-          "Signed-out page (no account menu) and signed-in page (account menu present)",
-          "Phone 390 px and desktop 1280 px without horizontal scrolling; keyboard focus order",
-          "Plans link on the sign-in screen and plans entry in the account menu"
+          "/planes ES: four cards Entusiasta,Designer,Designer Plus,Master Designer in that order; monthly COP,Entusiasta Gratis.",
+          "/planes EN: Enthusiast,Designer,Designer Plus,Master Designer; monthly USD,Enthusiast Free; never both currencies together.",
+          "Each card contains its complete cumulative catalogue tool list, visible without accordion/hide control, plus unavailable markers and the existing chat-limit wording without numbers.",
+          "Signed-out and signed-in pages show identical public plan information; preserve host shell/account controls for its actual role without marking a current plan.",
+          "360/390px phone,768px tablet and1280px desktop; readable cards,normal vertical scrolling,no horizontal overflow,visible keyboard focus and ES/EN/light/dark/reduced-motion parity.",
+          "Loading/catalogue unavailable/error recovery follows the existing architecture without invented plans/prices or success from partial/invalid data; no comparison controls appear in any state.",
+          "Legacy selection query URLs resolve to the same non-selectable cards. No comparison tabs/side index/selection summary,default highlighted plan,per-plan pressed state,select/buy/request/register CTA or recommended/current-plan badge."
+        ],
+        "criteria": [
+          "The /planes route presents four conventional informational subscription cards in catalogue order, each with plan name, monthly price and full included-tool list; no comparison/selection controls, highlighted/current/recommended plan or card action is rendered, and no hide-tools control is offered.",
+          "Legacy /planes?vista=seleccionar and obsolete plan-selection query parameters show the same four informational cards without restoring a comparison mode, selection state, pressed plan, highlighted default plan or selection-specific controls.",
+          "The four cards and full cumulative tool lists remain legible in Spanish and English at360,390,768 and1280px without horizontal page scrolling, clipping or collapsed tools, and every remaining language, back and account-menu link works by keyboard.",
+          "The owner confirms the final planes@v2 design and SP14 before implementation. Preserve all unaffected catalogue/public-information/account invariants; full lists stay visible and reading cards never mutates account access."
         ]
       }
     },
@@ -1303,13 +1327,13 @@
           "version": 1
         },
         {
-          "contract": "galeria-index",
-          "dependency": "implementation",
           "from": "SP-7",
+          "contract": "galeria-index",
+          "version": 1,
+          "dependency": "implementation",
           "verified_by": [
             "T9.5"
-          ],
-          "version": 1
+          ]
         }
       ],
       "covers": [
@@ -1340,12 +1364,6 @@
         "A separate manual local observation using the already configured AI provider confirms an English conversation receives an English reply and a Spanish conversation a Spanish reply; record the actual provider and outcome without secrets or exact free-text assertions, and never substitute stub evidence for this observation."
       ],
       "audit_task": "T10.6",
-      "checkpoints": [
-        {
-          "purpose": "Run the existing exhaustive real-entrypoint integration on the corrected producer snapshot before SP-10 audit; preserve the separate genuine provider observation and reject stale partial evidence.",
-          "task": "T10.5"
-        }
-      ],
       "consumes": [
         {
           "contract": "idioma",
@@ -1367,7 +1385,13 @@
       "integration_test_task": "T10.5",
       "milestone_id": "M3",
       "outcome": "Every screen an external user reaches beyond the Taller and the navigation (home, guided chat, counter, calculator and professional quote, catalogue, gallery, saved projects and personal library, account) is complete in English, the chat tools and the Taller scene AI reply in the user's language while catalogue searches keep using the Spanish catalogue, and staff-only screens stay in Spanish.",
-      "title": "Remaining screens and AI replies in English"
+      "title": "Remaining screens and AI replies in English",
+      "checkpoints": [
+        {
+          "task": "T10.5",
+          "purpose": "Run the existing exhaustive real-entrypoint integration on the corrected producer snapshot before SP-10 audit; preserve the separate genuine provider observation and reject stale partial evidence."
+        }
+      ]
     },
     {
       "acceptance_criteria": [
@@ -4345,15 +4369,6 @@
           ],
           "justification": "Only own-account/password presentation and the shared account menu plus focused regression outputs change."
         },
-        "duration": {
-          "evidence": [
-            "task:T2.4",
-            "task:T2.56",
-            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 6ec74192eb0175827a9005ae2c152955cb0d220d:src/components/cuentas/MenuCuenta.tsx -> native details has no outside-pointer or Escape dismissal; actual stored name already uses email fallback",
-            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 6ec74192eb0175827a9005ae2c152955cb0d220d:src/app/cuenta/page.tsx -> ordinary profile renders role and accepted-notice version/date"
-          ],
-          "justification": "Provisional account UI/redesign agent estimate is uncalibrated; comparable measured history remains unknown."
-        },
         "risk": {
           "evidence": [
             "task:T2.4",
@@ -4380,6 +4395,15 @@
             "command:git -C /home/david/dev/.pictures-wt/login-redirect show 6ec74192eb0175827a9005ae2c152955cb0d220d:src/app/cuenta/page.tsx -> ordinary profile renders role and accepted-notice version/date"
           ],
           "justification": "The exact rejected snapshot and browser evidence identify the disclosure and presentation surfaces; new design still needs owner approval."
+        },
+        "duration": {
+          "evidence": [
+            "task:T2.4",
+            "task:T2.56",
+            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 6ec74192eb0175827a9005ae2c152955cb0d220d:src/components/cuentas/MenuCuenta.tsx -> native details has no outside-pointer or Escape dismissal; actual stored name already uses email fallback",
+            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 6ec74192eb0175827a9005ae2c152955cb0d220d:src/app/cuenta/page.tsx -> ordinary profile renders role and accepted-notice version/date"
+          ],
+          "justification": "Provisional account UI/redesign agent estimate is uncalibrated; comparable measured history remains unknown."
         }
       },
       "expected_paths": [
@@ -4583,12 +4607,6 @@
           ],
           "justification": "Only exact-candidate account browser evidence and screenshots are produced; no product or harness implementation belongs here."
         },
-        "duration": {
-          "evidence": [
-            "task:T2.57"
-          ],
-          "justification": "Provisional30 agent minutes cover a browser suite and inspection; no comparable measured duration,retries or quality is available."
-        },
         "risk": {
           "evidence": [
             "task:T2.57"
@@ -4606,6 +4624,12 @@
             "task:T2.57"
           ],
           "justification": "T2.57 owns each browser case; actual runtime duration and outcomes remain unknown until execution."
+        },
+        "duration": {
+          "evidence": [
+            "task:T2.57"
+          ],
+          "justification": "Provisional30 agent minutes cover a browser suite and inspection; no comparable measured duration,retries or quality is available."
         }
       },
       "expected_paths": [
@@ -11889,12 +11913,12 @@
       "estimate_rationale": "Agent estimate in minutes: 30 locating every reply-language instruction in Next and ai-api + 50 threading the language through prompt builders and the signed internal context + 20 search-in-Spanish tool instruction + 50 stub-provider tests = 150.",
       "classification_evidence": {
         "complexity": {
+          "justification": "Language-aware replies cross Next/Python adapters, streamed and final output plus fixed Spanish search keys, requiring high cross-component reasoning.",
           "evidence": [
             "file:src/app/api/escena-ia/route.ts",
             "file:src/lib/ia/guiado/prompt-guiado.ts",
             "file:src/lib/ia/nucleo/python-adapter.ts"
-          ],
-          "justification": "Language-aware replies cross Next/Python adapters, streamed and final output plus fixed Spanish search keys, requiring high cross-component reasoning."
+          ]
         },
         "scope": {
           "evidence": [
@@ -13698,13 +13722,101 @@
       "ui": false
     },
     {
-      "id": "T14.2",
+      "id": "T14.11",
       "milestone_id": "M1",
-      "title": "Public plans page: the four plans from the plan catalogue, prices by language",
-      "objective": "A public /planes page renders the four access plans only from the plan catalogue, in the visitor's language with its currency, with all tool lists visible, no hide-tools control, and an extra informational view to select/highlight a plan for comparison without changing account assignment.",
+      "title": "Copy the independently owner-approved planes@v2 subscription-card contract",
+      "objective": "Copy only the exact independently owner-approved planes@v2 card contract to design/contracts/planes@v2.md after CG1. Unchanged T14.1 preserves the old approved v1 artifact; never overwrite it. The new contract removes comparison/selection and changes only the public plan presentation,not catalogue data,permissions or account/menu behavior. Exact owner visual and SP14 approval are prerequisites,not authority granted by the Planner or Designer.",
       "repository": "pictures",
       "after": [
-        "T14.1"
+        "T91"
+      ],
+      "complexity": "low",
+      "scope": "isolated_fix",
+      "estimated_minutes": 5,
+      "risk": "low",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "Provisional5 agent minutes to copy one owner-pinned card contract; no comparable measured duration or retries available.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "task:T14.1",
+            "task:T14.2"
+          ],
+          "justification": "The plans design task copies one exact owner-pinned card artifact without creating product behavior."
+        },
+        "scope": {
+          "evidence": [
+            "task:T14.1",
+            "task:T14.2"
+          ],
+          "justification": "Only the new planes v2 Markdown is added; v1 and product code remain untouched by this design copy."
+        },
+        "duration": {
+          "evidence": [
+            "task:T14.1",
+            "task:T14.2"
+          ],
+          "justification": "Five provisional agent minutes cover the single plans contract copy; no measured comparable history exists."
+        },
+        "risk": {
+          "evidence": [
+            "task:T14.1",
+            "task:T14.2"
+          ],
+          "justification": "Independent owner digest approval and immutable old planes v1 preservation bound this design-copy risk."
+        },
+        "coupling": {
+          "evidence": [
+            "task:T14.1",
+            "task:T14.2"
+          ],
+          "justification": "The new planes copy follows CG1 in parallel with T14.1; both UI consumers have the declared v2 design ancestor."
+        },
+        "confidence": {
+          "evidence": [
+            "task:T14.1",
+            "task:T14.2"
+          ],
+          "justification": "The ordinary approved-planning-artifact copy flow exists; the new card design is still pending owner approval."
+        }
+      },
+      "expected_paths": [
+        "design/contracts/planes@v2.md"
+      ],
+      "shared_resources": [
+        "design:planes@v2"
+      ],
+      "acceptance_criteria": [
+        "The independently owner-approved planes@v2 contract is copied byte for byte into design/contracts/planes@v2.md without changing the existing approved planes@v1 artifact."
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "test -s design/contracts/planes@v2.md",
+          "purpose": "The independently owner-approved planes@v2 contract is copied byte for byte into design/contracts/planes@v2.md without changing the existing approved planes@v1 artifact.",
+          "category": "static"
+        }
+      ],
+      "covers": [
+        "R17",
+        "R18",
+        "R19",
+        "R20"
+      ],
+      "kind": "design",
+      "subplan_id": "SP-14",
+      "ui": false
+    },
+    {
+      "id": "T14.2",
+      "milestone_id": "M1",
+      "title": "Replace comparison and selection with public subscription cards",
+      "objective": "Implement the independently owner-approved planes@v2 conventional subscription-card presentation on the exact candidate. The four informational cards read PLANES directly in catalogue order,with name,monthly currency/price,complete cumulative tools,unavailable markers and existing chat wording. Remove comparison/selection state and controls from the public page: selectionView/selectedPlanId/default highlighting,comparison tabs/side index,choose/return actions,summary and comparison-only metadata/copy. Do not add a purchase/request/contact/signup/current-plan/recommended action or badge. Preserve existing language/account-preference composition and sign-in/menu/back links,public route and all permission/catalogue contracts. Legacy vista=seleccionar and selected-plan query inputs are ignored and show the same canonical card page; no alternative comparison mode or account mutation is possible. Keep the legacy component/style filenames if appropriate to avoid unrelated renames; they must implement only cards/language presentation,not retain hidden comparison behavior. Update existing planes:test-ui cases only where the owner explicitly superseded selection/highlighting; replace those assertions with positive four-card and negative no-selection/no-action cases,without skip,relaxed checks or dropping unrelated catalogue/currency/public-route/tablet tests. CSS changes belong to comparador-planes.module.css. Add focused lint,workspace build and full strict types with4096MB Node heap before integration. No new dependency,provider,data migration,auth policy or production action.",
+      "repository": "pictures",
+      "after": [
+        "T14.1",
+        "T14.11"
       ],
       "complexity": "medium",
       "scope": "small_change",
@@ -13712,54 +13824,61 @@
       "risk": "medium",
       "coupling": "medium",
       "confidence": "medium",
-      "estimate_rationale": "Agent estimate in minutes: 50 page and comparison component + 20 strings and language selection + 10 public-route check + 40 static-render tests = 120. No comparable history.",
+      "estimate_rationale": "Uncalibrated provisional agent estimate retained at120minutes:60 layout/copy,30 replacement regressions,30 focused checks. Comparable duration,retries,quality and consumption unknown; not human time or a delivery promise.",
       "classification_evidence": {
         "complexity": {
           "evidence": [
-            "file:src/app/globals.css",
-            "file:scripts/test/test-ui-armado-columna.ts"
+            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 0715a331b72111afe085e35d773b284764924fe4:src/components/planes/ComparadorPlanes.tsx -> page owns selectionView,selectedPlanId,comparison navigation and highlightedPlanId; replace these with informational catalogue cards",
+            "task:T1.2",
+            "task:T14.4"
           ],
-          "justification": "A comparison of four cumulative plans at phone and desktop widths with two currencies needs care but no new data."
+          "justification": "Four responsive catalogue cards in ES/EN replace the existing comparison state without new data or account actions."
         },
         "scope": {
           "evidence": [
-            "file:src/app/layout.tsx",
-            "task:T1.2"
+            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 0715a331b72111afe085e35d773b284764924fe4:src/components/planes/ComparadorPlanes.tsx -> page owns selectionView,selectedPlanId,comparison navigation and highlightedPlanId; replace these with informational catalogue cards",
+            "task:T1.2",
+            "task:T14.4"
           ],
-          "justification": "One new page, one component, one strings module and one test; the public map entry for /planes is written by T1.2."
+          "justification": "Only the existing public plans page,component,styles,copy and focused UI tests change."
         },
         "duration": {
           "evidence": [
-            "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind implement -> status unknown, no comparable samples",
-            "file:scripts/test/test-ui-armado-columna.ts"
+            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 0715a331b72111afe085e35d773b284764924fe4:src/components/planes/ComparadorPlanes.tsx -> page owns selectionView,selectedPlanId,comparison navigation and highlightedPlanId; replace these with informational catalogue cards",
+            "task:T1.2",
+            "task:T14.4"
           ],
-          "justification": "Fifty page, twenty strings, ten public-route check and forty tests make one hundred twenty minutes."
+          "justification": "The unchanged provisional120 agent minutes cover60 layout/copy,30 replacement regressions and30 focused checks; comparable measured history remains unknown."
         },
         "risk": {
           "evidence": [
-            "spec:SPEC.md#requirements",
-            "file:src/proxy.ts"
+            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 0715a331b72111afe085e35d773b284764924fe4:src/components/planes/ComparadorPlanes.tsx -> page owns selectionView,selectedPlanId,comparison navigation and highlightedPlanId; replace these with informational catalogue cards",
+            "task:T1.2",
+            "task:T14.4"
           ],
-          "justification": "Public visitors would read a wrong price or a tool that does not exist, and a wrong map entry could open another route."
+          "justification": "The cards must preserve truthful prices/tools and the existing public-only access boundary while removing comparison controls."
         },
         "coupling": {
           "evidence": [
+            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 0715a331b72111afe085e35d773b284764924fe4:src/components/planes/ComparadorPlanes.tsx -> page owns selectionView,selectedPlanId,comparison navigation and highlightedPlanId; replace these with informational catalogue cards",
             "task:T1.2",
-            "task:T1.4"
+            "task:T14.4"
           ],
-          "justification": "Reads contract:plan-catalogue and the /planes entry of contract:permission-map from SP-1."
+          "justification": "The card presentation consumes existing plan-catalogue and route permissions and preserves the SP2 entry-link surface."
         },
         "confidence": {
           "evidence": [
-            "file:scripts/test/test-ui-armado-columna.ts",
-            "assumption:the planes@v1 contract keeps one comparison view without tabs"
+            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 0715a331b72111afe085e35d773b284764924fe4:src/components/planes/ComparadorPlanes.tsx -> page owns selectionView,selectedPlanId,comparison navigation and highlightedPlanId; replace these with informational catalogue cards",
+            "task:T1.2",
+            "task:T14.4"
           ],
-          "justification": "Static-render UI tests already exist in the repository; the contract layout is not drafted yet."
+          "justification": "The exact rejected page/component/tests were inspected; the new owner-approved card layout still needs Designer and owner confirmation."
         }
       },
       "expected_paths": [
         "src/app/planes/page.tsx",
         "src/components/planes/ComparadorPlanes.tsx",
+        "src/components/planes/comparador-planes.module.css",
         "src/components/planes/textos-planes.ts",
         "scripts/test/test-ui-planes.ts"
       ],
@@ -13774,8 +13893,11 @@
         "With a Spanish browser language the page shows every price in COP per month and with an English one in USD per month, never both, Entusiasta shows as free in each language and is named Enthusiast in English.",
         "Extended chat, structure detection and advanced balloon detection appear under Designer Plus and Master Designer marked «aún no disponible» in Spanish and «not available yet» in English, the Entusiasta chat reads «con límites» / «with limits» and the Designer chat «con límites más altos» / «with higher limits», and the page has no purchase, request or sign-up control and shows no limit value.",
         "Without a session the /planes page is served, because the route permission map lists /planes as public, and every other page and API keeps exactly one mapped entry.",
-        "The extra plans view lets a visitor select/highlight any plan for comparison and return to the full comparison; it never changes account assignment.",
-        "At tablet width all four plans and full tool lists remain legible without horizontal scrolling, and no hide-tools control is rendered."
+        "The /planes route presents four conventional informational subscription cards in catalogue order, each with plan name, monthly price and full included-tool list; no comparison/selection controls, highlighted/current/recommended plan or card action is rendered, and no hide-tools control is offered.",
+        "At tablet width all four plans and full tool lists remain legible without horizontal scrolling, and no hide-tools control is rendered.",
+        "The existing workspace packages build with their current scripts before the strict plans-card repository type check,without configuration changes and with the Node heap bounded to4096MB.",
+        "Full strict repository TypeScript accepts the subscription-card page after workspace build,without casts,suppressions or relaxed settings to bypass boundaries.",
+        "Owned plans-card TypeScript and UI regression files pass focused ESLint without new suppressions or lint configuration changes."
       ],
       "verification": [
         {
@@ -13808,8 +13930,8 @@
         },
         {
           "type": "command",
-          "value": "npm run planes:test-ui -- --solo vista-eleccion",
-          "purpose": "The extra plans view lets a visitor select/highlight any plan for comparison and return to the full comparison; it never changes account assignment.",
+          "value": "npm run planes:test-ui -- --solo tarjetas",
+          "purpose": "The /planes route presents four conventional informational subscription cards in catalogue order, each with plan name, monthly price and full included-tool list; no comparison/selection controls, highlighted/current/recommended plan or card action is rendered, and no hide-tools control is offered.",
           "created_by": "T14.2",
           "category": "functional"
         },
@@ -13819,6 +13941,24 @@
           "purpose": "At tablet width all four plans and full tool lists remain legible without horizontal scrolling, and no hide-tools control is rendered.",
           "created_by": "T14.2",
           "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "NODE_OPTIONS=--max-old-space-size=4096 npm run build --workspaces --if-present",
+          "purpose": "The existing workspace packages build with their current scripts before the strict plans-card repository type check,without configuration changes and with the Node heap bounded to4096MB.",
+          "category": "static"
+        },
+        {
+          "type": "command",
+          "value": "NODE_OPTIONS=--max-old-space-size=4096 npx --no-install tsc --noEmit --incremental false",
+          "purpose": "Full strict repository TypeScript accepts the subscription-card page after workspace build,without casts,suppressions or relaxed settings to bypass boundaries.",
+          "category": "static"
+        },
+        {
+          "type": "command",
+          "value": "npx --no-install eslint src/app/planes/page.tsx src/components/planes/ComparadorPlanes.tsx src/components/planes/textos-planes.ts scripts/test/test-ui-planes.ts",
+          "purpose": "Owned plans-card TypeScript and UI regression files pass focused ESLint without new suppressions or lint configuration changes.",
+          "category": "static"
         }
       ],
       "covers": [
@@ -13834,7 +13974,7 @@
       "id": "T14.3",
       "milestone_id": "M1",
       "title": "Plans links on the sign-in screen and in the account menu",
-      "objective": "The sign-in screen and the account menu each lead to the plans section without changing anything else the cuentas-admin@v1 screens do.",
+      "objective": "The sign-in screen and shared account menu each retain exactly one plans entry,without changing the active owner-approved SP2 account contract or its sign-in,dismissal,identity and password behavior; preserve cuentas-admin@v2 when composed rather than resurrect older v1 layout.",
       "repository": "pictures",
       "after": [
         "T14.2"
@@ -13948,7 +14088,7 @@
       "id": "T14.4",
       "milestone_id": "M1",
       "title": "Browser end-to-end of the plans section on a production build",
-      "objective": "Real browsers against next start prove the section is reachable signed out and signed in, follows the browser language and currency, fits phone, tablet and desktop, and choosing a plan in the informational view does not change assignment, and opens nothing else without a session.",
+      "objective": "Author and run the real production Next/browser card verification against an invocation-owned isolated REQ021 schema. Preserve all existing signed-out/signed-in,catalogue,currency,entry-link and public-route denial checks. Retire only the owner-superseded plan-selection assertions; replace them with four-card presence,absence of comparison/card actions,legacy-query equivalence and actual unchanged account/next-request permission assertions. Capture account/role state before and after reading/keyboard/language/back interactions; no purchase or account mutation request may originate from the card page after authenticated test setup. Expectations come independently from SPEC R17–R20 and the owner P211 amendment,not copied implementation state. Exercise ES/EN at360/390/768/1280 and preserve full tools/keyboard reachability. Keep no-account-change checks strong rather than treating missing buttons alone as proof. Existing authorized administration still changes plan through its own screen. No paid providers,production data,unowned schema cleanup or modified authorization.",
       "repository": "pictures",
       "after": [
         "T14.3"
@@ -14014,8 +14154,9 @@
       "acceptance_criteria": [
         "On a production build started with next start against the REQ-021 test database, a signed-out browser follows the sign-in screen's plans link to the four plans with COP prices, an English browser sees the same plans with USD prices, a signed-in Entusiasta reaches the section from the account menu, and the page fits 390 and 1280 pixel widths without horizontal scrolling with every link reachable by keyboard.",
         "Opening /planes without a session makes no other page or API reachable without a session.",
-        "A signed-in test account selects each plan in the public comparison view; its assigned plan and next-request permissions remain unchanged.",
-        "The extra plans view lets a visitor select/highlight any plan for comparison and return to the full comparison; it never changes account assignment, and all tool lists remain visible without an «Ocultar herramientas» control."
+        "Reading the subscription cards and using language or navigation controls, including legacy selection query URLs, never changes the signed-in account assignment or next-request permissions and sends no account or purchase mutation.",
+        "Legacy /planes?vista=seleccionar and obsolete plan-selection query parameters show the same four informational cards without restoring a comparison mode, selection state, pressed plan, highlighted default plan or selection-specific controls.",
+        "The four cards and full cumulative tool lists remain legible in Spanish and English at360,390,768 and1280px without horizontal page scrolling, clipping or collapsed tools, and every remaining language, back and account-menu link works by keyboard."
       ],
       "verification": [
         {
@@ -14040,8 +14181,8 @@
         },
         {
           "type": "command",
-          "value": "npm run planes:test-integracion -- --solo selector-sin-cambio",
-          "purpose": "A signed-in test account selects each plan in the public comparison view; its assigned plan and next-request permissions remain unchanged.",
+          "value": "npm run planes:test-integracion -- --solo tarjetas-sin-mutacion",
+          "purpose": "Reading the subscription cards and using language or navigation controls, including legacy selection query URLs, never changes the signed-in account assignment or next-request permissions and sends no account or purchase mutation.",
           "created_by": "T14.4",
           "category": "integration",
           "requires": [
@@ -14050,8 +14191,18 @@
         },
         {
           "type": "command",
-          "value": "npm run planes:test-integracion -- --solo selector-sin-cambio",
-          "purpose": "The extra plans view lets a visitor select/highlight any plan for comparison and return to the full comparison; it never changes account assignment, and all tool lists remain visible without an «Ocultar herramientas» control.",
+          "value": "npm run planes:test-integracion -- --solo legado-sin-comparacion",
+          "purpose": "Legacy /planes?vista=seleccionar and obsolete plan-selection query parameters show the same four informational cards without restoring a comparison mode, selection state, pressed plan, highlighted default plan or selection-specific controls.",
+          "created_by": "T14.4",
+          "category": "integration",
+          "requires": [
+            "PICTURES_REQ021_DATABASE_URL"
+          ]
+        },
+        {
+          "type": "command",
+          "value": "npm run planes:test-integracion -- --solo tarjetas-responsive",
+          "purpose": "The four cards and full cumulative tool lists remain legible in Spanish and English at360,390,768 and1280px without horizontal page scrolling, clipping or collapsed tools, and every remaining language, back and account-menu link works by keyboard.",
           "created_by": "T14.4",
           "category": "integration",
           "requires": [
@@ -14071,8 +14222,8 @@
     {
       "id": "T14.5",
       "milestone_id": "M1",
-      "title": "SP-14 visual review against the planes@v1 contract",
-      "objective": "A fresh reviewer compares the rendered plans section and its two entry points with the approved contract at phone, tablet and desktop widths and in both languages, including the extra selection view and records every mismatch with the task to redo.",
+      "title": "SP-14 visual review against the planes@v2 subscription-card contract",
+      "objective": "A fresh reviewer checks the owner-approved planes@v2 card presentation and unchanged entry-link composition at phone,tablet and desktop widths in ES/EN,with no comparison/selection controls,default highlighting,card actions or collapsed tools,recording every deviation with the responsible task. Preserve existing visual ledger and audit policy.",
       "repository": "pictures",
       "after": [
         "T14.4"
@@ -14136,13 +14287,13 @@
         "ledger:SP-14-visual"
       ],
       "acceptance_criteria": [
-        "The full plans comparison, extra select/highlight view and both entry links match the approved planes@v1 contract at phone, tablet and desktop widths in Spanish and English; every tool list is visible, no hide-tools control appears, and each finding names the repair task."
+        "The four subscription cards and both entry links match the approved planes@v2 contract at phone,tablet and desktop widths in Spanish and English; full tool lists stay visible without comparison/selection/highlighting or hide-tools controls,and every finding names the repair task."
       ],
       "verification": [
         {
           "type": "command",
           "value": "bitacora.py audit-ledger check .evidence/REQ-021/SP-14.visual.findings.json",
-          "purpose": "The full plans comparison, extra select/highlight view and both entry links match the approved planes@v1 contract at phone, tablet and desktop widths in Spanish and English; every tool list is visible, no hide-tools control appears, and each finding names the repair task.",
+          "purpose": "The four subscription cards and both entry links match the approved planes@v2 contract at phone,tablet and desktop widths in Spanish and English; full tool lists stay visible without comparison/selection/highlighting or hide-tools controls,and every finding names the repair task.",
           "created_by": "T14.5",
           "category": "static"
         }
@@ -15420,357 +15571,6 @@
       "kind": "test"
     },
     {
-      "id": "T3.91",
-      "milestone_id": "M2",
-      "title": "Restore mouse and pen drag of complete parametric table sets",
-      "objective": "Repair only the confirmed existing table-card drag defect from evidence/owner-rejected/SP-3-v3.md at published4aa221088d69. Restore the established Fondos y muebles mouse/pen drag interaction for every TIPOS_MESA parametric card,including approved additions,without a new screen,control,layout,contract or design. Reuse useArrastreDesdePanel threshold/click suppression and the existing viewer hit-testing/placement pipeline. Drag payload/preview/commit must represent the complete default table-and-attached-chairs set,not a standalone table or detached chair geometry. Reuse the canonical PARTIDA_MESA,sillasDePartida and existing conjunto builder/domain placement rules; do not duplicate the table/chair business logic. Extend the narrow internal drag/group pathway or reuse its existing multi-node item path only if table metadata,parent relationships,capacity and selection are preserved. Build the full new scene once at accepted drop and call the normal history-aware onCambio once; select the table and reuse its existing editor,warning and language/status mechanisms. Preserve click,touch tap,keyboard activation,search/cards/counts,default dimensions/chairs,chair capacity and fixed furniture/library drag. Real pointer release after drag must not create a second set. Invalid/outside drop,Escape,pointer cancellation,insufficient node capacity and cleanup/unmount must create nothing,leave prior selection/history intact and clear ghost/listeners/cursor/orbit state. Use the existing valid drop coordinates/units instead of click default coordinates or a hard-coded floor point. Keep moving an already placed table through the existing useEdicionEscena path,with its chair group attached; test that behavior rather than assuming the reproduction proves it broken. Do not rewrite that movement engine,export,scene schema or permission logic. Own only the four listed producer files and two new regression scripts. Author a pure domain/payload regression and a real Next/WebGL browser harness at /3d using an actual signed-in Master Designer in an invocation-owned isolated REQ021 database/schema and free loopback ports; keep auth bypass off,no production data or paid calls. Browser matrix must use real rendered cards/viewer,real hit-testing and trusted mouse input; Chromium CDP Input.dispatchMouseEvent pointerType=pen is supported by installed playwright-core/types/protocol.d.ts and can exercise the same real pen path. Never invoke creation callbacks,inject scene nodes as the gesture result,force invisible targets or accept component-only synthetic events as placement evidence. Fixture setup may load a controlled scene before the gesture,never substitute it for the gesture. Record per canonical type and pointer modality the default expected table/chair identifiers,accepted drop/world placement,actual exported scene relationships/selection/editor/history and a no-duplicate result. Full matrix also covers click/touch compatibility,invalid drops,capacity/cancellation,existing fixed/library drag and moving the placed set with undo/redo. Keep the focused producer smoke to real rectangular mouse red/green; T3.92 runs the complete matrix once so a production build is not needlessly repeated per criterion. Preserve every accepted task/criterion/check/path/gate and all frozen subplan definitions. No golden regeneration,no new dependency/package script,provider,paid call,owner attestation or UI redesign.",
-      "repository": "pictures",
-      "after": [
-        "T3.13",
-        "T3.121"
-      ],
-      "complexity": "medium",
-      "scope": "small_change",
-      "estimated_minutes": 120,
-      "risk": "medium",
-      "coupling": "medium",
-      "confidence": "medium",
-      "estimate_rationale": "Uncalibrated provisional120agent minutes:35group placement,25pointer wiring,45focused domain/browser cases,15static checks. Comparable measured duration,retries,quality and consumption remain unknown; not human hours or a deadline.",
-      "classification_evidence": {
-        "complexity": {
-          "evidence": [
-            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 4aa221088d69db34dee43d496ffe61d34b0ea428:src/components/tres-d/FondosYMuebles.tsx -> fixed cards call arrastre.apretar/fueArrastre; parametric table cards only call ponerConjunto from onClick",
-            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 4aa221088d69db34dee43d496ffe61d34b0ea428:src/components/tres-d/useLienzoDecoraciones.ts -> single-piece insertion branch cannot create the table-and-attached-chairs set",
-            "task:T3.9",
-            "task:T3.13"
-          ],
-          "justification": "Table set drag crosses existing card,pointer,viewer and canonical group placement paths without new product behavior."
-        },
-        "scope": {
-          "evidence": [
-            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 4aa221088d69db34dee43d496ffe61d34b0ea428:src/components/tres-d/FondosYMuebles.tsx -> fixed cards call arrastre.apretar/fueArrastre; parametric table cards only call ponerConjunto from onClick",
-            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 4aa221088d69db34dee43d496ffe61d34b0ea428:src/components/tres-d/useLienzoDecoraciones.ts -> single-piece insertion branch cannot create the table-and-attached-chairs set",
-            "task:T3.9",
-            "task:T3.13"
-          ],
-          "justification": "The repair is bounded to four existing table-drag producers and two new regression scripts."
-        },
-        "duration": {
-          "evidence": [
-            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 4aa221088d69db34dee43d496ffe61d34b0ea428:src/components/tres-d/FondosYMuebles.tsx -> fixed cards call arrastre.apretar/fueArrastre; parametric table cards only call ponerConjunto from onClick",
-            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 4aa221088d69db34dee43d496ffe61d34b0ea428:src/components/tres-d/useLienzoDecoraciones.ts -> single-piece insertion branch cannot create the table-and-attached-chairs set",
-            "task:T3.9",
-            "task:T3.13"
-          ],
-          "justification": "The table-drag120agent-minute estimate is provisional because history query has no verified comparable duration,retry or quality samples."
-        },
-        "risk": {
-          "evidence": [
-            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 4aa221088d69db34dee43d496ffe61d34b0ea428:src/components/tres-d/FondosYMuebles.tsx -> fixed cards call arrastre.apretar/fueArrastre; parametric table cards only call ponerConjunto from onClick",
-            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 4aa221088d69db34dee43d496ffe61d34b0ea428:src/components/tres-d/useLienzoDecoraciones.ts -> single-piece insertion branch cannot create the table-and-attached-chairs set",
-            "task:T3.9",
-            "task:T3.13"
-          ],
-          "justification": "Incorrect group insertion can orphan chairs,duplicate a set or consume history/capacity; atomic placement and real-browser tests protect these paths."
-        },
-        "coupling": {
-          "evidence": [
-            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 4aa221088d69db34dee43d496ffe61d34b0ea428:src/components/tres-d/FondosYMuebles.tsx -> fixed cards call arrastre.apretar/fueArrastre; parametric table cards only call ponerConjunto from onClick",
-            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 4aa221088d69db34dee43d496ffe61d34b0ea428:src/components/tres-d/useLienzoDecoraciones.ts -> single-piece insertion branch cannot create the table-and-attached-chairs set",
-            "task:T3.9",
-            "task:T3.13"
-          ],
-          "justification": "The table-drag repair consumes completed SP3 cards,group model and integration snapshot after T3.13 before its existing audit."
-        },
-        "confidence": {
-          "evidence": [
-            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 4aa221088d69db34dee43d496ffe61d34b0ea428:src/components/tres-d/FondosYMuebles.tsx -> fixed cards call arrastre.apretar/fueArrastre; parametric table cards only call ponerConjunto from onClick",
-            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 4aa221088d69db34dee43d496ffe61d34b0ea428:src/components/tres-d/useLienzoDecoraciones.ts -> single-piece insertion branch cannot create the table-and-attached-chairs set",
-            "task:T3.9",
-            "task:T3.13"
-          ],
-          "justification": "Published source and exact browser rejection isolate the missing pointer path; full pen/group/cancellation evidence still must be earned."
-        }
-      },
-      "expected_paths": [
-        "src/components/tres-d/FondosYMuebles.tsx",
-        "src/components/tres-d/arrastre-decoracion.ts",
-        "src/components/tres-d/useLienzoDecoraciones.ts",
-        "src/lib/globos3d/mobiliario-conjunto-escena.ts",
-        "scripts/test/test-arrastre-conjunto-mesas.ts",
-        "scripts/test/test-ui-arrastre-mesas-parametricas.ts"
-      ],
-      "shared_resources": [
-        "taller:anadir-panel",
-        "contract:taller-scene"
-      ],
-      "acceptance_criteria": [
-        "A valid dropped parametric table set uses its canonical type/default dimensions/chair configuration and accepted drop placement,creates the complete parent/attached-chair relationship atomically with unique ids,and refuses insufficient capacity without any partial scene change.",
-        "A real browser mouse drag of the rendered Rectangular card to a hit-tested valid viewer floor creates exactly one complete default table-and-chairs set at that drop,selects its table,opens the existing editor and is undone/redone as one history entry; the original click-only wiring fails this regression.",
-        "The existing table-card/default/editor regression remains unchanged and passes for every canonical type,capacity warning,fixed furniture and click creation; approved repository-count checks remain enabled on their original tasks.",
-        "The existing workspace packages build successfully before the full strict table-drag type check,with Node heap bounded to4096MB and no build or TypeScript setting change.",
-        "The repaired table-drag producer and browser fixtures pass full strict repository TypeScript without new casts,suppressions or relaxed settings.",
-        "Owned table-drag producer and regression files pass focused ESLint without new suppressions or lint configuration changes."
-      ],
-      "verification": [
-        {
-          "type": "command",
-          "value": "npx --no-install tsx scripts/test/test-arrastre-conjunto-mesas.ts",
-          "purpose": "A valid dropped parametric table set uses its canonical type/default dimensions/chair configuration and accepted drop placement,creates the complete parent/attached-chair relationship atomically with unique ids,and refuses insufficient capacity without any partial scene change.",
-          "created_by": "T3.91",
-          "category": "regression"
-        },
-        {
-          "type": "command",
-          "value": "npx --no-install tsx scripts/test/test-ui-arrastre-mesas-parametricas.ts --suite rectangular-mouse",
-          "purpose": "A real browser mouse drag of the rendered Rectangular card to a hit-tested valid viewer floor creates exactly one complete default table-and-chairs set at that drop,selects its table,opens the existing editor and is undone/redone as one history entry; the original click-only wiring fails this regression.",
-          "created_by": "T3.91",
-          "category": "regression",
-          "requires": [
-            "PICTURES_REQ021_DATABASE_URL"
-          ]
-        },
-        {
-          "type": "command",
-          "value": "npx --no-install tsx scripts/test/test-taller-mesas-piloto.ts",
-          "purpose": "The existing table-card/default/editor regression remains unchanged and passes for every canonical type,capacity warning,fixed furniture and click creation; approved repository-count checks remain enabled on their original tasks.",
-          "created_by": "T3.9",
-          "category": "regression"
-        },
-        {
-          "type": "command",
-          "value": "NODE_OPTIONS=--max-old-space-size=4096 npm run build --workspaces --if-present",
-          "purpose": "The existing workspace packages build successfully before the full strict table-drag type check,with Node heap bounded to4096MB and no build or TypeScript setting change.",
-          "category": "static"
-        },
-        {
-          "type": "command",
-          "value": "NODE_OPTIONS=--max-old-space-size=4096 npx --no-install tsc --noEmit --incremental false",
-          "purpose": "The repaired table-drag producer and browser fixtures pass full strict repository TypeScript without new casts,suppressions or relaxed settings.",
-          "category": "static"
-        },
-        {
-          "type": "command",
-          "value": "npx --no-install eslint src/components/tres-d/FondosYMuebles.tsx src/components/tres-d/arrastre-decoracion.ts src/components/tres-d/useLienzoDecoraciones.ts src/lib/globos3d/mobiliario-conjunto-escena.ts scripts/test/test-arrastre-conjunto-mesas.ts scripts/test/test-ui-arrastre-mesas-parametricas.ts",
-          "purpose": "Owned table-drag producer and regression files pass focused ESLint without new suppressions or lint configuration changes.",
-          "category": "static"
-        }
-      ],
-      "covers": [
-        "R9"
-      ],
-      "kind": "implement",
-      "subplan_id": "SP-3",
-      "ui": false
-    },
-    {
-      "id": "T3.92",
-      "milestone_id": "M2",
-      "title": "Verify parametric table drag,compatibility and moving the placed set in real browsers",
-      "objective": "Command-only focused checkpoint after T3.91,before existing T3.15. Run the authored real Next/WebGL table-drag browser matrix once with a genuine Master Designer and invocation-owned local fixtures. Require a case for every current TIPOS_MESA type under both trusted mouse and pen inputs,plus rectangular240×90×75cm defaults,complete attached chairs,actual hit-tested drop/world placement,one creation after pointer release,table selection/editor,click and touch tap,Escape/pointer cancellation/outside invalid drop,MAX_NODOS boundary with no partial set,and moving the created table with its chair group through the actual viewer followed by undo/redo. The expectation comes independently from SPEC R9,canonical approved type/default registries and documented parent-child invariants,never the same creation function result or a screenshot-only piece counter. Verify legacy fixed/library drag remains usable. Record exact candidate,per-case type/modality,destination,scene relationship and history outcomes; fail on missing/unexecuted cases,unsupported pen input,missing WebGL,missing DB or fabricated success. Fixtures may initialize baseline state before gestures but may not insert the expected result or invoke callbacks as proof. Preserve source/oracles; do not repair here. Clean up only invocation-owned schemas,ports,servers and temp data; redact secrets,no paid calls or production data. T3.15 audits the repair with its original unchanged criteria/checks.",
-      "repository": "pictures",
-      "after": [
-        "T3.91"
-      ],
-      "complexity": "low",
-      "scope": "isolated_fix",
-      "estimated_minutes": 30,
-      "risk": "low",
-      "coupling": "medium",
-      "confidence": "medium",
-      "estimate_rationale": "Uncalibrated provisional30agent minutes for one complete existing browser matrix and evidence review; measured runtime/retry/quality unknown.",
-      "classification_evidence": {
-        "complexity": {
-          "evidence": [
-            "task:T3.91",
-            "task:T3.9"
-          ],
-          "justification": "The table-drag checkpoint executes and inspects a producer-owned browser matrix without source implementation."
-        },
-        "scope": {
-          "evidence": [
-            "task:T3.91",
-            "task:T3.9"
-          ],
-          "justification": "Only exact-candidate table-drag evidence is produced before the original SP3 audit."
-        },
-        "duration": {
-          "evidence": [
-            "task:T3.91",
-            "task:T3.9"
-          ],
-          "justification": "Thirty provisional agent minutes cover table-drag execution/evidence; no verified comparable history is available."
-        },
-        "risk": {
-          "evidence": [
-            "task:T3.91",
-            "task:T3.9"
-          ],
-          "justification": "The checkpoint uses owned local fixtures with no paid provider or production account; unsupported environments block rather than fabricate proof."
-        },
-        "coupling": {
-          "evidence": [
-            "task:T3.91",
-            "task:T3.9"
-          ],
-          "justification": "The browser checkpoint consumes T3.91 pointer/group repair and is a prerequisite of the original T3.15 audit."
-        },
-        "confidence": {
-          "evidence": [
-            "task:T3.91",
-            "task:T3.9"
-          ],
-          "justification": "The matrix and exact required cases are specified; actual runtime and results remain unverified until execution."
-        }
-      },
-      "expected_paths": [
-        ".evidence/REQ-021/SP-3.table-drag.json",
-        ".evidence/REQ-021/SP-3.table-drag"
-      ],
-      "shared_resources": [
-        "candidate:SP-3"
-      ],
-      "acceptance_criteria": [
-        "On the exact real Next/WebGL candidate,the complete canonical table-card matrix proves mouse and pen valid-drop placement of one complete default table-and-chairs set per gesture,click/touch and editor compatibility,atomic capacity/cancellation/invalid-drop refusal,no duplicate creation and moving the placed set with its chairs plus undo/redo,with independent expected default/relationship assertions and every required case actually executed."
-      ],
-      "verification": [
-        {
-          "type": "command",
-          "value": "npx --no-install tsx scripts/test/test-ui-arrastre-mesas-parametricas.ts --suite completa",
-          "purpose": "On the exact real Next/WebGL candidate,the complete canonical table-card matrix proves mouse and pen valid-drop placement of one complete default table-and-chairs set per gesture,click/touch and editor compatibility,atomic capacity/cancellation/invalid-drop refusal,no duplicate creation and moving the placed set with its chairs plus undo/redo,with independent expected default/relationship assertions and every required case actually executed.",
-          "created_by": "T3.91",
-          "category": "integration",
-          "requires": [
-            "PICTURES_REQ021_DATABASE_URL"
-          ]
-        }
-      ],
-      "covers": [
-        "R9"
-      ],
-      "kind": "test",
-      "subplan_id": "SP-3",
-      "ui": false
-    },
-    {
-      "id": "T3.121",
-      "milestone_id": "M2",
-      "title": "Repair the Blender harness isolated environment fixtures before table-drag verification",
-      "objective": "Open /home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/RUN.notes/T3.91.history.jsonl before editing. Repair only the two T3.12-owned resolverBlender environment fixtures in scripts/test/test-harness-taller-esenciales.ts:12/14. Exact pre-T3.91 base8ac04102674cedaf454623ad530837bd6c705b92 already fails TS2345 because Next augments NodeJS.ProcessEnv with required NODE_ENV; T3.91 does not own this file. Give each controlled fixture NODE_ENV:\"test\" explicitly: the missing-default-Blender case otherwise has no Blender variable, and the invalid-configured-executable case retains its nonexistent BLENDER_EXECUTABLE under the invocation-owned temporary home. Do not spread process.env or inherit an installed Blender, because the negative oracle must remain isolated. Preserve every existing assertion, scenario, hash mismatch, comparison diagnostic, blocked-evidence precedence, per-type evidence and cleanup. No change to resolverBlender signature, shared ProcessEnv declarations, auth/environment policy, product source, dependencies, package scripts, tsconfig, Next/lint config, approved tasks or gates. No any, casts, ignore/expect-error, skips or suppressions. Run the original harness self-test, workspace build, full strict tsc and focused lint. This producer repair must finish before the unchanged T3.91 checks rerun; T3.91 retains its exact real Next/WebGL browser smoke (whose production build also demonstrated these same type errors), followed by T3.92 and the existing T3.15 audit. Do not claim browser/Blender-export acceptance from the harness self-test. No production data, network download, paid call, owner attestation or UI/design change.",
-      "repository": "pictures",
-      "after": [
-        "T3.13"
-      ],
-      "complexity": "low",
-      "scope": "isolated_fix",
-      "estimated_minutes": 15,
-      "risk": "low",
-      "coupling": "low",
-      "confidence": "high",
-      "estimate_rationale": "Uncalibrated provisional15agent minutes:3fixture inspection/edit,3negative harness regression,9build/types/lint and evidence. History query implement/low/isolated_fix/low/low reports unknown comparable duration,retries,quality and consumption; not human hours or a delivery promise.",
-      "classification_evidence": {
-        "complexity": {
-          "evidence": [
-            "task:T3.12",
-            "task:T3.91",
-            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 8ac04102674cedaf454623ad530837bd6c705b92:scripts/test/test-harness-taller-esenciales.ts -> lines12/14 omit required NODE_ENV in two isolated Blender-negative fixtures",
-            "command:NODE_OPTIONS=--max-old-space-size=4096 npx --no-install tsc --noEmit --incremental false -> exact pre-T3.91 base8ac04102 exit2; TS2345 only at test-harness-taller-esenciales.ts:12,14"
-          ],
-          "justification": "Two explicit test-environment properties repair a reproduced type error without changing runtime behavior."
-        },
-        "scope": {
-          "evidence": [
-            "task:T3.12",
-            "task:T3.91",
-            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 8ac04102674cedaf454623ad530837bd6c705b92:scripts/test/test-harness-taller-esenciales.ts -> lines12/14 omit required NODE_ENV in two isolated Blender-negative fixtures",
-            "command:NODE_OPTIONS=--max-old-space-size=4096 npx --no-install tsc --noEmit --incremental false -> exact pre-T3.91 base8ac04102 exit2; TS2345 only at test-harness-taller-esenciales.ts:12,14"
-          ],
-          "justification": "One inspected self-test file and two fixture inputs; no helper or product edit."
-        },
-        "duration": {
-          "evidence": [
-            "task:T3.12",
-            "task:T3.91",
-            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 8ac04102674cedaf454623ad530837bd6c705b92:scripts/test/test-harness-taller-esenciales.ts -> lines12/14 omit required NODE_ENV in two isolated Blender-negative fixtures",
-            "command:NODE_OPTIONS=--max-old-space-size=4096 npx --no-install tsc --noEmit --incremental false -> exact pre-T3.91 base8ac04102 exit2; TS2345 only at test-harness-taller-esenciales.ts:12,14"
-          ],
-          "justification": "The provisional15agent-minute estimate is uncalibrated; the exact baseline workspace build took2.44s and strict tsc54.18s, but implementation/retry comparability is unknown."
-        },
-        "risk": {
-          "evidence": [
-            "task:T3.12",
-            "task:T3.91",
-            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 8ac04102674cedaf454623ad530837bd6c705b92:scripts/test/test-harness-taller-esenciales.ts -> lines12/14 omit required NODE_ENV in two isolated Blender-negative fixtures",
-            "command:NODE_OPTIONS=--max-old-space-size=4096 npx --no-install tsc --noEmit --incremental false -> exact pre-T3.91 base8ac04102 exit2; TS2345 only at test-harness-taller-esenciales.ts:12,14"
-          ],
-          "justification": "Negative Blender oracles remain isolated; no auth, production or Blender resolver change is authorized."
-        },
-        "coupling": {
-          "evidence": [
-            "task:T3.12",
-            "task:T3.91",
-            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 8ac04102674cedaf454623ad530837bd6c705b92:scripts/test/test-harness-taller-esenciales.ts -> lines12/14 omit required NODE_ENV in two isolated Blender-negative fixtures",
-            "command:NODE_OPTIONS=--max-old-space-size=4096 npx --no-install tsc --noEmit --incremental false -> exact pre-T3.91 base8ac04102 exit2; TS2345 only at test-harness-taller-esenciales.ts:12,14"
-          ],
-          "justification": "Consumes the completed T3.12 harness after its T3.13 checkpoint; only the existing T3.91 waits for this explicit prerequisite."
-        },
-        "confidence": {
-          "evidence": [
-            "task:T3.12",
-            "task:T3.91",
-            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 8ac04102674cedaf454623ad530837bd6c705b92:scripts/test/test-harness-taller-esenciales.ts -> lines12/14 omit required NODE_ENV in two isolated Blender-negative fixtures",
-            "command:NODE_OPTIONS=--max-old-space-size=4096 npx --no-install tsc --noEmit --incremental false -> exact pre-T3.91 base8ac04102 exit2; TS2345 only at test-harness-taller-esenciales.ts:12,14"
-          ],
-          "justification": "Exact baseline reproduction and identical harness blob before/after T3.91 prove both the cause and narrow repair location."
-        }
-      },
-      "expected_paths": [
-        "scripts/test/test-harness-taller-esenciales.ts"
-      ],
-      "shared_resources": [
-        "test-harness:taller-esenciales"
-      ],
-      "acceptance_criteria": [
-        "The original Blender harness self-test passes with explicit NODE_ENV=test in both isolated environment fixtures, preserving the missing-current-symlink and nonexistent configured executable cases as blocked, never passed, plus every existing checksum, comparison-diagnostic and evidence assertion.",
-        "The existing workspace packages build successfully with a 4096MB Node heap before strict repository type verification, without changing build configuration.",
-        "The complete repository passes the original strict TypeScript command after the fixture repair, including both formerly failing Blender environment arguments, with no cast, suppression, optional NODE_ENV or relaxed setting.",
-        "The owned Blender harness self-test file passes focused ESLint without changing lint configuration or adding suppressions."
-      ],
-      "verification": [
-        {
-          "type": "command",
-          "value": "npm run taller:test-harness-esenciales",
-          "purpose": "The original Blender harness self-test passes with explicit NODE_ENV=test in both isolated environment fixtures, preserving the missing-current-symlink and nonexistent configured executable cases as blocked, never passed, plus every existing checksum, comparison-diagnostic and evidence assertion.",
-          "created_by": "T3.12",
-          "category": "regression"
-        },
-        {
-          "type": "command",
-          "value": "NODE_OPTIONS=--max-old-space-size=4096 npm run build --workspaces --if-present",
-          "purpose": "The existing workspace packages build successfully with a 4096MB Node heap before strict repository type verification, without changing build configuration.",
-          "category": "static"
-        },
-        {
-          "type": "command",
-          "value": "NODE_OPTIONS=--max-old-space-size=4096 npx --no-install tsc --noEmit --incremental false",
-          "purpose": "The complete repository passes the original strict TypeScript command after the fixture repair, including both formerly failing Blender environment arguments, with no cast, suppression, optional NODE_ENV or relaxed setting.",
-          "category": "static"
-        },
-        {
-          "type": "command",
-          "value": "npx --no-install eslint scripts/test/test-harness-taller-esenciales.ts",
-          "purpose": "The owned Blender harness self-test file passes focused ESLint without changing lint configuration or adding suppressions.",
-          "category": "static"
-        }
-      ],
-      "covers": [
-        "R11"
-      ],
-      "kind": "implement",
-      "subplan_id": "SP-3",
-      "ui": false
-    },
-    {
       "id": "T13.1",
       "milestone_id": "M5",
       "title": "Guarded pilot test-data cleanup and backup-restore checks",
@@ -16684,6 +16484,357 @@
           ]
         }
       }
+    },
+    {
+      "id": "T3.91",
+      "milestone_id": "M2",
+      "title": "Restore mouse and pen drag of complete parametric table sets",
+      "objective": "Repair only the confirmed existing table-card drag defect from evidence/owner-rejected/SP-3-v3.md at published4aa221088d69. Restore the established Fondos y muebles mouse/pen drag interaction for every TIPOS_MESA parametric card,including approved additions,without a new screen,control,layout,contract or design. Reuse useArrastreDesdePanel threshold/click suppression and the existing viewer hit-testing/placement pipeline. Drag payload/preview/commit must represent the complete default table-and-attached-chairs set,not a standalone table or detached chair geometry. Reuse the canonical PARTIDA_MESA,sillasDePartida and existing conjunto builder/domain placement rules; do not duplicate the table/chair business logic. Extend the narrow internal drag/group pathway or reuse its existing multi-node item path only if table metadata,parent relationships,capacity and selection are preserved. Build the full new scene once at accepted drop and call the normal history-aware onCambio once; select the table and reuse its existing editor,warning and language/status mechanisms. Preserve click,touch tap,keyboard activation,search/cards/counts,default dimensions/chairs,chair capacity and fixed furniture/library drag. Real pointer release after drag must not create a second set. Invalid/outside drop,Escape,pointer cancellation,insufficient node capacity and cleanup/unmount must create nothing,leave prior selection/history intact and clear ghost/listeners/cursor/orbit state. Use the existing valid drop coordinates/units instead of click default coordinates or a hard-coded floor point. Keep moving an already placed table through the existing useEdicionEscena path,with its chair group attached; test that behavior rather than assuming the reproduction proves it broken. Do not rewrite that movement engine,export,scene schema or permission logic. Own only the four listed producer files and two new regression scripts. Author a pure domain/payload regression and a real Next/WebGL browser harness at /3d using an actual signed-in Master Designer in an invocation-owned isolated REQ021 database/schema and free loopback ports; keep auth bypass off,no production data or paid calls. Browser matrix must use real rendered cards/viewer,real hit-testing and trusted mouse input; Chromium CDP Input.dispatchMouseEvent pointerType=pen is supported by installed playwright-core/types/protocol.d.ts and can exercise the same real pen path. Never invoke creation callbacks,inject scene nodes as the gesture result,force invisible targets or accept component-only synthetic events as placement evidence. Fixture setup may load a controlled scene before the gesture,never substitute it for the gesture. Record per canonical type and pointer modality the default expected table/chair identifiers,accepted drop/world placement,actual exported scene relationships/selection/editor/history and a no-duplicate result. Full matrix also covers click/touch compatibility,invalid drops,capacity/cancellation,existing fixed/library drag and moving the placed set with undo/redo. Keep the focused producer smoke to real rectangular mouse red/green; T3.92 runs the complete matrix once so a production build is not needlessly repeated per criterion. Preserve every accepted task/criterion/check/path/gate and all frozen subplan definitions. No golden regeneration,no new dependency/package script,provider,paid call,owner attestation or UI redesign.",
+      "repository": "pictures",
+      "after": [
+        "T3.13",
+        "T3.121"
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 120,
+      "risk": "medium",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "Uncalibrated provisional120agent minutes:35group placement,25pointer wiring,45focused domain/browser cases,15static checks. Comparable measured duration,retries,quality and consumption remain unknown; not human hours or a deadline.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 4aa221088d69db34dee43d496ffe61d34b0ea428:src/components/tres-d/FondosYMuebles.tsx -> fixed cards call arrastre.apretar/fueArrastre; parametric table cards only call ponerConjunto from onClick",
+            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 4aa221088d69db34dee43d496ffe61d34b0ea428:src/components/tres-d/useLienzoDecoraciones.ts -> single-piece insertion branch cannot create the table-and-attached-chairs set",
+            "task:T3.9",
+            "task:T3.13"
+          ],
+          "justification": "Table set drag crosses existing card,pointer,viewer and canonical group placement paths without new product behavior."
+        },
+        "scope": {
+          "evidence": [
+            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 4aa221088d69db34dee43d496ffe61d34b0ea428:src/components/tres-d/FondosYMuebles.tsx -> fixed cards call arrastre.apretar/fueArrastre; parametric table cards only call ponerConjunto from onClick",
+            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 4aa221088d69db34dee43d496ffe61d34b0ea428:src/components/tres-d/useLienzoDecoraciones.ts -> single-piece insertion branch cannot create the table-and-attached-chairs set",
+            "task:T3.9",
+            "task:T3.13"
+          ],
+          "justification": "The repair is bounded to four existing table-drag producers and two new regression scripts."
+        },
+        "duration": {
+          "evidence": [
+            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 4aa221088d69db34dee43d496ffe61d34b0ea428:src/components/tres-d/FondosYMuebles.tsx -> fixed cards call arrastre.apretar/fueArrastre; parametric table cards only call ponerConjunto from onClick",
+            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 4aa221088d69db34dee43d496ffe61d34b0ea428:src/components/tres-d/useLienzoDecoraciones.ts -> single-piece insertion branch cannot create the table-and-attached-chairs set",
+            "task:T3.9",
+            "task:T3.13"
+          ],
+          "justification": "The table-drag120agent-minute estimate is provisional because history query has no verified comparable duration,retry or quality samples."
+        },
+        "risk": {
+          "evidence": [
+            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 4aa221088d69db34dee43d496ffe61d34b0ea428:src/components/tres-d/FondosYMuebles.tsx -> fixed cards call arrastre.apretar/fueArrastre; parametric table cards only call ponerConjunto from onClick",
+            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 4aa221088d69db34dee43d496ffe61d34b0ea428:src/components/tres-d/useLienzoDecoraciones.ts -> single-piece insertion branch cannot create the table-and-attached-chairs set",
+            "task:T3.9",
+            "task:T3.13"
+          ],
+          "justification": "Incorrect group insertion can orphan chairs,duplicate a set or consume history/capacity; atomic placement and real-browser tests protect these paths."
+        },
+        "coupling": {
+          "evidence": [
+            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 4aa221088d69db34dee43d496ffe61d34b0ea428:src/components/tres-d/FondosYMuebles.tsx -> fixed cards call arrastre.apretar/fueArrastre; parametric table cards only call ponerConjunto from onClick",
+            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 4aa221088d69db34dee43d496ffe61d34b0ea428:src/components/tres-d/useLienzoDecoraciones.ts -> single-piece insertion branch cannot create the table-and-attached-chairs set",
+            "task:T3.9",
+            "task:T3.13"
+          ],
+          "justification": "The table-drag repair consumes completed SP3 cards,group model and integration snapshot after T3.13 before its existing audit."
+        },
+        "confidence": {
+          "evidence": [
+            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 4aa221088d69db34dee43d496ffe61d34b0ea428:src/components/tres-d/FondosYMuebles.tsx -> fixed cards call arrastre.apretar/fueArrastre; parametric table cards only call ponerConjunto from onClick",
+            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 4aa221088d69db34dee43d496ffe61d34b0ea428:src/components/tres-d/useLienzoDecoraciones.ts -> single-piece insertion branch cannot create the table-and-attached-chairs set",
+            "task:T3.9",
+            "task:T3.13"
+          ],
+          "justification": "Published source and exact browser rejection isolate the missing pointer path; full pen/group/cancellation evidence still must be earned."
+        }
+      },
+      "expected_paths": [
+        "src/components/tres-d/FondosYMuebles.tsx",
+        "src/components/tres-d/arrastre-decoracion.ts",
+        "src/components/tres-d/useLienzoDecoraciones.ts",
+        "src/lib/globos3d/mobiliario-conjunto-escena.ts",
+        "scripts/test/test-arrastre-conjunto-mesas.ts",
+        "scripts/test/test-ui-arrastre-mesas-parametricas.ts"
+      ],
+      "shared_resources": [
+        "taller:anadir-panel",
+        "contract:taller-scene"
+      ],
+      "acceptance_criteria": [
+        "A valid dropped parametric table set uses its canonical type/default dimensions/chair configuration and accepted drop placement,creates the complete parent/attached-chair relationship atomically with unique ids,and refuses insufficient capacity without any partial scene change.",
+        "A real browser mouse drag of the rendered Rectangular card to a hit-tested valid viewer floor creates exactly one complete default table-and-chairs set at that drop,selects its table,opens the existing editor and is undone/redone as one history entry; the original click-only wiring fails this regression.",
+        "The existing table-card/default/editor regression remains unchanged and passes for every canonical type,capacity warning,fixed furniture and click creation; approved repository-count checks remain enabled on their original tasks.",
+        "The existing workspace packages build successfully before the full strict table-drag type check,with Node heap bounded to4096MB and no build or TypeScript setting change.",
+        "The repaired table-drag producer and browser fixtures pass full strict repository TypeScript without new casts,suppressions or relaxed settings.",
+        "Owned table-drag producer and regression files pass focused ESLint without new suppressions or lint configuration changes."
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npx --no-install tsx scripts/test/test-arrastre-conjunto-mesas.ts",
+          "purpose": "A valid dropped parametric table set uses its canonical type/default dimensions/chair configuration and accepted drop placement,creates the complete parent/attached-chair relationship atomically with unique ids,and refuses insufficient capacity without any partial scene change.",
+          "created_by": "T3.91",
+          "category": "regression"
+        },
+        {
+          "type": "command",
+          "value": "npx --no-install tsx scripts/test/test-ui-arrastre-mesas-parametricas.ts --suite rectangular-mouse",
+          "purpose": "A real browser mouse drag of the rendered Rectangular card to a hit-tested valid viewer floor creates exactly one complete default table-and-chairs set at that drop,selects its table,opens the existing editor and is undone/redone as one history entry; the original click-only wiring fails this regression.",
+          "created_by": "T3.91",
+          "category": "regression",
+          "requires": [
+            "PICTURES_REQ021_DATABASE_URL"
+          ]
+        },
+        {
+          "type": "command",
+          "value": "npx --no-install tsx scripts/test/test-taller-mesas-piloto.ts",
+          "purpose": "The existing table-card/default/editor regression remains unchanged and passes for every canonical type,capacity warning,fixed furniture and click creation; approved repository-count checks remain enabled on their original tasks.",
+          "created_by": "T3.9",
+          "category": "regression"
+        },
+        {
+          "type": "command",
+          "value": "NODE_OPTIONS=--max-old-space-size=4096 npm run build --workspaces --if-present",
+          "purpose": "The existing workspace packages build successfully before the full strict table-drag type check,with Node heap bounded to4096MB and no build or TypeScript setting change.",
+          "category": "static"
+        },
+        {
+          "type": "command",
+          "value": "NODE_OPTIONS=--max-old-space-size=4096 npx --no-install tsc --noEmit --incremental false",
+          "purpose": "The repaired table-drag producer and browser fixtures pass full strict repository TypeScript without new casts,suppressions or relaxed settings.",
+          "category": "static"
+        },
+        {
+          "type": "command",
+          "value": "npx --no-install eslint src/components/tres-d/FondosYMuebles.tsx src/components/tres-d/arrastre-decoracion.ts src/components/tres-d/useLienzoDecoraciones.ts src/lib/globos3d/mobiliario-conjunto-escena.ts scripts/test/test-arrastre-conjunto-mesas.ts scripts/test/test-ui-arrastre-mesas-parametricas.ts",
+          "purpose": "Owned table-drag producer and regression files pass focused ESLint without new suppressions or lint configuration changes.",
+          "category": "static"
+        }
+      ],
+      "covers": [
+        "R9"
+      ],
+      "kind": "implement",
+      "subplan_id": "SP-3",
+      "ui": false
+    },
+    {
+      "id": "T3.92",
+      "milestone_id": "M2",
+      "title": "Verify parametric table drag,compatibility and moving the placed set in real browsers",
+      "objective": "Command-only focused checkpoint after T3.91,before existing T3.15. Run the authored real Next/WebGL table-drag browser matrix once with a genuine Master Designer and invocation-owned local fixtures. Require a case for every current TIPOS_MESA type under both trusted mouse and pen inputs,plus rectangular240×90×75cm defaults,complete attached chairs,actual hit-tested drop/world placement,one creation after pointer release,table selection/editor,click and touch tap,Escape/pointer cancellation/outside invalid drop,MAX_NODOS boundary with no partial set,and moving the created table with its chair group through the actual viewer followed by undo/redo. The expectation comes independently from SPEC R9,canonical approved type/default registries and documented parent-child invariants,never the same creation function result or a screenshot-only piece counter. Verify legacy fixed/library drag remains usable. Record exact candidate,per-case type/modality,destination,scene relationship and history outcomes; fail on missing/unexecuted cases,unsupported pen input,missing WebGL,missing DB or fabricated success. Fixtures may initialize baseline state before gestures but may not insert the expected result or invoke callbacks as proof. Preserve source/oracles; do not repair here. Clean up only invocation-owned schemas,ports,servers and temp data; redact secrets,no paid calls or production data. T3.15 audits the repair with its original unchanged criteria/checks.",
+      "repository": "pictures",
+      "after": [
+        "T3.91"
+      ],
+      "complexity": "low",
+      "scope": "isolated_fix",
+      "estimated_minutes": 30,
+      "risk": "low",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "Uncalibrated provisional30agent minutes for one complete existing browser matrix and evidence review; measured runtime/retry/quality unknown.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "task:T3.91",
+            "task:T3.9"
+          ],
+          "justification": "The table-drag checkpoint executes and inspects a producer-owned browser matrix without source implementation."
+        },
+        "scope": {
+          "evidence": [
+            "task:T3.91",
+            "task:T3.9"
+          ],
+          "justification": "Only exact-candidate table-drag evidence is produced before the original SP3 audit."
+        },
+        "duration": {
+          "evidence": [
+            "task:T3.91",
+            "task:T3.9"
+          ],
+          "justification": "Thirty provisional agent minutes cover table-drag execution/evidence; no verified comparable history is available."
+        },
+        "risk": {
+          "evidence": [
+            "task:T3.91",
+            "task:T3.9"
+          ],
+          "justification": "The checkpoint uses owned local fixtures with no paid provider or production account; unsupported environments block rather than fabricate proof."
+        },
+        "coupling": {
+          "evidence": [
+            "task:T3.91",
+            "task:T3.9"
+          ],
+          "justification": "The browser checkpoint consumes T3.91 pointer/group repair and is a prerequisite of the original T3.15 audit."
+        },
+        "confidence": {
+          "evidence": [
+            "task:T3.91",
+            "task:T3.9"
+          ],
+          "justification": "The matrix and exact required cases are specified; actual runtime and results remain unverified until execution."
+        }
+      },
+      "expected_paths": [
+        ".evidence/REQ-021/SP-3.table-drag.json",
+        ".evidence/REQ-021/SP-3.table-drag"
+      ],
+      "shared_resources": [
+        "candidate:SP-3"
+      ],
+      "acceptance_criteria": [
+        "On the exact real Next/WebGL candidate,the complete canonical table-card matrix proves mouse and pen valid-drop placement of one complete default table-and-chairs set per gesture,click/touch and editor compatibility,atomic capacity/cancellation/invalid-drop refusal,no duplicate creation and moving the placed set with its chairs plus undo/redo,with independent expected default/relationship assertions and every required case actually executed."
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npx --no-install tsx scripts/test/test-ui-arrastre-mesas-parametricas.ts --suite completa",
+          "purpose": "On the exact real Next/WebGL candidate,the complete canonical table-card matrix proves mouse and pen valid-drop placement of one complete default table-and-chairs set per gesture,click/touch and editor compatibility,atomic capacity/cancellation/invalid-drop refusal,no duplicate creation and moving the placed set with its chairs plus undo/redo,with independent expected default/relationship assertions and every required case actually executed.",
+          "created_by": "T3.91",
+          "category": "integration",
+          "requires": [
+            "PICTURES_REQ021_DATABASE_URL"
+          ]
+        }
+      ],
+      "covers": [
+        "R9"
+      ],
+      "kind": "test",
+      "subplan_id": "SP-3",
+      "ui": false
+    },
+    {
+      "id": "T3.121",
+      "milestone_id": "M2",
+      "title": "Repair the Blender harness isolated environment fixtures before table-drag verification",
+      "objective": "Open /home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/RUN.notes/T3.91.history.jsonl before editing. Repair only the two T3.12-owned resolverBlender environment fixtures in scripts/test/test-harness-taller-esenciales.ts:12/14. Exact pre-T3.91 base8ac04102674cedaf454623ad530837bd6c705b92 already fails TS2345 because Next augments NodeJS.ProcessEnv with required NODE_ENV; T3.91 does not own this file. Give each controlled fixture NODE_ENV:\"test\" explicitly: the missing-default-Blender case otherwise has no Blender variable, and the invalid-configured-executable case retains its nonexistent BLENDER_EXECUTABLE under the invocation-owned temporary home. Do not spread process.env or inherit an installed Blender, because the negative oracle must remain isolated. Preserve every existing assertion, scenario, hash mismatch, comparison diagnostic, blocked-evidence precedence, per-type evidence and cleanup. No change to resolverBlender signature, shared ProcessEnv declarations, auth/environment policy, product source, dependencies, package scripts, tsconfig, Next/lint config, approved tasks or gates. No any, casts, ignore/expect-error, skips or suppressions. Run the original harness self-test, workspace build, full strict tsc and focused lint. This producer repair must finish before the unchanged T3.91 checks rerun; T3.91 retains its exact real Next/WebGL browser smoke (whose production build also demonstrated these same type errors), followed by T3.92 and the existing T3.15 audit. Do not claim browser/Blender-export acceptance from the harness self-test. No production data, network download, paid call, owner attestation or UI/design change.",
+      "repository": "pictures",
+      "after": [
+        "T3.13"
+      ],
+      "complexity": "low",
+      "scope": "isolated_fix",
+      "estimated_minutes": 15,
+      "risk": "low",
+      "coupling": "low",
+      "confidence": "high",
+      "estimate_rationale": "Uncalibrated provisional15agent minutes:3fixture inspection/edit,3negative harness regression,9build/types/lint and evidence. History query implement/low/isolated_fix/low/low reports unknown comparable duration,retries,quality and consumption; not human hours or a delivery promise.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "task:T3.12",
+            "task:T3.91",
+            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 8ac04102674cedaf454623ad530837bd6c705b92:scripts/test/test-harness-taller-esenciales.ts -> lines12/14 omit required NODE_ENV in two isolated Blender-negative fixtures",
+            "command:NODE_OPTIONS=--max-old-space-size=4096 npx --no-install tsc --noEmit --incremental false -> exact pre-T3.91 base8ac04102 exit2; TS2345 only at test-harness-taller-esenciales.ts:12,14"
+          ],
+          "justification": "Two explicit test-environment properties repair a reproduced type error without changing runtime behavior."
+        },
+        "scope": {
+          "evidence": [
+            "task:T3.12",
+            "task:T3.91",
+            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 8ac04102674cedaf454623ad530837bd6c705b92:scripts/test/test-harness-taller-esenciales.ts -> lines12/14 omit required NODE_ENV in two isolated Blender-negative fixtures",
+            "command:NODE_OPTIONS=--max-old-space-size=4096 npx --no-install tsc --noEmit --incremental false -> exact pre-T3.91 base8ac04102 exit2; TS2345 only at test-harness-taller-esenciales.ts:12,14"
+          ],
+          "justification": "One inspected self-test file and two fixture inputs; no helper or product edit."
+        },
+        "duration": {
+          "evidence": [
+            "task:T3.12",
+            "task:T3.91",
+            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 8ac04102674cedaf454623ad530837bd6c705b92:scripts/test/test-harness-taller-esenciales.ts -> lines12/14 omit required NODE_ENV in two isolated Blender-negative fixtures",
+            "command:NODE_OPTIONS=--max-old-space-size=4096 npx --no-install tsc --noEmit --incremental false -> exact pre-T3.91 base8ac04102 exit2; TS2345 only at test-harness-taller-esenciales.ts:12,14"
+          ],
+          "justification": "The provisional15agent-minute estimate is uncalibrated; the exact baseline workspace build took2.44s and strict tsc54.18s, but implementation/retry comparability is unknown."
+        },
+        "risk": {
+          "evidence": [
+            "task:T3.12",
+            "task:T3.91",
+            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 8ac04102674cedaf454623ad530837bd6c705b92:scripts/test/test-harness-taller-esenciales.ts -> lines12/14 omit required NODE_ENV in two isolated Blender-negative fixtures",
+            "command:NODE_OPTIONS=--max-old-space-size=4096 npx --no-install tsc --noEmit --incremental false -> exact pre-T3.91 base8ac04102 exit2; TS2345 only at test-harness-taller-esenciales.ts:12,14"
+          ],
+          "justification": "Negative Blender oracles remain isolated; no auth, production or Blender resolver change is authorized."
+        },
+        "coupling": {
+          "evidence": [
+            "task:T3.12",
+            "task:T3.91",
+            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 8ac04102674cedaf454623ad530837bd6c705b92:scripts/test/test-harness-taller-esenciales.ts -> lines12/14 omit required NODE_ENV in two isolated Blender-negative fixtures",
+            "command:NODE_OPTIONS=--max-old-space-size=4096 npx --no-install tsc --noEmit --incremental false -> exact pre-T3.91 base8ac04102 exit2; TS2345 only at test-harness-taller-esenciales.ts:12,14"
+          ],
+          "justification": "Consumes the completed T3.12 harness after its T3.13 checkpoint; only the existing T3.91 waits for this explicit prerequisite."
+        },
+        "confidence": {
+          "evidence": [
+            "task:T3.12",
+            "task:T3.91",
+            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 8ac04102674cedaf454623ad530837bd6c705b92:scripts/test/test-harness-taller-esenciales.ts -> lines12/14 omit required NODE_ENV in two isolated Blender-negative fixtures",
+            "command:NODE_OPTIONS=--max-old-space-size=4096 npx --no-install tsc --noEmit --incremental false -> exact pre-T3.91 base8ac04102 exit2; TS2345 only at test-harness-taller-esenciales.ts:12,14"
+          ],
+          "justification": "Exact baseline reproduction and identical harness blob before/after T3.91 prove both the cause and narrow repair location."
+        }
+      },
+      "expected_paths": [
+        "scripts/test/test-harness-taller-esenciales.ts"
+      ],
+      "shared_resources": [
+        "test-harness:taller-esenciales"
+      ],
+      "acceptance_criteria": [
+        "The original Blender harness self-test passes with explicit NODE_ENV=test in both isolated environment fixtures, preserving the missing-current-symlink and nonexistent configured executable cases as blocked, never passed, plus every existing checksum, comparison-diagnostic and evidence assertion.",
+        "The existing workspace packages build successfully with a 4096MB Node heap before strict repository type verification, without changing build configuration.",
+        "The complete repository passes the original strict TypeScript command after the fixture repair, including both formerly failing Blender environment arguments, with no cast, suppression, optional NODE_ENV or relaxed setting.",
+        "The owned Blender harness self-test file passes focused ESLint without changing lint configuration or adding suppressions."
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npm run taller:test-harness-esenciales",
+          "purpose": "The original Blender harness self-test passes with explicit NODE_ENV=test in both isolated environment fixtures, preserving the missing-current-symlink and nonexistent configured executable cases as blocked, never passed, plus every existing checksum, comparison-diagnostic and evidence assertion.",
+          "created_by": "T3.12",
+          "category": "regression"
+        },
+        {
+          "type": "command",
+          "value": "NODE_OPTIONS=--max-old-space-size=4096 npm run build --workspaces --if-present",
+          "purpose": "The existing workspace packages build successfully with a 4096MB Node heap before strict repository type verification, without changing build configuration.",
+          "category": "static"
+        },
+        {
+          "type": "command",
+          "value": "NODE_OPTIONS=--max-old-space-size=4096 npx --no-install tsc --noEmit --incremental false",
+          "purpose": "The complete repository passes the original strict TypeScript command after the fixture repair, including both formerly failing Blender environment arguments, with no cast, suppression, optional NODE_ENV or relaxed setting.",
+          "category": "static"
+        },
+        {
+          "type": "command",
+          "value": "npx --no-install eslint scripts/test/test-harness-taller-esenciales.ts",
+          "purpose": "The owned Blender harness self-test file passes focused ESLint without changing lint configuration or adding suppressions.",
+          "category": "static"
+        }
+      ],
+      "covers": [
+        "R11"
+      ],
+      "kind": "implement",
+      "subplan_id": "SP-3",
+      "ui": false
     }
   ]
 }

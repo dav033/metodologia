@@ -1,6 +1,6 @@
 # Index — pictures
 
-_Generated 2026-10-31 09:50 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-31 18:29 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/pictures) · [graph](http://127.0.0.1:8765/p/pictures/graph)  
@@ -58,15 +58,15 @@ _Generated 2026-10-31 09:50 by `bitacora.py index`. Do not edit by hand._
 - P-021 · Refine acceptance feat/refinar-aceptacion (e4m) — approved, base of integ/foto-taller (was · high/M
 - P-123 · REQ-020 M2 final acceptance still needs a passing LIVE run and deployed phone check. Crede · high/M
 - P-124 · Summary repair integrated locally at 915a75af on feat/req-020-asesor-happia; scheduler r7  · high/M
-- P-062 · After the prod fixes: /api/generate legacy product ids (productosPorIdConFuente) still rea · med/S
+- P-210 · The owner rejected SP-2 v2 of REQ-021 after trying it: El desplegable el menu del usuario  · high/M
 
 ## Recent decisions
 
+- D-087 — The requested plans redesign changes the accepted comparison contract · 2026-10-31
+- D-086 — Readiness falls back when an input has empty inner text · 2026-10-31
+- D-085 — Reproduce a rejected account UI on its published version and preserve the design gate · 2026-10-31
+- D-084 — Preserve the producer repair and isolated harness prerequisites without bypassing stage confirmation · 2026-10-31
 - D-082 — A remaining-language harness failure repairs its photo-control producer · 2026-10-30
-- D-081 — Recorded unions preserve the tool home, bilingual rendering and shared session resolution · 2026-10-30
-- D-080 — Account-menu resolutions retain plans and permission-gated administration · 2026-10-30
-- D-079 — Recomposition preserves accepted usage refinements and the tool home · 2026-10-30
-- D-078 — SP-10 keeps real-provider observation separate from complete deterministic coverage · 2026-10-30
 
 ## Timeline
 
