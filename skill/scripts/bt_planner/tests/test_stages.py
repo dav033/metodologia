@@ -164,6 +164,39 @@ class StagedDirectory(unittest.TestCase):
         self.assertEqual(sync.bind_approved(self.rdir, forced=True)["revision"], 1)
         self.assertEqual(self.code(lambda: sync.bind_approved(self.rdir)), "PLAN_NOT_APPROVED")
 
+    def test_a_new_stage_keeps_an_approved_subplan_whose_amendment_is_unconfirmed(self):
+        """D-259: SP-2's confirmed change runs while SP-3 (approved) is being amended; SP-3 runs as approved and the
+        draft's pending SP-3 edit is not drift."""
+        sync.freeze_stage(self.rdir, ["SP-1", "SP-3"])
+        edited = copy.deepcopy(self.plan)
+        sp3 = next(t for t in edited["tasks"] if t.get("subplan_id") == "SP-3")
+        sp1 = next(t for t in edited["tasks"] if t.get("subplan_id") == "SP-1")
+        sp3["objective"] = "SP-3 amended by the Planner, not confirmed yet"
+        sp1["objective"] = "SP-1 changed and confirmed by the owner"
+        self.write(edited)
+        self.assertEqual(self.code(lambda: sync.bind_approved(self.rdir, forced=True)), "PLAN_DRIFT")
+        entry = sync.freeze_stage(self.rdir, ["SP-1"], kept=["SP-3"])
+        self.assertEqual((entry["revision"], entry["stage"]["kept"]), (2, ["SP-3"]))
+        frozen = rev.load_revision(self.rdir, 2)
+        by_id = {t["id"]: t for t in frozen["tasks"]}
+        self.assertEqual(by_id[sp1["id"]]["objective"], "SP-1 changed and confirmed by the owner")
+        self.assertNotEqual(by_id[sp3["id"]]["objective"], sp3["objective"])           # SP-3 as approved in r1
+        self.assertEqual(sync.bind_approved(self.rdir, forced=True)["revision"], 2)      # its pending edit is not drift
+        sp1["objective"] = "SP-1 edited again after r2"
+        self.write(edited)
+        self.assertEqual(self.code(lambda: sync.bind_approved(self.rdir, forced=True)), "PLAN_DRIFT")   # others still are
+
+    def test_keep_puts_the_frozen_subplan_back_into_the_draft(self):
+        full = draft()
+        frozen = stages.project(full, ["SP-1"])
+        edited = copy.deepcopy(full)
+        edited["tasks"][0]["objective"] = "amended"
+        edited["subplans"][0]["title"] = "amended title"
+        kept = stages.keep(edited, frozen, ["SP-1"])
+        self.assertEqual(pc.dumps({**stages.project(kept, ["SP-1"]), "revision": frozen["revision"]}),
+                         pc.dumps({**frozen, "revision": frozen["revision"]}))
+        self.assertIs(stages.keep(edited, frozen, []), edited)
+
     def test_drift_is_judged_only_on_approved_scope(self):
         sync.freeze_stage(self.rdir, ["SP-1"])
         edited = copy.deepcopy(self.plan)
