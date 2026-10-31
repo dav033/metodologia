@@ -274,6 +274,9 @@ def bind(directory: Path, draft: object) -> dict:
     entry, frozen = found
     if not isinstance(draft, dict):
         raise pc.PlanContractError("PLAN_INVALID", ["PLAN.json cannot be read (it may be being written); retry"])
+    kept = (entry.get(KEY) or {}).get("kept") if isinstance(entry.get(KEY), dict) else None
+    if kept:                                   # amendments the owner has not re-confirmed run as approved (D-259)
+        draft = keep(draft, frozen, kept)
     try:
         projection = project(draft, subplans_in(frozen))
     except pc.PlanContractError as exc:
@@ -305,7 +308,8 @@ def approval_pins(directory: Path, draft: dict, projection: dict) -> dict:
 
 
 def freeze(directory: Path, subplans: Iterable[str], draft: dict, report_for, *, require_complete: bool = False,
-           ledger_command: str = "engine audit-ledger check", before_freeze: Callable[[], None] | None = None) -> dict:
+           ledger_command: str = "engine audit-ledger check", before_freeze: Callable[[], None] | None = None,
+           kept: Iterable[str] = ()) -> dict:
     """Freeze the next stage: S = the subplans already approved plus `subplans`. `report_for(projection)` is the
     caller's publication check of the projection (a `contract.Report`). Idempotent when the projection is the latest
     revision (the same entry is returned). `require_complete` (approving the whole plan) refuses a stage short of the draft."""
@@ -315,6 +319,9 @@ def freeze(directory: Path, subplans: Iterable[str], draft: dict, report_for, *,
     if gone:
         raise pc.PlanContractError("STAGE_NOT_CUMULATIVE", [
             f"{', '.join(gone)} were approved in r{found[0]['revision']} but are no longer in the draft; a stage only grows"])
+    kept = [sid for sid in kept if sid in previous]
+    if kept:                                   # held as the latest revision holds them (D-259)
+        draft = keep(draft, found[1], kept)
     projection = project(draft, [*previous, *subplans])
     if require_complete and not complete(draft, projection):
         missing = [sid for sid in declared_subplans(draft) if sid not in subplans_in(projection)]
@@ -322,6 +329,8 @@ def freeze(directory: Path, subplans: Iterable[str], draft: dict, report_for, *,
             "approving the plan needs the whole draft in one stage" + (f"; missing {', '.join(missing)}" if missing else
                                                                       "; some tasks depend on nothing approved")])
     pins = approval_pins(directory, draft, projection)
+    if kept:
+        pins["kept"] = kept
     unchanged = (found and pc.dumps(_as_revision(projection, found[0]["revision"])) == pc.dumps(found[1])
                  and found[0].get(KEY) == pins)
     projection = _as_revision(projection, found[0]["revision"] if unchanged else ((found[0]["revision"] + 1) if found else 1))
@@ -342,6 +351,21 @@ def spec_ids_for(projection: dict, spec_ids: set[str] | None) -> tuple[set[str] 
     own = {r for r in projection.get("requirements") or [] if isinstance(r, str)}
     return spec_ids & own, [f"requirements: {r} is declared in the stage but missing from SPEC Requirements"
                             for r in sorted(own - spec_ids)]
+
+
+def keep(draft: dict, frozen: dict, subplans: Iterable[str]) -> dict:
+    """The draft with `subplans` as `frozen` holds them: their subplan objects and tasks. An approved subplan the Planner
+    is amending, which the owner has not re-confirmed yet, stays as approved while another subplan's change is run
+    (pictures REQ-021 2026-10-31: SP-2's confirmed redesign waited on SP-14's unconfirmed amendment, D-259)."""
+    wanted = set(subplans)
+    if not wanted:
+        return draft
+    old = {"tasks": [t for t in _dicts(draft.get("tasks")) if t.get("subplan_id") in wanted]}
+    new = {"tasks": [t for t in _dicts(frozen.get("tasks")) if t.get("subplan_id") in wanted],
+           "subplans": [s for s in _dicts(frozen.get("subplans")) if s.get("id") in wanted]}
+    out = splice(draft, old, new)
+    out["revision"] = draft.get("revision", out.get("revision"))
+    return out
 
 
 def splice(draft: dict, old: dict, new: dict) -> dict:

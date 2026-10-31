@@ -59,5 +59,25 @@ class CheckEnvironment(unittest.TestCase):
         self.assertIs(sandbox_policy(plain), plain)
 
 
+
+class DigestEnvironment(unittest.TestCase):
+    def test_the_durable_digest_names_what_the_checks_received(self):
+        """D-257: the note an attempt reads after a durable FAIL names the variables of the policy the checks ran under
+        (after sandbox_policy dropped the engine's own), never their values."""
+        from types import SimpleNamespace
+
+        from bt_durable.adapters.m6 import outcome_of
+        policy = sandbox_policy(QualityPolicy(environment=(("EXPLICIT_SETTING", "from-the-env-file"),),
+                                              ambient_environment=INHERITED, secret_values=(DB_URL,)))
+        store = SimpleNamespace(get_artifact=lambda ref: b"boom\n")
+        result = {"status": "FAIL", "checks": [{"command": "npm test", "status": "fail", "exit_code": 1,
+                                                "stderr_ref": "e", "stdout_ref": None}]}
+        digest = outcome_of(result, store, policy=policy).digest
+        self.assertIn("they receive only EXPLICIT_SETTING from the owner's verifier settings, plus 1 variable", digest)
+        self.assertNotIn("none of your environment variables", digest)
+        for value in ("from-the-env-file", "kept", "not-a-real-password"):
+            self.assertNotIn(value, digest)
+
+
 if __name__ == "__main__":
     unittest.main()

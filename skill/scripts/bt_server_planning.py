@@ -200,7 +200,7 @@ class PlanningActions:
         if self.client_address[0] not in ("127.0.0.1", "::1"):
             return "La ejecución solo se lanza desde esta máquina."
         info = bt_stages.info(rdir)
-        if sid in info["held"] and not reconfirmed:
+        if sid in info["held"] and not reconfirmed and not bt_stages.amended(rdir, sid):
             return f"{sid} ya está en ejecución en la etapa r{info['revision']}."
         if sid in info["queued"]:
             return f"{sid} ya está en cola: espera a {', '.join(info['queued'][sid]['after'])}."

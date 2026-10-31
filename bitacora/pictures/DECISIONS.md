@@ -576,3 +576,12 @@ Source: owner, REQ-021 rounds 1–3.
 - **Rule:** an empty successful innerText read is not an exception. For input readiness, fall back on nonempty DOM label/placeholder evidence; retain rejection of nameless empty and hidden controls. A passing mutation suite does not replace the real browser flow. Do not confuse an agent-local database refusal with a different M6 execution's demonstrated oracle defect.
 - **Source:** Solucionador session 20261031-123425-067d inbox continuation; frozen PLAN.r30 T10.45; a9 handoff and M6 result; pictures day log 12:50 for the separate retry-base repair assignment.
 - **Evidence:** working-folder reproduce-readiness.cjs extracts the exact captured expression (source SHA256 f1d5aac79c22478cf18bcd76c4ae87b73216f27e2bde6e508ee67390d9056aa5); real Chromium exit1, three input cases fail while heading and nameless-empty rejection agree; diagnostic nonempty fallback passes all five. readiness-reproduction.json/log, d6-verifier-manifest.json, filtered M6 excerpts, d6-answer.log and status-before/after-d6-answer.json; session D6-NOTE.md and REPORT.md. Full harness acceptance remains with the run.
+
+## D-087 — The requested plans redesign changes the accepted comparison contract · 2026-10-31
+
+- **Context:** P-211 rejects SP-14 v2, requesting removal of comparison logic and conventional subscription cards. The published commit 0715a331b721 displays selection/highlighting for comparison, as SPEC.md and the frozen SP-14 plan expressly require.
+- **Decision:** send the Planner an SP-14 amendment request covering comparison removal and a revised subscription-card design, preserving the public, informative catalogue and account permissions. Ask the owner to reconfirm SP-14 and its revised UI contract; this is not a D-241 bounded repair.
+- **Consequences:** Planner delivery succeeded. P-211 remains open. No product edit, plan freeze, join, owner approval, task decision or integration occurred.
+- **Rule:** reproduce rejected versions on the published commit; an owner-requested change to approved behavior or UI needs the affected subplan and revised design contract reconfirmed, not an additive repair classification.
+- **Source:** Solucionador 20261031-153033-1a41; owner P-211; methodology D-241 and D-244; SPEC.md SP-14 Pruebas and Behavior; PLAN.r30 SP-14.
+- **Evidence:** requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/owner-rejected/SP-14-v2.md; session screenshots and REPORT.md. Planner delivery exit 0.

@@ -24,7 +24,7 @@ class ConfigTests(unittest.TestCase):
         self.addCleanup(patcher.stop)
 
     def test_defaults(self):
-        self.assertEqual(bt_config.load(), bt_config.DEFAULTS)
+        self.assertEqual(bt_config.load(), bt_config.defaults())
         self.assertEqual(bt_config.get("routing.pool"), [])
         self.assertIsNone(bt_config.get("unknown"))
         self.assertEqual(bt_config.get("unknown", "fallback"), "fallback")
@@ -75,10 +75,10 @@ class ConfigTests(unittest.TestCase):
         self.state.mkdir(parents=True)
         path = self.state / "config.json"
         path.write_text("{broken", encoding="utf-8")
-        self.assertEqual(bt_config.load(), bt_config.DEFAULTS)
+        self.assertEqual(bt_config.load(), bt_config.defaults())
         path.write_text(json.dumps({"approval": {"auto": "yes", "max_tasks": True},
                                     "routing": {"pool": ["valid", 2]}}), encoding="utf-8")
-        self.assertEqual(bt_config.load(), bt_config.DEFAULTS)
+        self.assertEqual(bt_config.load(), bt_config.defaults())
 
     def test_file_contains_only_overrides(self):
         path = bt_config.set_value("approval.max_tasks", 12)
@@ -94,7 +94,7 @@ class ConfigTests(unittest.TestCase):
 
     def test_cli_get_set_unset_and_comma_list(self):
         self.assertEqual(json.loads(bt_config.cli("get", "approval.auto", None)), True)
-        self.assertEqual(json.loads(bt_config.cli("get", None, None)), bt_config.DEFAULTS)
+        self.assertEqual(json.loads(bt_config.cli("get", None, None)), bt_config.defaults())
         self.assertEqual(bt_config.cli("set", "routing.pool", "claude,codex"), "Set routing.pool.")
         self.assertEqual(bt_config.get("routing.pool"), ["claude", "codex"])
         bt_config.cli("set", "approval.max_tasks", "3")

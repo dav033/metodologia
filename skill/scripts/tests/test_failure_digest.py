@@ -36,6 +36,22 @@ class FailureDigest(unittest.TestCase):
         note = digest([check("Coordinator runs `run.ts --live`", "unknown", None)])
         self.assertIn("exit code None", note)
 
+    def test_the_note_states_the_environment_the_checks_really_had(self):
+        """pictures REQ-021 r30 T10.45 (D-257): every note said «none of your environment variables» while the verifier
+        gave the checks the owner's verifier file and, under `verifier.inherit_env`, his whole environment."""
+        from bt_scheduler_quality.policy import QualityPolicy
+        failing = [check("npm run idioma:test-harness-resto", "fail", 1, "err")]
+        port = SimpleNamespace(store=SimpleNamespace(get_artifact=lambda ref: ARTIFACTS.get(ref)),
+                               policy=QualityPolicy(environment=(("GEMINI_CHAT_MODEL", "m-value"),),
+                                                    ambient_environment=(("FNM_DIR", "/fnm"),)))
+        note = QualityVerificationPort._failure_digest(port, {"checks": failing})
+        self.assertNotIn("none of your environment variables", note)
+        self.assertIn("NOT your environment: they receive only GEMINI_CHAT_MODEL from the owner's verifier settings, plus 1 "
+                      "variable of the owner's own environment", note)
+        self.assertNotIn("m-value", note)
+        empty = SimpleNamespace(store=port.store, policy=QualityPolicy())
+        self.assertIn("none of your environment variables", QualityVerificationPort._failure_digest(empty, {"checks": failing}))
+
     def test_passing_checks_are_not_in_the_note(self):
         self.assertEqual(digest([check("npm run lint", "pass", 0)]), "")
 

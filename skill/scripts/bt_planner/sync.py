@@ -11,7 +11,7 @@ states differently is an error. Nothing here invents classification values; the 
 from __future__ import annotations
 
 import re
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Iterable, Mapping
 from pathlib import Path
 
 from .command_checks import IgnoredPath
@@ -367,7 +367,7 @@ def check(directory: Path, plan: object | None = None, plan_id: str | None = Non
 def check_stage(directory: Path, projection: dict, draft: dict, plan_id: str | None = None,
                 repo_roots: Mapping[str, Path] | None = None, verify_files: bool = False,
                 ref_exists: ev.RefExists | None = None, ignored_path: IgnoredPath | None = None,
-                ledger_command: str = "engine audit-ledger check") -> pc.Report:
+                ledger_command: str = "engine audit-ledger check", kept: Iterable[str] = ()) -> pc.Report:
     """Publication gate of a stage: the projection is a complete plan (schema, graph, subplans, gates, audits, mapped
     checks) against the SPEC requirements it covers, agrees with PLAN.md on its own tasks (on everything when it is the
     whole draft), and its evidence is verified. The rest of the draft is not judged."""
@@ -381,8 +381,13 @@ def check_stage(directory: Path, projection: dict, draft: dict, plan_id: str | N
                         ledger_command=ledger_command)
     report.errors += inner.errors + missing
     report.warnings += inner.warnings
-    report.errors += consistency(directory, projection, plan_id,
-                                 None if whole else {t["id"] for t in _dicts(projection.get("tasks"))})
+    only = None if whole else {t["id"] for t in _dicts(projection.get("tasks"))}
+    compared = projection
+    if kept:                       # kept subplans run as approved; PLAN.md already shows their pending amendment (D-259)
+        held = set(kept)
+        compared = {**projection, "tasks": [t for t in _dicts(projection.get("tasks")) if t.get("subplan_id") not in held]}
+        only = {t["id"] for t in _dicts(compared.get("tasks"))}
+    report.errors += consistency(directory, compared, plan_id, only)
     scoped = _evidence_scope_problems(directory, projection, repo_roots, verify_files)
     report.errors += scoped[0]
     report.warnings += scoped[1]
@@ -398,7 +403,8 @@ def freeze_stage(directory: Path, subplans: list[str], plan_id: str | None = Non
                  repo_roots: Mapping[str, Path] | None = None, verify_files: bool = False,
                  ref_exists: ev.RefExists | None = None, ignored_path: IgnoredPath | None = None,
                  ledger_command: str = "engine audit-ledger check", *, require_complete: bool = False,
-                 draft: object = None, before_freeze: Callable[[], None] | None = None) -> dict:
+                 draft: object = None, before_freeze: Callable[[], None] | None = None,
+                 kept: list[str] | tuple[str, ...] = ()) -> dict:
     """Freeze the next stage (the approved subplans plus `subplans`) from the working draft (read once here unless the
     caller passes the object it already read); see `stages.freeze`."""
     rev.list_revisions(directory)  # the revision store's own error codes come first
@@ -409,8 +415,9 @@ def freeze_stage(directory: Path, subplans: list[str], plan_id: str | None = Non
         raise pc.PlanContractError("PLAN_INVALID", report.errors or ["PLAN.json: top level must be an object"])
     return stages.freeze(directory, subplans, draft,
                          lambda projection: check_stage(directory, projection, draft, plan_id, repo_roots, verify_files,
-                                                        ref_exists, ignored_path, ledger_command),
-                         require_complete=require_complete, ledger_command=ledger_command, before_freeze=before_freeze)
+                                                        ref_exists, ignored_path, ledger_command, kept=kept),
+                         require_complete=require_complete, ledger_command=ledger_command, before_freeze=before_freeze,
+                         kept=kept)
 
 
 def approve_freeze(directory: Path, plan_id: str | None = None,

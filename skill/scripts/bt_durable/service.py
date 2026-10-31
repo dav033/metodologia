@@ -46,7 +46,8 @@ def wire(cfg: EngineConfig, *, repositories_for: Callable[[str], object], driver
     plans = FilePlans()
     attempts = M3Attempts(root=cfg.state_dir / "attempts-root", repositories_for=repositories_for,
                           plan_for=lambda attempt: steps.plan(attempt.run), driver_for=driver_for,
-                          briefs_for=briefs_for or DurableBriefs(repositories_for=repositories_for))
+                          briefs_for=briefs_for or DurableBriefs(repositories_for=repositories_for),
+                          check_policy_for=check_policy)
 
     integrator = _ProjectIntegrator(repositories_for, cfg.state_dir)
     telemetry = JsonlTelemetry(cfg.state_dir / "telemetry.jsonl")
@@ -60,6 +61,15 @@ def wire(cfg: EngineConfig, *, repositories_for: Callable[[str], object], driver
 
 def requirement_dir(run) -> Path:
     return Path(run.plan_path).parent.parent              # <req dir>/plan-revisions/PLAN.rN.json
+
+
+def check_policy(run):
+    """The M6 policy the run's checks get, as the verifier builds it (sandbox_policy over the operator's policy): the
+    attempt's brief names what it receives (D-257)."""
+    from bt_scheduler_executor_wiring import operator_quality_policy
+
+    from .adapters.m6 import sandbox_policy
+    return sandbox_policy(operator_quality_policy(run.project, requirement_dir(run)))
 
 
 def operator_verifier(store_path: Path) -> M6Verifier:

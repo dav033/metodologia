@@ -8,6 +8,7 @@ the shim — the DBOS workflow is the state, and bt_supervisor runs the process.
 from __future__ import annotations
 
 import json
+import logging
 import os
 import re
 import sys
@@ -27,6 +28,7 @@ from ..legacy import GitWorkspaces, Plan, TaskSpec, build_prompt, handoff
 from ..legacy import m3 as _m3
 
 m3 = _m3.model
+LOG = logging.getLogger("bt_durable.m3")
 
 from . import size_guard
 from .files import atomic_write
@@ -60,8 +62,11 @@ class M3Attempts:
 
     def __init__(self, *, root: Path, repositories_for: Callable[[str], Mapping[str, Path] | Callable[[str], Path | None]],
                  plan_for: Callable[[AttemptRef], Plan], driver_for: Callable[[str], object],
-                 briefs_for: Callable[[AttemptRef, Plan, str], object] | None = None, prompt_rtk: bool = False):
+                 briefs_for: Callable[[AttemptRef, Plan, str], object] | None = None, prompt_rtk: bool = False,
+                 check_policy_for: Callable[[object], object] | None = None):
         self.root = Path(root)
+        # `check_policy_for(run)`: the M6 policy the run's checks get (names only reach the brief, D-257); None = no note
+        self.check_policy_for = check_policy_for
         self.repositories_for = repositories_for
         self.plan_for = plan_for
         self.driver_for = driver_for
@@ -95,7 +100,8 @@ class M3Attempts:
         ws = workspaces.allocate(request)
         adir = self.attempt_dir(attempt)
         test_env = agent_test_env(attempt.run.project)
-        brief = self._brief(attempt, request, "\n\n".join(x for x in (_continuation(ws, attempt), _test_env_note(test_env), note) if x))
+        env_note = _environment_note(test_env, self._check_policy(attempt))
+        brief = self._brief(attempt, request, "\n\n".join(x for x in (_continuation(ws, attempt), env_note, note) if x))
         prompt = build_prompt(brief, request, workdir=ws.path, branch=ws.branch,
                               report_path=str(adir / "report.json"), handoff_mode="snapshot", rtk=self.prompt_rtk)
         atomic_write(adir / "prompt.txt", prompt.encode("utf-8"), 0o600)
@@ -116,6 +122,15 @@ class M3Attempts:
         return Prepared(worktree=Path(ws.path), branch=ws.branch, base_sha=ws.base_sha, repository=Path(ws.repo),
                         attempt_dir=adir, prompt_path=adir / "prompt.txt", argv=tuple(launch.argv),
                         env_file=env_file, stdin_path=stdin_path, timeout_seconds=timeout)
+
+    def _check_policy(self, attempt: AttemptRef):
+        if self.check_policy_for is None:
+            return None
+        try:
+            return self.check_policy_for(attempt.run)
+        except Exception as error:  # noqa: BLE001 - the note informs; the verifier builds its own policy and reports
+            LOG.warning("check environment of %s not described: %s", attempt.attempt_key, type(error).__name__)
+            return None
 
     def _brief(self, attempt: AttemptRef, request: m3.StartRequest, note: str) -> m3.Brief:
         plan = self.plan_for(attempt)
@@ -239,11 +254,13 @@ def agent_test_env(project: str) -> dict[str, str]:
 
 
 def _test_env_note(env: Mapping[str, str]) -> str:
-    if not env:
-        return ""
-    return ("Test environment: " + ", ".join(sorted(env)) + (" is" if len(env) == 1 else " are") + " set in your "
-            "environment by the owner for testing (a disposable database, never production). Run the verification "
-            "commands that need them yourself before you finish; never print, copy or commit their values.")
+    return _environment_note(env, None)
+
+
+def _environment_note(env: Mapping[str, str], check_policy) -> str:
+    """The owner's test variables of the attempt and, when the run's M6 policy is known, what its checks receive."""
+    import bt_verifier_env
+    return bt_verifier_env.attempt_note(dict(env), check_policy)
 
 
 def _m3_route(route: Route) -> m3.Route:

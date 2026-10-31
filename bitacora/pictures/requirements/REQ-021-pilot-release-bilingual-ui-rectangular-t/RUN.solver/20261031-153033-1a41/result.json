@@ -1,0 +1,11 @@
+{
+  "outcome": "asked_owner",
+  "summary": "Reproducida la comparación de SP-14; Planner prepara la enmienda y se requiere reconfirmar el subplan.",
+  "handled": [
+    "owner_rejected:SP-14:v2:0715a331b721:d9687e50c275"
+  ],
+  "decision": "",
+  "question": "¿Confirmas la enmienda de SP-14 para eliminar la selección y lógica de comparación y presentar los cuatro planes como tarjetas de suscripción, conservando su carácter público e informativo, sin compras ni cambios de cuenta? Si confirmas, el Planner y Designer prepararán el contrato y el plan revisados para tu aprobación; si no, mantendremos el contrato actual y necesitaremos que indiques el alcance deseado.",
+  "commits": [],
+  "rule": "D-087"
+}

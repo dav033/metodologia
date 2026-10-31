@@ -1,0 +1,11 @@
+{
+  "outcome": "asked_owner",
+  "summary": "Falta la observación real EN/ES; se solicita autorización para posibles cargos o evidencia del propietario.",
+  "handled": [
+    "pictures:REQ-021:r30:T10.5:T10.5:d1@k1"
+  ],
+  "decision": "",
+  "question": "¿Autorizas hasta dos turnos locales de texto con el proveedor configurado, uno en inglés y otro en español, que podrían generar cargos de API? Si autorizas, observaré y registraré los resultados reales; si no, proporciona el proveedor, la fecha y el resultado observado en ambos idiomas para comprobar si puede atestiguarse.",
+  "commits": [],
+  "rule": "D-078"
+}

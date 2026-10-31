@@ -1,0 +1,37 @@
+[
+ {
+  "kind": "owner_rejected",
+  "key": "owner_rejected:SP-14:v2:0715a331b721:d9687e50c275",
+  "run_id": "pictures:REQ-021:r30",
+  "task_id": "",
+  "request_id": "",
+  "round": null,
+  "reason": "the owner tried SP-14 version 2 (commit 0715a331b7) and rejected it: «Quitemos lalogica dela comparacion, ademas hagamos que los items de los planes sean tipo las cartas de subscricpiones normales»",
+  "subplan": "SP-14",
+  "title": "Plans section: the four access plans, public and informative",
+  "version": 2,
+  "commit": "0715a331b72111afe085e35d773b284764924fe4",
+  "note": "Quitemos lalogica dela comparacion, ademas hagamos que los items de los planes sean tipo las cartas de subscricpiones normales",
+  "pending": "P-211",
+  "decided_at": "2026-10-31T15:30:21-05:00",
+  "via": "web",
+  "tests": [
+   {
+    "subplans": [
+     "SP-14"
+    ],
+    "kind": "local",
+    "where": "Local Probar version with SP-1 and SP-2 built, REQ-021 test database",
+    "how": "With SP-1's setup: 1) `npm run dev`, open http://localhost:3000/login signed out and follow the plans link. 2) In /planes open the extra plan-selection view; select/highlight each plan, return to the full comparison, and verify the current account assignment is unchanged. 3) Switch browser language to English and repeat the comparison and selection view. 4) Sign in as entusiasta@prueba.local and open the plans entry from the account menu. 5) As admin@prueba.local move designer@prueba.local to «Usuario · Designer Plus» on the accounts screen; as designer@ open the cost calculator and /3d. 6) Try phone, tablet and desktop widths and keyboard (Tab).",
+    "expect": "The extra view only highlights a plan for comparison; it never assigns a plan or exposes purchase/request/sign-up controls. Existing account assignment and permissions remain unchanged after selection. Four plans and all tool lists stay visible, with no «Ocultar herramientas» control. Spanish uses COP and English USD; unavailable tools and chat copy match the catalogue. The sign-in and account-menu links still open /planes. On tablet there is no horizontal scroll and the four plans, prices and full tool lists remain legible; keyboard focus and activation work. Account-admin assignment still updates permissions through SP-2. Screens match approved planes@v1."
+   }
+  ],
+  "pages": [
+   "/login",
+   "/planes"
+  ],
+  "evidence": "evidence/owner-rejected/SP-14-v2.md",
+  "status": "pending",
+  "at": "2026-10-31T15:30:33"
+ }
+]

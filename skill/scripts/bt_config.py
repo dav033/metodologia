@@ -180,7 +180,7 @@ ALLOWED: dict[str, tuple] = {
     "run.isolation": ("off", "worktree"),
     "execution.backend": ("legacy", "dbos"),
     "execution.router": ("m2", "static"),
-    "integrate.regression": ("staged", "selective", "full"),
+    "integrate.regression": ("staged", "selective", "full", "none"),
 }
 ALLOWED_ITEMS: dict[str, tuple] = {"gates.audit_blocking": ("critical", "high", "medium", "low")}
 
@@ -193,8 +193,27 @@ def _path() -> Path:
     return STATE / "config.json"
 
 
+# Defaults that name the owner's own per-user files (his secrets, his agents' test database). They are the defaults of the
+# live bitácora only: any other root (a test, a lab) starts without them and reaches them only if its config names them,
+# so a scratch root never loads the owner's secrets into a check or an agent (D-256).
+LIVE_ROOT_ONLY: dict[str, object] = {"execution.agent_env_file": "", "verifier.secret_files": []}
+
+
+def defaults() -> dict:
+    """DEFAULTS as they apply to this root (`LIVE_ROOT_ONLY` emptied outside the live bitácora)."""
+    import bt_core
+    config = copy.deepcopy(DEFAULTS)
+    if not bt_core.is_live_root():
+        for key, value in LIVE_ROOT_ONLY.items():
+            section, name = key.split(".", 1)
+            config[section][name] = copy.deepcopy(value)
+    return config
+
+
 def _keys() -> dict[str, object]:
-    return {f"{section}.{name}": value for section, values in DEFAULTS.items() for name, value in values.items()}
+    import bt_core
+    keys = {f"{section}.{name}": value for section, values in DEFAULTS.items() for name, value in values.items()}
+    return keys if bt_core.is_live_root() else {**keys, **LIVE_ROOT_ONLY}
 
 
 def _valid(key: str, value: object) -> bool:
@@ -226,13 +245,14 @@ def _flatten(data: object) -> dict[str, object]:
 
 def load() -> dict:
     """Return defaults merged with each valid stored override."""
-    config = copy.deepcopy(DEFAULTS)
+    config = defaults()
     try:
         stored = json.loads(_path().read_text(encoding="utf-8"))
     except (OSError, ValueError):
         return config
+    keys = _keys()
     for key, value in _flatten(stored).items():
-        if key in _keys() and _valid(key, value):
+        if key in keys and _valid(key, value):
             section, name = key.split(".", 1)
             config[section][name] = value
     return config

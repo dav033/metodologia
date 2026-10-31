@@ -1,0 +1,15 @@
+{"name":"Fichas en fila — lectura operativa",
+"axes":{
+"concept":"Operational reading of the published /planes page: comparison tabs, plan index rail, highlighted plan and selection summary are removed and the divided sheet becomes four peer subscription cards whose full tool lists are all visible in the first desktop viewport.",
+"layout":"Four equal cards in one row at ≥1100px, 2×2 from 640–1099px, one column below 640px; each card spans five CSS-subgrid rows (name, price, rule, tools heading, list) so names, prices and list starts align across a row of cards.",
+"navigation":"No in-page navigation: published masthead (brand, Idioma select) and heading row with the existing back link (Volver al acceso signed out, Volver signed in); signed-in pages keep the cuentas-admin@v2 account bar and menu with its Planes entry marked aria-current.",
+"typography":"Existing Geist scale: H1 24/600; plan name 16/600; price 28/650 tabular figures with 12px COP / mes or USD / month suffix; tools heading 12/550 muted with tabular count; tool rows 14/1.45; unavailable marker 12px aviso.",
+"density":"Dense ledger inside each card: 20px card padding, 8px row padding with hairline row rules, 16px grid gap; Master Designer’s eight lines plus three markers fit within a 900px-high desktop viewport.",
+"components":"Article cards (non-interactive), lucide Check for available and CircleDashed for not-yet-available tools, shadcn Skeleton loading cards, shadcn Button outline Retry, shadcn Input/Button on the unchanged sign-in entry, custom account trigger/popup reused from cuentas-admin@v2.",
+"colour":"Only existing Pictures tokens: superficie cards on fondo, borde card edge, borde-suave rules, acento on checks, focus and the active menu language, aviso on unavailable icons and markers, error on the catalogue-unavailable heading; no card is tinted or highlighted.",
+"motion":"Precise quick cuts on the product’s --ease-out with no overshoot: cards cut up 8px left-to-right (220ms, 40ms stagger), the header rule draws from the left, tool rows slide 6px with a 16ms stagger, and a language change cuts each price vertically (160ms, 25ms stagger per card); subtle/natural profiles shorten timings and reduced motion removes all travel."},
+"evidence":{
+"layout":[".plan-grid",".plan-card"],
+"navigation":[".masthead .language",".heading-row .back"],
+"typography":[".plan-card .price-value",".plan-card .plan-name",".tools-head h3"],
+"motion":[".plan-card",".plan-rule",".tool-list li"]}}

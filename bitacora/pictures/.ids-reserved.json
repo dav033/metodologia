@@ -24,6 +24,11 @@
    "id": "D-086",
    "by": "solver 20261031-123425-067d: guided-chat readiness must fall back on empty input text",
    "at": "2026-10-31T12:44:16"
+  },
+  {
+   "id": "D-087",
+   "by": "solver 20261031-153033-1a41: SP-14 owner-requested comparison removal",
+   "at": "2026-10-31T15:31:13"
   }
  ]
 }
