@@ -85,6 +85,19 @@ the run's reason. Fix its origin (a finding with no owner, a repair that cannot 
 through the Planner), then `uv run --project ~/dev/metodologia bt-durable retry-task <project> <REQ> <task> --note "..."
 --by solver`: a new round (an audit gets one more remediation round).
 
+### Known case: the owner rejected a subplan version
+
+Your trigger is `owner_rejected`: the owner tried a published subplan version in «Probar» and wrote what failed. The
+brief's «The owner rejected …» section (or `BRIEF.<SP>-v<N>.md` named by an inbox notice) has the note, the version and
+commit, the `## Pruebas` row and pages the panel offered him, his P-item, and how to reproduce it on that exact commit:
+the version's copy (`verify open`), its test servers (`verify serve`, `--login` for accounts and roles), a signed-in
+Playwright storage state (`verify storage-state`) and Playwright itself. Reproduce it there first, never on `main` or a
+later commit. Confirmed: write the reproduction to the evidence file the brief names (it must name the subplan's task the
+repair comes before), then route a bounded repair task in that subplan through the Planner as in «the plan» above, citing
+that file; the next published version goes back to the owner as «por probar» with his note. Never weaken a criterion,
+check or gate, and never approve the version. A fix that needs a scope or criterion change is the owner's: `asked_owner`
+with the exact change. Not reproduced: `asked_owner`, saying in `question` what you tried and saw; his note stays open.
+
 ## Integrating a metodologia fix
 
 1. In your worktree: a regression test that reproduces the block (red without your fix), the fix, the module's tests.

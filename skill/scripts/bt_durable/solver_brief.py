@@ -58,12 +58,15 @@ def brief(run, rdir: Path, session: dict, items: list[dict], status: dict, *, te
     tasks = status.get("tasks") or {}
     lines = [f"# Solucionador {session['id']} — {run.project} {run.req} (run {run.run_id})", "",
              f"Started {session['started_at']} by the durable engine's maintenance pass.", "", "## Triggers", ""]
-    lines += [f"- `{i['key']}` — {i['kind']}{' · ' + i['task_id'] if i.get('task_id') else ''}: {i['reason']}"
-              for i in items]
-    from . import resolutions
+    for i in items:
+        about = i.get("task_id") or i.get("subplan") or ""
+        lines.append(f"- `{i['key']}` — {i['kind']}{' · ' + about if about else ''}: {i['reason']}")
+    from . import rejections, resolutions
     for item in items:
         if item["kind"] == "resolution":
             lines += resolutions.brief(item)
+        elif item["kind"] == rejections.KIND:
+            lines += rejections.brief(item, run, rdir)
     for item in items:
         task = tasks.get(item.get("task_id") or "") or {}
         decision = task.get("decision") if isinstance(task.get("decision"), dict) else None
