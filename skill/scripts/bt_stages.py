@@ -248,6 +248,14 @@ def repair_reconfirm(rdir: Path, evidence: list[str], by: str) -> list[str]:
     return kept
 
 
+def _kept(rdir: Path, add: list[str]) -> list[str]:
+    """Approved subplans the Planner changed and the owner has not re-confirmed, outside `add`: the new stage keeps them
+    as the latest revision holds them instead of refusing the whole stage (D-259; pictures REQ-021 2026-10-31: SP-2's
+    confirmed redesign could not run while SP-14's amendment waited for the owner's design choice)."""
+    st = flow.state(rdir)
+    return [sid for sid in approved(rdir) if sid not in add and (st["subplans"].get(sid) or {}).get("state") == "changed"]
+
+
 def freeze(project: str, rdir: Path, add: list[str], *, repair_evidence: list[str] | None = None,
            by: str = "owner") -> dict:
     """Approve the next stage (the approved subplans plus `add`) and freeze it; returns the manifest entry. With
@@ -261,16 +269,19 @@ def freeze(project: str, rdir: Path, add: list[str], *, repair_evidence: list[st
     if repair_evidence is not None:
         repair_reconfirm(rdir, repair_evidence, by)
     _add_second_auditor(rdir, stage, add)
+    kept = _kept(rdir, add)
     snapshot, unchanged = _approval_snapshot(rdir, stage)
-    if (missing := eligibility(rdir, stage)):
+    if (missing := eligibility(rdir, [sid for sid in stage if sid not in kept])):
         raise StageError("STAGE_SUBPLAN_UNCONFIRMED", "; ".join(missing))
+    if kept:
+        snapshot = bt_plan_adapter.planner.stages.keep(snapshot, bt_plan_adapter.planner.stages.latest(rdir)[1], kept)
     unchanged()
     try:
         require_ready(rdir, waive=PLANNING_FILES)
     except SystemExit as exc:
         raise StageError("REQUIREMENTS_REVALIDATION_REQUIRED", str(exc)) from exc
     report = bt_scheduler_adapter.plan_compatibility_report(rdir)
-    if (problem := bt_plan_adapter.stage_problem(rdir, add, compatibility_report=report, draft=snapshot)):
+    if (problem := bt_plan_adapter.stage_problem(rdir, add, compatibility_report=report, draft=snapshot, kept=kept)):
         code, _, text = problem.partition(":")
         raise StageError(code.strip(), text.strip())
     try:
@@ -280,7 +291,7 @@ def freeze(project: str, rdir: Path, add: list[str], *, repair_evidence: list[st
         raise StageError("STAGE_DESIGN_NOT_READY", str(exc)) from exc
     try:
         return bt_plan_adapter.freeze_stage(rdir, add, compatibility_report=report, draft=snapshot,
-                                            before_freeze=unchanged)
+                                            before_freeze=unchanged, kept=kept)
     except bt_plan_adapter.planner.PlanContractError as exc:
         raise StageError(exc.code, "; ".join(exc.issues[:5])) from exc
 
@@ -379,6 +390,20 @@ def run(project: str, rdir: Path, add: list[str], *, by: str = "owner", via: str
                     + (f", faltan {pending} subplanes" if pending else ""), kind="flow", sp=add[0] if add else "")
     return (f"Etapa r{entry['revision']} aprobada con {held}" + (f"; faltan {pending} subplanes por definir. " if pending
                                                                   else ". ") + message)
+
+
+def amended(rdir: Path, sid: str) -> bool:
+    """`sid` is in the latest approved stage, and the owner confirmed a different version of it since (D-259): the
+    page offers «Ejecutar cambios» instead of «En ejecución», and running it approves a new stage with the change."""
+    import bt_plan_adapter
+    try:
+        found = bt_plan_adapter.planner.stages.latest(rdir)
+    except Exception:  # noqa: BLE001 - an unreadable store offers nothing
+        return False
+    if not found or sid not in bt_plan_adapter.planner.stages.subplans_in(found[1]):
+        return False
+    item = flow.state(rdir)["subplans"].get(sid) or {}
+    return item.get("state") == "confirmed" and not flow.confirmed_as(rdir, sid, found[1])
 
 
 def info(rdir: Path) -> dict:

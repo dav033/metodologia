@@ -382,7 +382,7 @@ def freeze_approved(rdir: Path, *, compatibility_report: dict[str, object] | Non
 
 
 def stage_problem(rdir: Path, subplans: list[str], *, compatibility_report: dict[str, object] | None = None,
-                  allow_unmapped: bool = False, draft: dict | None = None) -> str | None:
+                  allow_unmapped: bool = False, draft: dict | None = None, kept: list[str] | tuple[str, ...] = ()) -> str | None:
     """Publication gate of the next stage (D-134) without writing: the engine supports the plan, the projection passes
     `check_stage` and, under `planner.require_mapped_checks`, every check maps to a criterion."""
     if problem := plan_consumer_problem(rdir, compatibility_report=compatibility_report):
@@ -390,7 +390,7 @@ def stage_problem(rdir: Path, subplans: list[str], *, compatibility_report: dict
     try:
         projection, draft = _next_stage(rdir, subplans, draft=draft)
         report = planner.check_stage(rdir, projection, draft, plan_id(rdir), repo_roots(rdir), True,
-                                     ref_verifier(rdir), ignore_resolver(repo_roots(rdir)), LEDGER_COMMAND)
+                                     ref_verifier(rdir), ignore_resolver(repo_roots(rdir)), LEDGER_COMMAND, kept=kept)
     except planner.PlanContractError as exc:
         return f"{exc.code}: " + "; ".join(exc.issues[:5]) + (f" (+{len(exc.issues) - 5} more)" if len(exc.issues) > 5 else "")
     except Exception as exc:  # noqa: BLE001 - fail closed
@@ -473,12 +473,14 @@ def _mapping_lines(plan: dict, req: str) -> str | None:
 
 
 def freeze_stage(rdir: Path, subplans: list[str], *, compatibility_report: dict[str, object] | None = None,
-                 draft: dict | None = None, before_freeze: Callable[[], None] | None = None) -> dict:
+                 draft: dict | None = None, before_freeze: Callable[[], None] | None = None,
+                 kept: list[str] | tuple[str, ...] = ()) -> dict:
     """Approve the next stage: the subplans already approved plus `subplans` (D-134). Raises PlanContractError."""
-    if problem := stage_problem(rdir, subplans, compatibility_report=compatibility_report, draft=draft):
+    if problem := stage_problem(rdir, subplans, compatibility_report=compatibility_report, draft=draft, kept=kept):
         raise planner.PlanContractError(problem.split(":", 1)[0], [problem.split(":", 1)[-1].strip()])
     return planner.freeze_stage(rdir, subplans, plan_id(rdir), repo_roots(rdir), True, ref_verifier(rdir),
-                                ignore_resolver(repo_roots(rdir)), LEDGER_COMMAND, draft=draft, before_freeze=before_freeze)
+                                ignore_resolver(repo_roots(rdir)), LEDGER_COMMAND, draft=draft, before_freeze=before_freeze,
+                                kept=kept)
 
 
 def stage_summary(rdir: Path) -> dict:
