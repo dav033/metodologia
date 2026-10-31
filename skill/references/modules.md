@@ -489,9 +489,9 @@ once per signature (D-167) → the Solucionador → the owner, only for what nee
   task (then `limit`: the owner is told); `solver.max_minutes` (120) without `result.json` → killed, `gave_up`, the owner
   is told. A trigger that finds its run's session at work goes to that session's `inbox.jsonl` and is typed into it;
   one it did not list as handled starts the next session.
-- **The session.** tmux `bit-<project>-<REQ>-solver` (socket `bitacora`); Claude Opus high with
+- **The session.** tmux `bit-<project>-<REQ>-solver` (socket `bitacora`); Claude Sonnet high (D-253) with
   `--dangerously-skip-permissions` on the account `bt_agent_terminal.role_route(project, "solver")` picks (unattended,
-  with quota; role `solver` ranks Opus first while it has quota), Codex `--dangerously-bypass-approvals-and-sandbox`
+  with quota; role `solver` ranks Sonnet first while it has quota), Codex Terra medium `--dangerously-bypass-approvals-and-sandbox`
   otherwise; moved to another account (conversation copied, `--resume`) when the screen shows a spent quota or an
   owner-only prompt, at most twice. Its working folder is `~/.local/share/bitacora-solver/<project>/<id>/` (outside every
   repository); `BITACORA_SOLVER=<id>` in its environment.

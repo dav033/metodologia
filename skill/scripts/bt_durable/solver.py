@@ -333,7 +333,9 @@ class Solver:
             if home:
                 env["CODEX_HOME"] = home
         else:
-            flags = "--model opus --effort high --dangerously-skip-permissions"
+            # the routed model and effort (D-253): a fixed `--model opus` here ran Opus whatever the role policy said
+            flags = (f"--model {shlex.quote(route.get('model') or 'sonnet')} "
+                     f"--effort {shlex.quote(route.get('effort') or 'high')} --dangerously-skip-permissions")
             old = session.get("session_id") or ""
             if home:
                 env["CLAUDE_CONFIG_DIR"] = home
