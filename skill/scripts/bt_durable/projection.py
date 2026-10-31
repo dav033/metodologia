@@ -113,7 +113,7 @@ def _task(source, task_id: str, rounds: list, summary_state: str | None, attempt
             task.update(durable_state=durable, attempt=event.get("attempt"), until=event.get("until"))
             task["state"] = {"routing": "queued", "queued": "queued", "waiting_quota": "waiting_quota",
                              "running": "running", "recovering": "recovering", "reconciling": "verifying",
-                             "needs_decision": "needs_decision", "completed": "completed",
+                             "needs_decision": "needs_decision", "completed": "completed", "requeued": "pending",
                              "inherited": "completed", "blocked": "blocked",
                              "cancelled": "cancelled"}.get(durable, "running")
             if durable == "needs_decision":
@@ -127,8 +127,10 @@ def _task(source, task_id: str, rounds: list, summary_state: str | None, attempt
             task["outcome"] = output.get("status")
             closed = output.get("decision") if isinstance(output.get("decision"), dict) else {}
             task["limit_hit"] = closed.get("limit_hit") or None
+            # `requeued` (D-262): the round handed the task back to the run, which starts it again once its ancestors
+            # are done
             task["state"] = {"completed": "completed", "inherited": "completed", "blocked": "blocked",
-                             "cancelled": "cancelled"}.get(output.get("status"), "blocked")
+                             "cancelled": "cancelled", "requeued": "pending"}.get(output.get("status"), "blocked")
         elif row.status == "CANCELLED":
             task["state"] = "cancelled"
         else:

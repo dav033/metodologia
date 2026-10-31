@@ -44,6 +44,8 @@ owner_notes = _wiring.owner_notes
 contract_notes = _wiring.contract_notes
 joined_notes = _wiring.joined_notes
 check_design_approval = _design_approval.check_tree
+# the legacy start gate's reading of a `ui: true` task's contract (path, state -> blocked reason), D-262
+design_gates = _exec.design_gates
 design_execution_notes = _design_drafts.execution_notes
 legacy_attempts_doc = _decisions._state                  # the M1 document of a legacy (or migrated) run
 with_recorded_history = _history.with_recorded

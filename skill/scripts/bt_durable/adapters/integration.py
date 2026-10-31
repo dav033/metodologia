@@ -33,6 +33,9 @@ IDENT = {"GIT_AUTHOR_NAME": "Bitacora Durable", "GIT_AUTHOR_EMAIL": "durable@loc
          "GIT_COMMITTER_NAME": "Bitacora Durable", "GIT_COMMITTER_EMAIL": "durable@localhost",
          "GIT_AUTHOR_DATE": "1700000000 +0000", "GIT_COMMITTER_DATE": "1700000000 +0000"}
 _SAFE = re.compile(r"[^A-Za-z0-9._-]+")
+# subject prefix of a retry base caught up with its line (continuation_base); its first parent is the earlier attempt's
+# snapshot, which the brief's continuation note names (adapters/m3.py `_continuation`)
+CATCH_UP = "bt: catch up"
 
 
 class LineMoved(RuntimeError):
@@ -112,6 +115,32 @@ class GitLineIntegrator:
                 continue
             tip = new or tip
         return tip
+
+    def continuation_base(self, run: RunRef, task: TaskSpec, snapshot_sha: str, *, home: str = "",
+                          lines: tuple[str, ...] = ()) -> str:
+        """Where a retry that continues an earlier attempt starts: that attempt's snapshot with the newer work of the
+        task's home line (`base_ref`: its subplan line, gate candidate or the run line) merged in, objects only, as
+        `_caught_up` does for a gate. D-254 keeps the earlier attempt's work; this keeps the work integrated into the
+        line since: pictures REQ-021 r32 T2.57 a2..a5 continued a1's empty snapshot `6ec74192` while T2.11 had put the
+        v2 contract on the SP-2 line (D-262). A snapshot with nothing the line lacks (an attempt that changed nothing)
+        fast-forwards to the line tip, i.e. the current base_ref; a line that conflicts with the snapshot is left out
+        (logged) and the conflict reaches the task at integration, as before."""
+        if not snapshot_sha:
+            return snapshot_sha
+        try:
+            repo = self._repo(task.repository)
+            tip = self.base_ref(run, task, home=home, lines=lines)
+            if not tip or tip == snapshot_sha:
+                return snapshot_sha
+            new, conflict = self._merge(repo, snapshot_sha, tip,
+                                        f"{CATCH_UP} {task.id}: {snapshot_sha[:12]} + {home or 'run line'}")
+        except RuntimeError as error:               # the line cannot be read or merged: continue as before (D-254)
+            LOG.warning("%s: retry base not caught up (%s)", task.id, str(error)[:200])
+            return snapshot_sha
+        if conflict:
+            LOG.info("%s: retry base left its line out (%s)", task.id, conflict[:200])
+            return snapshot_sha
+        return new or snapshot_sha
 
     def _run_line(self, run: RunRef, role: str) -> str:
         """The run line's tip, created at the repository's HEAD (and its base pinned) the first time it is needed."""

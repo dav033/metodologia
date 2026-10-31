@@ -299,7 +299,8 @@ class Solver:
         (folder / "inbox.jsonl").touch()
         from .solver_brief import brief, prompt
         (folder / "BRIEF.md").write_text(brief(run, rdir, session, items, status,
-                                               telemetry=self.state_dir / "telemetry.jsonl"), encoding="utf-8")
+                                               telemetry=self.state_dir / "telemetry.jsonl", client=self.client),
+                                         encoding="utf-8")
         (folder / "PROMPT.md").write_text(prompt(folder), encoding="utf-8")
         error = self._start(run, session, avoid="")
         if error:

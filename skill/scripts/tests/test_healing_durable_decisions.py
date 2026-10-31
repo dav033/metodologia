@@ -92,6 +92,38 @@ class DurableHealing(unittest.TestCase):
         self.assertEqual(len(client.answers), 1)
         self.assertEqual([(e["kind"], e["request_id"], e["round"]) for e in self.escalated], [("repeat", "T7.4:d2", 3)])
 
+    def test_an_attempt_that_changed_nothing_reaches_the_diagnosis_and_is_not_retried_again(self):
+        """pictures REQ-021 r32 T2.57 (D-262): every attempt changed nothing and its agent said it stopped at the design
+        gate; healing answered d1, d2, d3 with the same note about an npm script, each with a new signature."""
+        said = "I stopped at the design gate: design/contracts/cuentas-admin@v2.md is missing, so I changed nothing."
+        outputs = {"att-1": {"agent": {"status": "completed", "text": said},
+                             "snapshot": {"snapshot_sha": "a" * 40, "base_sha": "a" * 40, "changed_paths": []}}}
+        client = Client(dict(decision(signature="sig-a"), verify_attempt="att-1"), round_no=1)
+        client.attempt_output = outputs.get
+        diagnose = self.diagnosis(kind="code", option="retry_with_note", confidence="media",
+                                  headline="Falta el script npm", note="Add the npm script cuentas:test-ui-redesign first.")
+        self.heal(client, diagnose)
+        self.assertIn("it changed NOTHING", self.evidence)
+        self.assertIn(said, self.evidence)
+        self.heal(client, diagnose)
+        self.assertEqual(len(client.answers), 1)
+        outputs["att-2"] = outputs["att-1"]
+        client.item["decision"] = dict(decision(signature="sig-b", request="T7.4:d2"), verify_attempt="att-2")
+        self.assertEqual(self.heal(client, diagnose),
+                         ["proj:REQ-900:r1:T7.4:T7.4:d2@k1: no change again after healing's answer, left to the owner"])
+        self.assertEqual(len(client.answers), 1)
+        self.assertEqual([(e["kind"], e["request_id"]) for e in self.escalated], [("repeat", "T7.4:d2")])
+        self.assertIn("changed nothing", self.escalated[0]["reason"])
+
+    def test_attempt_facts_read_the_decided_attempt(self):
+        changed = {"agent": {"status": "completed", "text": "done"},
+                   "snapshot": {"snapshot_sha": "b" * 40, "base_sha": "a" * 40, "changed_paths": ["src/a.ts"]}}
+        reader = type("Reader", (), {"attempt_output": staticmethod(lambda key: changed)})()
+        facts = healing.attempt_facts(reader, {"verify_attempt": "att-9"})
+        self.assertEqual((facts["unchanged"], facts["changed"], facts["agent_message"]), (False, 1, "done"))
+        self.assertEqual(healing.attempt_facts(reader, {}), {})                     # no attempt named
+        self.assertEqual(healing.attempt_facts(object(), {"verify_attempt": "att-9"}), {})   # an older client
+
     def test_a_plan_defect_goes_to_the_planner_and_stays_for_the_owner(self):
         client = Client(decision())
         diagnose = self.diagnosis(kind="plan", option="retry", confidence="alta", headline="T7.4 no depende de SP-6",

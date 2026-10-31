@@ -166,6 +166,82 @@ class DurableRuns(EngineCase):
         last = manifests[-1]["snapshot_sha"]
         self.assertEqual(len(lab_support.git(self.lab.repo, "show", f"{last}:progress.txt").splitlines()), 4)
 
+    def test_a_continuing_retry_catches_up_with_work_integrated_into_its_line_since(self):
+        """pictures REQ-021 r32 T2.57 (D-262): a2..a5 continued a1's snapshot and never saw the contract T2.11 had put
+        on the line meanwhile. T1 fails first and continues; T2 is accepted onto the run line while T1's first
+        attempt still runs; T1's retry starts from its own snapshot WITH T2's work."""
+        (self.lab.repo / "checks" / "check_task.py").write_text(
+            "import pathlib, sys\nsys.exit(0 if pathlib.Path(sys.argv[1]).is_file() else 1)\n")
+        lab_support.git(self.lab.repo, "add", "-A")
+        lab_support.git(self.lab.repo, "commit", "-q", "-m", "task check")
+        os.environ["FAKE_FIXLATER_DELAY"] = "6"
+        self.addCleanup(os.environ.pop, "FAKE_FIXLATER_DELAY", None)
+        run = RunRef.model_validate(self.lab.freeze([
+            task("T1", scenario="fixlater", paths=["T1/**", "out.txt", "attempt-marker.txt"]),
+            task("T2", scenario="mark", paths=["T2.task"], check="python3 checks/check_task.py T2.task")]))
+        self.start_engine()
+        self.client.start(run, FAST)
+        status = self.settled(run, timeout=240)
+        self.assertEqual(status["summary"]["status"], "completed", status)
+        mine = [item for item in self.lab.launches() if item["task"] == "T1"]
+        self.assertEqual(len(mine), 2, self.lab.launches())
+        self.assertEqual(mine[0]["seen"], [])
+        self.assertEqual(mine[1]["seen"], ["T2.task"])                  # the line's newer work reached the retry
+        self.assertTrue(mine[1]["continues"])                           # ...and it still continues a1 (D-254)
+        second = json.loads(next(self.lab.state.glob("attempts-root/attempts/*T1-a2-*/handoff/manifest.json"))
+                            .read_text())
+        first = json.loads(next(self.lab.state.glob("attempts-root/attempts/*T1-a1-*/handoff/manifest.json"))
+                           .read_text())
+        self.assertEqual(lab_support.git(self.lab.repo, "rev-parse", f"{second['base_sha']}^1"), first["snapshot_sha"])
+
+    def test_an_attempt_that_changes_nothing_goes_to_the_owner_with_the_agent_s_reason(self):
+        """pictures REQ-021 r32 T2.57 (D-262): five empty attempts were judged CHECK_FAILED and retried."""
+        run = RunRef.model_validate(self.lab.freeze([task("T1", scenario="nochange")]))
+        self.start_engine()
+        self.client.start(run, FAST)
+        decision = wait_until(lambda: (self.client.status(run)["tasks"].get("T1") or {}).get("decision"), 240,
+                              interval=1, what="an owner decision")
+        self.assertEqual(decision["failure"]["code"], "AGENT_NO_CHANGE")
+        self.assertIn("stopped at the design gate", decision["reason"])
+        self.assertEqual(len(self.lab.launches()), 1)                    # no blind retries
+        self.client.answer(run, "T1", OwnerAnswer(request_id=decision["request_id"], action="stop"))
+        self.assertEqual(self.settled(run)["summary"]["status"], "blocked")
+
+    def test_a_heap_limit_in_the_task_s_own_check_goes_back_to_the_agent(self):
+        """pictures REQ-021 r32 T3.91 (D-262): the task's own harness hit Node's heap cap; a larger sandbox was tried and
+        the owner asked, while only the agent could fix the harness. Here the check is a file of the task's paths."""
+        run = RunRef.model_validate(self.lab.freeze([task("T1", check=lab_support.CHECK_HEAP,
+                                                          paths=["T1/**", "out.txt", "checks/check_heap.py"])]))
+        settings = FAST.model_copy(update={"budget": FAST.budget.model_copy(update={"max_attempts": 2})})
+        self.start_engine()
+        self.client.start(run, settings)
+        decision = wait_until(lambda: (self.client.status(run)["tasks"].get("T1") or {}).get("decision"), 240,
+                              interval=1, what="an owner decision")
+        self.assertEqual(decision["failure"]["code"], "CHECK_HEAP_LIMIT")
+        self.assertEqual(len(self.lab.launches()), 2)                    # retried by the agent, not re-verified
+        prompt = next(self.lab.state.glob("attempts-root/attempts/*T1-a2-*/prompt.txt")).read_text()
+        self.assertIn("NODE_OPTIONS", prompt)
+        rows = [json.loads(line) for line in (self.lab.state / "telemetry.jsonl").read_text().splitlines()]
+        self.assertEqual([r["action"] for r in rows if r.get("event") == "recovery_decision"], ["retry", "escalate"])
+        self.client.answer(run, "T1", OwnerAnswer(request_id=decision["request_id"], action="stop"))
+        self.assertEqual(self.settled(run)["summary"]["status"], "blocked")
+
+    def test_a_heap_limit_a_larger_heap_cannot_fix_goes_to_the_owner_as_a_check_problem(self):
+        (self.lab.repo / "checks" / "check_heap_always.py").write_text(
+            "import sys\nprint('FATAL ERROR: Reached heap limit Allocation failed - JavaScript heap out of memory',"
+            " file=sys.stderr)\nsys.exit(134)\n")
+        lab_support.git(self.lab.repo, "add", "-A")
+        lab_support.git(self.lab.repo, "commit", "-q", "-m", "heap check")
+        run = RunRef.model_validate(self.lab.freeze([task("T1", check="python3 checks/check_heap_always.py")]))
+        self.start_engine()
+        self.client.start(run, FAST)
+        decision = wait_until(lambda: (self.client.status(run)["tasks"].get("T1") or {}).get("decision"), 240,
+                              interval=1, what="an owner decision")
+        self.assertEqual(decision["failure"]["code"], "CHECK_HEAP_LIMIT_PLAN")
+        self.assertEqual(len(self.lab.launches()), 1)                    # one relaxed re-verification, no agent
+        self.client.answer(run, "T1", OwnerAnswer(request_id=decision["request_id"], action="stop"))
+        self.assertEqual(self.settled(run)["summary"]["status"], "blocked")
+
     def _legacy_from_first_run(self, verdict):
         """Run T1 once, then describe its real snapshot as legacy progress for a second plan revision."""
         from bt_contracts.execution import LegacyProgress, LegacyTask

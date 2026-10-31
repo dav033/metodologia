@@ -44,4 +44,6 @@ def approval_problem(state: str) -> str | None:
         return None
     if state == "hash-mismatch":
         return "DESIGN_CONTRACT_HASH_MISMATCH"
+    if state == "missing":                  # absent from the selected base tree (D-262)
+        return "DESIGN_CONTRACT_MISSING"
     return "DESIGN_CONTRACT_UNAPPROVED"

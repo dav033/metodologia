@@ -26,15 +26,21 @@ class Frontier:
 
 
 def compute(plan: Plan, states: Mapping[str, str], *, max_parallel: int, config: Config | None = None,
-            gates: subplans.Gates | None = None) -> Frontier:
+            gates: subplans.Gates | None = None, transitive: bool = False) -> Frontier:
     """`states` maps task id -> one of completed|inherited|blocked|cancelled|running (absent = not started).
     With `gates` (a 1.3.0 plan whose subplan support is on), composition gates hold their task and what follows it
-    (`subplans.held`); without it the frontier is exactly the pre-subplan one (workflows recorded before the patch)."""
+    (`subplans.held`); without it the frontier is exactly the pre-subplan one (workflows recorded before the patch).
+
+    `transitive`: a dependency counts as satisfied only when it AND every one of its ancestors is done, and a stopped
+    ancestor makes a task unreachable through done tasks too. Without it only the direct dependencies are looked at,
+    so an inherited dependency whose own ancestor runs again in this stage counted as done: pictures REQ-021 r32 T2.57
+    started while T2.11 (its contract's design task) and T2.3/T2.4/T2.5 ran again behind the inherited T2.56 → T2.55 →
+    T2.6 chain, from a base without the v2 contract (D-262). Off for run workflows recorded before the patch."""
     config = config or Config(max_parallel_tasks=max(1, max_parallel), unknown_surface="allow")
     by_id = {t.id: t for t in plan.tasks}
     running = [by_id[t] for t, s in states.items() if s == "running" and t in by_id]
     held = [claims_for(t, config) for t in running]
-    unreachable = _unreachable(plan, states)
+    unreachable = _unreachable(plan, states, transitive=transitive)
     ready: list[str] = []
     waiting: list[str] = []
     resource_held: list[str] = []
@@ -43,7 +49,8 @@ def compute(plan: Plan, states: Mapping[str, str], *, max_parallel: int, config:
         state = states.get(task.id)
         if state is not None or task.id in unreachable:
             continue
-        if not all(states.get(dep) in DONE for dep in task.after):
+        needed = plan.ancestors(task.id) if transitive else task.after
+        if not all(states.get(dep) in DONE for dep in needed):
             waiting.append(task.id)
             continue
         if gates is not None and subplans.held(plan, states, gates, task.id):
@@ -63,8 +70,11 @@ def compute(plan: Plan, states: Mapping[str, str], *, max_parallel: int, config:
     return Frontier(tuple(ready), tuple(waiting), tuple(resource_held), tuple(sorted(unreachable)), finished)
 
 
-def _unreachable(plan: Plan, states: Mapping[str, str]) -> set[str]:
+def _unreachable(plan: Plan, states: Mapping[str, str], *, transitive: bool = False) -> set[str]:
     stopped = {t for t, s in states.items() if s in STOPPED}
+    if transitive:                      # through done (e.g. inherited) tasks too: any stopped ancestor
+        return {task.id for task in plan.tasks
+                if states.get(task.id) is None and not stopped.isdisjoint(plan.ancestors(task.id))}
     out: set[str] = set()
     changed = True
     while changed:
@@ -78,12 +88,18 @@ def _unreachable(plan: Plan, states: Mapping[str, str]) -> set[str]:
     return out
 
 
-def settled(plan: Plan, states: Mapping[str, str]) -> bool:
+def settled(plan: Plan, states: Mapping[str, str], *, transitive: bool = False) -> bool:
     """Nothing is running and nothing more can start: the run waits for recovery or the owner, or it is finished."""
     if any(s == "running" for s in states.values()):
         return False
-    front = compute(plan, states, max_parallel=1)
+    front = compute(plan, states, max_parallel=1, transitive=transitive)
     return not front.ready and not front.held_by_resources and not front.waiting
+
+
+def unready_ancestors(plan: Plan, states: Mapping[str, str], task_id: str) -> tuple[str, ...]:
+    """The ancestors of `task_id` that are not done, in plan order (what the transitive frontier waits for)."""
+    ancestors = plan.ancestors(task_id)
+    return tuple(t.id for t in plan.tasks if t.id in ancestors and states.get(t.id) not in DONE)
 
 
 def task(plan: Plan, task_id: str) -> TaskSpec:

@@ -142,5 +142,11 @@ class Client:
                 return row.workflow_id
         raise LookupError(f"{task_id} has no open task workflow in {run.run_id}")
 
+    def attempt_output(self, attempt_key: str) -> dict:
+        """What an attempt's agent workflow returned (prepared, process, agent report, snapshot); {} when unknown."""
+        rows = self.client.list_workflows(workflow_ids=[f"bt:{attempt_key}:agent"], load_input=False, load_output=True)
+        output = rows[0].output if rows else None
+        return output if isinstance(output, dict) else {}
+
     def workflows(self, prefix: str) -> Iterable:
         return self.client.list_workflows(workflow_id_prefix=prefix, load_input=False, load_output=False)

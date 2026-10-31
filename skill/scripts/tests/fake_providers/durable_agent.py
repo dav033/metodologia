@@ -63,6 +63,18 @@ elif scenario == "fixk":                        # scenario K: the defect is fixe
     Path("out.txt").write_text("good\n")
     if "REMEDIATION" in prompt:
         Path("fixed-k.txt").write_text("F1 and F2 fixed together\n")
+        time.sleep(float(os.environ.get("FAKE_FIXK_REPAIR_DELAY", "0")))   # a repair long enough to overlap (D-262)
+    done()
+elif scenario == "mark":                        # only its own file: no claim shared with tasks writing out.txt
+    Path(f"{task_id}.task").write_text(f"{task_id}\n")
+    done()
+elif scenario == "nochange":                    # stops on purpose and says why (pictures REQ-021 r32 T2.57, D-262)
+    done("I stopped at the design gate: the approved contract is missing from my tree, so I changed nothing.")
+elif scenario == "contract":                    # the design task's copy of the approved contract
+    Path("design/contracts").mkdir(parents=True, exist_ok=True)
+    Path("design/contracts/shop@v1.md").write_text("# shop v1\n")
+    Path(f"{task_id}.task").write_text(f"{task_id}\n")
+    Path("out.txt").write_text("good\n")
     done()
 elif scenario in ("auditk", "auditnever"):       # a read-only audit: its report and findings ledger, nothing else
     fixed = scenario == "auditk" and Path("fixed-k.txt").exists()

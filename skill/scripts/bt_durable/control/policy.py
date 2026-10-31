@@ -86,6 +86,8 @@ def decide(failure: FailureReport, used: Spent, budget: Budget, *, now: float, o
             return make(RecoveryAction.ESCALATE, "the transient failure keeps coming back", limit="max_waits")
         delay = TRANSIENT_BACKOFF[min(max(repeats - 1, 0), len(TRANSIENT_BACKOFF) - 1)]
         return make(RecoveryAction.WAIT, f"transient failure, retry after {int(delay)} s", not_before=now + delay)
+    if failure.code == "AGENT_NO_CHANGE":         # classify.no_change: the agent stopped on purpose (D-262)
+        return make(RecoveryAction.ESCALATE, f"the agent changed nothing; its reason needs the owner: {failure.summary}")
     if cls in (FailureClass.ENVIRONMENT, FailureClass.VERIFICATION):
         repairable = failure.code in REPAIRABLE_ENVIRONMENT | REVERIFY and (
             failure.code != "ENGINE_INTERRUPTED" or interrupted_reverify)

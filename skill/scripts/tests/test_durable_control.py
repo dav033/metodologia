@@ -70,6 +70,48 @@ class Frontier(unittest.TestCase):
                          and "E" in front.ready and "F" in front.ready)
 
 
+# pictures REQ-021 r32 (D-262): T2.11 designs the contract; T2.3/T2.4/T2.5 → T2.6 → T2.55 → T2.56 → T2.57 (ui)
+R32 = plan_of([t("T2.11"), t("T2.3", ["T2.11"]), t("T2.4", ["T2.11"]), t("T2.5", ["T2.11"]),
+               t("T2.6", ["T2.3", "T2.4", "T2.5"]), t("T2.55", ["T2.6"]), t("T2.56", ["T2.55"]),
+               t("T2.57", ["T2.56"])])
+R32_INHERITED = {"T2.6": "inherited", "T2.55": "inherited", "T2.56": "inherited"}
+
+
+class TransitiveFrontier(unittest.TestCase):
+    def test_an_inherited_dependency_whose_ancestors_run_again_is_not_satisfied(self):
+        # the r32 states: T2.11 re-running, T2.3/T2.4/T2.5 sent back (not started), the T2.6 chain inherited
+        states = {**R32_INHERITED, "T2.11": "running"}
+        old = frontier.compute(R32, states, max_parallel=4)
+        self.assertIn("T2.57", old.ready)                    # the defect: only the direct dependency T2.56 was read
+        front = frontier.compute(R32, states, max_parallel=4, transitive=True)
+        self.assertNotIn("T2.57", front.ready)
+        self.assertIn("T2.57", front.waiting)
+        self.assertEqual(frontier.unready_ancestors(R32, states, "T2.57"), ("T2.11", "T2.3", "T2.4", "T2.5"))
+        done = {**states, "T2.11": "completed"}               # T2.11 settled: its dependents run, T2.57 still waits
+        front = frontier.compute(R32, done, max_parallel=4, transitive=True)
+        self.assertEqual(front.ready, ("T2.3", "T2.4", "T2.5"))
+        self.assertIn("T2.57", front.waiting)
+        every = {**done, "T2.3": "completed", "T2.4": "inherited", "T2.5": "completed"}
+        self.assertEqual(frontier.compute(R32, every, max_parallel=4, transitive=True).ready, ("T2.57",))
+
+    def test_a_stopped_ancestor_behind_inherited_tasks_makes_the_task_unreachable(self):
+        states = {**R32_INHERITED, "T2.11": "completed", "T2.3": "blocked", "T2.4": "completed", "T2.5": "completed"}
+        self.assertNotIn("T2.57", frontier.compute(R32, states, max_parallel=4).unreachable)   # before: it was ready
+        front = frontier.compute(R32, states, max_parallel=4, transitive=True)
+        self.assertEqual(front.unreachable, ("T2.57",))
+        self.assertTrue(frontier.settled(R32, states, transitive=True))
+
+    @settings(max_examples=300, deadline=None)
+    @given(st.dictionaries(st.sampled_from([x.id for x in R32.tasks]),
+                           st.sampled_from(["completed", "inherited", "blocked", "cancelled", "running"])))
+    def test_a_ready_task_has_every_ancestor_done(self, states):
+        front = frontier.compute(R32, states, max_parallel=8, transitive=True)
+        for tid in front.ready:
+            self.assertTrue(all(states.get(a) in frontier.DONE for a in R32.ancestors(tid)), (tid, states))
+        for tid in front.unreachable:
+            self.assertTrue(any(states.get(a) in frontier.STOPPED for a in R32.ancestors(tid)), (tid, states))
+
+
 def verdict(status, reason="FAIL_CODE", digest="", failing=("npm test",)):
     return VerifyOutcome(status=status, reason_code=reason, digest=digest, failing_checks=failing)
 
@@ -133,6 +175,86 @@ class Classification(unittest.TestCase):
 def report(cls, code="X", sig="sig00000"):
     from bt_contracts.failure import FailureReport
     return FailureReport(failure_class=cls, code=code, summary="s", signature=sig)
+
+
+class NoChangeAndContract(unittest.TestCase):
+    """D-262: an attempt that changed nothing, and a UI contract the base does not hold, are facts for the owner."""
+
+    def snapshot(self, changed=()):
+        from bt_contracts.execution import Snapshot
+        return Snapshot(snapshot_sha="a" * 40, base_sha="a" * 40 if not changed else "b" * 40, changed_paths=changed)
+
+    def test_an_unchanged_attempt_is_classified_from_the_agent_s_own_reason(self):
+        said = "Stopped at the design gate: design/contracts/cuentas-admin@v2.md is missing. No changes made."
+        agent = AgentReport(status="completed", text=said)
+        self.assertTrue(classify.unchanged(self.snapshot(), agent))
+        self.assertFalse(classify.unchanged(self.snapshot(("src/a.ts",)), agent))
+        self.assertFalse(classify.unchanged(self.snapshot(), AgentReport(status="failed", text=said)))
+        checked = classify.classify(classify.AttemptFacts(agent=agent, verify=verdict("FAIL", digest="Missing script"),
+                                                          failing_output="Missing script"))
+        self.assertEqual(checked.code, "CHECK_FAILED")
+        found = classify.no_change(checked, agent, verdict("FAIL"))
+        self.assertEqual((found.failure_class, found.code), (FailureClass.ENVIRONMENT, classify.NO_CHANGE))
+        self.assertIn("design gate", found.summary)
+        self.assertIn("changed nothing", found.agent_note)
+        again = classify.no_change(checked, AgentReport(status="completed", text="other words, same stop"),
+                                   verdict("FAIL"))
+        self.assertEqual(found.signature, again.signature)             # a repeat is recognisable whatever it says
+        decision = policy.decide(found, Spent(attempts=1, signatures={found.signature: 1}), Budget(), now=0,
+                                 other_route=True)
+        self.assertEqual(decision.action, RecoveryAction.ESCALATE)
+        self.assertIn("design gate", decision.reason)
+
+    def test_the_contract_gate_names_its_state(self):
+        for state, code in (("missing", "DESIGN_CONTRACT_MISSING"), ("unapproved", "DESIGN_CONTRACT_UNAPPROVED"),
+                            ("hash-mismatch", "DESIGN_CONTRACT_HASH_MISMATCH")):
+            found = classify.design_contract({"state": state, "path": "design/contracts/shop@v1.md",
+                                              "design_task": "T1"})
+            self.assertEqual((found.failure_class, found.code), (FailureClass.ENVIRONMENT, code))
+            self.assertIn(code, found.summary)
+            self.assertEqual(policy.decide(found, Spent(), Budget(), now=0, other_route=True).action,
+                             RecoveryAction.ESCALATE)
+
+
+class HeapLimit(unittest.TestCase):
+    """D-262 (pictures REQ-021 r32 T3.91 a1): a Node heap-limit abort is not a sandbox memory kill."""
+    HEAP = ("<--- Last few GCs --->\nFATAL ERROR: Ineffective mark-compacts near heap limit Allocation failed - "
+            "JavaScript heap out of memory\n")
+    OWN = "npx --no-install tsx scripts/test/test-ui-arrastre-mesas-parametricas.ts --suite rectangular-mouse"
+
+    def oom(self, out):
+        v = verdict("FAIL", digest=out, failing=(self.OWN, "npx --no-install tsc --noEmit"))
+        return v, classify.classify(classify.AttemptFacts(verify=v, failing_output=out))
+
+    def test_the_task_s_own_harness_gets_an_implementation_failure_with_a_concrete_note(self):
+        v, first = self.oom(self.HEAP)
+        self.assertEqual(first.code, "VERIFIER_OOM")                       # what the classifier alone still says
+        paths = ("scripts/test/test-ui-arrastre-mesas-parametricas.ts", "src/**")
+        own = classify.own_check(v.failing_checks, known_paths=paths)
+        self.assertEqual(own, self.OWN)
+        self.assertEqual(classify.own_check(v.failing_checks, own=(self.OWN,)), self.OWN)   # created_by in the plan
+        self.assertEqual(classify.own_check(v.failing_checks, known_paths=("src/**",)), "")
+        found = classify.heap_limit(first, v, own=own, relaxed=False)
+        self.assertEqual((found.failure_class, found.code), (FailureClass.IMPLEMENTATION, classify.HEAP_LIMIT))
+        self.assertIn("NODE_OPTIONS", found.agent_note)
+        self.assertIn("--max-old-space-size=4096", found.agent_note)
+        self.assertEqual(policy.decide(found, Spent(attempts=1, signatures={found.signature: 1}), Budget(), now=0,
+                                       other_route=False).action, RecoveryAction.RETRY)
+
+    def test_another_check_is_re_verified_once_then_goes_to_the_owner_as_a_plan_problem(self):
+        v, first = self.oom(self.HEAP)
+        self.assertIsNone(classify.heap_limit(first, v, own="", relaxed=False))   # the relaxed heap may still help
+        found = classify.heap_limit(first, v, own="", relaxed=True)
+        self.assertEqual((found.failure_class, found.code), (FailureClass.CONTRACT, classify.HEAP_LIMIT_PLAN))
+        self.assertEqual(policy.decide(found, Spent(attempts=1), Budget(), now=0, other_route=False).action,
+                         RecoveryAction.ESCALATE)
+
+    def test_a_genuine_sandbox_memory_kill_keeps_the_environment_repair(self):
+        for out in (self.HEAP + "Killed\n", "process exited with signal 9 (oom-kill)\nKilled\n"):
+            v, first = self.oom(out)
+            self.assertEqual(first.code, "VERIFIER_OOM")
+            self.assertEqual(classify.heap_abort(out), "")
+            self.assertIsNone(classify.heap_limit(first, v, own=self.OWN, relaxed=True))
 
 
 class Policy(unittest.TestCase):

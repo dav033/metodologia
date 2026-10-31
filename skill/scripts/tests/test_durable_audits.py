@@ -148,6 +148,45 @@ class DurableAudits(EngineCase):
                          {"T1": 1, "T2": 1, "TA": 3})                    # gates.remediation_rounds = 2 reruns
 
 
+class RequeueWhileAnAncestorIsRepaired(DurableAudits):
+    """D-262: before another attempt, a task whose ancestor runs again (here a coordinated repair of T1 while T2's
+    first attempt still runs) hands its round back and starts again once the ancestor is done. A wait inside the task
+    would keep its resource claims (pictures REQ-021 r32: the running T2.57 held T2.3/T2.4/T2.5)."""
+    test_related_audit_findings_become_one_coordinated_repair_then_the_audit_passes = None
+    test_the_audit_check_is_the_engine_owned_ledger_contract = None
+    test_an_audit_that_never_clears_stops_at_its_round_limit = None
+    test_a_finding_that_names_only_the_audit_runs_the_audit_again = None
+    test_a_coverage_gap_that_never_closes_stops_at_the_round_limit = None
+
+    def test_a_retry_waits_for_its_ancestor_s_repair(self):
+        import os
+        for name, value in (("FAKE_FIXLATER_DELAY", "8"), ("FAKE_FIXK_REPAIR_DELAY", "25")):
+            os.environ[name] = value
+            self.addCleanup(os.environ.pop, name, None)
+        tasks = [task("T1", scenario="fixk", subplan="SP-1", kind="implement"),
+                 task("TA", scenario="auditk", subplan="SP-1", kind="audit", after=["T1"],
+                      paths=["docs/TA.md", "docs/TA.findings.json"]),
+                 task("T2", scenario="fixlater", subplan="SP-1", kind="implement", after=["T1"],
+                      paths=["T2/**", "out.txt", "attempt-marker.txt"])]
+        run = RunRef.model_validate(self.lab.freeze(tasks, schema="1.3.0", subplans=[subplan("SP-1", "T1", "TA")]))
+        self.start_engine()
+        self.client.start(run, FAST)
+        status = self.settled(run, timeout=480)
+        self.assertEqual(status["summary"]["status"], "completed", status)
+        requeued = [e for e in self.events("task_requeued") if e.get("applied")]
+        self.assertEqual([(e["task_id"], e["round"], e["waiting"]) for e in requeued], [("T2", 1, ["T1"])])
+        launches = self.per_task()
+        repair = launches["T1"][1]
+        self.assertTrue(repair["remediation"])
+        after_repair = [item for item in launches["T2"] if item["at"] > repair["at"]]
+        self.assertEqual(len(launches["T2"]) - len(after_repair), 1)      # one attempt, then the round went back
+        self.assertIn("fixed-k.txt", lab_support.git(self.lab.repo, "ls-tree", "--name-only",
+                                                     "refs/bt/line/proj/REQ-900/r1/app").split())
+        repaired_at = max(r["ts"] for r in self.events("task_settled") if r["task_id"] == "T1")
+        self.assertTrue(after_repair and all(item["at"] > repaired_at for item in after_repair), after_repair)
+        self.assertEqual(self.projected(run)["T2"]["state"], "completed")
+
+
 class RepairCompilation(unittest.TestCase):
     """The repair compiler alone (pure, over the legacy grouping): related findings share one repair, unrelated ones
     get their own, and a finding naming no task of the plan has no owner."""

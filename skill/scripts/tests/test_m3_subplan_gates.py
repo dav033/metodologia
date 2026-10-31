@@ -172,6 +172,30 @@ class M3SubplanGates(unittest.TestCase):
         self.assertIn("DESIGN_CONTRACT_HASH_MISMATCH", ack.detail)
         self.assertFalse(executor.called)
 
+    def test_a_contract_missing_from_the_base_has_its_own_reason_and_brief(self):
+        """D-262: absent from the base is `missing` (DESIGN_CONTRACT_MISSING), not `hash-mismatch`, and the brief
+        says the file is not in the tree instead of «Approval: hash-mismatch, SHA-256 none»."""
+        self.assertEqual(gates.approval_problem("missing"), "DESIGN_CONTRACT_MISSING")
+        self.assertEqual(gates.approval_problem("hash-mismatch"), "DESIGN_CONTRACT_HASH_MISMATCH")
+        self.assertIsNone(gates.approval_problem("approved"))
+        ui_order = SimpleNamespace(**{**vars(self.order), "task_id": "T2"})
+        port = adapter.CoreExecutionPort(SimpleNamespace(start=lambda request: self.fail("started")), self.plan,
+                                         project="proj", base_ref=self.base, repo_of=lambda role: self.repo)
+        port.design_approval = lambda repo, base, path: {"state": "missing"}
+        ack = port.start(ui_order)
+        self.assertEqual(ack.classification, "blocked_environment")
+        self.assertIn("DESIGN_CONTRACT_MISSING", ack.detail)
+        from bt_scheduler_executor_wiring import contract_notes
+        notes = contract_notes(self.plan, SimpleNamespace(task_id="T2", base_ref=self.base), lambda task: self.repo,
+                               lambda repo, base, path: {"state": "missing", "sha256": None})
+        self.assertIn("Approval: missing", notes)
+        brief = adapter.PlanBriefs(self.plan, notes=lambda request: notes).brief(SimpleNamespace(task_id="T2"))
+        prompt = build_prompt(brief, m3.StartRequest("k", "REQ-1", 1, "T2", "att", 1, "direct:claude/sonnet#high",
+                                                     "app"),
+                              workdir="/tmp/w", branch="m3/a", report_path="report.json", rtk=False)
+        self.assertIn("is missing from the tree you start from", prompt)
+        self.assertNotIn("Owner approval:", prompt)
+
     def test_scheduler_holds_unapproved_ui_attempt_without_budget_then_owner_approval_releases_it(self):
         raw = {"schema_version": "1.3.0", "plan_id": "REQ-1", "revision": 1,
                "tasks": [{"id": tid, "milestone_id": "M1", "repository": "app", "after": [],

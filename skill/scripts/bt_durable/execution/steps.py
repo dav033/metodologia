@@ -102,6 +102,36 @@ def base_ref(run: dict, task_id: str) -> str:
                                                             lines=lines))
 
 
+@DBOS.step(name="bt.continue_base", retries_allowed=True, max_attempts=3, interval_seconds=2)
+def continue_base(run: dict, task_id: str, snapshot_sha: str) -> str:
+    """A continuing retry's base: the earlier attempt's snapshot caught up with the task's home line (D-262). Recorded:
+    a replay starts the attempt from the same commit whatever the line holds by then."""
+    ref = RunRef.model_validate(run)
+    integrator = engine.ports().integrator
+    catch_up = getattr(integrator, "continuation_base", None)        # optional port method
+    if catch_up is None or not snapshot_sha:
+        return snapshot_sha
+    home = subplans.home(plan(ref), task_id)
+    lines = subplans.lines_of(plan(ref), task_id) if home.startswith("gate:") else ()
+    return _port(lambda: catch_up(ref, frontier.task(plan(ref), task_id), snapshot_sha, home=home, lines=lines))
+
+
+@DBOS.step(name="bt.contract_gate", retries_allowed=True, max_attempts=3, interval_seconds=2)
+def contract_gate(run: dict, task_id: str, base: str) -> dict:
+    """A `ui: true` task's contract approval on `base` ({} for any other task, or with no gate wired), D-262."""
+    ref = RunRef.model_validate(run)
+    gate = engine.ports().design_gate
+    if gate is None:
+        return {}
+    return _port(lambda: gate.check(ref, plan(ref), task_id, base))
+
+
+@DBOS.step(name="bt.unready_ancestors")
+def unready_ancestors(run: dict, task_id: str, states: dict) -> list[str]:
+    """The task's ancestors not done in `states` (the run's summary), in plan order: pure over the frozen plan."""
+    return list(frontier.unready_ancestors(plan(RunRef.model_validate(run)), states, task_id))
+
+
 @DBOS.step(name="bt.prepare")
 def prepare(attempt: dict, route_data: dict, base: str, note: str, limits: dict) -> dict:
     """{"prepared": ...} or {"start_error": "CODE: detail"} — a refused start is a fact, not an exception."""
