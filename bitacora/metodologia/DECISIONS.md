@@ -3152,3 +3152,55 @@ Solucionador 20261030-100736-d494 integrated merge fff622890f28b8093a9a0afda9c40
   opens P-001 and P-002 on main, one on the branch); `test_verification`, `test_owner_reject_solver`,
   `test_durable_solver` and the server/verify/config suites green (226 tests). Built by an Opus subagent
   (metodologia-95), branch `reject-images`.
+
+## D-259 — A new stage keeps approved subplans whose amendment is still unconfirmed
+
+- **Date:** 2026-10-31 · **Status:** Accepted · **Refines:** D-134 (stages), D-241
+- **Context:** pictures REQ-021: the owner rejected SP-2 v2, confirmed its redesign at 16:11 and saw nothing start.
+  SP-2 was already held by stage r31, so the page showed «En ejecución · etapa r31» and offered no way to run the
+  change; the CLI freeze refused the whole stage with `STAGE_SUBPLAN_UNCONFIRMED: SP-14` because SP-14 (also rejected)
+  was being amended and its design direction was not chosen yet. The owner: «SP-2 ya; SP-14 no lo he escogido todavía».
+- **Decision:** `bt_stages.freeze` keeps every approved subplan in state `changed` outside the stage's additions as the
+  latest revision holds it (`bt_planner.stages.keep`, built on `splice`): eligibility skips it, the PLAN.md prose check
+  skips its tasks, and the stage pins record `kept`. `stages.bind` (the launch/join gate) applies the same `keep`
+  before comparing, so the draft's pending amendment is not drift; any other change still is. `bt_stages.amended`
+  detects a held subplan the owner confirmed in a different version; the Plan tab then shows «Ejecutar cambios», and
+  «Ejecutar» on it approves a new stage instead of answering «ya está en ejecución».
+- **Rule:** a confirmed change runs without waiting for an unrelated amendment; an unconfirmed amendment never runs.
+- **Evidence:** `bt_planner/tests/test_stages` (+2: keep, freeze-with-kept + bind), red on main; dry run on a copy
+  of REQ-021: r32 frozen with SP-2's 13 new tasks and SP-14 as in r31, bind OK. Built by the operator (the owner:
+  «el arreglo es fácil, hazlo tú»).
+
+## D-260 — An integration merges main into its branch and keeps its turn in the queue
+
+- **Date:** 2026-10-31 · **Status:** Accepted · **Refines:** D-220, D-230 (one regression at a time, arrival order)
+- **Context:** of 33 integrations on 2026-10-31, 13 were refused at once for «main has code the branch lacks» and
+  others for «main moved with code while the regression ran»; each needed a hand merge and went back to the end of the
+  queue (one turn ≈ 30–40 min). The owner asked for the operator's proposal: merge automatically.
+- **Decision:** under the integration lock, `bt_integrate.catch_up` merges main into the branch in the branch's own
+  worktree (never the live checkout) and the same turn goes on to the regression of the merged tree. When main moves
+  with code during the regression, it merges again; when that new code touches none of the branch's files (owner:
+  «perdemos mucho tiempo, que no meta regresiones») the merged tree is integrated on this regression and the full
+  regression of the merge runs in the background after the smoke (as `selective`: loud on red, revert proposed, never
+  silent); when it touches the branch's files the regression reruns (fresh scratch and selection), at most
+  `CATCH_UP_RUNS` (2) times, then gives the turn up as before. A conflicting merge is aborted in that worktree and
+  refused with the conflicting files; the live checkout still only sees `merge --ff-only`.
+- **Rule:** a clean catch-up with main never costs an integration its place in the queue.
+- **Evidence:** `test_integrate` (+5: catch-up before the regression, disjoint → no second regression + post-merge,
+  overlapping → rerun, keeps moving → refused, conflict aborted and refused) — 36 tests OK. Built by the operator on the owner's request («ejecuta la propuesta»).
+
+## D-261 — No regression tests in metodologia integrations until further notice; escaped defects are recorded
+
+- **Date:** 2026-10-31 17:05 · **Status:** Accepted (owner) · **Suspends:** the regression step of D-220/D-221/D-260
+- **Context:** the owner, after a day of 30–40 min integrations (33 attempts, 10 merged, regressions caught 2 real
+  defects): «hasta nuevo aviso no vamos a correr pruebas de regresión en metodología, documéntalo y también hagamos que
+  se guarden los errores que se pudieron haber evitado con pruebas de regresión para decidir luego».
+- **Decision:** `integrate.regression: none` (live config) and `bt_integrate.py --no-regression`: preflight, catch-up
+  with main (D-260), backup, deploy merge, ff-only, push, restart and smoke still run; no suite runs before or after
+  the merge. Every such integration is appended to `metodologia/REGRESSION-OFF.md` («Integrated without regression»);
+  a failed smoke is recorded there automatically as an escaped defect, and any later defect a regression would have
+  caught is added with `bt_integrate.py --escaped "<what, which suite would have caught it>" --merge <sha>`.
+- **Rule:** until the owner says otherwise, integrate without regression and record every escaped defect; turning it
+  back on is the owner's call, with that ledger as the evidence.
+- **Evidence:** `test_integrate` (+2: none integrates on the smoke and writes the ledger; a failed smoke is an escaped
+  defect), `test_config`: 50 tests OK. Integrated itself with `--no-regression`.

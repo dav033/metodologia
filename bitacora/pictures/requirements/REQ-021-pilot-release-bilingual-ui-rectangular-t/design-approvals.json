@@ -22,6 +22,17 @@
    "when": "2026-10-27T20:58:51+00:00",
    "who": "owner"
   },
+  "cuentas-admin@v2": {
+   "comments": "approved with the plan",
+   "contract": "cuentas-admin@v2",
+   "draft": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/design/history/cuentas-admin@v2/approved.md",
+   "path": "design/contracts/cuentas-admin@v2.md",
+   "sha256": "e34b1835ddcd115dc07fa8e52440bc399707b2dabd8b97adc6a862e2525cb29e",
+   "status": "approved",
+   "via": "plan",
+   "when": "2026-10-31T22:04:58+00:00",
+   "who": "owner"
+  },
   "decoraciones@v1": {
    "comments": "approved with the plan",
    "contract": "decoraciones@v1",

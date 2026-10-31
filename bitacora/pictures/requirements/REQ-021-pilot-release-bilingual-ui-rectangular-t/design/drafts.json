@@ -5016,6 +5016,7 @@
    ],
    "amend_source": "cuentas-admin@v2.amend-1.tsx",
    "amends": 1,
+   "approved": "2026-10-31T17:04:58-05:00",
    "attempt": 1,
    "before": null,
    "before_html": null,
@@ -5705,7 +5706,7 @@
    "selected_sha256": "7566cd4d4130c42cef81cd5d0648d2d022047a6afa054077f2ccbaa469f03649",
    "sha256": "e34b1835ddcd115dc07fa8e52440bc399707b2dabd8b97adc6a862e2525cb29e",
    "started": "2026-10-31T15:34:29-05:00",
-   "status": "ready",
+   "status": "approved",
    "subplan_id": "SP-2",
    "summary": "Wrote amendment 1 of cuentas-admin@v2 (draft, not approved): contract, TSX copied from r1.dir-c and rebuilt HTML, keeping the owner-chosen C composition, motion and tokens. Repaired the dangling repeat-password aria-describedby (and the closed trigger's dangling aria-controls), inherited the SP-8 host shell without CabeceraCuentas/NavegacionCuentas, reclassified v2 as a breaking scoped replacement",
    "ui_digest": "9d5a40b035431397"

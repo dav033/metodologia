@@ -164,6 +164,21 @@
    "id": "D-258",
    "by": "metodologia-95 subagent: image attachments on rejections",
    "at": "2026-10-31T15:32:26"
+  },
+  {
+   "id": "D-259",
+   "by": "metodologia-95: a new stage keeps approved subplans whose amendment is unconfirmed; «Ejecutar cambios»",
+   "at": "2026-10-31T16:23:40"
+  },
+  {
+   "id": "D-260",
+   "by": "metodologia-95: integrations merge main into the branch and keep their queue turn",
+   "at": "2026-10-31T16:52:22"
+  },
+  {
+   "id": "D-261",
+   "by": "metodologia-95: no regression in metodologia integrations until further notice; escaped-defect ledger",
+   "at": "2026-10-31T17:06:31"
   }
  ]
 }

@@ -410,3 +410,24 @@ previous main: 6b12d02c0fda3a452812d0c354a890d8d91eb5a0
 regression: 318 files, no failures + test_durable_remote (load flake, passes alone) [staged: first 99 in 9m49s, then the rest 219 in 24m07s] (/home/david/.local/share/bitacora-integrate/regress/env-feed-20261031-150514/results.txt)
 rollback: git revert the merge of env-feed on main, restart bt-durable.service and bitacora-web.service
 result: merged 2655d78842a5, restarted bt-durable.service, bitacora-web.service, smoke ok
+
+# integration of A new stage keeps approved subplans whose amendment is unconfirmed; «Ejecutar cambios» runs a confirmed change (D-259), local restart of engine + web, 2026-10-31 17:02, session metodologia-90
+previous main: e0a1a8dde6fe6466689bbe9908bb19b134291f99
+/home/david/bitacora/.state/durable/backups/bt_durable-20261031-170242.dump 47143165 fc2f9788d99efedcd06c6045b1e1de31e368ebc2ab3d7f040eba56b556914252
+regression: 318 files, no failures [staged: first 53 in 0m59s, then the rest 265 in 33m22s] (/home/david/.local/share/bitacora-integrate/regress/stage-keep-20261031-162821/results.txt)
+rollback: git revert the merge of stage-keep on main, restart bt-durable.service and bitacora-web.service
+result: merged 8b2ce6e57b74, restarted bt-durable.service, bitacora-web.service, smoke ok
+
+# integration of Integrations merge main into the branch and keep their turn; no regression until further notice, escaped defects recorded (D-260, D-261), local restart of engine + web, 2026-10-31 17:07, session metodologia-95
+previous main: 8b2ce6e57b74b86fe40e02982aae71e6be4531df
+/home/david/bitacora/.state/durable/backups/bt_durable-20261031-170703.dump 47917652 b00b357ee9d2c13b16e006718a34e343b09ab4aefe0495a968dfa7f550838084
+regression: skipped (D-261: integrate.regression = none)
+rollback: git revert the merge of integrate-catchup on main, restart bt-durable.service and bitacora-web.service
+result: merged ccb1d77e4e50, restarted bt-durable.service, bitacora-web.service, smoke ok
+
+# integration of Owner rejections carry images the agents open; a double-submitted rejection opens one P-item (D-258), local restart of engine + web, 2026-10-31 17:09, session metodologia-90
+previous main: ccb1d77e4e50cfaead1899b3d5e0304093d57e67
+/home/david/bitacora/.state/durable/backups/bt_durable-20261031-170945.dump 48184401 d7f3868d76abdd660e69a3ce7345440372924f02b432184e94c7391d6dc5ba8d
+regression: skipped (D-261: integrate.regression = none)
+rollback: git revert the merge of reject-images on main, restart bt-durable.service and bitacora-web.service
+result: merged babb137e38fa, restarted bt-durable.service, bitacora-web.service, smoke ok

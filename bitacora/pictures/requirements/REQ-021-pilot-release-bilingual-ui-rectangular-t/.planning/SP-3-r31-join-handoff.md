@@ -30,3 +30,7 @@ SP-2:owner selectedC;cuentas-admin@v2 revision2 is ready,with72/72ARIA/interacti
 ## Evidence
 
 Working folder:/home/david/.local/tmp/req021-sp3-bounded-drag-20e2/. freeze-success-readback.json proves the exact frozen delta;publication/journal.json records safe restoration;publication/freeze.txt and check.txt contain actual normal exits0. Original full-draft refusal remains freeze.txt at the working-folder root. Product code/tests were not executed by Planner.
+
+## Update after owner SP-2 confirmation
+
+The owner subsequently confirmed the exact new SP-2 contract/subplan through the web. SP-2 is now confirmed;only SP-14 is pending design selection/final confirmation. The web explicitly waits for SP-14 before reapproving the cumulative UI stage. This newer owner confirmation MUST NOT be replaced with the older v1 confirmation. The captured r31 publication view remains a proof of the valid immutable frozen repair,not authority to roll back current flow/design decisions. A normal stage run may now refuse even that historical view because the live SP-2 confirmation has legitimately advanced. Solver must revalidate current authority and use an officially supported join of the already-frozen r31 or coordinate the next cumulative stage within its authority;do not forge/reconfirm old owner input,force or modify policy to make a join pass. Planner has not launched or joined any run.

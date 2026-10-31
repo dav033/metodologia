@@ -691,3 +691,24 @@
 {"at": "2026-10-31T16:10:25-05:00", "who": "Planner", "kind": "plan", "sp": "SP-3", "text": "Actualizó SP-3 (tareas)", "diff": "+ tarea: Restore mouse and pen drag of complete parametric table sets"}
 {"at": "2026-10-31T16:10:25-05:00", "who": "Planner", "kind": "doc", "sp": "", "text": "PLAN.md: «M2 — Saved work, Taller essentials, spend per user and the chat tools» cambió", "diff": ""}
 {"at": "2026-10-31T16:11:55-05:00", "who": "Tú", "kind": "flow", "sp": "SP-2", "text": "Confirmaste SP-2 en la web; sigue SP-14", "diff": ""}
+{"at": "2026-10-31T17:05:26-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-14", "text": "SP-14 versión 1 está lista para probar de nuevo: rechazaste la versión 2 («Quitemos lalogica dela comparacion, ademas hagamos que los items de los planes sean tipo las cartas de subscricpiones normales»)", "diff": ""}
+{"at": "2026-10-31T17:05:26-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-2", "text": "SP-2 versión 1 está lista para probar de nuevo: rechazaste la versión 2 («El desplegable el menu del usuario se peude desplegar, epro no se peude cerrar de ninguna amnera, solamente si se entra a algun link, en la parte de rol no debe»)", "diff": ""}
+{"at": "2026-10-31T17:05:26-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-3", "text": "SP-3 versión 2 está lista para probar de nuevo: rechazaste la versión 3 («las mesas quese arreglaron no sepuedn arrastrar y colocar, si el probelma es otro, investigalo y solucionalo»)", "diff": ""}
+{"at": "2026-10-31T17:05:26-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-4", "text": "SP-4 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T17:05:26-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-5", "text": "SP-5 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T17:05:26-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-6", "text": "SP-6 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T17:05:26-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-7", "text": "SP-7 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T17:05:26-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-8", "text": "SP-8 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T17:05:26-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-9", "text": "SP-9 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T17:05:27-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-14", "text": "SP-14 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T17:05:27-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-3", "text": "SP-3 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T17:05:27-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-4", "text": "SP-4 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T17:05:27-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-5", "text": "SP-5 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T17:05:27-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-6", "text": "SP-6 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T17:05:27-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-7", "text": "SP-7 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T17:05:27-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-8", "text": "SP-8 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T17:05:27-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-9", "text": "SP-9 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T17:09:21-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-14", "text": "SP-14 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T17:09:21-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-3", "text": "SP-3 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T17:09:21-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-4", "text": "SP-4 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T17:09:21-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-6", "text": "SP-6 terminó y está listo para probar", "diff": ""}
