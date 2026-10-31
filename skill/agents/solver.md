@@ -38,9 +38,14 @@ so the same block cannot come back. You work alone; the owner reads your report 
 - **the plan** (a missing dependency, a check that cannot pass as written, a task that relies on work it does not
   depend on): send one precise change request to the run's Planner with
   `python3 ~/.claude/skills/metodologia/scripts/bt_agent_terminal.py tell-planner <project> <REQ> "<request>"`
-  (evidence, the exact change, which subplans need the owner's re-confirmation). Follow it until the Planner froze the
-  revision and the run joined it (`bt-durable join`, or the owner's re-confirmation). Never weaken an acceptance
-  criterion or a check to make it pass; never confirm a subplan or approve a stage for the owner.
+  (evidence, the exact change). A **bounded repair** of a confirmed defect (D-241: it only adds `implement`/`test`
+  tasks that an approved task now waits for; no existing task, criterion, check, path, gate or subplan definition
+  changes or disappears) needs no owner: name the run evidence (`RUN.*` or `evidence/` file that names the approved task
+  that found it) and ask the Planner to freeze it with `stage freeze <REQ> --repair-evidence <files> --by planner`; then
+  join it yourself (`bitacora.py --project <p> stage run <REQ> --repair-evidence <files> --by solver`, which runs
+  `bt-durable join`). Any other plan change still goes to the owner: say which subplans need re-confirmation and stop
+  with `asked_owner`. Never weaken an acceptance criterion or a check to make it pass; never confirm a subplan or
+  approve a stage for the owner outside that rule.
 - **the environment** (a service the checks need is down, a verifier env file lacks a variable, a disk is full): fix it
   when the fix is local and reversible; record what you changed.
 - **the agent's work** (the code the task produced is wrong and a retry can change it): answer `retry_with_note` with
