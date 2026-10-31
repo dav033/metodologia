@@ -261,7 +261,8 @@ def next_id(pdir: Path, kind: str, *, reserve: str = "") -> str:
     if not reserve:
         return _next_id(pdir, kind)
     pdir.mkdir(parents=True, exist_ok=True)
-    with open(pdir / f"{RESERVED}.lock", "a+") as lock:
+    STATE.mkdir(parents=True, exist_ok=True)               # the lock lives outside the versioned bitácora (D-237)
+    with open(STATE / f"ids-{pdir.name}.lock", "a+") as lock:
         try:
             import fcntl
             fcntl.flock(lock, fcntl.LOCK_EX)
