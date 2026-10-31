@@ -85,9 +85,24 @@ class WebActions(Base):
         with patch("bt_agent_terminal.exists", return_value=False), patch("bt_agent_terminal.send") as send:
             self.assertFalse(terminal.notify_planner("pictures", "REQ-021", "hi"))
             send.assert_not_called()
-        with patch("bt_agent_terminal.exists", return_value=True), patch("bt_agent_terminal.send", return_value="Enviado.") as send:
+        # D-238 checks the screen before delivery; the real Planner's quota/modal must not decide this fixture (D-247).
+        with patch("bt_agent_terminal.exists", return_value=True), \
+                patch("bt_agent_terminal.screen", return_value=""), \
+                patch("bt_planner_notices._rdir", return_value=self.rdir), \
+                patch("bt_agent_terminal.send", return_value="Enviado.") as send:
             self.assertTrue(terminal.notify_planner("pictures", "REQ-021", "hi"))
             self.assertIn("Automatic notice from the web", send.call_args.args[1])
+
+    def test_notify_planner_does_not_report_a_quota_hold_as_delivery(self):
+        import bt_agent_terminal as terminal
+        with patch("bt_agent_terminal.exists", return_value=True), \
+                patch("bt_agent_terminal.screen", return_value="You've hit your usage limit"), \
+                patch("bt_planner_notices.after_wall", return_value=("held", "Held for quota")) as hold, \
+                patch("bt_agent_terminal.send") as send:
+            self.assertFalse(terminal.notify_planner("pictures", "REQ-021", "hi"))
+            hold.assert_called_once()
+            self.assertIn("Automatic notice from the web", hold.call_args.args[2])
+            send.assert_not_called()
 
 
 if __name__ == "__main__":
