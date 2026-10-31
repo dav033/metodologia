@@ -135,3 +135,69 @@ def ambient_for_run(project: str, explicit: set[str]) -> tuple[tuple[tuple[str, 
     found = inherited(patterns, [dict(os.environ), *files], set(explicit))
     secrets = tuple(dict.fromkeys(value for key, value in found.items() if SENSITIVE_ENV.search(key) or _CREDENTIAL_URL.search(value)))
     return tuple(found.items()), secrets
+
+
+MAX_NAMED = 24
+
+
+def _names(names) -> str:
+    names = sorted(names)
+    shown = ", ".join(names[:MAX_NAMED])
+    return shown + (f" and {len(names) - MAX_NAMED} more" if len(names) > MAX_NAMED else "")
+
+
+def check_environment(policy: object) -> tuple[tuple[str, ...], int]:
+    """(names the checks receive from the owner's verifier settings, how many more they inherit from the owner's own
+    environment under `verifier.inherit_env`) for a QualityPolicy-like object. Names only, never a value."""
+    explicit = tuple(sorted({name for name, _ in getattr(policy, "environment", ()) or ()}))
+    ambient = {name for name, _ in getattr(policy, "ambient_environment", ()) or ()} - set(explicit)
+    return explicit, len(ambient)
+
+
+def check_environment_sentence(policy: object | None) -> str:
+    """What the sandbox's environment really is, for an agent: until D-257 every failure digest said the checks get
+    «none of your environment variables», whatever the verifier settings gave them (pictures REQ-021 r30 T10.45:
+    the owner's verifier file and his whole environment reached the checks, while the attempt read that they got none)."""
+    if policy is None:
+        return "NOT your environment: only what the owner's verifier settings give them"
+    explicit, ambient = check_environment(policy)
+    if not explicit and not ambient:
+        return "none of your environment variables (the sandbox sets only PATH, HOME, TMPDIR, the locale and the toolchain's own)"
+    parts = []
+    if explicit:
+        parts.append("only " + _names(explicit) + " from the owner's verifier settings")
+    if ambient:
+        parts.append(f"{'plus ' if explicit else 'only '}{ambient} variable{'s' if ambient != 1 else ''} of the owner's own "
+                     "environment (verifier.inherit_env)")
+    return ("NOT your environment: they receive " + ", ".join(parts)
+            + "; any other variable your attempt had is absent there")
+
+
+def attempt_note(test_env: dict | None, policy: object | None) -> str:
+    """The brief's environment paragraph: the owner's test variables of this attempt (`execution.agent_env_file`) and what
+    the independent checks will receive instead, so a harness that starts the product sets what it depends on itself."""
+    test_env = dict(test_env or {})
+    lines = []
+    if test_env:
+        lines.append("Test environment: " + ", ".join(sorted(test_env)) + (" is" if len(test_env) == 1 else " are")
+                     + " set in your environment by the owner for testing (a disposable database, never production). "
+                     "Run the verification commands that need them yourself before you finish; never print, copy or "
+                     "commit their values.")
+    if policy is None:
+        return "\n".join(lines)
+    explicit, ambient = check_environment(policy)
+    seen = set(explicit) | {name for name, _ in getattr(policy, "ambient_environment", ()) or ()}
+    missing = sorted(set(test_env) - seen)
+    text = ("Check environment: the independent verification runs your checks in a sandbox that does NOT get your "
+            "environment. It receives " + (("only " + _names(explicit) + " from the owner's verifier settings")
+                                           if explicit else "no variable from the owner's verifier settings"))
+    if ambient:
+        text += f", plus {ambient} variable{'s' if ambient != 1 else ''} of the owner's own environment"
+    text += "."
+    if missing:
+        text += " " + _names(missing) + (" is" if len(missing) == 1 else " are") + " NOT among them."
+    text += (" A test harness that starts the product (a server, a worker) with an explicit environment gets nothing it "
+             "does not set itself: set every product setting its scenario depends on (feature flags and provider "
+             "switches included) explicitly; otherwise the product runs with its own defaults, never with your shell's.")
+    lines.append(text)
+    return "\n".join(lines)

@@ -34,14 +34,27 @@ def stable_path(value: str) -> str:
     """The PATH to bake into a boot-time script, without per-shell directories. fnm puts `/run/user/<uid>/fnm_multishells/<pid>_<ts>/bin`
     on PATH: a symlink to the node version in use, created by that shell and gone after the next boot. A service launched with it
     could not find `codex` or `node` (REQ-021 after a reboot: Codex quota sampling answered `app_server_unavailable`, so the
-    router assigned nothing). Each such entry becomes the real directory it points to, or is dropped if it points nowhere."""
+    router assigned nothing). Each such entry becomes the directory its link names, or is dropped if it points nowhere.
+    One hop only: the link names fnm's alias (`aliases/default`), which follows `fnm default`; resolving it fully baked one
+    node version (v24.21.0 in the engine's drop-in), which vanishes with that version's uninstall (D-256)."""
     out: list[str] = []
     for entry in value.split(os.pathsep):
         if "fnm_multishells" in entry:
-            entry = os.path.realpath(entry) if os.path.isdir(entry) else ""
+            entry = _multishell_target(entry)
         if entry and entry not in out:
             out.append(entry)
     return os.pathsep.join(out)
+
+
+def _multishell_target(entry: str) -> str:
+    path = Path(entry)
+    link = next((p for p in (path, *path.parents) if p.is_symlink() and "fnm_multishells" in str(p)), None)
+    if link is not None:
+        hop = Path(os.readlink(link))
+        candidate = (hop if hop.is_absolute() else link.parent / hop) / path.relative_to(link)
+        if candidate.is_dir():
+            return str(candidate)
+    return os.path.realpath(entry) if os.path.isdir(entry) else ''
 
 
 def install(project: str, req: str, root: Path, cli: Path, *, scheduler: bool = False) -> Path:

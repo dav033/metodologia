@@ -8,6 +8,7 @@ from collections.abc import Mapping
 
 import bt_audit_gate
 import bt_scheduler_adapter as scheduler_adapter
+import bt_verifier_env
 from bt_scheduler_quality.contracts import VerifyRequest
 from bt_scheduler_quality.identity import verdict_id
 from bt_scheduler_recovery_adapter import (
@@ -155,9 +156,11 @@ class QualityDeliveryMethods:
             return ""
         text = "\n".join(outputs)
         hints = _resource_note(text) + _missing_module_note(text, _declared_paths(self))
+        # the sandbox's real environment, by name (D-257); never a value
+        environment = bt_verifier_env.check_environment_sentence(getattr(self, "policy", None))
         return (hints + "The independent verification of your previous attempt failed. The checks run in a sandbox: "
-                "`node_modules` mounted read-only, a clean copy of your final files, none of your environment variables. Fix the cause shown here before "
-                "anything else:\n\n" + "\n\n".join(blocks))
+                "`node_modules` mounted read-only, a clean copy of your final files, " + environment + ". Fix the cause "
+                "shown here before anything else:\n\n" + "\n\n".join(blocks))
 
     def _write_verify_note(self, order: VerifyRequest, result) -> None:
         if self.verify_notes is None or not isinstance(result, Mapping):

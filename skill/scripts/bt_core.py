@@ -43,7 +43,43 @@ SKILL_DIR = resource_root()
 PYTHON = Path(sys.executable).as_posix()  # generated commands name the interpreter, never a bare `python`
 SCRIPT = Path(__file__).resolve().parent / "bitacora.py"
 TEMPLATES = SKILL_DIR / "templates"
-ROOT = Path(os.environ.get("BITACORA_ROOT", Path.home() / "bitacora"))
+# The owner's bitácora. The per-user live resources belong to it alone: the engine's database (~/.config/bitacora/
+# durable.env), the tmux socket `bitacora`, the owner's secret and agent env files. Any other root gets its own.
+LIVE_ROOT = Path.home() / "bitacora"
+
+
+def _same_path(a: Path, b: Path) -> bool:
+    try:
+        return Path(a).expanduser().resolve() == Path(b).expanduser().resolve()
+    except (OSError, RuntimeError):
+        return Path(a).expanduser().absolute() == Path(b).expanduser().absolute()
+
+
+def _under_test_runner() -> bool:
+    """This process is `python -m unittest` or pytest: the one kind of process that must never write the live bitácora."""
+    spec = getattr(sys.modules.get("__main__"), "__spec__", None)
+    name = (getattr(spec, "name", "") or "").split(".")[0]
+    return name in ("unittest", "pytest") or Path(sys.argv[0] if sys.argv else "").name in ("pytest", "py.test")
+
+
+def _root() -> Path:
+    """$BITACORA_ROOT, else the live root. A test run never gets the live root, whether the variable is missing or names
+    it (an agent spawned by the engine inherits BITACORA_ROOT=~/bitacora): it gets a throwaway root, exported so its
+    subprocesses inherit it. 2026-10-31: a hand-run `test_page_planning_asks` wrote into the live plan feed (D-247)."""
+    root = Path(os.environ.get("BITACORA_ROOT") or LIVE_ROOT)
+    if _under_test_runner() and _same_path(root, LIVE_ROOT):
+        import tempfile
+        root = Path(tempfile.mkdtemp(prefix="bt-test-root-")) / "bitacora"
+        os.environ["BITACORA_ROOT"] = str(root)
+    return root
+
+
+def is_live_root(root: Path | str | None = None) -> bool:
+    """`root` (default: this process's ROOT, as tests patch it) is the owner's live bitácora."""
+    return _same_path(Path(ROOT if root is None else root), LIVE_ROOT)
+
+
+ROOT = _root()
 STATE = ROOT / ".state"
 CENTRAL = ["SUMMARY.md", "ARCHITECTURE.md", "DECISIONS.md", "PENDING.md", "TOOLS.md", "INDEX.md"]
 MUTATING_TOOLS = {"Edit", "Write", "MultiEdit", "NotebookEdit"}

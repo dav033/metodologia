@@ -29,7 +29,22 @@ MAX_SAY = 2000
 
 
 def socket() -> str:
-    return os.environ.get("BITACORA_TMUX_SOCKET") or "bitacora"
+    """$BITACORA_TMUX_SOCKET, else `bitacora` for the owner's live bitácora only. Any other root (a test, a lab, a
+    scratch root) gets a socket of its own, so a process without the variable can never read, type into or kill the
+    owner's live Planner (D-252 covered bt_regress only; a hand-run suite still defaulted to `-L bitacora`)."""
+    explicit = os.environ.get("BITACORA_TMUX_SOCKET")
+    if explicit:
+        return explicit
+    import hashlib
+
+    import bt_core
+    if bt_core.is_live_root():
+        return "bitacora"
+    try:
+        where = str(Path(bt_core.ROOT).expanduser().resolve())
+    except (OSError, RuntimeError):
+        where = str(bt_core.ROOT)
+    return "bitacora-" + hashlib.sha256(where.encode("utf-8")).hexdigest()[:12]
 
 
 def _tmux_path() -> str | None:
