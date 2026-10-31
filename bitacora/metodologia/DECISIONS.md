@@ -2871,3 +2871,38 @@ Solucionador 20261030-100736-d494 integrated merge fff622890f28b8093a9a0afda9c40
 - **Evidence:** `test_durable_verification.BuiltBeforeItsGate` (2, real git; red on main). Live read-only check: SP-11
   and SP-12 appear as v1; SP-2 becomes v2 with T2.55/T2.56/T2.7's repairs; no owner decision existed to lose (all
   «to_test»). Branch `built-subplan-versions` (staged/full regression, not selective, until D-240 is on main).
+
+## D-248 — The panel and the remote listener stop recomputing the read model per poll
+
+- **Date:** 2026-10-31 · **Status:** Accepted
+- **Context:** owner: «cuando los agentes están corriendo el sistema se vuelve bastante lento». Measured 08:28–09:10:
+  `bitacora-web` at 40–60% of a core writing ~2 MiB/s (each SSE client polled every 0.25 s, re-reading every store and
+  re-parsing an 800 KB PLAN.json four times a second; hidden tabs kept streaming); `bitacora-remote` at ~60% (the advin
+  gateway probes every 5 s and each probe rebuilt ~83 `plan_status` calls); it also runs an old pin (3519eec, P-144).
+- **Decision:** `bt_live_api` polls at 0.5 s and re-reads a run only when its store marks change (forced every 30 s),
+  caches the subplan scope by PLAN.json stat, `NOW_TTL` 4 s; `bt_planstatus.reuse()/forget()` memoizes `plan_status` by
+  file marks (≤15 s, private copies; only in `serve`/`serve-remote`, cleared after every POST); an empty WAL is not a
+  change; hidden tabs close their streams (`live.js`, `flow.js`, `plans-live.js`).
+- **Evidence:** panel 18.8% → 4.7% CPU, 1.93 → 0.09 MiB/s; a remote cycle 950 → 317 ms CPU; `test_live_api.QuietStores`,
+  `test_planstatus.Reuse`. A plan's status may lag a change outside the watched files by up to 15 s.
+
+## D-249 — The relay hook skips the CLI
+
+- **Date:** 2026-10-31 · **Status:** Accepted
+- **Decision:** `bitacora.py hook relay` (every PostToolUse/UserPromptSubmit/Stop of every session) goes straight to
+  `bt_relay` without importing ~20 CLI modules: ~450 → ~160 ms per tool call.
+- **Evidence:** `test_relay.test_the_cli_hook_skips_the_command_modules`.
+
+## D-250 — Background work yields CPU and keeps test fsyncs off the disk
+
+- **Date:** 2026-10-31 · **Status:** Accepted
+- **Context:** the desktop felt disk I/O most (system `io full` avg 8.7%, p95 15%): regression suites fsync on btrfs
+  (`TMPDIR=~/.local/tmp`), 182 MiB per 30 s; M6 checks (`next build` ~700%) ran at nice 0. IOWeight is inert here (io
+  controller not delegated to user@, scheduler `none`).
+- **Decision:** attempt units (`bt_supervisor/systemd.py`) and `bt-durable.service` get Nice=15, CPUWeight=20,
+  IOWeight=20; `bt_regress` gives each suite a private TMPDIR on a tmpfs with ≥4 GiB free (`BT_REGRESS_TMPDIR` overrides;
+  empty keeps the inherited one). A hand-made drop-in `~/.config/systemd/user/bt-.service.d/prioridad-baja.conf` (08:02,
+  not from this session) already lowers every `bt-*` unit and is kept.
+- **Evidence:** `test_supervisor_limits.SystemdPriority`, `test_regress_venv.FastTemp`. Built by an Opus subagent
+  (branch `machine-responsive`). Left: refresh the remote pin after integration (and make integrations do it); planners'
+  tmux in its own low-weight scope; Stop hook ~1 s per turn; real I/O weighting needs a system-level change.
