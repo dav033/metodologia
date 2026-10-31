@@ -382,6 +382,19 @@ def gate(rdir: Path) -> list[str]:
 
 # ------------------------------------------------------------------ decisions
 
+def approval_over_rejection(rdir: Path, sid: str) -> str:
+    """Why approving `sid` now needs an explicit confirmation, or "": the owner rejected this very version (D-255).
+
+    An approval closes that rejection's pending items and drains the stages queued behind the subplan, so a stray click
+    on «Aprobar» (pictures REQ-021 SP-2 v2, 2026-10-31 13:04, half an hour after its rejection) silently undid it."""
+    row = next((r for r in state(rdir)["subplans"] if r["id"] == sid), None)
+    if not row or row["state"] != "rejected":
+        return ""
+    note = str((row.get("decision") or {}).get("note") or "").strip()
+    return (f"{sid} versión {row['version']} tiene tu rechazo" + (f" («{note[:120]}»)" if note else "") +
+            ". No la aprobé: si ya no aplica, marca «Ya no aplica mi rechazo de esta versión» y aprueba otra vez.")
+
+
 def decide(project: str, rdir: Path, sid: str, decision: str, note: str = "", by: str = "owner", via: str = "web") -> str:
     if decision not in ("approved", "rejected"):
         return "La decisión debe ser aprobar o rechazar."

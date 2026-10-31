@@ -111,6 +111,9 @@ class PlanningActions:
         sid = form.get("anchor", "")
         if not re.fullmatch(r"[A-Za-z0-9_.-]{1,40}", sid):
             msg, sid = "Subplan no válido.", ""
+        elif action == "verify-approve" and form.get("over_rejection") != "1" and \
+                (blocked := verification.approval_over_rejection(rdir, sid)):
+            msg = blocked                             # a mis-click must not answer the owner's own rejection (D-255)
         elif action in ("verify-run", "verify-stop") and self.client_address[0] not in ("127.0.0.1", "::1"):
             msg = "Los servidores de prueba solo se arrancan desde esta máquina."
         elif action == "verify-run":                  # «Probar»: restart the version clean; the new tab follows it

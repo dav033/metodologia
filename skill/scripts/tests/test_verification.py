@@ -289,6 +289,27 @@ class VerificationWeb(Base):
             self.assertIn("Subplan%20no%20v%C3%A1lido", go("verify-approve", anchor="../x"))
         self.assertEqual(commit.call_count, 2)
 
+    def test_approving_a_version_the_owner_rejected_needs_the_tick(self):
+        """D-255: a stray «Aprobar» half an hour after a rejection closed its pending item and drained queued stages."""
+        import bt_page_verification as page
+        import bt_server
+        self.projection(**{"SP-1": (2, COMMIT)})
+        self.assertNotIn("over_rejection", page.panel(self.ctx(), {"id": "SP-1"}))     # nothing to confirm before
+        v.decide("proj", self.rdir, "SP-1", "rejected", "el menú no cierra")
+        self.assertIn('name="over_rejection" value="1" required', page.panel(self.ctx(), {"id": "SP-1"}))
+        with patch.object(bt_server, "commit") as commit, patch.object(bt_server, "ROOT", Path(self.tmp.name)):
+            go = lambda action, **form: bt_server.Handler.verify_post(object(), "proj", "REQ-009", self.rdir, action, form, "/p/proj/req/REQ-009")
+            url = go("verify-approve", anchor="SP-1")
+            self.assertIn("tiene%20tu%20rechazo", url)
+            self.assertEqual(v.state(self.rdir)["subplans"][0]["state"], "rejected")
+            commit.assert_not_called()
+            self.assertIn("SP-1%20aprobado", go("verify-approve", anchor="SP-1", over_rejection="1"))
+            self.assertEqual(v.state(self.rdir)["subplans"][0]["state"], "approved")
+        self.projection(**{"SP-1": (3, "b" * 40)})              # a new version after the rejection: no tick needed
+        v.decide("proj", self.rdir, "SP-1", "rejected", "otra cosa")
+        self.projection(**{"SP-1": (4, "c" * 40)})
+        self.assertEqual(v.approval_over_rejection(self.rdir, "SP-1"), "")
+
     def test_now_page_lists_subplans_waiting_for_the_owner(self):
         import bt_page_now
         items = [{"project": "proj", "req": "REQ-009", "subplans": ["SP-1", "SP-2"], "approved": 1, "total": 3}]
