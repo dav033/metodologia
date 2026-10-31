@@ -218,8 +218,9 @@ class Integrate(unittest.TestCase):
         commit(other, path, text, name)
         sh(self.live, "merge", "-q", "--ff-only", name)
 
-    def test_code_landing_on_main_during_the_regression_is_merged_and_tested_again_in_the_same_turn(self):
-        """D-260: main moving during the regression no longer gives the turn up; it is merged and tested again."""
+    def test_disjoint_code_landing_during_the_regression_is_merged_without_another_regression(self):
+        """D-260: main's new code in other files is merged and integrated in the same turn; the full regression of the
+        merge runs in the background after the smoke instead of a second one before it."""
         landed = []
         def code_commit():
             if not landed:
@@ -228,15 +229,43 @@ class Integrate(unittest.TestCase):
         fake = Fake(self, during_regression=code_commit)
         outcome = self.run_it(fake)
         self.assertEqual(outcome.code, 0, outcome.lines)
-        self.assertEqual([c for c in fake.calls if c[0] == "regress"], [("regress", "wt-fix")] * 2)
-        self.assertTrue(any("merging it and running again" in line for line in outcome.lines))
+        self.assertEqual([c for c in fake.calls if c[0] == "regress"], [("regress", "wt-fix")])
+        self.assertTrue(any("full regression of the merge runs after the smoke" in line for line in outcome.lines))
+        self.assertTrue(fake.spawned)                                         # the post-merge regression started
         self.assertEqual(sh(self.live, "show", "main:skill/scripts/bt_y.py"), "y = 1")
 
-    def test_main_that_keeps_moving_gives_the_turn_up(self):
-        count = []
+    def shared_file(self) -> list[str]:
+        """bt_m.py on main and in the branch, which then changes its first line: main can change its last one cleanly."""
+        lines = [f"m{i} = {i}" for i in range(10)]
+        self.other_on_main(path="skill/scripts/bt_m.py", text="\n".join(lines) + "\n", name="base-m")
+        sh(self.wt, "merge", "-q", "--no-edit", "main")
+        commit(self.wt, "skill/scripts/bt_m.py", "\n".join(["m0 = 'branch'", *lines[1:]]) + "\n", "branch m0")
+        return lines
+
+    def main_changes_last_line(self, lines: list[str], value: str, name: str) -> None:
+        current = sh(self.live, "show", "main:skill/scripts/bt_m.py").splitlines()
+        self.other_on_main(path="skill/scripts/bt_m.py", text="\n".join([*current[:-1], f"m9 = {value!r}"]) + "\n",
+                           name=name)
+
+    def test_overlapping_code_landing_during_the_regression_is_merged_and_tested_again(self):
+        """Main's new code in one of the branch's files (a clean merge): the merged tree is tested before it lands."""
+        lines, landed = self.shared_file(), []
+        def code_commit():
+            if not landed:
+                landed.append(1)
+                self.main_changes_last_line(lines, "main", "other")
+        fake = Fake(self, during_regression=code_commit)
+        outcome = self.run_it(fake)
+        self.assertEqual(outcome.code, 0, outcome.lines)
+        self.assertEqual([c for c in fake.calls if c[0] == "regress"], [("regress", "wt-fix")] * 2)
+        self.assertTrue(any("merging it and running again" in line for line in outcome.lines))
+        self.assertFalse(fake.spawned)                                        # tested before, nothing after
+
+    def test_main_that_keeps_moving_in_the_branchs_files_gives_the_turn_up(self):
+        lines, count = self.shared_file(), []
         def code_commit():
             count.append(1)
-            self.other_on_main(path=f"skill/scripts/bt_y{len(count)}.py", name=f"other{len(count)}")
+            self.main_changes_last_line(lines, f"main {len(count)}", f"other{len(count)}")
         outcome = self.run_it(Fake(self, during_regression=code_commit))
         self.assertEqual(outcome.code, 1)
         self.assertIn("main moved with code", outcome.lines[-1])

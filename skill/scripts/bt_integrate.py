@@ -512,11 +512,20 @@ def _integrate(req: Request, services: Services, note: Callable[[str], None], li
         if attempt == CATCH_UP_RUNS:
             raise Refused(f"main moved with code while the regression ran ({', '.join(moved[:3])}), "
                           f"{CATCH_UP_RUNS + 1} times: merge main into {req.branch} and run this again")
-        note(f"main moved with code while the regression ran ({', '.join(moved[:3])}): merging it and running again")
         start_main = git(req.live, "rev-parse", "main")
         catch_up(req, note)
         paths = git(req.live, "diff", "--name-only", f"main...{req.branch}").splitlines()
         units = units_for(paths)
+        if not set(moved) & set(paths):
+            # owner 2026-10-31 («perdemos mucho tiempo»): main's new code touches none of the branch's files, so the
+            # merged tree is integrated on this regression and the full regression of the merge runs in the background
+            # after the smoke, like `selective`: a red one is loud and proposes the revert, never reverts silently
+            note(f"main moved with code while the regression ran ({', '.join(moved[:3])}), none of it in "
+                 f"{req.branch}'s files: merged, integrating; the full regression of the merge runs after the smoke")
+            selective = True
+            break
+        note(f"main moved with code while the regression ran ({', '.join(moved[:3])}), in {req.branch}'s files: "
+             "merging it and running again")
         scratch = scratch.with_name(f"{scratch.name}-{attempt + 2}")
         results = scratch / "results.txt"
         selection = _selection(req, services, mode, note)
