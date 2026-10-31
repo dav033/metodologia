@@ -212,15 +212,103 @@ class Integrate(unittest.TestCase):
             subprocess.run(["git", "-C", str(self.live), "commit", "-q", "-m", "bitácora", "--allow-empty"], check=True)
         self.assertEqual(self.run_it(Fake(self, during_regression=bitacora_commit)).code, 0)
 
-    def test_code_landing_on_main_during_the_regression_stops_it(self):
+    def other_on_main(self, path="skill/scripts/bt_y.py", text="y = 1\n", name="other"):
+        other = self.base / f"wt-{name}"
+        sh(self.live, "worktree", "add", "-q", "-b", name, str(other), "main")
+        commit(other, path, text, name)
+        sh(self.live, "merge", "-q", "--ff-only", name)
+
+    def test_disjoint_code_landing_during_the_regression_is_merged_without_another_regression(self):
+        """D-260: main's new code in other files is merged and integrated in the same turn; the full regression of the
+        merge runs in the background after the smoke instead of a second one before it."""
+        landed = []
         def code_commit():
-            other = self.base / "wt-other"
-            sh(self.live, "worktree", "add", "-q", "-b", "other", str(other), "main")
-            commit(other, "skill/scripts/bt_y.py", "y = 1\n", "y")
-            sh(self.live, "merge", "-q", "--ff-only", "other")
+            if not landed:
+                landed.append(1)
+                self.other_on_main()
+        fake = Fake(self, during_regression=code_commit)
+        outcome = self.run_it(fake)
+        self.assertEqual(outcome.code, 0, outcome.lines)
+        self.assertEqual([c for c in fake.calls if c[0] == "regress"], [("regress", "wt-fix")])
+        self.assertTrue(any("full regression of the merge runs after the smoke" in line for line in outcome.lines))
+        self.assertTrue(fake.spawned)                                         # the post-merge regression started
+        self.assertEqual(sh(self.live, "show", "main:skill/scripts/bt_y.py"), "y = 1")
+
+    def shared_file(self) -> list[str]:
+        """bt_m.py on main and in the branch, which then changes its first line: main can change its last one cleanly."""
+        lines = [f"m{i} = {i}" for i in range(10)]
+        self.other_on_main(path="skill/scripts/bt_m.py", text="\n".join(lines) + "\n", name="base-m")
+        sh(self.wt, "merge", "-q", "--no-edit", "main")
+        commit(self.wt, "skill/scripts/bt_m.py", "\n".join(["m0 = 'branch'", *lines[1:]]) + "\n", "branch m0")
+        return lines
+
+    def main_changes_last_line(self, lines: list[str], value: str, name: str) -> None:
+        current = sh(self.live, "show", "main:skill/scripts/bt_m.py").splitlines()
+        self.other_on_main(path="skill/scripts/bt_m.py", text="\n".join([*current[:-1], f"m9 = {value!r}"]) + "\n",
+                           name=name)
+
+    def test_overlapping_code_landing_during_the_regression_is_merged_and_tested_again(self):
+        """Main's new code in one of the branch's files (a clean merge): the merged tree is tested before it lands."""
+        lines, landed = self.shared_file(), []
+        def code_commit():
+            if not landed:
+                landed.append(1)
+                self.main_changes_last_line(lines, "main", "other")
+        fake = Fake(self, during_regression=code_commit)
+        outcome = self.run_it(fake)
+        self.assertEqual(outcome.code, 0, outcome.lines)
+        self.assertEqual([c for c in fake.calls if c[0] == "regress"], [("regress", "wt-fix")] * 2)
+        self.assertTrue(any("merging it and running again" in line for line in outcome.lines))
+        self.assertFalse(fake.spawned)                                        # tested before, nothing after
+
+    def test_main_that_keeps_moving_in_the_branchs_files_gives_the_turn_up(self):
+        lines, count = self.shared_file(), []
+        def code_commit():
+            count.append(1)
+            self.main_changes_last_line(lines, f"main {len(count)}", f"other{len(count)}")
         outcome = self.run_it(Fake(self, during_regression=code_commit))
         self.assertEqual(outcome.code, 1)
         self.assertIn("main moved with code", outcome.lines[-1])
+        self.assertEqual(len(count), integ.CATCH_UP_RUNS + 1)
+
+    def test_without_regression_it_integrates_on_the_smoke_and_lists_it_in_the_ledger(self):
+        """D-261 (owner 2026-10-31): `none` runs no regression and writes the integration to the ledger."""
+        ledger = self.base / "REGRESSION-OFF.md"
+        fake = Fake(self)
+        outcome = self.run_it(fake, regression="none", ledger=ledger)
+        self.assertEqual(outcome.code, 0, outcome.lines)
+        self.assertFalse([c for c in fake.calls if c[0] == "regress"])
+        self.assertFalse(fake.spawned)                                        # no post-merge regression either
+        text = ledger.read_text(encoding="utf-8")
+        self.assertIn("## Integrated without regression\n", text)
+        self.assertIn("x is two (D-900)", text.split("## Escaped defects")[0])
+        self.assertIn("regression: skipped (D-261", self.log.read_text(encoding="utf-8"))
+        integ.record_escape("T9 broke the panel; test_page_x would have failed", outcome.merge, ledger)
+        escaped = ledger.read_text(encoding="utf-8").split("## Escaped defects")[1]
+        self.assertIn(f"`{outcome.merge[:12]}` · T9 broke the panel", escaped)
+
+    def test_without_regression_a_failed_smoke_is_an_escaped_defect(self):
+        ledger = self.base / "REGRESSION-OFF.md"
+        outcome = self.run_it(Fake(self, smoke=[["web answers 500"], []]), regression="none", ledger=ledger)
+        self.assertEqual(outcome.code, 3, outcome.lines)
+        self.assertIn("the smoke failed after an integration without regression",
+                      ledger.read_text(encoding="utf-8").split("## Escaped defects")[1])
+
+    def test_main_code_the_branch_lacks_is_merged_into_it_before_the_regression(self):
+        """D-260: 13 of 33 integrations on 2026-10-31 went back to the end of the queue for this."""
+        self.other_on_main()
+        outcome = self.run_it(Fake(self))
+        self.assertEqual(outcome.code, 0, outcome.lines)
+        self.assertTrue(any("merged main into fix" in line for line in outcome.lines))
+        self.assertEqual(sh(self.live, "show", "main:skill/scripts/bt_x.py"), "x = 2")
+
+    def test_a_conflicting_main_is_aborted_in_the_worktree_and_refused_with_its_files(self):
+        self.other_on_main(path="skill/scripts/bt_x.py", text="x = 3\n")
+        outcome = self.run_it(Fake(self))
+        self.assertEqual(outcome.code, 1)
+        self.assertIn("merging it conflicts (skill/scripts/bt_x.py)", outcome.lines[-1])
+        self.assertEqual(sh(self.wt, "status", "--porcelain", "--untracked-files=no"), "")    # the merge was aborted
+        self.assertEqual(sh(self.wt, "rev-parse", "HEAD"), self.tip)
 
     def test_preflight_refusals(self):
         commit(self.wt, "bitacora/metodologia/DECISIONS.md", "D-900\n", "decision in the branch")
@@ -232,8 +320,7 @@ class Integrate(unittest.TestCase):
         sh(self.live, "worktree", "add", "-q", "-b", "other", str(other), "main")
         commit(other, "skill/scripts/bt_y.py", "y = 1\n", "y")
         sh(self.live, "merge", "-q", "--ff-only", "other")
-        outcome = self.run_it(Fake(self))
-        self.assertIn("merge main into the branch", outcome.lines[-1])
+        sh(self.wt, "merge", "-q", "--no-edit", "main")                     # D-260 would merge it anyway
         (self.wt / "skill" / "scripts" / "bt_x.py").write_text("dirty\n", encoding="utf-8")
         self.assertIn("uncommitted changes", self.run_it(Fake(self)).lines[-1])
 
