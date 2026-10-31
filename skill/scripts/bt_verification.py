@@ -347,9 +347,16 @@ SOLVER_ES = {"pending": "pasó al Solucionador", "queued": "pasó al Solucionado
 
 
 def rejection_key(sid: str, dec: dict) -> str:
-    """The Solucionador's trigger key of one rejection: the subplan, the version and commit it saw, and the note."""
+    """The Solucionador's trigger key of one rejection: the subplan, the version and commit it saw, and the note. With
+    attached images their digests join the note (in any order), so the same note with other images is a new rejection;
+    without images the key is the one it always was (D-258)."""
     import hashlib
-    note = hashlib.sha256(" ".join(str(dec.get("note") or "").split()).encode()).hexdigest()[:12]
+
+    import bt_rejection_images as images
+    seed = " ".join(str(dec.get("note") or "").split())
+    if images.digests(dec):
+        seed += "\n" + "\n".join(images.digests(dec))
+    note = hashlib.sha256(seed.encode()).hexdigest()[:12]
     return f"owner_rejected:{sid}:v{dec.get('version')}:{str(dec.get('commit') or '')[:12]}:{note}"
 
 
@@ -395,7 +402,12 @@ def approval_over_rejection(rdir: Path, sid: str) -> str:
             ". No la aprobé: si ya no aplica, marca «Ya no aplica mi rechazo de esta versión» y aprueba otra vez.")
 
 
-def decide(project: str, rdir: Path, sid: str, decision: str, note: str = "", by: str = "owner", via: str = "web") -> str:
+def decide(project: str, rdir: Path, sid: str, decision: str, note: str = "", by: str = "owner", via: str = "web",
+           attachments: list | None = None) -> str:
+    """Record the owner's decision on the subplan's current version. A rejection may carry images (D-258):
+    `attachments` holds `(client name, bytes)` pairs (the web form) or file paths (the CLI); they are checked by their
+    bytes and stored under `<rdir>/evidence/owner-rejected/<SP>-v<N>/` before anything is recorded, and a refusal
+    records nothing."""
     if decision not in ("approved", "rejected"):
         return "La decisión debe ser aprobar o rechazar."
     if decision == "rejected" and not note.strip():
@@ -405,14 +417,25 @@ def decide(project: str, rdir: Path, sid: str, decision: str, note: str = "", by
         return f"{sid or 'Ese subplan'} no está en el plan."
     if row["state"] == "waiting":
         return f"{sid} todavía se está construyendo: aún no hay una versión que probar."
+    import bt_rejection_images as images
+    stored: list[dict] = []
+    if decision == "rejected" and attachments:
+        try:
+            items = [a if isinstance(a, tuple) else images.from_paths([a])[0] for a in attachments]
+            stored = images.store(rdir, sid, row["version"], images.accept(items))
+        except images.Refused as exc:
+            return str(exc)
     with _locked(rdir) as data:
         # P-items of rejections no approval has answered yet travel with the subplan's latest decision
         carried = [p for p in (data["subplans"].get(sid) or {}).get("open_pending") or [] if isinstance(p, str)]
         data["subplans"][sid] = {"decision": decision, "version": row["version"], "commit": row["commit"], "by": by,
                                  "via": via, "at": _now(), "note": note.strip()[:1000],
                                  "open_pending": [] if decision == "approved" else carried}
+        if stored:
+            data["subplans"][sid]["attachments"] = stored
     verb = "Aprobaste" if decision == "approved" else "Rechazaste"
-    activity.record(rdir, "Tú", f"{verb} {sid} (versión {row['version']})" + (f": {note.strip()[:120]}" if note.strip() else ""),
+    activity.record(rdir, "Tú", f"{verb} {sid} (versión {row['version']})" + (f": {note.strip()[:120]}" if note.strip() else "")
+                    + (f" ({len(stored)} {'imagen' if len(stored) == 1 else 'imágenes'})" if stored else ""),
                     kind="verify", sp=sid)
     left = gate(rdir)
     if decision == "approved":
@@ -425,7 +448,7 @@ def decide(project: str, rdir: Path, sid: str, decision: str, note: str = "", by
             ran = []
         return f"{sid} aprobado." + (" Todos los subplanes están aprobados: ya se puede fusionar en Revisar." if not left else
                                      f" Faltan {len(left)} por aprobar.") + "".join(f" {m}" for m in ran)
-    pid = _open_pending(rdir, sid, row["version"], note.strip())
+    pid = _open_pending(rdir, sid, row["version"], note.strip(), images.project_relative(rdir, {"attachments": stored}))
     if pid:                                      # the owner-visible record, linked from the Solucionador's trigger
         with _locked(rdir) as data:
             if (data["subplans"].get(sid) or {}).get("note") == note.strip()[:1000]:
@@ -434,7 +457,9 @@ def decide(project: str, rdir: Path, sid: str, decision: str, note: str = "", by
     who = ("; se lo paso al Solucionador: lo reproduce en esta versión y, si confirma el fallo, pide la reparación "
            "al Planner. Cuando se publique la versión nueva te aparecerá aquí «por probar» con tu nota"
            if _solver_takes(rdir) else "; el requisito sigue por verificar")
-    return f"{sid} rechazado. Tu nota quedó guardada" + (f" y abrí el pendiente {pid}" if pid else "") + who + "."
+    saved = (f"Tu nota y {'la imagen quedaron guardadas' if len(stored) == 1 else f'las {len(stored)} imágenes quedaron guardadas'}"
+             if stored else "Tu nota quedó guardada")
+    return f"{sid} rechazado. {saved}" + (f" y abrí el pendiente {pid}" if pid else "") + who + "."
 
 
 def _solver_takes(rdir: Path) -> bool:
@@ -449,7 +474,7 @@ def _solver_takes(rdir: Path) -> bool:
         return False
 
 
-def _open_pending(rdir: Path, sid: str, version: object, note: str) -> str:
+def _open_pending(rdir: Path, sid: str, version: object, note: str, images: list[str] | None = None) -> str:
     """File the rejection in the project's PENDING.md so it is not lost; empty when there is no such file."""
     try:
         pdir = Path(rdir).resolve().parents[1]
@@ -461,7 +486,9 @@ def _open_pending(rdir: Path, sid: str, version: object, note: str) -> str:
         from bt_core import next_id
         pid = next_id(pdir, "P")
         item = (f"- {pid} · The owner rejected {sid} v{version} of {_req(rdir)} after trying it: "
-                f"{' '.join(note.split())[:400]} · urgency: high · complexity: M · added {dt.date.today().isoformat()} · "
+                f"{' '.join(note.split())[:400]}"
+                + ("".join(f" [imagen {i}]({p})" for i, p in enumerate(images or [], 1)) if images else "")
+                + f" · urgency: high · complexity: M · added {dt.date.today().isoformat()} · "
                 f"per-subplan verification\n")
         target.write_text(text.replace("## Open\n", "## Open\n" + item, 1), encoding="utf-8")
         bt_pending.sort_file(pdir)

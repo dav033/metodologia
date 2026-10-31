@@ -144,6 +144,17 @@ class Handler(PlanningActions, PlanListActions, BaseHTTPRequestHandler):
             ctype += "; charset=utf-8"
         self.send(p.read_bytes(), 200, ctype, sandbox=p.suffix == ".html")
 
+    def image(self, path: Path, ctype: str) -> None:
+        data = path.read_bytes()
+        self.send_response(200)
+        self.send_header("Content-Type", ctype)
+        self.send_header("Content-Length", str(len(data)))
+        self.send_header("X-Content-Type-Options", "nosniff")
+        self.send_header("Content-Security-Policy", "default-src 'none'; sandbox")
+        self.send_header("Cache-Control", "private, max-age=3600")
+        self.end_headers()
+        self.wfile.write(data)
+
     # ------------------------------------------------------------ GET
     def do_GET(self):
         if self.strict_host and not _local_host(self.headers.get("Host") or ""):
@@ -225,6 +236,8 @@ class Handler(PlanningActions, PlanListActions, BaseHTTPRequestHandler):
         if not rest:
             return self.send(pages.project_page(project, q.get("tab", "overview")))
         kind, sub = rest[0], "/".join(rest[1:])
+        if kind == "doc" and (found := __import__("bt_rejection_images").served(ROOT / project, sub)):
+            return self.image(*found)                                 # a rejection's image (D-258)
         if kind == "doc" and sub.endswith(".md") and safe_path(ROOT / project, sub):
             return self.send(pages.doc_page(project, sub))
         if kind == "artifacts":                                   # the bare folder is the project's artifacts tab
@@ -272,9 +285,24 @@ class Handler(PlanningActions, PlanListActions, BaseHTTPRequestHandler):
         except ValueError:
             length = -1
         host = self.headers.get("Host") or ""
-        if not 0 <= length <= MAX_FORM_BYTES or (self.strict_host and not _local_host(host)):            # before reading anything the caller sent
+        import bt_rejection_images as images
+        ctype = self.headers.get("Content-Type") or ""                  # only a rejection carries images (D-258)
+        upload = ctype.lower().startswith("multipart/form-data") and parts[-1:] == ["verify-reject"]
+        if self.strict_host and not _local_host(host) or length < 0:   # before reading anything the caller sent
             return self.send("Forbidden", 403, "text/plain")
-        form = {k: v[0] for k, v in parse_qs(self.rfile.read(length).decode("utf-8", "replace")).items()}
+        if upload and length > images.max_body():
+            self.close_connection = True
+            return self.send(pages.layout("Imágenes demasiado grandes", "<p>Las imágenes superan el máximo por rechazo "
+                             f"({images.limits()['max_total_mb']} MB en total). Vuelve atrás, quita alguna y rechaza otra "
+                             "vez: no guardé nada.</p>"), 413)
+        if not upload and length > MAX_FORM_BYTES:
+            return self.send("Forbidden", 403, "text/plain")
+        body = self.rfile.read(length)
+        if upload:
+            form, files = images.parse_form(ctype, body)
+            form["_files"] = files                                    # never a text field: verify_post checks the type
+        else:
+            form = {k: v[0] for k, v in parse_qs(body.decode("utf-8", "replace")).items()}
         origin = self.headers.get("Origin") or ""
         if not hmac.compare_digest(form.get("token", ""), token()) or (origin and urlparse(origin).netloc != host):
             return self.send("Forbidden", 403, "text/plain")

@@ -92,7 +92,8 @@ subplans as frozen scope: changes require re-confirmation and a new approval, ex
 defect (D-241: only new `implement`/`test` tasks that an approved task now waits for, nothing existing changed or
 removed). Freeze that yourself when the Solucionador asks, with the run evidence it names:
 `stage freeze REQ-NNN --repair-evidence <files> --by planner` (the touched subplans stay confirmed `by: policy`; a
-refusal `STAGE_REPAIR_UNBOUNDED` means it goes to the owner). Never use autonomous sessions to run
+refusal `STAGE_REPAIR_UNBOUNDED` means it goes to the owner). When the request names images the owner attached to his
+rejection, open them, and the repair task's instructions list the same absolute paths and tell its agent to open them. Never use autonomous sessions to run
 planned tasks. Later stages join the same Scheduler run at a quiet point, keeping accepted unchanged work; the
 complete plan and D-131 owner verification are required before final closure. Every approval uses stages; old-plan
 compatibility is not required. `stage status REQ-NNN` shows frozen stages and remaining draft scope.

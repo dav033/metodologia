@@ -381,6 +381,17 @@ a.pp-ev:hover { text-decoration: none; background: var(--code); }
 .pp-vrevert pre { overflow-x: auto; padding: 10px 12px; border-radius: 10px; background: var(--pp-c1); }
 .pp-vwarn { margin: 0; padding: 10px 12px; border-radius: 10px; background: var(--warn-soft); color: var(--warn); font-size: 13px; }
 .pp-vprev { margin: 0; padding: 10px 12px; border-radius: 10px; background: var(--warn-soft); color: var(--text); font-size: 13px; border-left: 3px solid var(--warn); }
+/* the owner's images on a rejection (D-258): the file input, the preview before sending and the stored thumbnails */
+.pp-vfiles { display: flex; flex-direction: column; gap: 4px; font-size: 13px; }
+.pp-vfiles input[type="file"] { font: inherit; color: var(--muted); max-width: 100%; }
+.pp-vfiles input[type="file"]::file-selector-button { font: inherit; height: 32px; margin-right: 10px; padding: 0 14px; border-radius: 99px; border: 1px solid var(--pp-ctl); background: transparent; color: var(--text); cursor: pointer; }
+.pp-vfiles input[type="file"]::file-selector-button:hover { border-color: var(--accent); color: var(--accent); }
+.pp-vthumbs { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.pp-vthumbs:empty { display: none; }
+.pp-vthumbs li { font-size: 12px; color: var(--muted); overflow-wrap: anywhere; max-width: 120px; }
+.pp-vthumbs img { display: block; width: 112px; height: 84px; object-fit: cover; border-radius: 8px; border: 1px solid var(--pp-line); background: var(--pp-c1); }
+.pp-vthumbs a:hover img, .pp-vthumbs a:focus-visible img { border-color: var(--accent); }
+.pp-vform textarea.pp-vdrop { outline: 2px dashed var(--accent); outline-offset: 2px; }
 .pp-vcard { border: 1px solid var(--border); border-radius: var(--radius-lg, 16px); padding: 18px 20px; margin-bottom: 20px; background: var(--surface); }
 .pp-vcard header h3 { margin: 0; font-size: 16px; } .pp-vcard header p { margin: 4px 0 12px; }
 .pp-vrow { display: flex; align-items: center; gap: 12px; padding: 10px 4px; border-top: 1px solid var(--border); color: var(--text); }

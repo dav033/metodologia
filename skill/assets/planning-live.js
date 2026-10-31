@@ -17,6 +17,8 @@
     if (n.matches('dialog[open]') || n.querySelector('dialog[open]')) return true;
     return Array.prototype.some.call(n.querySelectorAll('textarea'), function (t) {
       return t === document.activeElement || t.value.trim() !== '';
+    }) || Array.prototype.some.call(n.querySelectorAll('input[type="file"]'), function (f) {
+      return f.files && f.files.length > 0;            // chosen images are lost by a swap too (D-258)
     });
   }
   function opened(n) {
