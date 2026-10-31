@@ -29,6 +29,13 @@ _HERE = str(Path(__file__).resolve().parent)
 if _HERE not in sys.path:
     sys.path.append(_HERE)
 
+# `hook relay` runs on every tool call and prompt of every agent session (PostToolUse, UserPromptSubmit, Stop): the
+# full CLI below imports ~20 command modules (~0.4 s of CPU) it never uses, so that exact command line skips them (D-249).
+if __name__ == "__main__" and sys.argv[1:] == ["hook", "relay"]:
+    import bt_relay
+    bt_relay.hook_main(sys.stdin.read())
+    raise SystemExit(0)
+
 from bt_core import *  # noqa: F403
 from bt_core import _first_heading, _load_bindings, _save_bindings
 from bt_views import *  # noqa: F403
