@@ -1,0 +1,49 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Candidata 1 · Estantería — planes@v2 r1 dir-b</title>
+<style>
+:root{--fondo:#faf9fc;--superficie:#fff;--borde:#e3daef;--borde-suave:#efe9f8;--texto:#1c1425;--texto-suave:#6b6178;--acento:#6d3fe0;--aviso:#8f5f12;--superficie-2:#efe9f8}
+body{margin:0;background:#11111b;font:13px/1.4 system-ui,sans-serif;color:#cdd6f4;padding:16px}
+.tag{font-weight:600;margin:0 0 10px}
+.wrap{display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap}
+.frame{background:var(--fondo);color:var(--texto);border-radius:10px;overflow:hidden;position:relative}
+.d{width:640px;height:400px}.m{width:180px;height:400px}
+.top{display:flex;justify-content:space-between;align-items:center;padding:10px 14px}
+.brand{display:flex;gap:6px;align-items:center;font-weight:650;font-size:9px}.ring{width:12px;height:12px;border:1px solid var(--borde);border-radius:50%;display:grid;place-items:center}.ring i{width:4px;height:4px;border-radius:50%;background:var(--acento)}
+.sel{border:1px solid #766c85;border-radius:6px;font-size:8px;padding:2px 6px}
+.h{display:flex;justify-content:space-between;padding:4px 14px 2px;font-size:13px;font-weight:600}.h small{font-size:8px;color:var(--texto-suave);font-weight:400}
+.ctx{padding:0 14px 8px;font-size:8px;color:var(--texto-suave)}
+.shelf{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:0 14px}
+.card{background:var(--superficie);border:1px solid var(--borde);border-radius:10px;padding:9px;display:grid;grid-template-rows:auto auto auto 1fr;gap:3px;animation:deal .9s cubic-bezier(.2,.9,.2,1) both}
+.card:nth-child(2){animation-delay:.08s}.card:nth-child(3){animation-delay:.16s}.card:nth-child(4){animation-delay:.24s}
+@keyframes deal{from{transform:translateX(-40px)}to{transform:none}}
+.n{font-size:9px;font-weight:600}.p{font-size:14px;font-weight:650}.p small{font-size:7px;color:var(--texto-suave);font-weight:400}
+.k{font-size:7px;color:var(--texto-suave);border-top:1px solid var(--borde-suave);padding-top:5px}
+ul{margin:0;padding:0;list-style:none;display:grid;gap:3px}li{font-size:7.5px;display:flex;gap:3px;height:16px}li::before{content:"";width:6px;height:3px;border-left:1px solid var(--acento);border-bottom:1px solid var(--acento);transform:rotate(-45deg);margin-top:2px}
+li.u{color:var(--texto)}li.u::before{border-color:var(--aviso)}li.u em{display:block;color:var(--aviso);font-style:normal;font-size:6.5px}
+.guide{position:absolute;left:14px;right:14px;height:1px;background:repeating-linear-gradient(90deg,var(--acento) 0 4px,transparent 4px 8px);opacity:.35}
+.ann{font-size:11px;color:#cdd6f4;max-width:640px;margin-top:6px}
+.m .shelf{grid-template-columns:1fr}.m .card{grid-template-rows:auto}.m .sticky{position:sticky;top:0;background:var(--superficie);box-shadow:0 1px 0 var(--borde-suave)}
+</style></head><body>
+<p class="tag">Candidata 1 · «Estantería»: cuatro tarjetas pares en una sola fila (1280), filas de herramientas alineadas por subgrid; 2×2 a 768; pila con cabecera de tarjeta pegajosa en teléfono.</p>
+<div class="wrap">
+<div class="frame d">
+ <div class="top"><span class="brand"><span class="ring"><i></i></span>Pictures <span style="font-weight:400;color:#6b6178">Sempertex</span></span><span class="sel">Idioma ES ▾</span></div>
+ <div class="h">Planes <small>‹ Volver al acceso</small></div>
+ <div class="ctx">Un administrador asigna el plan.</div>
+ <div class="shelf">
+  <div class="card"><div class="n">Entusiasta</div><div class="p">Gratis</div><div class="k">Herramientas incluidas</div><ul><li>Chat asistido con límites.</li><li>Contador de globos</li><li>Catálogo</li></ul></div>
+  <div class="card"><div class="n">Designer</div><div class="p">20.000 <small>COP / mes</small></div><div class="k">Herramientas incluidas</div><ul><li>Chat asistido con límites más altos.</li><li>Contador de globos</li><li>Catálogo</li></ul></div>
+  <div class="card"><div class="n">Designer Plus</div><div class="p">45.000 <small>COP / mes</small></div><div class="k">Herramientas incluidas</div><ul><li>Chat asistido con límites más altos.</li><li>Contador de globos</li><li>Catálogo</li><li>Calculadora de costos</li><li class="u"><span>Chat extendido<em>aún no disponible</em></span></li><li class="u"><span>Detección de estructura<em>aún no disponible</em></span></li><li class="u"><span>Detección avanzada de globos<em>aún no disponible</em></span></li></ul></div>
+  <div class="card"><div class="n">Master Designer</div><div class="p">70.000 <small>COP / mes</small></div><div class="k">Herramientas incluidas</div><ul><li>Chat asistido con límites más altos.</li><li>Contador de globos</li><li>Catálogo</li><li>Calculadora de costos</li><li class="u"><span>Chat extendido<em>aún no disponible</em></span></li><li class="u"><span>Detección de estructura<em>aún no disponible</em></span></li><li class="u"><span>Detección avanzada de globos<em>aún no disponible</em></span></li><li>Taller 3D</li></ul></div>
+ </div>
+ <div class="guide" style="top:178px"></div>
+</div>
+<div class="frame m">
+ <div class="top"><span class="brand"><span class="ring"><i></i></span>Pictures</span><span class="sel">ES ▾</span></div>
+ <div class="h">Planes</div>
+ <div class="shelf">
+  <div class="card"><div class="sticky"><div class="n">Designer Plus</div><div class="p">45.000 <small>COP / mes</small></div></div><div class="k">Herramientas incluidas</div><ul><li>Chat asistido…</li><li>Contador de globos</li><li>Catálogo</li><li>Calculadora de costos</li><li class="u"><span>Chat extendido<em>aún no disponible</em></span></li></ul></div>
+ </div>
+</div>
+</div>
+<p class="ann">Movimiento: las tarjetas se «reparten» desde detrás de la primera hacia su columna; al cruzar un punto de quiebre se deslizan a su nueva celda (FLIP); al cambiar ES/EN el precio rueda verticalmente COP→USD. Guía punteada = filas alineadas entre tarjetas (no se dibuja en el producto).</p>
+</body></html>

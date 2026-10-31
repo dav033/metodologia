@@ -1,0 +1,36 @@
+[
+ {
+  "kind": "owner_rejected",
+  "key": "owner_rejected:SP-3:v3:4aa221088d69:ab93ff6e5662",
+  "run_id": "pictures:REQ-021:r30",
+  "task_id": "",
+  "request_id": "",
+  "round": null,
+  "reason": "the owner tried SP-3 version 3 (commit 4aa221088d) and rejected it: «las mesas quese arreglaron no sepuedn arrastrar y colocar, si el probelma es otro, investigalo y solucionalo»",
+  "subplan": "SP-3",
+  "title": "Taller essentials: researched and modelled Backing and table types, type cards and every-type Blender export",
+  "version": 3,
+  "commit": "4aa221088d69db34dee43d496ffe61d34b0ea428",
+  "note": "las mesas quese arreglaron no sepuedn arrastrar y colocar, si el probelma es otro, investigalo y solucionalo",
+  "pending": "P-213",
+  "decided_at": "2026-10-31T15:41:03-05:00",
+  "via": "web",
+  "tests": [
+   {
+    "subplans": [
+     "SP-3"
+    ],
+    "kind": "local",
+    "where": "Local Probar version and owner Blender",
+    "how": "SP-3 ships in M2, after M1. First, when T3.2 finishes: read `docs/req021/propuesta-backing-mesas.md` and name which Backings and table types are modelled (the coordinator records your answer; you may approve none). Then, with SP-1's test database/account setup, sign in as master-designer@ (Master Designer) and open /3d → Añadir → Fondos y muebles. 1) In «Mesas» touch the Rectangular card (also search «rectangular»), then each new table-type card; edit size and chairs in the existing editor, undo, and open the shopping list. 2) Open the Backing group: add each of the seven existing props and each approved new Backing; search «Backing» and original names such as «Aro metálico». 3) Load a scene with every kind of element, export it as GLB, import it in Blender (metres) and compare. Run `npm run taller:test-integracion-esenciales` for the automated flow (portable Blender under ~/.local/opt/blender, explicitly provisioned with `npm run taller:preparar-blender`, T3.12, without pacman). In T3.9/T3.10's UI tests check the existing card/group patterns at 390 px phone, 768 px tablet and 1280 px desktop widths; verify no new screen or navigation is introduced.",
+    "expect": "1) One card per table type; each adds the default-size table (rectangular 240 × 90 × 75 cm) and opens today's editor; capacity warnings explain unplaced chairs; the list shows quantities and dimensions without rental prices. 2) Backing contains the seven old props and approved new ones once each, removed from «Fondos y tapetes» and «Decorado de pie»; original names still find them. 3) Every element type keeps position/size within 1 mm and base colours within 1/255 in Blender, or evidence names the failing type as a defect; material/lighting limits are documented. The export menu stays as today. Existing Taller card/group patterns work at phone, tablet and desktop widths with no new screen/navigation. Missing Blender is blocked/manual evidence, never a pass."
+   }
+  ],
+  "pages": [
+   "/3d"
+  ],
+  "evidence": "evidence/owner-rejected/SP-3-v3.md",
+  "status": "pending",
+  "at": "2026-10-31T15:41:25"
+ }
+]

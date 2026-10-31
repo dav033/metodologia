@@ -8,10 +8,12 @@ owner: David
 author: Designer
 date: 2026-10-31
 direction: Ficha en su sitio — direct manipulation (c)
-source_revision: r1.dir-c
-source_behavior: cuentas-admin@v2.r1.chosen.behavior.md
+source_revision: amend-1 (from r1.dir-c, owner-chosen)
+source_behavior: cuentas-admin@v2.amend-1.behavior.md
+amends: cuentas-admin@v2 finalization draft (design/cuentas-admin@v2.md, unchanged)
+compatibility: breaking (scoped UI/interaction replacement)
 supersedes_for: [own-account /cuenta identity and password area, shared signed-in account menu]
-preserves: cuentas-admin@v1 (every other view, unchanged)
+incorporates_by_reference: cuentas-admin@v1 (every other view, unchanged)
 ---
 
 # cuentas-admin@v2 — Ficha en su sitio
@@ -20,18 +22,29 @@ preserves: cuentas-admin@v1 (every other view, unchanged)
 
 **Draft; not approved for implementation.** Finalization of the owner's web-selected direction **Ficha en su sitio — direct manipulation (c), r1**. Choosing a direction does not approve this contract; owner visual approval is still pending (SPEC «Behavior — SP-2 account amendment (P-209)»: behavior confirmed 2026-10-31 13:08 with «Confirmar todo»). Designer grants no approval. After independent approval, **T2.11** copies the exact approved snapshot into `design/contracts/cuentas-admin@v2.md`; **T2.1** keeps owning v1 and v1 is never overwritten or regenerated.
 
-Version scope: v2 supersedes v1 **only** for the ordinary own-account surface (`/cuenta` identity and password area) and the shared signed-in account menu (presentation, identity, dismissal and focus). Sign-in, invitation activation, password reset, the mandatory data-notice gate, accounts/invitations administration and the role editor keep their `cuentas-admin@v1` requirements unchanged. Compatibility: **minor, additive replacement of two surfaces**; no route, API, permission, consent or password-policy change.
+Version scope: v2 replaces v1 **only** for the ordinary own-account surface (`/cuenta` identity and password area) and the shared signed-in account menu (presentation, identity, dismissal and focus). Sign-in, invitation activation, password reset, the mandatory data-notice gate, accounts/invitations administration and the role editor are **incorporated into v2 by reference** to the unchanged `cuentas-admin@v1` sections (F1–F6 and their views, states and acceptance criteria). Compatibility: **breaking — a scoped visual/interaction replacement** of those two surfaces, not a compatible additive change: v1's V6 identity grid, notice-version row, always-open password card and native-`details` menu without outside/Escape dismissal are no longer valid targets. No route, API, permission, consent or password-policy change.
 
-Consumers: T2.57 (redesign Mi cuenta and repair menu dismissal), T2.4 (account menu and Mi cuenta, as amended), T2.7 (visual review against v2). T2.3 and T2.5 continue to consume v1. Shared menu composition is co-owned with SP-8 (language selector, round 15), SP-14 (Planes entry, round 10) and SP-10 (theme composition): v2 changes the menu's presentation and dismissal only and retains their controls.
+Consumers: **every SP-2 UI task binds v2** — T2.3 (sign-in, activation, reset, notice re-acceptance: v1 sections by reference), T2.4 (account menu and Mi cuenta, as amended), T2.5 (administration screens: v1 sections by reference, under the v2 shared menu), T2.57 (redesign Mi cuenta and repair menu dismissal), T2.7 (visual review against v2) and T2.11 (copies the approved snapshot). T2.1 keeps owning v1, which stays unchanged. Shared menu composition: SP-8 owns the language selector inside the menu (round 15), SP-14 the Planes entry (round 10); theme stays the existing shell's responsibility; SP-10 supplies only the remaining-language composition (English copy of other screens), not theme ownership. v2 changes the menu's presentation and dismissal only and retains those controls.
 
 Plan-change delta folded in this finalization (direction was drawn from `cuentas-admin@v2.r1.behavior.md`; current brief `cuentas-admin@v2.r1.chosen.behavior.md`): published source commit `6ec74192`; language stays in the account menu; Planes stays available to every signed-in role including staff/custom; theme composition unchanged; explicit Name row keeps the email fallback; EN system-role labels Administrator / Internal employee, custom-role names untranslated; 8–200 hints and too-long copy allowed; network errors reuse the generic failure; no acknowledgment button after success; T2.1 replaced by T2.11 as the v2 copy task. No composition, navigation, motion or token change was needed for this delta.
 
-Inputs (SHA-256 at finalization):
+**Amendment 1 delta** (previous brief `cuentas-admin@v2.r1.chosen.behavior.md` → current `cuentas-admin@v2.amend-1.behavior.md`; owner feedback 2026-10-31 15:34). Not a redesign: the owner-chosen C composition, motion, tokens and every untouched decision stay as finalized.
+
+1. *Classification* — v2 is a breaking scoped replacement (above); all SP-2 UI tasks bind v2 with unchanged v1 sections by reference; SP-10 is remaining language, not theme.
+2. *Host shell* — the mockup now inherits the exact SP-8 composed host shell: layout-level account bar, then the page content. The page-level `CabeceraCuentas` (mark + «Idioma» select) and `NavegacionCuentas` route rule, removed by the SP-8 composition, are no longer reproduced on `/cuenta` or on the v1 Cuentas view (§5).
+3. *ARIA repair* — the repeat-password field referenced `pw-repeat-help` while that node was absent (blank or unequal input). Each password field now references only a help/error node rendered at that moment (§7, §10, UI-AC-34…37). The same class of defect on the closed menu trigger (`aria-controls` to the unmounted popup) is repaired: `aria-controls` is present only while the popup is rendered.
+4. *Q1–Q4 closed* with the settled SPEC/Planner dispositions (§12); no new owner interview.
+5. *Mockup* — one added «Estado» switch, «Clave · coinciden» (editor open with equal values), so the blank / equal / mismatch descriptions are all reachable; «Clave · editor abierto» is relabelled «(vacío)».
+
+Inputs (SHA-256; SPEC/PLAN re-hashed at amendment 1, finalization values superseded):
 
 | Input | SHA-256 |
 |---|---|
-| `SPEC.md` | `a2082c27cc3a095244a263eeac4d98d11ca4c6aa33640b6167b5d3406c702337` |
-| `PLAN.json` | `5ec77d5011e0ffcb6b9c2c6b912530e9b231133672064292c6d645cbc84bbf13` |
+| `SPEC.md` (at amendment 1) | `6259a47b39e3de21a6364f99d5dd5012631279957945531f55fc4569d3a613ae` |
+| `PLAN.json` (at amendment 1) | `aaa5941d5578487a3a026f728a23b2f281c511bfb03e904da1adf5f19b2e08c6` |
+| `design/cuentas-admin@v2.amend-1.behavior.md` | `8b36dc144cd765106fecd6f4c7f1ce3b444a507af175079535c35ec3cb19ba31` |
+| `design/cuentas-admin@v2.md` (finalization draft, unchanged) | `da3b799d4881c2e9431d2666a2680a0d665e336162b98570e2b0a3b3aa37339b` |
+| `design/cuentas-admin@v2.html` (finalization mockup, unchanged) | `7c79e1c3b0c9a91412067b690b06b4ab802775e79a80f7c7c899d180ca079344` |
 | `design/cuentas-admin@v2.r1.behavior.md` | `90d1d19cabf7d52cdbfc1ad8fd40b101cc0ec23e522e97affd4cd1a35e591a1f` |
 | `design/cuentas-admin@v2.r1.chosen.behavior.md` | `2602333e9f000e666123b74e08049e5595dde9bdb56885b7098f4174675ac411` |
 | `design/cuentas-admin@v2.r1.dir-c.md` | `cbf4ef8e91a61670725a057ef587432a24585cb02d0cbe17e8fd4181a450a9f8` |
@@ -39,7 +52,7 @@ Inputs (SHA-256 at finalization):
 | `design/cuentas-admin@v2.r1.dir-c.styles.ts` | `125dcd96b4bf8ea16dcda0e27c4343ead202eb156eff901f4ee8494283e3ce71` |
 | `design/cuentas-admin@v2.r1.dir-c.html` | `7566cd4d4130c42cef81cd5d0648d2d022047a6afa054077f2ccbaa469f03649` |
 
-Mockup: `design/cuentas-admin@v2.html`, rebuilt from the unchanged `cuentas-admin@v2.r1.dir-c.tsx` with the current offline builder (556 KB, 2032 source files, offline). Production surface read read-only at published commit `6ec74192eb0175827a9005ae2c152955cb0d220d` (via `/home/david/dev/.pictures-wt/login-redirect`, `git show`) and the composed SP-8-v2 verification snapshot for the menu's language selector and Planes link. `/home/david/dev/pictures` was not read or written.
+Mockup: `design/cuentas-admin@v2.amend-1.html` (SHA-256 `63f4a7e014bcd9d053f10f09cd54ec8f51446a307ec6d09c67ce86528f6490a1`), built with the current offline builder (556 KB, 2032 source files, offline) from `design/cuentas-admin@v2.amend-1.tsx` (469 lines, SHA-256 `93299c609d6b8ed279f2c63eaf3b966eefbb20e93845da3eb748965ae8b9fd66`), a copy of `cuentas-admin@v2.r1.dir-c.tsx` edited only for this delta; it reuses the unchanged adjacent `cuentas-admin@v2.r1.dir-c.styles.ts`. Production surface read read-only at published commit `6ec74192eb0175827a9005ae2c152955cb0d220d` (via `/home/david/dev/.pictures-wt/login-redirect`, `git show`) and the composed SP-8-v2 verification snapshot (`afe025e3`: `src/app/layout.tsx` renders `BarraCuenta` before every page; `src/app/cuenta/page.tsx` starts with the H1; no `src/app` page renders `CabeceraCuentas`/`NavegacionCuentas`; `MenuCuenta` holds `SelectorIdioma`). `/home/david/dev/pictures` was not read or written.
 
 ## 2. Purpose and users
 
@@ -66,7 +79,7 @@ Rationale: the page is visited to confirm identity; the always-open three-field 
 
 ## 4. Design system and visual language
 
-Tokens: exact Pictures `src/app/globals.css` tokens, both themes, no new value — `fondo`, `superficie`, `superficie-suave` (open password row and drawer), `superficie-2` (access chip, meter track), `borde`, `borde-suave` (rules), `texto`, `texto-suave` (labels), `texto-secundario` (subtitle), `acento` (primary submit, focus ring, active trigger edge, meter fill), `acento-suave` (initial discs, active-trigger halo), `exito`/`exito-suave` (meter in range, «Coinciden.», success seal), `error`/`error-suave` (invalid fields, summary). No theme control is added to the menu or page; the existing theme composition (SP-10, `InterruptorTema` in the product shell) is unchanged.
+Tokens: exact Pictures `src/app/globals.css` tokens, both themes, no new value — `fondo`, `superficie`, `superficie-suave` (open password row and drawer), `superficie-2` (access chip, meter track), `borde`, `borde-suave` (rules), `texto`, `texto-suave` (labels), `texto-secundario` (subtitle), `acento` (primary submit, focus ring, active trigger edge, meter fill), `acento-suave` (initial discs, active-trigger halo), `exito`/`exito-suave` (meter in range, «Coinciden.», success seal), `error`/`error-suave` (invalid fields, summary). No theme control is added to the menu or page; theme remains the existing shell's responsibility (stored choice applied before first paint in `layout.tsx`, `prefers-color-scheme` otherwise) and is unchanged. SP-10 supplies only remaining-language composition, not theme.
 
 Typography: Geist Sans / Geist Mono only. H1 24px/600; identity name 20px/600 (18px below 640px); email 15px; row labels 13px `texto-suave`; row values 15px/550; field labels 14px/600; help/errors 13px; mono 12px only for the mockup footnote (not product copy).
 
@@ -100,9 +113,9 @@ Focus: 2px `acento` outline, 2px offset, on every interactive element; active tr
 
 Entry: the account trigger in the full-width 64px signed-in bar (`BarraCuenta` → `MenuCuenta`) on every signed-in page; `/cuenta` from «Mi cuenta» in the menu.
 
-Header and page shell: v2 neither adds nor removes shell controls. The mockup reproduces the published `6ec74192` `/cuenta` shell (`CabeceraCuentas` with ring-and-dot mark, «Idioma» select; `NavegacionCuentas` route rule). The composed SP-8 shell (round 15) places language switching in the account menu and its snapshot no longer renders `CabeceraCuentas`/`NavegacionCuentas` on `/cuenta`; implementers keep whatever the integrated shell composes there. The menu's language pair is mandatory in every composition and may not be moved out of the menu.
+Header and page shell: v2 inherits the **exact integrated host shell of the SP-8 composition** and neither adds nor removes shell controls: the layout-level 64px account bar (`BarraCuenta` → `MenuCuenta`) on every signed-in page, then the page's own content in the 676px column (H1, subtitle, sheet). The page-level `CabeceraCuentas` (mark + «Idioma» select) and `NavegacionCuentas` route rule present at published `6ec74192` were removed by the SP-8 composition and **must not be reintroduced** on `/cuenta` or the administration pages; navigation between Mi cuenta, Administración, Roles y permisos and Planes is the account menu's. Language switching lives in the account menu (round 15) and may not move out of it; theme stays with the existing shell.
 
-Menu trigger: a disclosure control with `aria-expanded` and `aria-controls`; no `role="menu"`/`menuitem`, no focus trap. Accessible name «Cuenta: <full display name>» / «Account: <full display name>». Native `<details>/<summary>` or a button are both acceptable only if every behaviour below is identical (see §12 Q3).
+Menu trigger: a disclosure control with `aria-expanded`; `aria-controls` names the popup id only while the popup is rendered (absent when closed, so it never references a missing node); no `role="menu"`/`menuitem`, no focus trap. Accessible name «Cuenta: <full display name>» / «Account: <full display name>». Native `<details>/<summary>` or a button is a technical choice, acceptable only when layout, every dismissal and every focus behaviour below are identical (settled, §12).
 
 Menu outcomes:
 
@@ -137,24 +150,33 @@ Mi cuenta outcomes: «Cambiar contraseña» (row) opens the editor and moves foc
 
 ### V6′ Mi cuenta (`/cuenta`)
 
-- Shell: 64px account bar with trigger at right; 676px column; H1 «Mi cuenta» / «My account»; subtitle «Tu cuenta está activa.» / «Your account is active.»; shell header/route rule per §5.
+- Shell: inherited SP-8 host shell (§5) — 64px account bar with trigger at right; 676px column; H1 «Mi cuenta» / «My account»; subtitle «Tu cuenta está activa.» / «Your account is active.»; the sheet 24px below the subtitle; no page-level header, «Idioma» select or route rule.
 - Sheet `section[aria-labelledby]` heading «Tu identidad» / «Your identity».
 - Identity plate: initial = first character of the display name, upper-cased (`aria-hidden`). `dl`: «Nombre»/«Name» → stored name trimmed, or the email when the stored name is null, empty or whitespace (the Name row is kept even though email is also shown); «Correo»/«Email» → email. Both wrap (`overflow-wrap:anywhere`), never truncate.
 - Access row: catalogue plan account → label «Plan», value from `plan-catalogue@1` (ES Entusiasta / Designer / Designer Plus / Master Designer; EN Enthusiast / Designer / Designer Plus / Master Designer). Otherwise label «Rol»/«Role», value the actual role: ES «Administrador» / «Empleado interno», EN «Administrator» / «Internal employee»; custom roles show their user-authored name as written in both languages. Never infer a plan for staff/custom accounts, even with every tool or a plan-like role name.
-- Empresa/Company row: read-only, only when the local authenticated projection supplies a company; no editor; no change to the shared account-service contract.
+- Empresa/Company row: optional and read-only, only when the local authenticated projection supplies the account's actual company (settled); no editor; no change to the shared account-service contract; never invented.
 - Password row: «Contraseña»/«Password», masked value with accessible name «Contraseña guardada»/«Saved password», outline «Cambiar contraseña»/«Change password».
 - Editor (in-paper drawer, `role="region"` labelled by the Contraseña row label, `superficie-suave`, dashed top rule): optional summary; three labelled password fields (`autocomplete` current-password / new-password / new-password; `maxLength=200` on new/repeat); help/error under each; actions primary «Cambiar contraseña» + outline «Cancelar»/«Cancel».
+- Field descriptions (amendment 1): `aria-describedby` on each password input names **only a node rendered at that moment**, recomputed on every render, in ES and EN:
+
+  | Field | Blank / typing, no error | Equal (repeat = new, non-empty) | Error state |
+  |---|---|---|---|
+  | Contraseña actual | none | none | its error («Este campo es obligatorio.» or wrong-current message) |
+  | Contraseña nueva | the always-rendered hint «Entre 8 y 200 caracteres.» | hint | its error (required / too short / too long) |
+  | Repite la contraseña nueva | **none** (no help node exists while blank or unequal) | «Coinciden.» / «They match.» | its error (required / mismatch) |
+
+  The help and error of one field share one id slot (`pw-<field>-help`) but only one of them is rendered at a time; when neither is rendered the attribute is omitted, never left pointing at an absent id.
 - No profile, plan or role editing; no notice version/date.
 
 ### Shared account menu
 
-- Trigger pill (min-height 44px, max-width `min(260px, 100vw − 32px)`): 28px initial disc, display name on one line (truncated with ellipsis; full name in accessible name), chevron.
+- Trigger pill (min-height 44px, max-width `min(260px, 100vw − 32px)`): 28px initial disc, display name on one line (owner-selected C truncation: first 25 characters + ellipsis; full name in the accessible name, the open popup and the profile), chevron.
 - Popup (304px, `max-width: calc(100vw − 32px)`, anchored right, 8px below trigger; below 640px a fixed non-modal sheet 16px from both viewport edges under the bar, overlapping page content without inert background):
   - identity: 40px initial; full name (wraps, no truncation); email (wraps); access chip `<label> <value>` per §7 V6′ rules;
   - «Idioma»/«Language» + ES/EN pair (`role="group"`, `aria-pressed`);
   - links: «Mi cuenta», «Administración» (needs `administracion_usuarios`), «Roles y permisos» (needs `administracion_roles`), «Planes»/«Plans» (every signed-in role, including staff and custom);
   - ruled «Cerrar sesión»/«Sign out»; pending «Cerrando sesión…»; error `role="alert"` «No se pudo cerrar la sesión. Inténtalo de nuevo.».
-- Copy source: `textos-cuenta.ts` plus the v2 labels in §7/§8 (Nombre/Name, Correo/Email, Plan, Empresa/Company, Contraseña/Password, Cancelar/Cancel, help and too-long copy).
+- Copy source: `textos-cuenta.ts` plus the v2 labels in §7/§8 (Nombre/Name, Correo/Email, Plan, Empresa/Company, Contraseña/Password, Cancelar/Cancel, help, «Coinciden.»/«They match.» and too-long copy).
 
 ## 8. States
 
@@ -172,7 +194,8 @@ Mi cuenta outcomes: «Cambiar contraseña» (row) opens the editor and moves foc
 | Four plans / Administrador / Empleado interno / custom role | Plan or Rol row and chip per §7. | — |
 | Loading | Sheet skeleton: 64px disc, two lines, two 44px rows; `aria-busy`. | Wait. |
 | Password idle (closed) | Masked row + «Cambiar contraseña». | Open editor. |
-| Editor open | Three empty fields, meter at 0, hint. | Type, submit, cancel/Escape. |
+| Editor open (blank) | Three empty fields, meter at 0, hint. Only Contraseña nueva is described (by the hint). | Type, submit, cancel/Escape. |
+| Editor open, values equal | Meter full in `exito`, hint with check, «Coinciden.»/«They match.» under the repeat field, which is now described by it. | Submit, cancel/Escape. |
 | Required | Summary «Completa los tres campos de contraseña.» (`role=alert`); each empty field invalid with «Este campo es obligatorio.». | Fill fields. |
 | Too short | New field invalid: «La contraseña nueva debe tener al menos 8 caracteres.». | Correct. |
 | Too long | New field invalid: «La contraseña nueva debe tener como máximo 200 caracteres.» (restates the existing rule). | Correct. |
@@ -199,14 +222,14 @@ Supported: 1280×900 and 390×844 (explicit dismissal/focus cases), 768px tablet
 | 640–1023px | Bar padding 24px; otherwise as desktop. |
 | <640px | Bar padding 16px; column insets 20px; paper radius 24px; plate disc 48px, name 18px; rows stack label above value, row action full width; editor actions full width; popup becomes fixed non-modal sheet 16px from both edges under the bar; trigger max-width `100vw − 32px`, name truncates. |
 
-Long strings wrap everywhere except the trigger name. Header wraps (`flex-wrap`) when the language select and mark do not fit.
+Long strings wrap everywhere except the trigger name. No page-level header exists to wrap (SP-8 host shell); the bar holds only the right-aligned trigger.
 
 ## 10. Accessibility targets
 
 Target WCAG 2.2 AA (awaiting rendered verification in production):
 
 - Semantics: `section` + `h2` for the sheet; `dl/dt/dd` for identity and rows; `form noValidate` with labelled inputs; drawer `role="region"` labelled by the row label; disclosure trigger with `aria-expanded`/`aria-controls`; no menu roles.
-- Errors: invalid inputs carry `aria-invalid="true"` and `aria-describedby` pointing to their rendered message; `aria-describedby` references only ids that exist in the DOM (the mockup's repeat field points at a help id that is absent until «Coinciden.» renders — a verified defect not to be copied). Summary uses `role="alert"`; success uses `role="status"`; sign-out error `role="alert"`.
+- Errors: invalid inputs carry `aria-invalid="true"` and `aria-describedby` pointing to their rendered message. Every IDREF (`aria-describedby`, `aria-labelledby`, `aria-controls`) references only ids rendered at that moment, per the §7 field table; when no description node is rendered the attribute is omitted. The dangling repeat-field reference demonstrated in the finalization mockup is repaired in this amendment's mockup and must not exist in production (UI-AC-34…37). Summary uses `role="alert"`; success uses `role="status"`; sign-out error `role="alert"`.
 - Keyboard: every control reachable in visual order; Enter/Space open the trigger; Escape as in §5; no focus trap; focus moves per §5/§6.
 - Accessible names: trigger «Cuenta: <full name>»; masked value «Contraseña guardada»; language group «Idioma»; decorative icons/meter `aria-hidden`.
 - Contrast: text ≥4.5:1, control edges and focus ≥3:1 in light and dark; pending must not lower text contrast.
@@ -252,24 +275,33 @@ Target WCAG 2.2 AA (awaiting rendered verification in production):
 | UI-AC-31 | All | Light and dark | Text ≥4.5:1, control edges/focus ≥3:1, visible 2px `acento` focus ring. |
 | UI-AC-32 | All | Reduced motion | Popup, drawer, rows and seal appear in final position without travel or overshoot. |
 | UI-AC-33 | 1280 | Cuentas page (v1), admin, menu open | The same popup renders over the unchanged v1 Cuentas page; «Administración» carries `aria-current="page"`, «Mi cuenta» does not. |
+| UI-AC-34 | 1280, 390 · ES, EN | Editor open, blank | Contraseña actual and Repite la contraseña nueva have no `aria-describedby`; Contraseña nueva references the rendered hint. |
+| UI-AC-35 | 1280, 390 · ES, EN | Editor open, equal values (preset or typed) | Repite la contraseña nueva references the rendered «Coinciden.»/«They match.» node; not `aria-invalid`. |
+| UI-AC-36 | 1280, 390 · ES, EN | Unequal while typing; then submitted mismatch | While typing: repeat field has no `aria-describedby`. After submit: `aria-invalid="true"` and it references the rendered mismatch message. |
+| UI-AC-37 | All | Every view and state, menu open or closed | No `aria-describedby`, `aria-labelledby` or `aria-controls` references an id absent from the DOM; the closed trigger has no `aria-controls`. |
+| UI-AC-38 | 1280, 390 | `/cuenta` and Cuentas (v1) | No page-level brand header, «Idioma» select or account route rule under the bar; the H1 is the first page content (SP-8 host shell). |
 
-Verification run on `design/cuentas-admin@v2.html` (2026-10-31):
+Verification run on the exact artifact `design/cuentas-admin@v2.amend-1.html` (SHA-256 `63f4a7e0…90a1`, 2026-10-31):
 
-- `contrast.py`: **158 pairs checked in light and dark, all pass.**
-- `audit_mockup.py --widths 1280,768,390,360`: **528 renders (528 planned), 14336 text measurements, 1096 focus stops — RESULT: PASS — no contrast, non-text, focus, alignment, padding or overflow problems.**
-- Scripted Playwright interaction check (`?still=1`, 1280×900 and 390×844): **24/24 pass** — open by click and Enter, Planes and ES/EN present in the menu, Escape closes with focus on trigger, repeated trigger closes with focus kept, outside pointer closes while the clicked «Cambiar contraseña» acts, editor focus on «Contraseña actual», short-password error, success status with focus on «Cambiar contraseña», Shift+Tab out closes, no horizontal overflow.
+- `contrast.py`: **158 pairs checked in light and dark, all pass** (exit 0).
+- `audit_mockup.py` (default widths): **276 renders (276 planned), 6008 text measurements, 806 focus stops — RESULT: PASS — no contrast, non-text, focus, alignment, padding or overflow problems** (exit 0).
+- `audit_mockup.py --widths 1280,768,390,360`: **552 renders (552 planned), 12016 text measurements, 806 focus stops — RESULT: PASS — no contrast, non-text, focus, alignment, padding or overflow problems** (exit 0).
+- Scripted Playwright ARIA + interaction check (`?motion=still`, 1280×900 and 390×844, each in ES and EN): **72/72 pass** — no dangling `aria-describedby`/`aria-labelledby`/`aria-controls` in any of 3 views × 23 states; blank, preset-equal, typed-unequal, typed-equal, cleared and submitted-mismatch descriptions per UI-AC-34…36; closed trigger without `aria-controls`; open by click, Planes and ES/EN present, Escape closes with focus on trigger, repeated trigger closes with focus kept, outside pointer closes while the clicked «Cambiar contraseña» acts, Shift+Tab out closes; no page-level header/«Idioma» select/route rule; no horizontal overflow. The same script run on the unchanged finalization mockup `design/cuentas-admin@v2.html` fails (repeat field → absent `pw-repeat-help`; closed trigger → absent `account-menu-panel`), so the check detects the repaired defects.
+- Screens inspected: 1280 light «Clave · coinciden»; 390 dark «Menú abierto · Datos largos».
 
-Mockup controls: «Vista» Mi cuenta (/cuenta) · Menú abierto · Menú en Cuentas (v1). «Estado» Designer Plus + empresa, four plans, Administrador, Empleado interno, Rol personalizado, Sin nombre, Datos largos, Menú cerrado, Cargando, nine password states, Salida pendiente/error. «Tema» light/dark; motion profiles expressive/natural/subtle/Quieto. ES/EN is switched in the product (menu pair or Idioma select). Mock data is clearly sample (`@prueba.local`).
+Mockup controls: «Vista» Mi cuenta (/cuenta) · Menú abierto · Menú en Cuentas (v1). «Estado» Designer Plus + empresa, four plans, Administrador, Empleado interno, Rol personalizado, Sin nombre, Datos largos, Menú cerrado, Cargando, ten password states (editor abierto (vacío), coinciden, obligatorios, corta, larga, no coinciden, actual incorrecta, guardando, error servicio/red, cambiada), Salida pendiente/error. «Tema» light/dark; motion profiles expressive/natural/subtle/Quieto (reduced-motion parity). ES/EN is switched in the product through the account menu's language pair. Mock data is clearly sample (`@prueba.local`).
 
 ## 12. Open questions and assumptions
 
-Confirmed decisions (owner/Planner, not open): language in the account menu (round 15); Planes for every signed-in role (round 10); theme composition unchanged; explicit Name row with email fallback; EN system-role labels; custom-role names untranslated; 8–200 hints and too-long copy; generic copy for network errors; no acknowledgment button after success; non-modal popup overlap on phones, one-line truncated trigger and account/password grouping are visible choices of this composition.
+Confirmed decisions (owner/Planner, not open): language in the account menu (round 15); Planes for every signed-in role (round 10); theme stays the existing shell's responsibility; explicit Name row with email fallback; EN system-role labels; custom-role names untranslated; 8–200 hints and too-long copy; generic copy for network errors; no acknowledgment button after success; non-modal popup overlap on phones, one-line truncated trigger and account/password grouping are visible choices of this composition; v2 is a breaking scoped replacement bound by every SP-2 UI task.
 
-Open questions (decision owner: David):
+Settled finalization dispositions (former Q1–Q4, closed by the SPEC/Planner dispositions in the amendment brief; no new owner interview):
 
-- Q1: On `/cuenta`, should the page header's «Idioma» select (present at published `6ec74192`, absent in the composed SP-8-v2 snapshot) remain once the menu pair exists? This contract keeps whatever the integrated shell composes and requires the menu pair either way.
-- Q2: Should «Empresa» appear for invited accounts? Company exists in invitation storage but the own-account read model omits it; presentation needs the local authenticated projection only.
-- Q3: May the implementer keep the native `<details>/<summary>` trigger instead of a disclosure button, provided every dismissal and focus behaviour in §5 is identical?
-- Q4: Is the 25-character truncation of the trigger name acceptable, given the full name is in the popup, profile and accessible name? (Brief also lists an initial-only narrow trigger as a visible choice; this direction keeps initial + truncated name at all widths.)
+- Former Q1 — host shell: **inherit the exact SP-8 composed host shell**. The page-level «Idioma» select and `CabeceraCuentas`/`NavegacionCuentas` are not resurrected; language remains in the account menu (§5, UI-AC-38).
+- Former Q2 — company: **optional, read-only actual company is allowed** through the local authenticated projection; shown only when that projection carries it; no editor, no shared-contract change (§7).
+- Former Q3 — trigger element: native `<details>/<summary>` versus an equivalent button is a **technical choice**, valid only with identical layout, dismissal and focus semantics (§5).
+- Former Q4 — truncation: **owner-selected C truncation accepted**; the full name stays in the popup, the profile and the trigger's accessible name (§7).
+
+Open questions: **none.** Pending (not a question): owner visual approval of this draft and of SP-2; P-209 stays open until the owner approves a later published version. Permission, password, session and consent rules are unchanged.
 
 Assumptions: the account read model already exposes display name, email, roles and permissions; plan accounts expose a canonical plan id resolvable through `plan-catalogue@1`; EN system-role labels are presentation-only mappings (production stores Spanish names).

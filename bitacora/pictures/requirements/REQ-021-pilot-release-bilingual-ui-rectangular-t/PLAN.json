@@ -466,14 +466,9 @@
         "The account and role administration APIs refuse anyone without the users or roles permission with 403 and accept only same-origin requests with validated bodies.",
         "The data notice exists in Spanish and English with a version number, its bracketed placeholders are still marked for legal review, and accepting stores the version and date on the account.",
         "On a production build against the REQ-021 test database, an administrator invites a Designer Plus person through the screens, the person activates the link in a separate browser, accepts the notice, signs in and reaches the chat and the costs tool but not the Taller 3D, and after the administrator moves them to Master Designer their next request opens the Taller.",
-        "The rendered sign-in, activation, account and administration screens match the approved cuentas-admin@v2 contract at phone, tablet and desktop widths, and every finding is recorded with the task to redo in the SP-2 visual ledger.",
+        "The rendered sign-in, activation, account and administration screens match the approved cuentas-admin@v1 contract at phone, tablet and desktop widths, and every finding is recorded with the task to redo in the SP-2 visual ledger.",
         "An independent audit of SP-2 records every confirmed defect with the task that must redo it in the SP-2 findings ledger, and the ledger has no open critical or high finding.",
-        "The role picker of the invitation and account screens offers the four access plans with the names of the plan catalogue in plan order, then Empleado interno, Administrador and the custom roles.",
-        "The real signed-in account menu closes on repeated trigger, outside pointer, Escape and focus leaving at390x844 and1280x900 in ES/EN; Escape returns focus to its trigger, trigger toggle retains trigger focus, outside closure preserves the clicked target and Tab/Shift+Tab leave without a focus trap.",
-        "Named accounts show their actual stored name with an explicit Name or Nombre label on Mi cuenta and in the shared menu; null, empty or whitespace names use email fallback without invented names, including long names and emails at both widths.",
-        "Only canonical stored system-plan identifiers map to Plan and PLANES localized names; Administrator, Internal employee, local administrator and custom roles retain truthful access identity, including custom-role names resembling a plan and roles with identical permissions.",
-        "The complete Mi cuenta and password section follows the approved cuentas-admin@v2 redesign in ES/EN without accepted-notice metadata in ordinary presentation, while activation/reacceptance/version-date storage and server consent enforcement remain unchanged.",
-        "Current-password verification,8–200-character new-password validation, matching confirmation, pending/error recovery, secret clearing after acknowledged success, current-browser session renewal and other-session invalidation remain enforced on the real local production entrypoints."
+        "The role picker of the invitation and account screens offers the four access plans with the names of the plan catalogue in plan order, then Empleado interno, Administrador and the custom roles."
       ],
       "audit_task": "T2.8",
       "consumes": [
@@ -515,8 +510,8 @@
       "title": "Sign-in, invitation and administration screens",
       "ui": {
         "contract": "cuentas-admin",
-        "design_task": "T2.11",
-        "version": 2,
+        "design_task": "T2.1",
+        "version": 1,
         "visual_review_task": "T2.7"
       },
       "checkpoints": [
@@ -524,92 +519,7 @@
           "task": "T2.6",
           "purpose": "Prove ordinary account integration before the isolated local-session follow-up."
         }
-      ],
-      "ui_brief": {
-        "flows": [
-          {
-            "name": "Existing sign-in, activation, reset, mandatory notice and administration",
-            "steps": [
-              "Preserve cuentas-admin@v1 outside F7/V6 and the shared account menu.",
-              "Keep six system roles, catalogue-owned plan assignments, custom permissions and all existing consent/security behavior."
-            ]
-          },
-          {
-            "name": "Account menu and identity",
-            "steps": [
-              "Open from the existing product header; show the real person name, email and actual access identity.",
-              "Close by repeated trigger, outside pointer or Escape; preserve native keyboard activation and predictable focus.",
-              "Choose Mi cuenta, permitted administration, plans, language/theme controls where currently composed, or sign out."
-            ]
-          },
-          {
-            "name": "My account and password redesign",
-            "steps": [
-              "Read a clearly labelled name and email in a redesigned identity area.",
-              "Read Plan plus the catalogue name only for a catalogue plan account; otherwise read actual administrator, internal employee or custom-role identity.",
-              "Read optional company only when actual existing account data supplies it; add no field editor.",
-              "Enter current password, new password and confirmation; correct validation or current-password errors.",
-              "Confirm service success, clear secrets and remain signed in with a renewed session; other browser sessions end."
-            ]
-          }
-        ],
-        "screens_states": [
-          "Keep unchanged login, activation, reset, mandatory data-notice gate, accounts/invitations and role administration from v1.",
-          "Redesign /cuenta identity and password area as the complete owner-requested new layout within existing Pictures shell/tokens.",
-          "Shared menu closed/open; named/absent-name/long-name/long-email fixtures; each of four plans, administrator, employee, custom role; restricted/no administrator links.",
-          "Password idle, required/short/too-long/mismatch, wrong current password, pending, service/network error, acknowledged success; ES/EN, light/dark, reduced motion.",
-          "390x844 and1280x900 explicit dismissal/focus cases,768px tablet and360px contractual floor; no clipped controls or horizontal page overflow."
-        ],
-        "existing_surface": {
-          "routes": [
-            "/cuenta",
-            "existing shared signed-in account menu"
-          ],
-          "paths": [
-            "src/components/cuentas/MenuCuenta.tsx",
-            "src/app/cuenta/page.tsx",
-            "src/components/cuentas/CambiarContrasena.tsx",
-            "src/components/cuentas/textos-cuenta.ts",
-            "src/components/cuentas/BarraCuenta.tsx",
-            "src/lib/cuentas/cuenta-actual.ts",
-            "src/lib/planes/catalogo.ts"
-          ],
-          "components": [
-            "MenuCuenta",
-            "CambiarContrasena",
-            "BarraCuenta",
-            "CabeceraCuentas",
-            "NavegacionCuentas"
-          ],
-          "screenshots": [
-            "/home/david/.local/share/bitacora-solver/pictures/20261031-123425-067d/account-open-1280.png",
-            "/home/david/.local/share/bitacora-solver/pictures/20261031-123425-067d/account-open-390.png"
-          ],
-          "notes": "Read published immutable commit6ec74192eb0175827a9005ae2c152955cb0d220d via /home/david/dev/.pictures-wt/login-redirect; never read/write /home/david/dev/pictures. Extend approved cuentas-admin@v1 (selected Parte de acceso); preserve all views/shell/navigation not affected by the owner request. Preserve every v1 artifact unchanged. Evidence: evidence/owner-rejected/SP-2-v2.md and RUN.solver/20261031-123425-067d/AMENDMENT.md. Owner confirmed behavior at13:08 with Confirmar todo; visual approval remains pending. Existing named-account rendering already falls back to email; current synthetic administrator has no display_name. Show both actual-name and absent-name states; never invent a person name or infer data loss."
-        },
-        "must_not_change": [
-          "No new route, product rebrand, new font/palette, self-service profile/plan/role editing, plan purchases or permission policy.",
-          "No UI disclosure of accepted-notice version/date in ordinary profile; keep activation/reacceptance text, explicit consent, authoritative version/date storage and route enforcement unchanged.",
-          "Keep current-password verification,8–200-character password validation, mismatch handling, session renewal for current browser and invalidation elsewhere; no client-only simulated success.",
-          "Keep every existing sign-in/invitation/reset/admin flow, plan links, permission-scoped navigation and ES/EN composition; no production actions or real personal data.",
-          "The new version is a breaking scoped UI/interaction replacement, not a compatible additive change. All SP2 UI tasks bind v2, incorporating unchanged v1 sections by reference. Preserve the exact integrated host shell; do not reintroduce page-level account navigation/header removed by SP8 composition. Theme remains existing shell responsibility; SP10 supplies remaining language composition."
-        ],
-        "copy_rules": [
-          "Spanish owner-facing preview with English parity. Explicit Nombre/Name and Correo/Email. Catalogue-backed Plan label/name for real plan identities only. Use real role identity for staff/custom accounts without inventing a subscription.",
-          "Email fallback only for null/empty/whitespace name. No invented full name and no claim that the synthetic unnamed account proves loss of an invitation name.",
-          "No data-notice accepted/version/date summary in the ordinary account view. No marketing copy, invented profile editing or new password-policy claims.",
-          "Dropdown Escape returns focus to trigger; repeated-trigger closure leaves focus there; outside-pointer closure preserves focus on the clicked focusable target; Tab/Shift+Tab can leave without trapping focus and closes when focus leaves.",
-          "Resolved existing-owner decisions for finalization: per round15 the language switch belongs in the account menu, and per round10 the public Plans menu entry is available to signed-in staff/custom accounts too. Preserve current theme composition. A chosen direction may not move language out of the account menu or restrict the plans link.",
-          "Name fallback is already owner-confirmed: keep the explicit Name row and email when the stored name is absent, even when email is also separately shown. Translate canonical system-role labels for EN as Administrator and Internal employee; never translate user-authored custom-role names or infer a plan.",
-          "Hints and too-long copy may restate the existing8–200-character rule; no new password policy. Network errors can reuse existing generic change-password failure copy. Service-acknowledged success does not require a new human acknowledgment button. Non-modal popup overlap, initial-only narrow trigger and account/password grouping are visible choices in the mockup; preserve full name in the open popup and profile, accessible trigger name, outside/Escape/focus behavior and existing security.",
-          "Q1–Q4 finalization dispositions are settled: inherit the exact candidate host shell, optional read-only actual company is allowed through the local projection, equivalent disclosure HTML is technical if every required behavior matches, and owner-selected C truncation is accepted with full name in popup/profile/accessible name. No new owner interview for those settled points."
-        ],
-        "criteria": [
-          "Full new /cuenta and password composition, actual identity and correct access label, no consent metadata in ordinary profile, responsive ES/EN, all password states, unchanged security invariants and tested dismissal/focus.",
-          "Only SP-2 changes contract; analyze shared menu composition with SP-8, SP-10 and SP-14, retaining their language/theme/plans controls without blanket contract replacement.",
-          "Password-field aria-describedby references only help/error nodes actually rendered in blank, matching and mismatching states in ES/EN; the final mockup and production target must not retain a demonstrated dangling ARIA reference."
-        ]
-      }
+      ]
     },
     {
       "acceptance_criteria": [
@@ -619,10 +529,7 @@
         "The sign-in screen and the account menu each show one link to the plans section that opens /planes, signed out from the sign-in screen and signed in from the menu.",
         "On a production build started with next start against the REQ-021 test database, a signed-out browser follows the sign-in screen's plans link to the four plans with COP prices, an English browser sees the same plans with USD prices, a signed-in Entusiasta reaches the section from the account menu, and the page fits 390 and 1280 pixel widths without horizontal scrolling with every link reachable by keyboard.",
         "An independent audit of SP-14 records every confirmed defect with the task that must redo it in the SP-14 findings ledger, and the ledger has no open critical or high finding.",
-        "The /planes route presents four conventional informational subscription cards in catalogue order, each with plan name, monthly price and full included-tool list; no comparison/selection controls, highlighted/current/recommended plan or card action is rendered, and no hide-tools control is offered.",
-        "Reading the subscription cards and using language or navigation controls, including legacy selection query URLs, never changes the signed-in account assignment or next-request permissions and sends no account or purchase mutation.",
-        "Legacy /planes?vista=seleccionar and obsolete plan-selection query parameters show the same four informational cards without restoring a comparison mode, selection state, pressed plan, highlighted default plan or selection-specific controls.",
-        "The four cards and full cumulative tool lists remain legible in Spanish and English at360,390,768 and1280px without horizontal page scrolling, clipping or collapsed tools, and every remaining language, back and account-menu link works by keyboard."
+        "The extra plans view lets a visitor select/highlight any plan for comparison and return to the full comparison; it never changes account assignment, and all tool lists remain visible without an «Ocultar herramientas» control."
       ],
       "audit_task": "T14.6",
       "consumes": [
@@ -654,12 +561,12 @@
       "id": "SP-14",
       "integration_test_task": "T14.4",
       "milestone_id": "M1",
-      "outcome": "Anyone, signed in or not, reads four conventional informational subscription cards for Entusiasta, Designer, Designer Plus and Master Designer in catalogue order, with monthly price (COP in Spanish, USD in English), complete included-tool lists and unavailable-tool markers. There is no comparison/selection mode, highlighted/current/recommended plan, purchase, request, registration or account mutation.",
+      "outcome": "Anyone, signed in or not, opens the plans section from the sign-in screen or the account menu and compares Entusiasta, Designer, Designer Plus and Master Designer with their monthly price (COP in Spanish, USD in English) and included tools read from the plan catalogue, with the tools not built yet marked «aún no disponible»; a separate view lets visitors select/highlight one plan for comparison only; nothing in it buys, requests, signs up or changes an account’s assigned plan.",
       "title": "Plans section: the four access plans, public and informative",
       "ui": {
         "contract": "planes",
-        "design_task": "T14.11",
-        "version": 2,
+        "design_task": "T14.1",
+        "version": 1,
         "visual_review_task": "T14.5"
       },
       "ui_brief": {
@@ -671,43 +578,37 @@
           "Tools not built yet say «aún no disponible» (Spanish) and «not available yet» (English)",
           "Chat limits are named without numbers: Entusiasta «con límites» / «with limits», Designer «con límites más altos» / «with higher limits» (owner, 2026-10-27)",
           "The Taller 3D line of Master Designer stands for the whole 3D balloon editor, the ready-made decorations explorer included; no separate explorer line (owner-confirmed 2026-10-27)",
-          "If the section says how a plan is obtained, it says only that an administrator assigns it",
-          "Use the heading Planes / Plans and ordinary subscription-card hierarchy: plan name,price/currency per month,full included tools. Remove Comparar planes,Seleccionar para comparar,Ir a un plan,Plan resaltado,selection-summary and return-to-comparison copy.",
-          "No recommended/popular/best-value/current-plan badges,discounts,testimonials or invented marketing claims. All four cards are peers and no card is selected/highlighted by default.",
-          "If explanatory access copy is useful,retain only the existing factual administrator-assignment statement; do not introduce a purchase/request action."
+          "If the section says how a plan is obtained, it says only that an administrator assigns it"
         ],
         "existing_surface": {
-          "routes": [
-            "/planes",
-            "/planes?vista=seleccionar (legacy query only; no separate mode after amendment)",
-            "existing plans link in /login and shared signed-in account menu"
-          ],
-          "paths": [
-            "src/app/planes/page.tsx",
-            "src/components/planes/ComparadorPlanes.tsx",
-            "src/components/planes/comparador-planes.module.css",
-            "src/components/planes/textos-planes.ts",
-            "src/lib/planes/catalogo.ts",
-            "src/components/cuentas/MenuCuenta.tsx",
-            "src/app/globals.css"
-          ],
           "components": [
-            "ComparadorPlanes (legacy filename/export may remain; behavior becomes informational cards)",
-            "MenuCuenta (preserve active SP2 contract,including chosen cuentas-admin@v2 when composed)"
+            "LoginForm",
+            "CabeceraApp",
+            "MenuApp",
+            "MenuCuenta (planned by SP-2 T2.4, not on main yet)"
           ],
-          "screenshots": [
-            "/home/david/.local/share/bitacora-solver/pictures/20261031-153033-1a41/planes.png",
-            "/home/david/.local/share/bitacora-solver/pictures/20261031-153033-1a41/seleccionar.png"
+          "notes": "The sign-in screen and the account menu are redesigned by SP-2 (cuentas-admin@v1, owner-chosen direction «Parte de acceso»); planes@v1 only adds one plans link in each and follows that direction and the tokens of src/app/globals.css. The page data comes only from the plan catalogue (src/lib/planes/catalogo.ts, SP-1 T1.2).",
+          "paths": [
+            "src/app/login/page.tsx",
+            "src/app/login/LoginForm.tsx",
+            "src/app/globals.css",
+            "src/app/layout.tsx",
+            "src/components/ui/shell/CabeceraApp.tsx",
+            "src/components/ui/shell/MenuApp.tsx"
           ],
-          "notes": "Owner P211 explicitly replaces comparison/selection with conventional subscription cards. Read exact published commit0715a331b72111afe085e35d773b284764924fe4 through git show in /home/david/dev/.pictures-wt/login-redirect; never read/write /home/david/dev/pictures. Reproduction evidence/owner-rejected/SP-14-v2.md. Approved planes@v1 is immutable history,not the new design; new planes@v2 is a breaking scoped presentation/interaction revision. Keep actual Pictures shell/tokens/fonts and approved sibling account-menu composition. SP2 chosen-C correction is independent; do not redesign its account/password surface or create a new login/menu layout."
+          "routes": [
+            "/login",
+            "/planes (new)"
+          ]
         },
         "flows": [
           {
-            "name": "Signed-out visitor reads the plan cards",
+            "name": "Signed-out visitor compares the plans",
             "steps": [
-              "Open sign-in and follow its existing plans link.",
-              "Read four conventional subscription cards in catalogue order with name, monthly price and full included tools.",
-              "Return through the existing back navigation without selecting or requesting a plan."
+              "Opens the sign-in screen",
+              "Follows its plans link",
+              "Reads the four plans in order with name, monthly price and included tools",
+              "Goes back to the sign-in screen"
             ]
           },
           {
@@ -725,36 +626,23 @@
               "Opens /planes with an English browser",
               "Sees the same four plans and tools in English with prices in USD per month"
             ]
-          },
-          {
-            "name": "Legacy plan-selection URL",
-            "steps": [
-              "Open /planes?vista=seleccionar or an obsolete selected-plan query.",
-              "Read the same informational cards; no comparison, selection or highlighting mode appears and no account changes."
-            ]
           }
         ],
         "must_not_change": [
-          "Four catalogue plans/order,canonical names,monthly COP/ES versus USD/EN prices,full cumulative tools,unavailable markers and existing chat-limit copy without numeric limits.",
-          "Public informational /planes route and existing sign-in/account-menu entry links for every signed-in role; no authentication/permission/role/catalogue/business contract change.",
-          "No buying,paying,requesting,contacting,signing up,changing plans or marking the current account plan. Cards are informational articles,not selection controls; do not add disabled or decorative purchase CTA.",
-          "Preserve exact current host shell/account-menu behavior and SP2 contract,including dismissal/focus/name/plan identity. No new theme,language placement,font,palette,brand,marketing badge or invented benefit.",
-          "Remove only owner-superseded comparison/selection features. Do not remove unrelated language,accessibility,responsive,public-route,entry-link or authorization regression coverage."
+          "The sign-in screen and account menu layout, copy and behavior defined by cuentas-admin@v1, except one plans link in each",
+          "No purchase, subscription, request, contact or sign-up action anywhere in the section",
+          "No limit values, counters or limit messages",
+          "Custom roles, staff roles and permission keys are never shown in the section"
         ],
         "screens_states": [
-          "/planes ES: four cards Entusiasta,Designer,Designer Plus,Master Designer in that order; monthly COP,Entusiasta Gratis.",
-          "/planes EN: Enthusiast,Designer,Designer Plus,Master Designer; monthly USD,Enthusiast Free; never both currencies together.",
-          "Each card contains its complete cumulative catalogue tool list, visible without accordion/hide control, plus unavailable markers and the existing chat-limit wording without numbers.",
-          "Signed-out and signed-in pages show identical public plan information; preserve host shell/account controls for its actual role without marking a current plan.",
-          "360/390px phone,768px tablet and1280px desktop; readable cards,normal vertical scrolling,no horizontal overflow,visible keyboard focus and ES/EN/light/dark/reduced-motion parity.",
-          "Loading/catalogue unavailable/error recovery follows the existing architecture without invented plans/prices or success from partial/invalid data; no comparison controls appear in any state.",
-          "Legacy selection query URLs resolve to the same non-selectable cards. No comparison tabs/side index/selection summary,default highlighted plan,per-plan pressed state,select/buy/request/register CTA or recommended/current-plan badge."
-        ],
-        "criteria": [
-          "The /planes route presents four conventional informational subscription cards in catalogue order, each with plan name, monthly price and full included-tool list; no comparison/selection controls, highlighted/current/recommended plan or card action is rendered, and no hide-tools control is offered.",
-          "Legacy /planes?vista=seleccionar and obsolete plan-selection query parameters show the same four informational cards without restoring a comparison mode, selection state, pressed plan, highlighted default plan or selection-specific controls.",
-          "The four cards and full cumulative tool lists remain legible in Spanish and English at360,390,768 and1280px without horizontal page scrolling, clipping or collapsed tools, and every remaining language, back and account-menu link works by keyboard.",
-          "The owner confirms the final planes@v2 design and SP14 before implementation. Preserve all unaffected catalogue/public-information/account invariants; full lists stay visible and reading cards never mutates account access."
+          "/planes in Spanish: Entusiasta, Designer, Designer Plus and Master Designer in that order, prices in COP per month, Entusiasta free",
+          "/planes in English: Enthusiast, Designer, Designer Plus and Master Designer with prices in USD per month",
+          "Cumulative plans: each plan includes everything of the plan before it; the contract decides whether a plan lists all its tools or what it adds",
+          "Chat lines without numbers: Entusiasta «Chat con límites» / «Chat with limits»; Designer «Chat con límites más altos» / «Chat with higher limits»",
+          "Tools not built yet (extended chat, structure detection, advanced balloon detection) shown under Designer Plus and Master Designer as «aún no disponible» / «not available yet»",
+          "Signed-out page (no account menu) and signed-in page (account menu present)",
+          "Phone 390 px and desktop 1280 px without horizontal scrolling; keyboard focus order",
+          "Plans link on the sign-in screen and plans entry in the account menu"
         ]
       }
     },
@@ -3434,87 +3322,6 @@
       "ui": false
     },
     {
-      "id": "T2.11",
-      "milestone_id": "M1",
-      "title": "Copy the independently owner-approved cuentas-admin@v2 amendment",
-      "objective": "Copy only the exact independently owner-approved cuentas-admin@v2 planning artifact into design/contracts/cuentas-admin@v2.md. The existing T2.1 still owns and preserves v1; never overwrite or regenerate it. Version2 supersedes v1 only for the ordinary account/password surface and shared menu interactions; unchanged views keep their prior requirements. Owner visual approval is mandatory before copy/UI consumption.",
-      "repository": "pictures",
-      "after": [
-        "T1.4"
-      ],
-      "complexity": "low",
-      "scope": "isolated_fix",
-      "estimated_minutes": 5,
-      "risk": "low",
-      "coupling": "medium",
-      "confidence": "high",
-      "estimate_rationale": "Provisional5 agent minutes for an exact owner-pinned contract copy; no measured comparable duration or retries are available.",
-      "classification_evidence": {
-        "complexity": {
-          "evidence": [
-            "task:T2.1"
-          ],
-          "justification": "The account v2 design task copies one exact owner-pinned artifact without designing or implementing production UI."
-        },
-        "scope": {
-          "evidence": [
-            "task:T2.1"
-          ],
-          "justification": "Only the new cuentas-admin v2 Markdown is added; v1 and production code are unchanged."
-        },
-        "duration": {
-          "evidence": [
-            "task:T2.1"
-          ],
-          "justification": "Five provisional agent minutes cover the account contract copy; comparable measured history is unknown."
-        },
-        "risk": {
-          "evidence": [
-            "task:T2.1"
-          ],
-          "justification": "Owner digest approval and immutable v1 preservation bound the account artifact-copy risk."
-        },
-        "coupling": {
-          "evidence": [
-            "task:T2.1"
-          ],
-          "justification": "The account v2 copy runs independently of unchanged v1 copy T2.1 after session guard T1.4; each UI consumer waits for both distinct artifacts."
-        },
-        "confidence": {
-          "evidence": [
-            "task:T2.1",
-            "command:rg -n -A42 -B6 contract_snapshot_for /home/david/dev/metodologia/skill/scripts/bt_scheduler_executor/prompt.py -> _design_instructions copies the exact single approved planning artifact and forbids other writes"
-          ],
-          "justification": "The methodology executor explicitly supports copying a single planning contract byte for byte with its owner-pinned digest."
-        }
-      },
-      "expected_paths": [
-        "design/contracts/cuentas-admin@v2.md"
-      ],
-      "shared_resources": [
-        "design:cuentas-admin@v2"
-      ],
-      "acceptance_criteria": [
-        "The independently owner-approved cuentas-admin@v2 contract is copied byte for byte into design/contracts/cuentas-admin@v2.md without altering the existing owner-approved v1 artifact."
-      ],
-      "verification": [
-        {
-          "type": "command",
-          "value": "test -s design/contracts/cuentas-admin@v2.md",
-          "purpose": "The independently owner-approved cuentas-admin@v2 contract is copied byte for byte into design/contracts/cuentas-admin@v2.md without altering the existing owner-approved v1 artifact.",
-          "category": "static"
-        }
-      ],
-      "covers": [
-        "R1",
-        "R3",
-        "R16"
-      ],
-      "kind": "design",
-      "subplan_id": "SP-2",
-      "ui": false
-    },
-    {
       "id": "T2.2",
       "milestone_id": "M1",
       "title": "Account APIs: activation, reset, notice acceptance, own password and the administration of accounts and roles",
@@ -3682,8 +3489,7 @@
       "repository": "pictures",
       "after": [
         "T2.1",
-        "T2.2",
-        "T2.11"
+        "T2.2"
       ],
       "complexity": "medium",
       "scope": "full_feature",
@@ -3815,8 +3621,7 @@
       "repository": "pictures",
       "after": [
         "T2.1",
-        "T2.2",
-        "T2.11"
+        "T2.2"
       ],
       "complexity": "medium",
       "scope": "small_change",
@@ -3910,8 +3715,7 @@
       "repository": "pictures",
       "after": [
         "T2.1",
-        "T2.2",
-        "T2.11"
+        "T2.2"
       ],
       "complexity": "medium",
       "scope": "full_feature",
@@ -4333,342 +4137,13 @@
       "subplan_id": "SP-2"
     },
     {
-      "id": "T2.57",
-      "milestone_id": "M1",
-      "title": "Redesign Mi cuenta and repair account-menu dismissal under cuentas-admin@v2",
-      "objective": "Implement only the independently owner-approved cuentas-admin@v2 amendment for P-209, preserving the selected Pictures shell and untouched v1 views. Own the shared account menu, complete Mi cuenta/password presentation and focused actual-browser regression. Reuse the existing account/session guard and plan catalogue. Produce a presentation-only server projection from the current authenticated account and its canonical stored role identifiers; compare the canonical role id with PLANES[].rolSistema, never permissions or translated/name strings. Keep shared account-service@1, session-guard@1 and permission-map@1 unchanged; isolate any account-scoped read projection in presentacion-cuenta.ts using existing pool conventions and validated output, not SQL in a React handler. Do not add paid plans, change roles/grants or edit authorization/consent/password domain policy. Display actual stored name explicitly; email fallback for missing/blank name, never invent a name or modify operator test seeds. Redesign all own-account/password states with selected-language copy, catalogue Plan labels only for plan roles and truthful staff/custom/local-administrator identity. Remove only accepted-notice metadata from ordinary profile presentation; preserve consent text/capture/storage/version gate. Preserve existing language/theme and /planes links wherever composed. Implement open/toggle/outside-pointer/Escape/focus-leave semantics with accessible controls, predictable focus, no trap and cleaned-up listeners; maintain pending sign-out/error behavior. Author/register cuentas:test-ui-redesign at scripts/test/test-ui-cuenta-redesign.ts. The regression starts real production Next on a free loopback port against an invocation-owned isolated REQ-021 schema, signs in genuine named and nameless fixtures, and exercises actual /cuenta and shared header in ES/EN at390x844 and1280x900, plus tablet/floor layout evidence. Seed all four plan roles, staff/admin and a custom role whose display name resembles a plan, preserving canonical ids and non-admin denials. Test the exact original outside/Escape failure and real focus destinations; no pageerrors. Test real password API with two independent authenticated browser contexts: wrong current password, short/too-long/mismatched new password, no fabricated success, renewed requesting session and invalidated other session. Independently verify stored consent/version enforcement without rendering metadata or changing policy. Keep every existing test case/command, updating brittle locators only to match the approved accessible controls. Controlled fixture data, no production credentials, no paid providers; cleanup only invocation-owned resources and redact secrets in evidence. Domain/service/role definitions and migrations are read-only. Existing T2.7 and T2.8 review the resulting exact candidate and P-209 stays open until owner approves a later published version.",
-      "repository": "pictures",
-      "after": [
-        "T2.56"
-      ],
-      "complexity": "medium",
-      "scope": "small_change",
-      "estimated_minutes": 150,
-      "risk": "medium",
-      "coupling": "medium",
-      "confidence": "medium",
-      "estimate_rationale": "Uncalibrated provisional agent estimate:45 minutes account/password composition,30 menu/identity projection,60 genuine browser fixtures/session regressions and15 focused checks. Historical duration,retries,quality and consumption unknown; not human hours or a deadline promise.",
-      "classification_evidence": {
-        "complexity": {
-          "evidence": [
-            "task:T2.4",
-            "task:T2.56",
-            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 6ec74192eb0175827a9005ae2c152955cb0d220d:src/components/cuentas/MenuCuenta.tsx -> native details has no outside-pointer or Escape dismissal; actual stored name already uses email fallback",
-            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 6ec74192eb0175827a9005ae2c152955cb0d220d:src/app/cuenta/page.tsx -> ordinary profile renders role and accepted-notice version/date"
-          ],
-          "justification": "Account redesign combines menu focus and two-browser password/identity regressions using existing account entrypoints."
-        },
-        "scope": {
-          "evidence": [
-            "task:T2.4",
-            "task:T2.56",
-            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 6ec74192eb0175827a9005ae2c152955cb0d220d:src/components/cuentas/MenuCuenta.tsx -> native details has no outside-pointer or Escape dismissal; actual stored name already uses email fallback",
-            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 6ec74192eb0175827a9005ae2c152955cb0d220d:src/app/cuenta/page.tsx -> ordinary profile renders role and accepted-notice version/date"
-          ],
-          "justification": "Only own-account/password presentation and the shared account menu plus focused regression outputs change."
-        },
-        "risk": {
-          "evidence": [
-            "task:T2.4",
-            "task:T2.56",
-            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 6ec74192eb0175827a9005ae2c152955cb0d220d:src/components/cuentas/MenuCuenta.tsx -> native details has no outside-pointer or Escape dismissal; actual stored name already uses email fallback",
-            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 6ec74192eb0175827a9005ae2c152955cb0d220d:src/app/cuenta/page.tsx -> ordinary profile renders role and accepted-notice version/date"
-          ],
-          "justification": "Account password and notice behavior must stay server enforced while presentation changes."
-        },
-        "coupling": {
-          "evidence": [
-            "task:T2.4",
-            "task:T2.56",
-            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 6ec74192eb0175827a9005ae2c152955cb0d220d:src/components/cuentas/MenuCuenta.tsx -> native details has no outside-pointer or Escape dismissal; actual stored name already uses email fallback",
-            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 6ec74192eb0175827a9005ae2c152955cb0d220d:src/app/cuenta/page.tsx -> ordinary profile renders role and accepted-notice version/date"
-          ],
-          "justification": "Shared account menu consumes existing plan catalogue, session context and language/navigation composition."
-        },
-        "confidence": {
-          "evidence": [
-            "task:T2.4",
-            "task:T2.56",
-            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 6ec74192eb0175827a9005ae2c152955cb0d220d:src/components/cuentas/MenuCuenta.tsx -> native details has no outside-pointer or Escape dismissal; actual stored name already uses email fallback",
-            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 6ec74192eb0175827a9005ae2c152955cb0d220d:src/app/cuenta/page.tsx -> ordinary profile renders role and accepted-notice version/date"
-          ],
-          "justification": "The exact rejected snapshot and browser evidence identify the disclosure and presentation surfaces; new design still needs owner approval."
-        },
-        "duration": {
-          "evidence": [
-            "task:T2.4",
-            "task:T2.56",
-            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 6ec74192eb0175827a9005ae2c152955cb0d220d:src/components/cuentas/MenuCuenta.tsx -> native details has no outside-pointer or Escape dismissal; actual stored name already uses email fallback",
-            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 6ec74192eb0175827a9005ae2c152955cb0d220d:src/app/cuenta/page.tsx -> ordinary profile renders role and accepted-notice version/date"
-          ],
-          "justification": "Provisional account UI/redesign agent estimate is uncalibrated; comparable measured history remains unknown."
-        }
-      },
-      "expected_paths": [
-        "src/components/cuentas/MenuCuenta.tsx",
-        "src/components/cuentas/CambiarContrasena.tsx",
-        "src/components/cuentas/textos-cuenta.ts",
-        "src/components/cuentas/BarraCuenta.tsx",
-        "src/app/cuenta/page.tsx",
-        "src/lib/cuentas/cuenta-actual.ts",
-        "src/lib/cuentas/presentacion-cuenta.ts",
-        "scripts/test/test-ui-mi-cuenta.ts",
-        "scripts/test/test-ui-cuenta-redesign.ts"
-      ],
-      "shared_resources": [
-        "contract:session-guard",
-        "contract:plan-catalogue",
-        "contract:idioma",
-        "package.json scripts:cuentas:test-ui-redesign"
-      ],
-      "acceptance_criteria": [
-        "The real signed-in account menu closes on repeated trigger, outside pointer, Escape and focus leaving at390x844 and1280x900 in ES/EN; Escape returns focus to its trigger, trigger toggle retains trigger focus, outside closure preserves the clicked target and Tab/Shift+Tab leave without a focus trap.",
-        "Named accounts show their actual stored name with an explicit Name or Nombre label on Mi cuenta and in the shared menu; null, empty or whitespace names use email fallback without invented names, including long names and emails at both widths.",
-        "Only canonical stored system-plan identifiers map to Plan and PLANES localized names; Administrator, Internal employee, local administrator and custom roles retain truthful access identity, including custom-role names resembling a plan and roles with identical permissions.",
-        "The complete Mi cuenta and password section follows the approved cuentas-admin@v2 redesign in ES/EN without accepted-notice metadata in ordinary presentation, while activation/reacceptance/version-date storage and server consent enforcement remain unchanged.",
-        "Current-password verification,8–200-character new-password validation, matching confirmation, pending/error recovery, secret clearing after acknowledged success, current-browser session renewal and other-session invalidation remain enforced on the real local production entrypoints.",
-        "Every inherited Mi cuenta UI/password/sign-out case remains enabled and passes; locator adaptation follows the new accessible control without removing behavior coverage.",
-        "The inherited real account API own-password regression passes with current-password verification and unchanged requesting-session renewal and other-session invalidation.",
-        "The inherited real account API notice regression passes with unchanged version/date storage and consent enforcement.",
-        "The inherited real account invitation/activation/plan-change integration passes against production entrypoints without removing a behavior case.",
-        "The inherited local-session navigation and production/non-loopback refusal regression passes unchanged.",
-        "Existing workspace packages build successfully using their current scripts before the strict account redesign type check, with the Node heap bounded to4096MB and no configuration weakening.",
-        "Full strict repository TypeScript accepts the account redesign after workspace package build, with no cast, suppression or relaxed settings used to bypass an account boundary.",
-        "Owned account UI and browser regression files pass focused ESLint without new suppression or lint configuration changes.",
-        "In the real ES/EN account page at390x844 and1280x900, every password-field aria-describedby token resolves to a rendered help/error node in blank, matching and mismatching states; accessible names, validation and focus remain correct."
-      ],
-      "verification": [
-        {
-          "type": "command",
-          "value": "npm run cuentas:test-ui-redesign -- --suite menu",
-          "purpose": "The real signed-in account menu closes on repeated trigger, outside pointer, Escape and focus leaving at390x844 and1280x900 in ES/EN; Escape returns focus to its trigger, trigger toggle retains trigger focus, outside closure preserves the clicked target and Tab/Shift+Tab leave without a focus trap.",
-          "created_by": "T2.57",
-          "category": "regression",
-          "requires": [
-            "PICTURES_REQ021_DATABASE_URL"
-          ]
-        },
-        {
-          "type": "command",
-          "value": "npm run cuentas:test-ui-redesign -- --suite identidad",
-          "purpose": "Named accounts show their actual stored name with an explicit Name or Nombre label on Mi cuenta and in the shared menu; null, empty or whitespace names use email fallback without invented names, including long names and emails at both widths.",
-          "created_by": "T2.57",
-          "category": "regression",
-          "requires": [
-            "PICTURES_REQ021_DATABASE_URL"
-          ]
-        },
-        {
-          "type": "command",
-          "value": "npm run cuentas:test-ui-redesign -- --suite acceso",
-          "purpose": "Only canonical stored system-plan identifiers map to Plan and PLANES localized names; Administrator, Internal employee, local administrator and custom roles retain truthful access identity, including custom-role names resembling a plan and roles with identical permissions.",
-          "created_by": "T2.57",
-          "category": "regression",
-          "requires": [
-            "PICTURES_REQ021_DATABASE_URL"
-          ]
-        },
-        {
-          "type": "command",
-          "value": "npm run cuentas:test-ui-redesign -- --suite aviso",
-          "purpose": "The complete Mi cuenta and password section follows the approved cuentas-admin@v2 redesign in ES/EN without accepted-notice metadata in ordinary presentation, while activation/reacceptance/version-date storage and server consent enforcement remain unchanged.",
-          "created_by": "T2.57",
-          "category": "integration",
-          "requires": [
-            "PICTURES_REQ021_DATABASE_URL"
-          ]
-        },
-        {
-          "type": "command",
-          "value": "npm run cuentas:test-ui-redesign -- --suite sesiones",
-          "purpose": "Current-password verification,8–200-character new-password validation, matching confirmation, pending/error recovery, secret clearing after acknowledged success, current-browser session renewal and other-session invalidation remain enforced on the real local production entrypoints.",
-          "created_by": "T2.57",
-          "category": "integration",
-          "requires": [
-            "PICTURES_REQ021_DATABASE_URL"
-          ]
-        },
-        {
-          "type": "command",
-          "value": "npm run cuentas:test-ui-mi-cuenta",
-          "purpose": "Every inherited Mi cuenta UI/password/sign-out case remains enabled and passes; locator adaptation follows the new accessible control without removing behavior coverage.",
-          "created_by": "T2.4",
-          "category": "regression",
-          "requires": [
-            "PICTURES_REQ021_DATABASE_URL"
-          ]
-        },
-        {
-          "type": "command",
-          "value": "npm run cuentas:test-api -- --test-name-pattern=mi-cuenta",
-          "purpose": "The inherited real account API own-password regression passes with current-password verification and unchanged requesting-session renewal and other-session invalidation.",
-          "created_by": "T2.2",
-          "category": "regression",
-          "requires": [
-            "PICTURES_REQ021_DATABASE_URL"
-          ]
-        },
-        {
-          "type": "command",
-          "value": "npm run cuentas:test-api -- --test-name-pattern=aviso",
-          "purpose": "The inherited real account API notice regression passes with unchanged version/date storage and consent enforcement.",
-          "created_by": "T2.2",
-          "category": "regression",
-          "requires": [
-            "PICTURES_REQ021_DATABASE_URL"
-          ]
-        },
-        {
-          "type": "command",
-          "value": "npm run cuentas:test-integracion-ui",
-          "purpose": "The inherited real account invitation/activation/plan-change integration passes against production entrypoints without removing a behavior case.",
-          "created_by": "T2.6",
-          "category": "regression",
-          "requires": [
-            "PICTURES_REQ021_DATABASE_URL"
-          ]
-        },
-        {
-          "type": "command",
-          "value": "npm run cuentas:test-sesion-local-paginas",
-          "purpose": "The inherited local-session navigation and production/non-loopback refusal regression passes unchanged.",
-          "created_by": "T2.55",
-          "category": "regression",
-          "requires": [
-            "PICTURES_REQ021_DATABASE_URL"
-          ]
-        },
-        {
-          "type": "command",
-          "value": "NODE_OPTIONS=--max-old-space-size=4096 npm run build --workspaces --if-present",
-          "purpose": "Existing workspace packages build successfully using their current scripts before the strict account redesign type check, with the Node heap bounded to4096MB and no configuration weakening.",
-          "category": "static"
-        },
-        {
-          "type": "command",
-          "value": "NODE_OPTIONS=--max-old-space-size=4096 npx --no-install tsc --noEmit --incremental false",
-          "purpose": "Full strict repository TypeScript accepts the account redesign after workspace package build, with no cast, suppression or relaxed settings used to bypass an account boundary.",
-          "category": "static"
-        },
-        {
-          "type": "command",
-          "value": "npx --no-install eslint src/components/cuentas/MenuCuenta.tsx src/components/cuentas/CambiarContrasena.tsx src/components/cuentas/textos-cuenta.ts src/components/cuentas/BarraCuenta.tsx src/app/cuenta/page.tsx src/lib/cuentas/cuenta-actual.ts src/lib/cuentas/presentacion-cuenta.ts scripts/test/test-ui-mi-cuenta.ts scripts/test/test-ui-cuenta-redesign.ts",
-          "purpose": "Owned account UI and browser regression files pass focused ESLint without new suppression or lint configuration changes.",
-          "category": "static"
-        },
-        {
-          "type": "command",
-          "value": "npm run cuentas:test-ui-redesign -- --suite accesibilidad",
-          "purpose": "In the real ES/EN account page at390x844 and1280x900, every password-field aria-describedby token resolves to a rendered help/error node in blank, matching and mismatching states; accessible names, validation and focus remain correct.",
-          "created_by": "T2.57",
-          "category": "regression",
-          "requires": [
-            "PICTURES_REQ021_DATABASE_URL"
-          ]
-        }
-      ],
-      "covers": [
-        "R1",
-        "R16",
-        "R17"
-      ],
-      "kind": "implement",
-      "subplan_id": "SP-2",
-      "ui": true
-    },
-    {
-      "id": "T2.58",
-      "milestone_id": "M1",
-      "title": "Verify the redesigned account on real signed-in production entrypoints",
-      "objective": "Command-only checkpoint after T2.57, before existing T2.7/T2.8. Run the producer-owned browser suite on the exact candidate and retain sanitized per-viewport/language/fixture results, pageerrors, actual focus destinations and screenshots linked to candidate identity. Enforce invocation-owned isolated local database/server cleanup. Do not repair source, alter fixtures/oracles or substitute component-only fetch stubs for authenticated session evidence. A missing case, server, database, approved design or genuine session result fails or blocks; never accept NOT_RUN as passing.",
-      "repository": "pictures",
-      "after": [
-        "T2.57"
-      ],
-      "complexity": "low",
-      "scope": "isolated_fix",
-      "estimated_minutes": 30,
-      "risk": "low",
-      "coupling": "medium",
-      "confidence": "medium",
-      "estimate_rationale": "Uncalibrated provisional agent estimate30 minutes to run and inspect existing browser regression; no comparable measured duration/retries/quality available.",
-      "classification_evidence": {
-        "complexity": {
-          "evidence": [
-            "task:T2.57"
-          ],
-          "justification": "The account checkpoint runs one existing producer-owned browser suite and inspects its explicit evidence matrix without repairing source."
-        },
-        "scope": {
-          "evidence": [
-            "task:T2.57"
-          ],
-          "justification": "Only exact-candidate account browser evidence and screenshots are produced; no product or harness implementation belongs here."
-        },
-        "risk": {
-          "evidence": [
-            "task:T2.57"
-          ],
-          "justification": "The checkpoint uses invocation-owned local synthetic accounts and no production credentials or paid providers."
-        },
-        "coupling": {
-          "evidence": [
-            "task:T2.57"
-          ],
-          "justification": "The account checkpoint consumes T2.57 actual Next/browser/database fixtures and runs before existing visual review and audit."
-        },
-        "confidence": {
-          "evidence": [
-            "task:T2.57"
-          ],
-          "justification": "T2.57 owns each browser case; actual runtime duration and outcomes remain unknown until execution."
-        },
-        "duration": {
-          "evidence": [
-            "task:T2.57"
-          ],
-          "justification": "Provisional30 agent minutes cover a browser suite and inspection; no comparable measured duration,retries or quality is available."
-        }
-      },
-      "expected_paths": [
-        ".evidence/REQ-021/SP-2.account-redesign.json",
-        ".evidence/REQ-021/SP-2.account-redesign"
-      ],
-      "shared_resources": [
-        "candidate:SP-2"
-      ],
-      "acceptance_criteria": [
-        "On the exact composed SP-2 candidate, the real production-browser account redesign regression proves dismissal/focus, actual named/null-name identity, canonical-plan/staff/custom-role presentation, consent preservation and two-browser password-session invariants in ES/EN at390x844 and1280x900, with no paid calls, fabricated pass or secret-bearing evidence. Expected roles and password/consent outcomes come independently from SPEC R1/R2/R16/R17 and the owner-confirmed P-209 amendment, not copied implementation state; a non-admin direct account/role API write receives403 and signed-out /cuenta cannot expose account data."
-      ],
-      "verification": [
-        {
-          "type": "command",
-          "value": "npm run cuentas:test-ui-redesign",
-          "purpose": "On the exact composed SP-2 candidate, the real production-browser account redesign regression proves dismissal/focus, actual named/null-name identity, canonical-plan/staff/custom-role presentation, consent preservation and two-browser password-session invariants in ES/EN at390x844 and1280x900, with no paid calls, fabricated pass or secret-bearing evidence. Expected roles and password/consent outcomes come independently from SPEC R1/R2/R16/R17 and the owner-confirmed P-209 amendment, not copied implementation state; a non-admin direct account/role API write receives403 and signed-out /cuenta cannot expose account data.",
-          "created_by": "T2.57",
-          "category": "integration",
-          "requires": [
-            "PICTURES_REQ021_DATABASE_URL"
-          ]
-        }
-      ],
-      "covers": [
-        "R1",
-        "R16",
-        "R17"
-      ],
-      "kind": "test",
-      "subplan_id": "SP-2"
-    },
-    {
       "id": "T2.7",
       "milestone_id": "M1",
-      "title": "SP-2 visual review against the cuentas-admin@v2 contract",
+      "title": "SP-2 visual review against the cuentas-admin@v1 contract",
       "objective": "A fresh reviewer compares the rendered screens with the approved contract at three widths and records every mismatch with the task to redo.",
       "repository": "pictures",
       "after": [
-        "T2.56",
-        "T2.58"
+        "T2.56"
       ],
       "complexity": "medium",
       "scope": "small_change",
@@ -4729,13 +4204,13 @@
         "ledger:SP-2-visual"
       ],
       "acceptance_criteria": [
-        "The rendered sign-in, activation, account and administration screens match the approved cuentas-admin@v2 contract at phone, tablet and desktop widths, and every finding is recorded with the task to redo in the SP-2 visual ledger."
+        "The rendered sign-in, activation, account and administration screens match the approved cuentas-admin@v1 contract at phone, tablet and desktop widths, and every finding is recorded with the task to redo in the SP-2 visual ledger."
       ],
       "verification": [
         {
           "type": "command",
           "value": "bitacora.py audit-ledger check .evidence/REQ-021/SP-2.visual.findings.json",
-          "purpose": "The rendered sign-in, activation, account and administration screens match the approved cuentas-admin@v2 contract at phone, tablet and desktop widths, and every finding is recorded with the task to redo in the SP-2 visual ledger.",
+          "purpose": "The rendered sign-in, activation, account and administration screens match the approved cuentas-admin@v1 contract at phone, tablet and desktop widths, and every finding is recorded with the task to redo in the SP-2 visual ledger.",
           "created_by": "T2.7",
           "category": "static"
         }
@@ -6666,7 +6141,8 @@
       "objective": "An independent SP-3 spec and standards audit has no open critical or high findings, maps each defect to its introducing task, checks modelled pieces against docs/req021/aprobacion-backing-mesas.json and the proposal, and distinguishes GLB structural evidence from real Blender and owner evidence.",
       "repository": "pictures",
       "after": [
-        "T3.13"
+        "T3.13",
+        "T3.92"
       ],
       "complexity": "medium",
       "scope": "small_change",
@@ -13719,101 +13195,13 @@
       "ui": false
     },
     {
-      "id": "T14.11",
-      "milestone_id": "M1",
-      "title": "Copy the independently owner-approved planes@v2 subscription-card contract",
-      "objective": "Copy only the exact independently owner-approved planes@v2 card contract to design/contracts/planes@v2.md after CG1. Unchanged T14.1 preserves the old approved v1 artifact; never overwrite it. The new contract removes comparison/selection and changes only the public plan presentation,not catalogue data,permissions or account/menu behavior. Exact owner visual and SP14 approval are prerequisites,not authority granted by the Planner or Designer.",
-      "repository": "pictures",
-      "after": [
-        "T91"
-      ],
-      "complexity": "low",
-      "scope": "isolated_fix",
-      "estimated_minutes": 5,
-      "risk": "low",
-      "coupling": "medium",
-      "confidence": "medium",
-      "estimate_rationale": "Provisional5 agent minutes to copy one owner-pinned card contract; no comparable measured duration or retries available.",
-      "classification_evidence": {
-        "complexity": {
-          "evidence": [
-            "task:T14.1",
-            "task:T14.2"
-          ],
-          "justification": "The plans design task copies one exact owner-pinned card artifact without creating product behavior."
-        },
-        "scope": {
-          "evidence": [
-            "task:T14.1",
-            "task:T14.2"
-          ],
-          "justification": "Only the new planes v2 Markdown is added; v1 and product code remain untouched by this design copy."
-        },
-        "duration": {
-          "evidence": [
-            "task:T14.1",
-            "task:T14.2"
-          ],
-          "justification": "Five provisional agent minutes cover the single plans contract copy; no measured comparable history exists."
-        },
-        "risk": {
-          "evidence": [
-            "task:T14.1",
-            "task:T14.2"
-          ],
-          "justification": "Independent owner digest approval and immutable old planes v1 preservation bound this design-copy risk."
-        },
-        "coupling": {
-          "evidence": [
-            "task:T14.1",
-            "task:T14.2"
-          ],
-          "justification": "The new planes copy follows CG1 in parallel with T14.1; both UI consumers have the declared v2 design ancestor."
-        },
-        "confidence": {
-          "evidence": [
-            "task:T14.1",
-            "task:T14.2"
-          ],
-          "justification": "The ordinary approved-planning-artifact copy flow exists; the new card design is still pending owner approval."
-        }
-      },
-      "expected_paths": [
-        "design/contracts/planes@v2.md"
-      ],
-      "shared_resources": [
-        "design:planes@v2"
-      ],
-      "acceptance_criteria": [
-        "The independently owner-approved planes@v2 contract is copied byte for byte into design/contracts/planes@v2.md without changing the existing approved planes@v1 artifact."
-      ],
-      "verification": [
-        {
-          "type": "command",
-          "value": "test -s design/contracts/planes@v2.md",
-          "purpose": "The independently owner-approved planes@v2 contract is copied byte for byte into design/contracts/planes@v2.md without changing the existing approved planes@v1 artifact.",
-          "category": "static"
-        }
-      ],
-      "covers": [
-        "R17",
-        "R18",
-        "R19",
-        "R20"
-      ],
-      "kind": "design",
-      "subplan_id": "SP-14",
-      "ui": false
-    },
-    {
       "id": "T14.2",
       "milestone_id": "M1",
-      "title": "Replace comparison and selection with public subscription cards",
-      "objective": "Implement the independently owner-approved planes@v2 conventional subscription-card presentation on the exact candidate. The four informational cards read PLANES directly in catalogue order,with name,monthly currency/price,complete cumulative tools,unavailable markers and existing chat wording. Remove comparison/selection state and controls from the public page: selectionView/selectedPlanId/default highlighting,comparison tabs/side index,choose/return actions,summary and comparison-only metadata/copy. Do not add a purchase/request/contact/signup/current-plan/recommended action or badge. Preserve existing language/account-preference composition and sign-in/menu/back links,public route and all permission/catalogue contracts. Legacy vista=seleccionar and selected-plan query inputs are ignored and show the same canonical card page; no alternative comparison mode or account mutation is possible. Keep the legacy component/style filenames if appropriate to avoid unrelated renames; they must implement only cards/language presentation,not retain hidden comparison behavior. Update existing planes:test-ui cases only where the owner explicitly superseded selection/highlighting; replace those assertions with positive four-card and negative no-selection/no-action cases,without skip,relaxed checks or dropping unrelated catalogue/currency/public-route/tablet tests. CSS changes belong to comparador-planes.module.css. Add focused lint,workspace build and full strict types with4096MB Node heap before integration. No new dependency,provider,data migration,auth policy or production action.",
+      "title": "Public plans page: the four plans from the plan catalogue, prices by language",
+      "objective": "A public /planes page renders the four access plans only from the plan catalogue, in the visitor's language with its currency, with all tool lists visible, no hide-tools control, and an extra informational view to select/highlight a plan for comparison without changing account assignment.",
       "repository": "pictures",
       "after": [
-        "T14.1",
-        "T14.11"
+        "T14.1"
       ],
       "complexity": "medium",
       "scope": "small_change",
@@ -13821,61 +13209,54 @@
       "risk": "medium",
       "coupling": "medium",
       "confidence": "medium",
-      "estimate_rationale": "Uncalibrated provisional agent estimate retained at120minutes:60 layout/copy,30 replacement regressions,30 focused checks. Comparable duration,retries,quality and consumption unknown; not human time or a delivery promise.",
+      "estimate_rationale": "Agent estimate in minutes: 50 page and comparison component + 20 strings and language selection + 10 public-route check + 40 static-render tests = 120. No comparable history.",
       "classification_evidence": {
         "complexity": {
           "evidence": [
-            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 0715a331b72111afe085e35d773b284764924fe4:src/components/planes/ComparadorPlanes.tsx -> page owns selectionView,selectedPlanId,comparison navigation and highlightedPlanId; replace these with informational catalogue cards",
-            "task:T1.2",
-            "task:T14.4"
+            "file:src/app/globals.css",
+            "file:scripts/test/test-ui-armado-columna.ts"
           ],
-          "justification": "Four responsive catalogue cards in ES/EN replace the existing comparison state without new data or account actions."
+          "justification": "A comparison of four cumulative plans at phone and desktop widths with two currencies needs care but no new data."
         },
         "scope": {
           "evidence": [
-            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 0715a331b72111afe085e35d773b284764924fe4:src/components/planes/ComparadorPlanes.tsx -> page owns selectionView,selectedPlanId,comparison navigation and highlightedPlanId; replace these with informational catalogue cards",
-            "task:T1.2",
-            "task:T14.4"
+            "file:src/app/layout.tsx",
+            "task:T1.2"
           ],
-          "justification": "Only the existing public plans page,component,styles,copy and focused UI tests change."
+          "justification": "One new page, one component, one strings module and one test; the public map entry for /planes is written by T1.2."
         },
         "duration": {
           "evidence": [
-            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 0715a331b72111afe085e35d773b284764924fe4:src/components/planes/ComparadorPlanes.tsx -> page owns selectionView,selectedPlanId,comparison navigation and highlightedPlanId; replace these with informational catalogue cards",
-            "task:T1.2",
-            "task:T14.4"
+            "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind implement -> status unknown, no comparable samples",
+            "file:scripts/test/test-ui-armado-columna.ts"
           ],
-          "justification": "The unchanged provisional120 agent minutes cover60 layout/copy,30 replacement regressions and30 focused checks; comparable measured history remains unknown."
+          "justification": "Fifty page, twenty strings, ten public-route check and forty tests make one hundred twenty minutes."
         },
         "risk": {
           "evidence": [
-            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 0715a331b72111afe085e35d773b284764924fe4:src/components/planes/ComparadorPlanes.tsx -> page owns selectionView,selectedPlanId,comparison navigation and highlightedPlanId; replace these with informational catalogue cards",
-            "task:T1.2",
-            "task:T14.4"
+            "spec:SPEC.md#requirements",
+            "file:src/proxy.ts"
           ],
-          "justification": "The cards must preserve truthful prices/tools and the existing public-only access boundary while removing comparison controls."
+          "justification": "Public visitors would read a wrong price or a tool that does not exist, and a wrong map entry could open another route."
         },
         "coupling": {
           "evidence": [
-            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 0715a331b72111afe085e35d773b284764924fe4:src/components/planes/ComparadorPlanes.tsx -> page owns selectionView,selectedPlanId,comparison navigation and highlightedPlanId; replace these with informational catalogue cards",
             "task:T1.2",
-            "task:T14.4"
+            "task:T1.4"
           ],
-          "justification": "The card presentation consumes existing plan-catalogue and route permissions and preserves the SP2 entry-link surface."
+          "justification": "Reads contract:plan-catalogue and the /planes entry of contract:permission-map from SP-1."
         },
         "confidence": {
           "evidence": [
-            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 0715a331b72111afe085e35d773b284764924fe4:src/components/planes/ComparadorPlanes.tsx -> page owns selectionView,selectedPlanId,comparison navigation and highlightedPlanId; replace these with informational catalogue cards",
-            "task:T1.2",
-            "task:T14.4"
+            "file:scripts/test/test-ui-armado-columna.ts",
+            "assumption:the planes@v1 contract keeps one comparison view without tabs"
           ],
-          "justification": "The exact rejected page/component/tests were inspected; the new owner-approved card layout still needs Designer and owner confirmation."
+          "justification": "Static-render UI tests already exist in the repository; the contract layout is not drafted yet."
         }
       },
       "expected_paths": [
         "src/app/planes/page.tsx",
         "src/components/planes/ComparadorPlanes.tsx",
-        "src/components/planes/comparador-planes.module.css",
         "src/components/planes/textos-planes.ts",
         "scripts/test/test-ui-planes.ts"
       ],
@@ -13890,11 +13271,8 @@
         "With a Spanish browser language the page shows every price in COP per month and with an English one in USD per month, never both, Entusiasta shows as free in each language and is named Enthusiast in English.",
         "Extended chat, structure detection and advanced balloon detection appear under Designer Plus and Master Designer marked «aún no disponible» in Spanish and «not available yet» in English, the Entusiasta chat reads «con límites» / «with limits» and the Designer chat «con límites más altos» / «with higher limits», and the page has no purchase, request or sign-up control and shows no limit value.",
         "Without a session the /planes page is served, because the route permission map lists /planes as public, and every other page and API keeps exactly one mapped entry.",
-        "The /planes route presents four conventional informational subscription cards in catalogue order, each with plan name, monthly price and full included-tool list; no comparison/selection controls, highlighted/current/recommended plan or card action is rendered, and no hide-tools control is offered.",
-        "At tablet width all four plans and full tool lists remain legible without horizontal scrolling, and no hide-tools control is rendered.",
-        "The existing workspace packages build with their current scripts before the strict plans-card repository type check,without configuration changes and with the Node heap bounded to4096MB.",
-        "Full strict repository TypeScript accepts the subscription-card page after workspace build,without casts,suppressions or relaxed settings to bypass boundaries.",
-        "Owned plans-card TypeScript and UI regression files pass focused ESLint without new suppressions or lint configuration changes."
+        "The extra plans view lets a visitor select/highlight any plan for comparison and return to the full comparison; it never changes account assignment.",
+        "At tablet width all four plans and full tool lists remain legible without horizontal scrolling, and no hide-tools control is rendered."
       ],
       "verification": [
         {
@@ -13927,8 +13305,8 @@
         },
         {
           "type": "command",
-          "value": "npm run planes:test-ui -- --solo tarjetas",
-          "purpose": "The /planes route presents four conventional informational subscription cards in catalogue order, each with plan name, monthly price and full included-tool list; no comparison/selection controls, highlighted/current/recommended plan or card action is rendered, and no hide-tools control is offered.",
+          "value": "npm run planes:test-ui -- --solo vista-eleccion",
+          "purpose": "The extra plans view lets a visitor select/highlight any plan for comparison and return to the full comparison; it never changes account assignment.",
           "created_by": "T14.2",
           "category": "functional"
         },
@@ -13938,24 +13316,6 @@
           "purpose": "At tablet width all four plans and full tool lists remain legible without horizontal scrolling, and no hide-tools control is rendered.",
           "created_by": "T14.2",
           "category": "functional"
-        },
-        {
-          "type": "command",
-          "value": "NODE_OPTIONS=--max-old-space-size=4096 npm run build --workspaces --if-present",
-          "purpose": "The existing workspace packages build with their current scripts before the strict plans-card repository type check,without configuration changes and with the Node heap bounded to4096MB.",
-          "category": "static"
-        },
-        {
-          "type": "command",
-          "value": "NODE_OPTIONS=--max-old-space-size=4096 npx --no-install tsc --noEmit --incremental false",
-          "purpose": "Full strict repository TypeScript accepts the subscription-card page after workspace build,without casts,suppressions or relaxed settings to bypass boundaries.",
-          "category": "static"
-        },
-        {
-          "type": "command",
-          "value": "npx --no-install eslint src/app/planes/page.tsx src/components/planes/ComparadorPlanes.tsx src/components/planes/textos-planes.ts scripts/test/test-ui-planes.ts",
-          "purpose": "Owned plans-card TypeScript and UI regression files pass focused ESLint without new suppressions or lint configuration changes.",
-          "category": "static"
         }
       ],
       "covers": [
@@ -13971,7 +13331,7 @@
       "id": "T14.3",
       "milestone_id": "M1",
       "title": "Plans links on the sign-in screen and in the account menu",
-      "objective": "The sign-in screen and shared account menu each retain exactly one plans entry,without changing the active owner-approved SP2 account contract or its sign-in,dismissal,identity and password behavior; preserve cuentas-admin@v2 when composed rather than resurrect older v1 layout.",
+      "objective": "The sign-in screen and the account menu each lead to the plans section without changing anything else the cuentas-admin@v1 screens do.",
       "repository": "pictures",
       "after": [
         "T14.2"
@@ -14085,7 +13445,7 @@
       "id": "T14.4",
       "milestone_id": "M1",
       "title": "Browser end-to-end of the plans section on a production build",
-      "objective": "Author and run the real production Next/browser card verification against an invocation-owned isolated REQ021 schema. Preserve all existing signed-out/signed-in,catalogue,currency,entry-link and public-route denial checks. Retire only the owner-superseded plan-selection assertions; replace them with four-card presence,absence of comparison/card actions,legacy-query equivalence and actual unchanged account/next-request permission assertions. Capture account/role state before and after reading/keyboard/language/back interactions; no purchase or account mutation request may originate from the card page after authenticated test setup. Expectations come independently from SPEC R17–R20 and the owner P211 amendment,not copied implementation state. Exercise ES/EN at360/390/768/1280 and preserve full tools/keyboard reachability. Keep no-account-change checks strong rather than treating missing buttons alone as proof. Existing authorized administration still changes plan through its own screen. No paid providers,production data,unowned schema cleanup or modified authorization.",
+      "objective": "Real browsers against next start prove the section is reachable signed out and signed in, follows the browser language and currency, fits phone, tablet and desktop, and choosing a plan in the informational view does not change assignment, and opens nothing else without a session.",
       "repository": "pictures",
       "after": [
         "T14.3"
@@ -14151,9 +13511,8 @@
       "acceptance_criteria": [
         "On a production build started with next start against the REQ-021 test database, a signed-out browser follows the sign-in screen's plans link to the four plans with COP prices, an English browser sees the same plans with USD prices, a signed-in Entusiasta reaches the section from the account menu, and the page fits 390 and 1280 pixel widths without horizontal scrolling with every link reachable by keyboard.",
         "Opening /planes without a session makes no other page or API reachable without a session.",
-        "Reading the subscription cards and using language or navigation controls, including legacy selection query URLs, never changes the signed-in account assignment or next-request permissions and sends no account or purchase mutation.",
-        "Legacy /planes?vista=seleccionar and obsolete plan-selection query parameters show the same four informational cards without restoring a comparison mode, selection state, pressed plan, highlighted default plan or selection-specific controls.",
-        "The four cards and full cumulative tool lists remain legible in Spanish and English at360,390,768 and1280px without horizontal page scrolling, clipping or collapsed tools, and every remaining language, back and account-menu link works by keyboard."
+        "A signed-in test account selects each plan in the public comparison view; its assigned plan and next-request permissions remain unchanged.",
+        "The extra plans view lets a visitor select/highlight any plan for comparison and return to the full comparison; it never changes account assignment, and all tool lists remain visible without an «Ocultar herramientas» control."
       ],
       "verification": [
         {
@@ -14178,8 +13537,8 @@
         },
         {
           "type": "command",
-          "value": "npm run planes:test-integracion -- --solo tarjetas-sin-mutacion",
-          "purpose": "Reading the subscription cards and using language or navigation controls, including legacy selection query URLs, never changes the signed-in account assignment or next-request permissions and sends no account or purchase mutation.",
+          "value": "npm run planes:test-integracion -- --solo selector-sin-cambio",
+          "purpose": "A signed-in test account selects each plan in the public comparison view; its assigned plan and next-request permissions remain unchanged.",
           "created_by": "T14.4",
           "category": "integration",
           "requires": [
@@ -14188,18 +13547,8 @@
         },
         {
           "type": "command",
-          "value": "npm run planes:test-integracion -- --solo legado-sin-comparacion",
-          "purpose": "Legacy /planes?vista=seleccionar and obsolete plan-selection query parameters show the same four informational cards without restoring a comparison mode, selection state, pressed plan, highlighted default plan or selection-specific controls.",
-          "created_by": "T14.4",
-          "category": "integration",
-          "requires": [
-            "PICTURES_REQ021_DATABASE_URL"
-          ]
-        },
-        {
-          "type": "command",
-          "value": "npm run planes:test-integracion -- --solo tarjetas-responsive",
-          "purpose": "The four cards and full cumulative tool lists remain legible in Spanish and English at360,390,768 and1280px without horizontal page scrolling, clipping or collapsed tools, and every remaining language, back and account-menu link works by keyboard.",
+          "value": "npm run planes:test-integracion -- --solo selector-sin-cambio",
+          "purpose": "The extra plans view lets a visitor select/highlight any plan for comparison and return to the full comparison; it never changes account assignment, and all tool lists remain visible without an «Ocultar herramientas» control.",
           "created_by": "T14.4",
           "category": "integration",
           "requires": [
@@ -14219,8 +13568,8 @@
     {
       "id": "T14.5",
       "milestone_id": "M1",
-      "title": "SP-14 visual review against the planes@v2 subscription-card contract",
-      "objective": "A fresh reviewer checks the owner-approved planes@v2 card presentation and unchanged entry-link composition at phone,tablet and desktop widths in ES/EN,with no comparison/selection controls,default highlighting,card actions or collapsed tools,recording every deviation with the responsible task. Preserve existing visual ledger and audit policy.",
+      "title": "SP-14 visual review against the planes@v1 contract",
+      "objective": "A fresh reviewer compares the rendered plans section and its two entry points with the approved contract at phone, tablet and desktop widths and in both languages, including the extra selection view and records every mismatch with the task to redo.",
       "repository": "pictures",
       "after": [
         "T14.4"
@@ -14284,13 +13633,13 @@
         "ledger:SP-14-visual"
       ],
       "acceptance_criteria": [
-        "The four subscription cards and both entry links match the approved planes@v2 contract at phone,tablet and desktop widths in Spanish and English; full tool lists stay visible without comparison/selection/highlighting or hide-tools controls,and every finding names the repair task."
+        "The full plans comparison, extra select/highlight view and both entry links match the approved planes@v1 contract at phone, tablet and desktop widths in Spanish and English; every tool list is visible, no hide-tools control appears, and each finding names the repair task."
       ],
       "verification": [
         {
           "type": "command",
           "value": "bitacora.py audit-ledger check .evidence/REQ-021/SP-14.visual.findings.json",
-          "purpose": "The four subscription cards and both entry links match the approved planes@v2 contract at phone,tablet and desktop widths in Spanish and English; full tool lists stay visible without comparison/selection/highlighting or hide-tools controls,and every finding names the repair task.",
+          "purpose": "The full plans comparison, extra select/highlight view and both entry links match the approved planes@v1 contract at phone, tablet and desktop widths in Spanish and English; every tool list is visible, no hide-tools control appears, and each finding names the repair task.",
           "created_by": "T14.5",
           "category": "static"
         }
@@ -14685,7 +14034,7 @@
       "id": "T94",
       "milestone_id": "M1",
       "title": "Composition check CG-4: access plans from the plans section to the accounts screen",
-      "objective": "On the integrated M1 candidate the public subscription cards,authorized account administration and permission guard agree on the four catalogue plans;reading the cards or legacy selection URLs never changes account assignment or grants access.",
+      "objective": "On the integrated M1 candidate the plans section, the accounts screen and the permission guard agree on the four plans: the plans view, admin assignment and permission guard agree, and the public comparison selector never mutates assignment.",
       "repository": "pictures",
       "after": [
         "T14.6"
@@ -14751,7 +14100,7 @@
       ],
       "acceptance_criteria": [
         "On the integrated M1 candidate started with next start against the REQ-021 test database, a signed-out visitor follows the sign-in screen's plans link to the four plans, an administrator moves a Designer account to Designer Plus on the accounts screen and that person's next request opens the cost calculator but not the Taller 3D, and the plan names offered on the accounts screen are exactly the four the plans section shows.",
-        "Reading the subscription cards and using language or navigation controls, including legacy selection query URLs, never changes the signed-in account assignment or next-request permissions and sends no account or purchase mutation."
+        "Selecting/highlighting a plan in the public plans view is comparison-only: the signed-in account’s assigned plan and server permissions do not change."
       ],
       "verification": [
         {
@@ -14766,9 +14115,9 @@
         },
         {
           "type": "command",
-          "value": "npm run planes:test-integracion -- --solo tarjetas-sin-mutacion",
-          "purpose": "Reading the subscription cards and using language or navigation controls, including legacy selection query URLs, never changes the signed-in account assignment or next-request permissions and sends no account or purchase mutation.",
-          "created_by": "T14.4",
+          "value": "npm run planes:test-integracion -- --solo selector-sin-cambio",
+          "purpose": "Selecting/highlighting a plan in the public plans view is comparison-only: the signed-in account’s assigned plan and server permissions do not change.",
+          "created_by": "T94",
           "category": "integration",
           "requires": [
             "PICTURES_REQ021_DATABASE_URL"
@@ -16481,6 +15830,238 @@
           ]
         }
       }
+    },
+    {
+      "id": "T3.91",
+      "milestone_id": "M2",
+      "title": "Restore mouse and pen drag of complete parametric table sets",
+      "objective": "Repair only the confirmed existing table-card drag defect from evidence/owner-rejected/SP-3-v3.md at published4aa221088d69. Restore the established Fondos y muebles mouse/pen drag interaction for every TIPOS_MESA parametric card,including approved additions,without a new screen,control,layout,contract or design. Reuse useArrastreDesdePanel threshold/click suppression and the existing viewer hit-testing/placement pipeline. Drag payload/preview/commit must represent the complete default table-and-attached-chairs set,not a standalone table or detached chair geometry. Reuse the canonical PARTIDA_MESA,sillasDePartida and existing conjunto builder/domain placement rules; do not duplicate the table/chair business logic. Extend the narrow internal drag/group pathway or reuse its existing multi-node item path only if table metadata,parent relationships,capacity and selection are preserved. Build the full new scene once at accepted drop and call the normal history-aware onCambio once; select the table and reuse its existing editor,warning and language/status mechanisms. Preserve click,touch tap,keyboard activation,search/cards/counts,default dimensions/chairs,chair capacity and fixed furniture/library drag. Real pointer release after drag must not create a second set. Invalid/outside drop,Escape,pointer cancellation,insufficient node capacity and cleanup/unmount must create nothing,leave prior selection/history intact and clear ghost/listeners/cursor/orbit state. Use the existing valid drop coordinates/units instead of click default coordinates or a hard-coded floor point. Keep moving an already placed table through the existing useEdicionEscena path,with its chair group attached; test that behavior rather than assuming the reproduction proves it broken. Do not rewrite that movement engine,export,scene schema or permission logic. Own only the four listed producer files and two new regression scripts. Author a pure domain/payload regression and a real Next/WebGL browser harness at /3d using an actual signed-in Master Designer in an invocation-owned isolated REQ021 database/schema and free loopback ports; keep auth bypass off,no production data or paid calls. Browser matrix must use real rendered cards/viewer,real hit-testing and trusted mouse input; Chromium CDP Input.dispatchMouseEvent pointerType=pen is supported by installed playwright-core/types/protocol.d.ts and can exercise the same real pen path. Never invoke creation callbacks,inject scene nodes as the gesture result,force invisible targets or accept component-only synthetic events as placement evidence. Fixture setup may load a controlled scene before the gesture,never substitute it for the gesture. Record per canonical type and pointer modality the default expected table/chair identifiers,accepted drop/world placement,actual exported scene relationships/selection/editor/history and a no-duplicate result. Full matrix also covers click/touch compatibility,invalid drops,capacity/cancellation,existing fixed/library drag and moving the placed set with undo/redo. Keep the focused producer smoke to real rectangular mouse red/green; T3.92 runs the complete matrix once so a production build is not needlessly repeated per criterion. Preserve every accepted task/criterion/check/path/gate and all frozen subplan definitions. No golden regeneration,no new dependency/package script,provider,paid call,owner attestation or UI redesign.",
+      "repository": "pictures",
+      "after": [
+        "T3.13"
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 120,
+      "risk": "medium",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "Uncalibrated provisional120agent minutes:35group placement,25pointer wiring,45focused domain/browser cases,15static checks. Comparable measured duration,retries,quality and consumption remain unknown; not human hours or a deadline.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 4aa221088d69db34dee43d496ffe61d34b0ea428:src/components/tres-d/FondosYMuebles.tsx -> fixed cards call arrastre.apretar/fueArrastre; parametric table cards only call ponerConjunto from onClick",
+            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 4aa221088d69db34dee43d496ffe61d34b0ea428:src/components/tres-d/useLienzoDecoraciones.ts -> single-piece insertion branch cannot create the table-and-attached-chairs set",
+            "task:T3.9",
+            "task:T3.13"
+          ],
+          "justification": "Table set drag crosses existing card,pointer,viewer and canonical group placement paths without new product behavior."
+        },
+        "scope": {
+          "evidence": [
+            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 4aa221088d69db34dee43d496ffe61d34b0ea428:src/components/tres-d/FondosYMuebles.tsx -> fixed cards call arrastre.apretar/fueArrastre; parametric table cards only call ponerConjunto from onClick",
+            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 4aa221088d69db34dee43d496ffe61d34b0ea428:src/components/tres-d/useLienzoDecoraciones.ts -> single-piece insertion branch cannot create the table-and-attached-chairs set",
+            "task:T3.9",
+            "task:T3.13"
+          ],
+          "justification": "The repair is bounded to four existing table-drag producers and two new regression scripts."
+        },
+        "duration": {
+          "evidence": [
+            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 4aa221088d69db34dee43d496ffe61d34b0ea428:src/components/tres-d/FondosYMuebles.tsx -> fixed cards call arrastre.apretar/fueArrastre; parametric table cards only call ponerConjunto from onClick",
+            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 4aa221088d69db34dee43d496ffe61d34b0ea428:src/components/tres-d/useLienzoDecoraciones.ts -> single-piece insertion branch cannot create the table-and-attached-chairs set",
+            "task:T3.9",
+            "task:T3.13"
+          ],
+          "justification": "The table-drag120agent-minute estimate is provisional because history query has no verified comparable duration,retry or quality samples."
+        },
+        "risk": {
+          "evidence": [
+            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 4aa221088d69db34dee43d496ffe61d34b0ea428:src/components/tres-d/FondosYMuebles.tsx -> fixed cards call arrastre.apretar/fueArrastre; parametric table cards only call ponerConjunto from onClick",
+            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 4aa221088d69db34dee43d496ffe61d34b0ea428:src/components/tres-d/useLienzoDecoraciones.ts -> single-piece insertion branch cannot create the table-and-attached-chairs set",
+            "task:T3.9",
+            "task:T3.13"
+          ],
+          "justification": "Incorrect group insertion can orphan chairs,duplicate a set or consume history/capacity; atomic placement and real-browser tests protect these paths."
+        },
+        "coupling": {
+          "evidence": [
+            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 4aa221088d69db34dee43d496ffe61d34b0ea428:src/components/tres-d/FondosYMuebles.tsx -> fixed cards call arrastre.apretar/fueArrastre; parametric table cards only call ponerConjunto from onClick",
+            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 4aa221088d69db34dee43d496ffe61d34b0ea428:src/components/tres-d/useLienzoDecoraciones.ts -> single-piece insertion branch cannot create the table-and-attached-chairs set",
+            "task:T3.9",
+            "task:T3.13"
+          ],
+          "justification": "The table-drag repair consumes completed SP3 cards,group model and integration snapshot after T3.13 before its existing audit."
+        },
+        "confidence": {
+          "evidence": [
+            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 4aa221088d69db34dee43d496ffe61d34b0ea428:src/components/tres-d/FondosYMuebles.tsx -> fixed cards call arrastre.apretar/fueArrastre; parametric table cards only call ponerConjunto from onClick",
+            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 4aa221088d69db34dee43d496ffe61d34b0ea428:src/components/tres-d/useLienzoDecoraciones.ts -> single-piece insertion branch cannot create the table-and-attached-chairs set",
+            "task:T3.9",
+            "task:T3.13"
+          ],
+          "justification": "Published source and exact browser rejection isolate the missing pointer path; full pen/group/cancellation evidence still must be earned."
+        }
+      },
+      "expected_paths": [
+        "src/components/tres-d/FondosYMuebles.tsx",
+        "src/components/tres-d/arrastre-decoracion.ts",
+        "src/components/tres-d/useLienzoDecoraciones.ts",
+        "src/lib/globos3d/mobiliario-conjunto-escena.ts",
+        "scripts/test/test-arrastre-conjunto-mesas.ts",
+        "scripts/test/test-ui-arrastre-mesas-parametricas.ts"
+      ],
+      "shared_resources": [
+        "taller:anadir-panel",
+        "contract:taller-scene"
+      ],
+      "acceptance_criteria": [
+        "A valid dropped parametric table set uses its canonical type/default dimensions/chair configuration and accepted drop placement,creates the complete parent/attached-chair relationship atomically with unique ids,and refuses insufficient capacity without any partial scene change.",
+        "A real browser mouse drag of the rendered Rectangular card to a hit-tested valid viewer floor creates exactly one complete default table-and-chairs set at that drop,selects its table,opens the existing editor and is undone/redone as one history entry; the original click-only wiring fails this regression.",
+        "The existing table-card/default/editor regression remains unchanged and passes for every canonical type,capacity warning,fixed furniture and click creation; approved repository-count checks remain enabled on their original tasks.",
+        "The existing workspace packages build successfully before the full strict table-drag type check,with Node heap bounded to4096MB and no build or TypeScript setting change.",
+        "The repaired table-drag producer and browser fixtures pass full strict repository TypeScript without new casts,suppressions or relaxed settings.",
+        "Owned table-drag producer and regression files pass focused ESLint without new suppressions or lint configuration changes."
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npx --no-install tsx scripts/test/test-arrastre-conjunto-mesas.ts",
+          "purpose": "A valid dropped parametric table set uses its canonical type/default dimensions/chair configuration and accepted drop placement,creates the complete parent/attached-chair relationship atomically with unique ids,and refuses insufficient capacity without any partial scene change.",
+          "created_by": "T3.91",
+          "category": "regression"
+        },
+        {
+          "type": "command",
+          "value": "npx --no-install tsx scripts/test/test-ui-arrastre-mesas-parametricas.ts --suite rectangular-mouse",
+          "purpose": "A real browser mouse drag of the rendered Rectangular card to a hit-tested valid viewer floor creates exactly one complete default table-and-chairs set at that drop,selects its table,opens the existing editor and is undone/redone as one history entry; the original click-only wiring fails this regression.",
+          "created_by": "T3.91",
+          "category": "regression",
+          "requires": [
+            "PICTURES_REQ021_DATABASE_URL"
+          ]
+        },
+        {
+          "type": "command",
+          "value": "npx --no-install tsx scripts/test/test-taller-mesas-piloto.ts",
+          "purpose": "The existing table-card/default/editor regression remains unchanged and passes for every canonical type,capacity warning,fixed furniture and click creation; approved repository-count checks remain enabled on their original tasks.",
+          "created_by": "T3.9",
+          "category": "regression"
+        },
+        {
+          "type": "command",
+          "value": "NODE_OPTIONS=--max-old-space-size=4096 npm run build --workspaces --if-present",
+          "purpose": "The existing workspace packages build successfully before the full strict table-drag type check,with Node heap bounded to4096MB and no build or TypeScript setting change.",
+          "category": "static"
+        },
+        {
+          "type": "command",
+          "value": "NODE_OPTIONS=--max-old-space-size=4096 npx --no-install tsc --noEmit --incremental false",
+          "purpose": "The repaired table-drag producer and browser fixtures pass full strict repository TypeScript without new casts,suppressions or relaxed settings.",
+          "category": "static"
+        },
+        {
+          "type": "command",
+          "value": "npx --no-install eslint src/components/tres-d/FondosYMuebles.tsx src/components/tres-d/arrastre-decoracion.ts src/components/tres-d/useLienzoDecoraciones.ts src/lib/globos3d/mobiliario-conjunto-escena.ts scripts/test/test-arrastre-conjunto-mesas.ts scripts/test/test-ui-arrastre-mesas-parametricas.ts",
+          "purpose": "Owned table-drag producer and regression files pass focused ESLint without new suppressions or lint configuration changes.",
+          "category": "static"
+        }
+      ],
+      "covers": [
+        "R9"
+      ],
+      "kind": "implement",
+      "subplan_id": "SP-3",
+      "ui": false
+    },
+    {
+      "id": "T3.92",
+      "milestone_id": "M2",
+      "title": "Verify parametric table drag,compatibility and moving the placed set in real browsers",
+      "objective": "Command-only focused checkpoint after T3.91,before existing T3.15. Run the authored real Next/WebGL table-drag browser matrix once with a genuine Master Designer and invocation-owned local fixtures. Require a case for every current TIPOS_MESA type under both trusted mouse and pen inputs,plus rectangular240×90×75cm defaults,complete attached chairs,actual hit-tested drop/world placement,one creation after pointer release,table selection/editor,click and touch tap,Escape/pointer cancellation/outside invalid drop,MAX_NODOS boundary with no partial set,and moving the created table with its chair group through the actual viewer followed by undo/redo. The expectation comes independently from SPEC R9,canonical approved type/default registries and documented parent-child invariants,never the same creation function result or a screenshot-only piece counter. Verify legacy fixed/library drag remains usable. Record exact candidate,per-case type/modality,destination,scene relationship and history outcomes; fail on missing/unexecuted cases,unsupported pen input,missing WebGL,missing DB or fabricated success. Fixtures may initialize baseline state before gestures but may not insert the expected result or invoke callbacks as proof. Preserve source/oracles; do not repair here. Clean up only invocation-owned schemas,ports,servers and temp data; redact secrets,no paid calls or production data. T3.15 audits the repair with its original unchanged criteria/checks.",
+      "repository": "pictures",
+      "after": [
+        "T3.91"
+      ],
+      "complexity": "low",
+      "scope": "isolated_fix",
+      "estimated_minutes": 30,
+      "risk": "low",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "Uncalibrated provisional30agent minutes for one complete existing browser matrix and evidence review; measured runtime/retry/quality unknown.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "task:T3.91",
+            "task:T3.9"
+          ],
+          "justification": "The table-drag checkpoint executes and inspects a producer-owned browser matrix without source implementation."
+        },
+        "scope": {
+          "evidence": [
+            "task:T3.91",
+            "task:T3.9"
+          ],
+          "justification": "Only exact-candidate table-drag evidence is produced before the original SP3 audit."
+        },
+        "duration": {
+          "evidence": [
+            "task:T3.91",
+            "task:T3.9"
+          ],
+          "justification": "Thirty provisional agent minutes cover table-drag execution/evidence; no verified comparable history is available."
+        },
+        "risk": {
+          "evidence": [
+            "task:T3.91",
+            "task:T3.9"
+          ],
+          "justification": "The checkpoint uses owned local fixtures with no paid provider or production account; unsupported environments block rather than fabricate proof."
+        },
+        "coupling": {
+          "evidence": [
+            "task:T3.91",
+            "task:T3.9"
+          ],
+          "justification": "The browser checkpoint consumes T3.91 pointer/group repair and is a prerequisite of the original T3.15 audit."
+        },
+        "confidence": {
+          "evidence": [
+            "task:T3.91",
+            "task:T3.9"
+          ],
+          "justification": "The matrix and exact required cases are specified; actual runtime and results remain unverified until execution."
+        }
+      },
+      "expected_paths": [
+        ".evidence/REQ-021/SP-3.table-drag.json",
+        ".evidence/REQ-021/SP-3.table-drag"
+      ],
+      "shared_resources": [
+        "candidate:SP-3"
+      ],
+      "acceptance_criteria": [
+        "On the exact real Next/WebGL candidate,the complete canonical table-card matrix proves mouse and pen valid-drop placement of one complete default table-and-chairs set per gesture,click/touch and editor compatibility,atomic capacity/cancellation/invalid-drop refusal,no duplicate creation and moving the placed set with its chairs plus undo/redo,with independent expected default/relationship assertions and every required case actually executed."
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npx --no-install tsx scripts/test/test-ui-arrastre-mesas-parametricas.ts --suite completa",
+          "purpose": "On the exact real Next/WebGL candidate,the complete canonical table-card matrix proves mouse and pen valid-drop placement of one complete default table-and-chairs set per gesture,click/touch and editor compatibility,atomic capacity/cancellation/invalid-drop refusal,no duplicate creation and moving the placed set with its chairs plus undo/redo,with independent expected default/relationship assertions and every required case actually executed.",
+          "created_by": "T3.91",
+          "category": "integration",
+          "requires": [
+            "PICTURES_REQ021_DATABASE_URL"
+          ]
+        }
+      ],
+      "covers": [
+        "R9"
+      ],
+      "kind": "test",
+      "subplan_id": "SP-3",
+      "ui": false
     }
   ]
 }

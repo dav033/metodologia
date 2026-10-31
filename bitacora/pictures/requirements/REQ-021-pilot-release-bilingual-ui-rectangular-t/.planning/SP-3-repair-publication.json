@@ -1,0 +1,20 @@
+{
+  "state": "publishing-approved-repair-view",
+  "previous_revision": 30,
+  "scope": "Only T3.91,T3.92 and T3.15.after; UI SP2/SP14 proposals are preserved for restoration,not approved.",
+  "pending_files": {
+    "PLAN.json": "67712ad37670703803c009f5d1c76624cd8476aee72f64c045504bacd8065b2f",
+    "PLAN.md": "2f8521d7a69a898423b9f6f0d310133c6aa0e851c9051ccae2174e63b1eaabe2",
+    "SPEC.md": "6259a47b39e3de21a6364f99d5dd5012631279957945531f55fc4569d3a613ae"
+  },
+  "normal_command": [
+    "stage",
+    "freeze",
+    "REQ-021",
+    "--repair-evidence",
+    "evidence/owner-rejected/SP-3-v3.md",
+    "--by",
+    "planner"
+  ],
+  "new_revision": null
+}

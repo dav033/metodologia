@@ -3137,11 +3137,18 @@ Solucionador 20261030-100736-d494 integrated merge fff622890f28b8093a9a0afda9c40
 - **Trigger key:** without images `rejection_key` is byte-for-byte the old one. With images their sorted digests join
   the note before hashing: the same note with other images is a new rejection (the earlier trigger goes stale and the
   Solucionador gets a new one); the same note with the same images, in any order, is the same trigger.
+- **Idempotent rejection:** a double-submitted rejection opened two P-items (pictures REQ-021 SP-3 v3, 15:40:59 and
+  15:41:03, P-212 and P-213; the trigger was already deduped by its key). `decide` now checks, under the ledger lock,
+  whether the standing decision is already this rejection (same version and commit, same note whitespace aside, same
+  image digests in any order): nothing is rewritten, no P-item is opened, and the answer names the existing one
+  («… ya estaba rechazado con esta misma nota: sigue abierto el pendiente P-NNN. No abrí otro.»). Another note, other
+  images or a newer version is a new rejection.
 - **Not versioned:** image bytes stay on this machine (the repository's `.gitignore` keeps `bitacora/**/*.png|jpg|…`
   out of the remote, owner 2026-10-19); the decision entry with each path and digest is versioned. A missing file shows
   its alt text in the panel and 404s on the route.
 - **DBOS:** no workflow step changed (the trigger and brief are maintenance-pass data).
-- **Evidence:** `test_rejection_images` (18: parsing 3, checking 4, decisions 7, real HTTP server 3, Solucionador
-  brief 1), red on main (the module does not exist there); `test_verification`, `test_owner_reject_solver`,
+- **Evidence:** `test_rejection_images` (20: parsing 3, checking 4, decisions 9 incl. double submit and 4 concurrent
+  submits, real HTTP server 3, Solucionador brief 1), red on main (the module does not exist there; the double submit
+  opens P-001 and P-002 on main, one on the branch); `test_verification`, `test_owner_reject_solver`,
   `test_durable_solver` and the server/verify/config suites green (226 tests). Built by an Opus subagent
   (metodologia-95), branch `reject-images`.
