@@ -271,6 +271,29 @@ class Integrate(unittest.TestCase):
         self.assertIn("main moved with code", outcome.lines[-1])
         self.assertEqual(len(count), integ.CATCH_UP_RUNS + 1)
 
+    def test_without_regression_it_integrates_on_the_smoke_and_lists_it_in_the_ledger(self):
+        """D-261 (owner 2026-10-31): `none` runs no regression and writes the integration to the ledger."""
+        ledger = self.base / "REGRESSION-OFF.md"
+        fake = Fake(self)
+        outcome = self.run_it(fake, regression="none", ledger=ledger)
+        self.assertEqual(outcome.code, 0, outcome.lines)
+        self.assertFalse([c for c in fake.calls if c[0] == "regress"])
+        self.assertFalse(fake.spawned)                                        # no post-merge regression either
+        text = ledger.read_text(encoding="utf-8")
+        self.assertIn("## Integrated without regression\n", text)
+        self.assertIn("x is two (D-900)", text.split("## Escaped defects")[0])
+        self.assertIn("regression: skipped (D-261", self.log.read_text(encoding="utf-8"))
+        integ.record_escape("T9 broke the panel; test_page_x would have failed", outcome.merge, ledger)
+        escaped = ledger.read_text(encoding="utf-8").split("## Escaped defects")[1]
+        self.assertIn(f"`{outcome.merge[:12]}` · T9 broke the panel", escaped)
+
+    def test_without_regression_a_failed_smoke_is_an_escaped_defect(self):
+        ledger = self.base / "REGRESSION-OFF.md"
+        outcome = self.run_it(Fake(self, smoke=[["web answers 500"], []]), regression="none", ledger=ledger)
+        self.assertEqual(outcome.code, 3, outcome.lines)
+        self.assertIn("the smoke failed after an integration without regression",
+                      ledger.read_text(encoding="utf-8").split("## Escaped defects")[1])
+
     def test_main_code_the_branch_lacks_is_merged_into_it_before_the_regression(self):
         """D-260: 13 of 33 integrations on 2026-10-31 went back to the end of the queue for this."""
         self.other_on_main()

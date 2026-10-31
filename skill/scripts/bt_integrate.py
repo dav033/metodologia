@@ -63,7 +63,11 @@ PG_CONTAINER = "metodologia-dbos-pg"
 BITACORA = "bitacora/"
 SMOKE_SECONDS = 90
 BUSY = 75
-MODES = ("staged", "selective", "full")
+MODES = ("staged", "selective", "full", "none")
+# owner 2026-10-31 17:05: «hasta nuevo aviso no vamos a correr pruebas de regresión en metodología» (D-261). `none`
+# integrates on preflight and smoke alone and writes every such integration to this ledger, where the defects a
+# regression would have caught are recorded too (`--escaped`), so the owner can decide later with evidence.
+LEDGER = "REGRESSION-OFF.md"
 
 
 class Refused(RuntimeError):
@@ -163,6 +167,35 @@ def units_for(paths: list[str]) -> list[str]:
 
 def code_paths(paths: list[str]) -> list[str]:
     return [p for p in paths if p and not p.startswith(BITACORA)]
+
+
+def ledger() -> Path:
+    import bt_core
+    return Path(bt_core.ROOT) / "metodologia" / LEDGER
+
+
+def _ledger_add(section: str, line: str, path: Path | None = None) -> None:
+    """Append `line` under `section` («Integrated without regression» / «Escaped defects») of the ledger."""
+    path = path or ledger()
+    text = path.read_text(encoding="utf-8") if path.exists() else (
+        "# Integrations without regression (D-261)\n\nOwner, 2026-10-31 17:05: until further notice metodologia "
+        "integrations run no regression tests (`integrate.regression: none`). Every integration made that way is "
+        "listed here, and so is every defect found later that a regression would have caught, to decide with "
+        "evidence whether to turn regressions back on.\n\n## Integrated without regression\n\n## Escaped defects\n")
+    head = f"## {section}\n"
+    at = text.index(head) + len(head)
+    following = text.find("\n## ", at)
+    end = len(text) if following < 0 else following
+    body = text[at:end].rstrip("\n")
+    text = text[:at] + (body + "\n" if body.strip() else "\n") + line.rstrip("\n") + "\n" + text[end:]
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(text, encoding="utf-8")
+
+
+def record_escape(text: str, merge: str = "", path: Path | None = None) -> None:
+    """A defect found after an integration without regression that a regression would have caught."""
+    _ledger_add("Escaped defects", f"- {dt.datetime.now():%Y-%m-%d %H:%M}" + (f" · merge `{merge[:12]}`" if merge else "")
+                + f" · {text}", path)
 
 
 def release_log() -> Path:
@@ -331,7 +364,8 @@ class Request:
     dry_run: bool = False
     keep_worktree: bool = False
     cwd: Path | None = None                      # the caller's working directory (default: this process's)
-    regression: str = ""                         # staged | selective | full; "" = integrate.regression
+    regression: str = ""                         # staged | selective | full | none; "" = integrate.regression
+    ledger: Path | None = None                   # D-261's ledger (tests); default <bitácora>/metodologia/REGRESSION-OFF.md
 
 
 @dataclass
@@ -492,7 +526,9 @@ def _integrate(req: Request, services: Services, note: Callable[[str], None], li
     units = units_for(paths)
     note(f"preflight ok: {len(paths)} path(s) changed; restart: {', '.join(units) or 'none'}")
     mode = regression_mode(req)
-    selection = _selection(req, services, mode, note)
+    selection = None if mode == "none" else _selection(req, services, mode, note)
+    if mode == "none":
+        note("regression: skipped (integrate.regression = none: owner, 2026-10-31, until further notice; D-261)")
     if req.dry_run:
         return Outcome(0, lines)
     selective = mode == "selective" and selection is not None and selection.trusted
@@ -500,7 +536,7 @@ def _integrate(req: Request, services: Services, note: Callable[[str], None], li
     scratch = Path(req.scratch or Path(req.deploy).parent / "regress" /     # fresh roots for every run
                    f"{req.branch.replace('/', '-')}-{dt.datetime.now():%Y%m%d-%H%M%S}")
     results = scratch / "results.txt"
-    for attempt in range(CATCH_UP_RUNS + 1):
+    for attempt in range(0 if mode == "none" else CATCH_UP_RUNS + 1):
         regression = services.regress(Path(req.worktree), scratch, results, selection=selection, mode=mode)
         note(f"regression: {regression.summary()} ({results})")
         if not regression.ok:
@@ -530,13 +566,19 @@ def _integrate(req: Request, services: Services, note: Callable[[str], None], li
         results = scratch / "results.txt"
         selection = _selection(req, services, mode, note)
         selective = mode == "selective" and selection is not None and selection.trusted
+    if mode == "none":
+        moved = code_paths(git(req.live, "diff", "--name-only", start_main, "main").splitlines())
+        if moved:                                    # nothing ran meanwhile, but the merge must hold main's code
+            catch_up(req, note)
+            paths = git(req.live, "diff", "--name-only", f"main...{req.branch}").splitlines()
+            units = units_for(paths)
     previous = git(req.live, "rev-parse", "main")
     backup = ""
     if ENGINE_UNIT in units:
         backup = services.backup()
         note(f"backup: {backup.split()[0]}")
     log = req.log or release_log()
-    summary = f"{regression.summary()} ({results})"
+    summary = "skipped (D-261: integrate.regression = none)" if mode == "none" else f"{regression.summary()} ({results})"
     if selective:
         summary += "; the full regression of the merge runs in the background after the smoke"
     _append(log, _entry(req, previous, backup, summary, units))
@@ -557,12 +599,19 @@ def _integrate(req: Request, services: Services, note: Callable[[str], None], li
     problems = _restart(services, units, note)
     if not problems:
         _append(log, f"result: merged {merge[:12]}, restarted {', '.join(units) or 'nothing'}, smoke ok\n")
+        if mode == "none":
+            _ledger_add("Integrated without regression", f"- {dt.datetime.now():%Y-%m-%d %H:%M} · `{merge[:12]}` · "
+                        f"{req.title} · {len(paths)} path(s): {', '.join(paths[:6])}" + (" …" if len(paths) > 6 else ""),
+                        req.ledger)
         if selective:
             import bt_integrate_post
             bt_integrate_post.start(req, merge, log, services, note)
         _clean_up(req, note)
         return Outcome(0, lines, merge)
     note(f"SMOKE FAILED: {'; '.join(problems)}; reverting the merge")
+    if mode == "none":
+        record_escape(f"{req.title}: the smoke failed after an integration without regression ({'; '.join(problems)[:300]})",
+                      merge, req.ledger)
     try:
         reverted = _revert(req, merge, services, units, note)
     except Refused as error:
@@ -665,6 +714,8 @@ def main(argv: list[str] | None = None) -> int:
                        help="integrate on the selected suites alone; the full regression of the merge runs afterwards")
     modes.add_argument("--full", dest="regression", action="store_const", const="full",
                        help="run the full regression without a selection first")
+    modes.add_argument("--no-regression", dest="regression", action="store_const", const="none",
+                       help="integrate on preflight and smoke alone and list it in the D-261 ledger")
     modes.add_argument("--staged", dest="regression", action="store_const", const="staged",
                        help="the selected suites first, then the rest (the default unless integrate.regression says)")
     parser.add_argument("--attached", action="store_true",
@@ -673,7 +724,14 @@ def main(argv: list[str] | None = None) -> int:
     actions = parser.add_mutually_exclusive_group()
     actions.add_argument("--post-merge", metavar="MERGE", help="run the full regression of an integrated merge")
     actions.add_argument("--revert", metavar="MERGE", help="revert an integrated merge (deploy worktree, ff-only)")
+    actions.add_argument("--escaped", metavar="TEXT", help="record a defect a regression would have caught (D-261 "
+                         "ledger); --merge names the integration it came from")
+    parser.add_argument("--merge", default="", help="with --escaped: the merge commit the defect came from")
     args = parser.parse_args(argv)
+    if args.escaped:
+        record_escape(args.escaped, args.merge)
+        print(f"recorded in {ledger()}")
+        return 0
     req = Request(branch=args.branch, worktree=args.worktree or Path("."), title=args.title, session=args.session,
                   live=args.live, deploy=args.deploy, scratch=args.scratch, log=args.release_log,
                   wait_seconds=args.wait_seconds, trailers=args.trailer, dry_run=args.dry_run,

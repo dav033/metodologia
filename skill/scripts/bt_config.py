@@ -177,7 +177,7 @@ ALLOWED: dict[str, tuple] = {
     "run.isolation": ("off", "worktree"),
     "execution.backend": ("legacy", "dbos"),
     "execution.router": ("m2", "static"),
-    "integrate.regression": ("staged", "selective", "full"),
+    "integrate.regression": ("staged", "selective", "full", "none"),
 }
 ALLOWED_ITEMS: dict[str, tuple] = {"gates.audit_blocking": ("critical", "high", "medium", "low")}
 
