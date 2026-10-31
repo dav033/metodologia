@@ -125,6 +125,9 @@ class _ProjectIntegrator:
     def compose(self, run, gate_id, evidence):
         return self._for(run.project).composer.compose(run, gate_id, evidence)
 
+    def stale_members(self, run, gate_id, snapshot):
+        return self._for(run.project).composer.stale_members(run, gate_id, snapshot)
+
 
 def reap_once(prefix: str = "") -> list[str]:
     """Terminate agent units whose workflow is terminal (cancelled, failed, finished) but which are still alive."""

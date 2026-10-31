@@ -244,7 +244,12 @@ class VerificationWeb(Base):
             self.assertIn(expected, html)
         v.decide("proj", self.rdir, "SP-1", "rejected", "falla el botón")
         self.assertIn("Tu nota: «falla el botón»", page.panel(self.ctx(), {"id": "SP-1"}))
-        self.projection(**{"SP-1": (4, "b" * 40)})
+        self.projection(**{"SP-1": (4, "b" * 40)})                 # after a rejection: «por probar» with the note
+        html = page.panel(self.ctx(), {"id": "SP-1"})
+        self.assertIn("Rechazaste la versión 3: «falla el botón»; comprueba esto en la versión 4.", html)
+        self.assertIn('<span class="pp-vstate warn">por probar</span>', html)
+        v.decide("proj", self.rdir, "SP-1", "approved")
+        self.projection(**{"SP-1": (5, "c" * 40)})                 # after an approval: it changed after your decision
         self.assertIn("vuelve a probarla", page.panel(self.ctx(), {"id": "SP-1"}))
 
     def test_run_card_chip_and_tab_label_follow_the_states(self):

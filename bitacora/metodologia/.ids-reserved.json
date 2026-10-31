@@ -89,6 +89,46 @@
    "id": "D-243",
    "by": "metodologia-95: a built subplan is offered to try before its composition gate",
    "at": "2026-10-31T08:00:22"
+  },
+  {
+   "id": "D-244",
+   "by": "owner-reject-solver subagent: the owner's rejection of a subplan version goes to the Solucionador and comes back as a repaired version por probar with his note",
+   "at": "2026-10-31T08:29:26"
+  },
+  {
+   "id": "D-245",
+   "by": "gate-recompose subagent: a passed gate is composed again when a member line moves on",
+   "at": "2026-10-31T08:34:44"
+  },
+  {
+   "id": "D-246",
+   "by": "gate-recompose subagent: Probar folds predecessors' current lines into a later subplan's tree",
+   "at": "2026-10-31T08:34:45"
+  },
+  {
+   "id": "D-247",
+   "by": "solver 20261031-075511-d592: isolate planner notification terminal fixture",
+   "at": "2026-10-31T08:42:53"
+  },
+  {
+   "id": "D-248",
+   "by": "machine-responsive subagent: panel and remote listener stop recomputing the read model per poll",
+   "at": "2026-10-31T08:44:21"
+  },
+  {
+   "id": "D-249",
+   "by": "machine-responsive subagent: frequent agent hooks take a fast path",
+   "at": "2026-10-31T08:44:21"
+  },
+  {
+   "id": "D-250",
+   "by": "machine-responsive subagent: background work yields CPU and keeps test fsyncs off the disk",
+   "at": "2026-10-31T08:44:22"
+  },
+  {
+   "id": "D-251",
+   "by": "metodologia-95: a vanished Solucionador session's triggers go back to the queue",
+   "at": "2026-10-31T09:46:08"
   }
  ]
 }

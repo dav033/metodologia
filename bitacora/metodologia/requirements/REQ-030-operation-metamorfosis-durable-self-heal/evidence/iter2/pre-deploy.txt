@@ -338,3 +338,10 @@ previous main: df1fe113807c969883102f0380fb121c10f75508
 regression: 310 files, no failures + test_verify_procs (load flake, passes alone) [staged: first 36 in 1m51s, then the rest 274 in 32m22s] (/home/david/.local/share/bitacora-integrate/regress/agent-quota-wall-20261030-183515/results.txt)
 rollback: git revert the merge of agent-quota-wall on main, restart bt-durable.service and bitacora-web.service
 result: merged 4a32ce2e72e6, restarted bt-durable.service, bitacora-web.service, smoke ok
+
+# integration of A built subplan is offered to try before its composition gate (D-243), local restart of engine + web, 2026-10-31 09:18, session metodologia-90
+previous main: d6dfbd2e8db57e6dd4861ccee79aaeb55eddbee9
+/home/david/bitacora/.state/durable/backups/bt_durable-20261031-091807.dump 41424397 ae666bdad070159b355ad28dc4b9bc6c82bde5b55e2503ffadfd53b30602346d
+regression: 310 files, no failures + test_durable_remote (load flake, passes alone) [staged: selected 96 in 15m44s, then the rest 214 in 21m46s] (/home/david/.local/share/bitacora-integrate/regress/built-subplan-versions-20261031-084036/results.txt)
+rollback: git revert the merge of built-subplan-versions on main, restart bt-durable.service and bitacora-web.service
+result: merged e74c6ea8b414, restarted bt-durable.service, bitacora-web.service, smoke ok

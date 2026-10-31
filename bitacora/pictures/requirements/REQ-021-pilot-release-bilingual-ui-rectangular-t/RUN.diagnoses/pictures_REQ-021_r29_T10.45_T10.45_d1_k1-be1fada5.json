@@ -1,0 +1,23 @@
+{
+ "request": "pictures:REQ-021:r29:T10.45:T10.45:d1@k1",
+ "state": "done",
+ "kind": "dependency",
+ "label": "Dependencias",
+ "tone": "info",
+ "headline": "Falló la verificación del idioma inglés: texto en español y error de build",
+ "origin": "La última salida muestra \"harness_oracle_failure: guided chat emitted its terminal response event\" con un evento SSE de tipo \"error\" (request_id 4f5b9db3-468e-4b53-b864-dd357870f316), sin causa establecida. En otros intentos, el build falló con \"scripts/test/test-fotos-ejemplo-idioma.tsx(16,7): error TS2769\" (fuera del alcance de T10.45) y la pantalla en inglés mostró \"product_translation_failure: English screen contains Spanish text: Quinceañera\", que depende del productor de traducción T10.44. Cada intento falla en un punto distinto y ninguno se corrige reintentando solo el arnés.",
+ "steps": [
+  "Corregir la traducción de \"Quinceañera\" en la pantalla en inglés dentro del productor T10.44 y volver a verificar ese task; no tocar el arnés para ocultarlo.",
+  "Corregir scripts/test/test-fotos-ejemplo-idioma.tsx:16 (falta la prop children en la llamada con idioma), o asignarlo a su dueño, porque el build de Next lo incluye en la verificación.",
+  "Revisar en el controlador de guided chat por qué devuelve el evento SSE \"error\" para la conversación de prueba, y volver a ejecutar npm run idioma:test-harness-resto con PICTURES_REQ021_DATABASE_URL definida.",
+  "Cuando T10.44 y el build estén corregidos, relanzar T10.45 con bitacora.py --project <proyecto> scheduler-op REQ-021 decisions y elegir una nueva ejecución para la decisión T10.45:d1."
+ ],
+ "option": "stop",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-31T08:57:12",
+ "seconds": 25.5
+}

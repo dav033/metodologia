@@ -11779,13 +11779,147 @@
       "ui": false
     },
     {
+      "id": "T10.442",
+      "milestone_id": "M3",
+      "title": "Repair the typed language fixture and English fifteenth-birthday label",
+      "objective": "Repair the two demonstrated producer defects inherited from accepted T10.441 snapshot 147ee97f22d5394b6ff696ae902709e0cf6e7a45, without changing that accepted task or assigning product changes to harness-only T10.45. Own only scripts/test/test-fotos-ejemplo-idioma.tsx and src/components/guiado/textos/chat-guiado.ts. In the rendered fixture supply the required IdiomaProvider children through correctly typed React props/JSX, preserving the real provider and component; do not make children optional, cast around TS2769, weaken strict settings, add suppressions, or alter the production provider API. Preserve every existing EN/ES photo-control case, disabled/native-button assertion, Spanish compatibility alias and header-oracle negative. Extend the same focused suite to render the actual SaludoGuiado under the actual IdiomaProvider in EN and ES, with options visible and enabled/disabled states. Correct only en.celebrationQuince from the untranslated Quinceañera to Fifteenth birthday; keep es.celebrationQuince exactly XV años, all dictionary keys, Spanish catalogue/search vocabulary, event IDs and SaludoGuiado selection payloads unchanged. Assert those two independently fixed visible labels, reject the old Spanish label in EN, and demonstrate the old label fails the rendered regression. Reuse existing idioma:test-fotos-ejemplo registration; no new package entry or dependency is needed. Build existing workspace packages first with NODE_OPTIONS=--max-old-space-size=4096 npm run build --workspaces --if-present, then run NODE_OPTIONS=--max-old-space-size=4096 npx --no-install tsc --noEmit --incremental false plus focused lint/coverage, reporting unrelated preexisting failures without expanding ownership. SaludoGuiado.tsx, IdiomaProvider, authorization, catalogue data, migration SQL and both T10.45 harness files are read-only inputs, never producer outputs. This repairs existing R12 behavior with no new screen, layout, interaction or Designer scope; no paid calls or live-provider attestation.",
+      "repository": "pictures",
+      "after": [
+        "T10.441"
+      ],
+      "complexity": "low",
+      "scope": "isolated_fix",
+      "estimated_minutes": 45,
+      "risk": "low",
+      "coupling": "medium",
+      "confidence": "high",
+      "estimate_rationale": "Uncalibrated provisional agent estimate: 5 minutes for required React children, 5 for the one English entry, 20 for actual EN/ES greeting regressions and 15 for strict types/focused checks. History query returns unknown comparable duration, retries, quality and consumption; this is not human time or measured throughput.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "task:T10.441",
+            "command:git -C /home/david/dev/.pictures-wt/login-redirect show f456c7fe5fc942ee2d104ffb56518c867094f3fc:src/components/guiado/SaludoGuiado.tsx -> actual greeting renders celebrationQuince and preserves Spanish selection payload XV años",
+            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 147ee97f22d5394b6ff696ae902709e0cf6e7a45:scripts/test/test-fotos-ejemplo-idioma.tsx -> provider fixture passes idioma without required children props; real provider source requires ReactNode children"
+          ],
+          "justification": "Two exact defects use the existing real provider and greeting without introducing new state or domain rules."
+        },
+        "scope": {
+          "evidence": [
+            "task:T10.441",
+            "command:git -C /home/david/dev/.pictures-wt/login-redirect show f456c7fe5fc942ee2d104ffb56518c867094f3fc:src/components/guiado/SaludoGuiado.tsx -> actual greeting renders celebrationQuince and preserves Spanish selection payload XV años",
+            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 147ee97f22d5394b6ff696ae902709e0cf6e7a45:scripts/test/test-fotos-ejemplo-idioma.tsx -> provider fixture passes idioma without required children props; real provider source requires ReactNode children"
+          ],
+          "justification": "Only the accepted photo-test fixture and one English dictionary entry plus its rendered regression are changed."
+        },
+        "duration": {
+          "evidence": [
+            "command:python /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind implement --complexity low --scope isolated_fix --risk low --coupling medium -> status unknown; no verified comparable samples"
+          ],
+          "justification": "The forty-five minute agent estimate is provisional because comparable measured history is unavailable."
+        },
+        "risk": {
+          "evidence": [
+            "task:T10.441",
+            "command:git -C /home/david/dev/.pictures-wt/login-redirect show f456c7fe5fc942ee2d104ffb56518c867094f3fc:src/components/guiado/SaludoGuiado.tsx -> actual greeting renders celebrationQuince and preserves Spanish selection payload XV años",
+            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 147ee97f22d5394b6ff696ae902709e0cf6e7a45:scripts/test/test-fotos-ejemplo-idioma.tsx -> provider fixture passes idioma without required children props; real provider source requires ReactNode children"
+          ],
+          "justification": "Production provider APIs and selection payloads remain unchanged while real English and Spanish renders protect the label."
+        },
+        "coupling": {
+          "evidence": [
+            "task:T10.441",
+            "task:T10.45"
+          ],
+          "justification": "The accepted producer supplies the fixture and dictionary; the exhaustive harness must consume this repaired producer snapshot."
+        },
+        "confidence": {
+          "evidence": [
+            "task:T10.441",
+            "command:git -C /home/david/dev/.pictures-wt/login-redirect show f456c7fe5fc942ee2d104ffb56518c867094f3fc:src/components/guiado/SaludoGuiado.tsx -> actual greeting renders celebrationQuince and preserves Spanish selection payload XV años",
+            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 147ee97f22d5394b6ff696ae902709e0cf6e7a45:scripts/test/test-fotos-ejemplo-idioma.tsx -> provider fixture passes idioma without required children props; real provider source requires ReactNode children"
+          ],
+          "justification": "Exact accepted and failed snapshots show the required React prop and untranslated label with their real consumers."
+        }
+      },
+      "expected_paths": [
+        "scripts/test/test-fotos-ejemplo-idioma.tsx",
+        "src/components/guiado/textos/chat-guiado.ts"
+      ],
+      "shared_resources": [
+        "contract:idioma"
+      ],
+      "acceptance_criteria": [
+        "The existing workspace package build completes using current package scripts before the full strict repository type check, with NODE_OPTIONS bounding the Node heap to 4096 MB and without changing package, TypeScript or lint settings.",
+        "The repaired photo fixture satisfies the existing required IdiomaProvider children prop under strict repository TypeScript, with no cast, suppression, optional-prop change or configuration weakening.",
+        "Every inherited real photo-control EN/ES, enabled/disabled, native-button and Spanish compatibility-alias case remains and passes in the existing focused suite.",
+        "The real SaludoGuiado rendered under the real IdiomaProvider shows Fifteenth birthday in English and exactly XV años in Spanish with options enabled and disabled, the old Quinceañera label fails the English rendered regression, and dictionary keys, event IDs, Spanish catalogue vocabulary and selection payloads remain unchanged.",
+        "The inherited header-oracle case and its negatives for removing either dev or herramientas_internas gate or substituting another permission remain and pass, without changing production authorization.",
+        "The two owned producer files pass focused ESLint with no new suppression or lint-configuration change.",
+        "The unchanged language coverage guard accepts SaludoGuiado without a new scanner exemption; the real production provider, event-selection code, permissions, Spanish catalogue vocabulary and interactions remain unchanged."
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "NODE_OPTIONS=--max-old-space-size=4096 npm run build --workspaces --if-present",
+          "purpose": "The existing workspace package build completes using current package scripts before the full strict repository type check, with NODE_OPTIONS bounding the Node heap to 4096 MB and without changing package, TypeScript or lint settings.",
+          "category": "static"
+        },
+        {
+          "type": "command",
+          "value": "NODE_OPTIONS=--max-old-space-size=4096 npx --no-install tsc --noEmit --incremental false",
+          "purpose": "The repaired photo fixture satisfies the existing required IdiomaProvider children prop under strict repository TypeScript, with no cast, suppression, optional-prop change or configuration weakening.",
+          "category": "static"
+        },
+        {
+          "type": "command",
+          "value": "npm run idioma:test-fotos-ejemplo",
+          "purpose": "Every inherited real photo-control EN/ES, enabled/disabled, native-button and Spanish compatibility-alias case remains and passes in the existing focused suite.",
+          "created_by": "T10.441",
+          "category": "regression"
+        },
+        {
+          "type": "command",
+          "value": "npm run idioma:test-fotos-ejemplo",
+          "purpose": "The real SaludoGuiado rendered under the real IdiomaProvider shows Fifteenth birthday in English and exactly XV años in Spanish with options enabled and disabled, the old Quinceañera label fails the English rendered regression, and dictionary keys, event IDs, Spanish catalogue vocabulary and selection payloads remain unchanged.",
+          "created_by": "T10.442",
+          "category": "regression"
+        },
+        {
+          "type": "command",
+          "value": "npm run idioma:test-fotos-ejemplo -- --caso oraculo-cabecera",
+          "purpose": "The inherited header-oracle case and its negatives for removing either dev or herramientas_internas gate or substituting another permission remain and pass, without changing production authorization.",
+          "created_by": "T10.441",
+          "category": "regression"
+        },
+        {
+          "type": "command",
+          "value": "npx --no-install eslint scripts/test/test-fotos-ejemplo-idioma.tsx src/components/guiado/textos/chat-guiado.ts",
+          "purpose": "The two owned producer files pass focused ESLint with no new suppression or lint-configuration change.",
+          "category": "static"
+        },
+        {
+          "type": "command",
+          "value": "npm run idioma:test-cobertura -- src/components/guiado/SaludoGuiado.tsx",
+          "purpose": "The unchanged language coverage guard accepts SaludoGuiado without a new scanner exemption; the real production provider, event-selection code, permissions, Spanish catalogue vocabulary and interactions remain unchanged.",
+          "created_by": "T8.3",
+          "category": "static"
+        }
+      ],
+      "covers": [
+        "R12"
+      ],
+      "kind": "implement",
+      "subplan_id": "SP-10",
+      "ui": false
+    },
+    {
       "id": "T10.45",
       "milestone_id": "M3",
       "title": "Implement the remaining-English browser verification harness",
       "objective": "Repair only scripts/test/test-integracion-idioma-resto.ts, scripts/test/test-harness-idioma-resto.ts and their package script wiring, after translation producer T10.44. Start real production Next and controlled local Python against disposable REQ-021 fixtures; deterministic execution makes no paid calls. Register idioma:test-integracion-resto and idioma:test-harness-resto. Enforce the complete frozen T10.5 matrix: English Designer Plus uses home, guided chat, counter, calculator and account; Master Designer opens gallery, saved projects and personal library. Record actual role/route, imported dictionary module/keys/values, meaningful visible readiness, rendered-language scan and result for every entry. Fail on omissions, wrong roles, redirects, empty/stale/partial evidence or untranslated interface text; catalogue visits never replace required screens. Capture an actual provider-emitted Spanish catalogue-search tool call correlated with an English guided-chat conversation, plus reply-language instructions and rendered response. A hard-coded direct catalogue request proves nothing. Negative regressions remove each matrix entry, substitute wrong roles/text, omit calls and emit English search arguments; all must fail. CG-10 mode additionally proves its frozen composed flow and unchanged Spanish behavior. Correct demonstrated locator/oracle defects with appropriate DOM-visible, accessible-name or placeholder assertions while preserving dictionary expectations. Classify harness_oracle_failure, product_translation_failure and candidate_identity_failure separately, never as success. Preserve SP-9 data/fallback and staff exclusions. T10.5 remains command-only; real configured-provider EN/ES observation stays NOT_RUN until genuine authorized observation, never satisfied by fixtures.\nFor gitless M6, read only SYSTEM /run/bt-m6/snapshot.json, schema m6.snapshot-context/1: snapshot_sha, base_sha, manifest_sha256, content_sha256, files. The envelope is generated after M3 provenance/commit/materialized-tree validation and read-only mounted outside writable workspace. Validate schema, field types and digest syntax. files is a canonical sorted relative-path map to {kind:file,sha256:<bytes SHA256>} or {kind:symlink,target:<exact target>}; reject absolute/traversal paths. Recompute content_sha256 as SHA256 of UTF-8 JSON(files, sorted keys, compact separators, ensure_ascii=false). Compare declared original source entries and both harness byte hashes; do not include generated build/evidence outputs or follow links outside the tree. Keep exact snapshot/base/manifest identities separate from content/harness digests. Never use env/repo input, agent HEAD or invented SHA as captured-snapshot authority. Standalone Git mode may identify verified HEAD plus dirty content explicitly. Test trusted gitless identity and missing/malformed/tampered envelope, source, harness and symlink cases. Absent D-205 metadata is a precise system prerequisite; product code must not patch methodology runtime. D-205 deployment/full regression is owned separately by solver.\nValidate identity before createIsolatedTestDatabase or mkdtemp. Establish try/finally cleanup before the first resource allocation and register ownership immediately, covering partial setup, readiness, provider/browser failures and success. Test early identity rejection and partial allocation leaks. Release only invocation-owned fixture databases, directories and child servers; never drop user/existing databases or infer ownership from name prefixes. Preserve the primary failure while reporting cleanup errors. Bind fresh SP-10/CG-10 evidence to exact verifier candidate, content, harness version/digests, coverage and captured requests.",
       "repository": "pictures",
       "after": [
-        "T10.441"
+        "T10.442"
       ],
       "complexity": "medium",
       "scope": "small_change",

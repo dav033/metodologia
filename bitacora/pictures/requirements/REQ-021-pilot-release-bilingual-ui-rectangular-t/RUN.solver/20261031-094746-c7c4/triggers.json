@@ -1,0 +1,15 @@
+[
+ {
+  "kind": "decision",
+  "key": "pictures:REQ-021:r29:T10.45:T10.45:d1@k1",
+  "run_id": "pictures:REQ-021:r29",
+  "task_id": "T10.45",
+  "request_id": "T10.45:d1",
+  "round": 1,
+  "reason": "the diagnosis is not enough to answer alone (option stop, confidence media): Falló la verificación del idioma inglés: texto en español y error de build",
+  "status": "pending",
+  "at": "2026-10-31T08:57:18",
+  "session": "20261031-075511-d592",
+  "requeued_by": "operator metodologia-95 2026-10-31: session d592 vanished with the shutdown (D-251)"
+ }
+]

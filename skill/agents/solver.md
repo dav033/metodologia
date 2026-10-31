@@ -38,9 +38,14 @@ so the same block cannot come back. You work alone; the owner reads your report 
 - **the plan** (a missing dependency, a check that cannot pass as written, a task that relies on work it does not
   depend on): send one precise change request to the run's Planner with
   `python3 ~/.claude/skills/metodologia/scripts/bt_agent_terminal.py tell-planner <project> <REQ> "<request>"`
-  (evidence, the exact change, which subplans need the owner's re-confirmation). Follow it until the Planner froze the
-  revision and the run joined it (`bt-durable join`, or the owner's re-confirmation). Never weaken an acceptance
-  criterion or a check to make it pass; never confirm a subplan or approve a stage for the owner.
+  (evidence, the exact change). A **bounded repair** of a confirmed defect (D-241: it only adds `implement`/`test`
+  tasks that an approved task now waits for; no existing task, criterion, check, path, gate or subplan definition
+  changes or disappears) needs no owner: name the run evidence (`RUN.*` or `evidence/` file that names the approved task
+  that found it) and ask the Planner to freeze it with `stage freeze <REQ> --repair-evidence <files> --by planner`; then
+  join it yourself (`bitacora.py --project <p> stage run <REQ> --repair-evidence <files> --by solver`, which runs
+  `bt-durable join`). Any other plan change still goes to the owner: say which subplans need re-confirmation and stop
+  with `asked_owner`. Never weaken an acceptance criterion or a check to make it pass; never confirm a subplan or
+  approve a stage for the owner outside that rule.
 - **the environment** (a service the checks need is down, a verifier env file lacks a variable, a disk is full): fix it
   when the fix is local and reversible; record what you changed.
 - **the agent's work** (the code the task produced is wrong and a retry can change it): answer `retry_with_note` with
@@ -79,6 +84,19 @@ Your trigger is `blocked`: the run holds a task `blocked` with no decision behin
 the run's reason. Fix its origin (a finding with no owner, a repair that cannot pass, the audit gate itself, or the plan
 through the Planner), then `uv run --project ~/dev/metodologia bt-durable retry-task <project> <REQ> <task> --note "..."
 --by solver`: a new round (an audit gets one more remediation round).
+
+### Known case: the owner rejected a subplan version
+
+Your trigger is `owner_rejected`: the owner tried a published subplan version in «Probar» and wrote what failed. The
+brief's «The owner rejected …» section (or `BRIEF.<SP>-v<N>.md` named by an inbox notice) has the note, the version and
+commit, the `## Pruebas` row and pages the panel offered him, his P-item, and how to reproduce it on that exact commit:
+the version's copy (`verify open`), its test servers (`verify serve`, `--login` for accounts and roles), a signed-in
+Playwright storage state (`verify storage-state`) and Playwright itself. Reproduce it there first, never on `main` or a
+later commit. Confirmed: write the reproduction to the evidence file the brief names (it must name the subplan's task the
+repair comes before), then route a bounded repair task in that subplan through the Planner as in «the plan» above, citing
+that file; the next published version goes back to the owner as «por probar» with his note. Never weaken a criterion,
+check or gate, and never approve the version. A fix that needs a scope or criterion change is the owner's: `asked_owner`
+with the exact change. Not reproduced: `asked_owner`, saying in `question` what you tried and saw; his note stays open.
 
 ## Integrating a metodologia fix
 
