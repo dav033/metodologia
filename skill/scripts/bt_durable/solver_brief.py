@@ -124,7 +124,8 @@ def brief(run, rdir: Path, session: dict, items: list[dict], status: dict, *, te
               f"- answer a decision: `uv run --project ~/dev/metodologia bt-durable answer {run.project} {run.req} <task> "
               "<request>@k<round> <action> --note \"...\" --by solver`",
               f"- the run's Planner: `python3 {scripts / 'bt_agent_terminal.py'} tell-planner {run.project} {run.req} "
-              "\"<change request>\"`",
+              "\"<change request>\"` (exit 0: it has it; 3: no account has quota, it is held and sent again on its "
+              "own when the quota returns; 1: not delivered)",
               f"- integrate a metodologia fix: `python3 ~/dev/metodologia/skill/scripts/bt_integrate.py --branch "
               f"solver/{session['id']} --worktree {session['cwd']}/wt --title \"<what> (D-NNN)\" --session "
               f"{session['id']} --trailer \"<your attribution line>\"` (`--dry-run` first; `--help` for the steps)",

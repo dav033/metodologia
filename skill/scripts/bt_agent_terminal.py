@@ -18,6 +18,11 @@ import time
 import uuid
 from pathlib import Path
 
+import bt_agent_wall as wall
+
+# what an agent prints when its account ran out; a question only the owner may answer (the Solucionador reads them here)
+LIMITED, OWNER_PROMPT = wall.LIMITED, wall.OWNER_PROMPT
+
 NAME_OK = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,80}")
 ANSI = re.compile(r"\x1b\[[0-9;?]*[ -/]*[@-~]|\x1b\][^\x07\x1b]*(?:\x07|\x1b\\)")
 MAX_SAY = 2000
@@ -94,24 +99,119 @@ def start(name: str, cwd: Path, command: str, env: dict[str, str] | None = None,
         raise RuntimeError("No pude abrir la sesión: " + (done.stderr or "").strip()[:200])
 
 
-def send(name: str, text: str) -> str:
-    """Type `text` into the agent and press Enter; newlines become spaces so one message is one submission."""
+class Said(str):
+    """What `send` reports, a plain Spanish text (callers compare it with «Enviado.»), plus `state`: sent | empty |
+    gone | error | unsent | limited (a quota wall answered the message; `until` is when the account comes back, epoch
+    or None) | owner (a question only the owner answers) | blocked (a modal nobody here may answer); and `answered`,
+    the harmless modals answered on the way."""
+    state: str = "sent"
+    until: float | None = None
+    answered: tuple[str, ...] = ()
+
+    @classmethod
+    def of(cls, text: str, state: str, until: float | None = None, answered: list[str] | None = None) -> Said:
+        said = cls(text)
+        said.state, said.until, said.answered = state, until, tuple(answered or ())
+        return said
+
+
+WALL_WAIT = 4.0                                       # seconds a quota wall takes to answer a submitted message
+
+
+def send(name: str, text: str) -> Said:
+    """Type `text` into the agent and press Enter; newlines become spaces so one message is one submission. It counts
+    as sent only when the agent can act on it: a harmless modal in the way is answered first (Codex's «Switch to
+    <model>?»: «Keep current model»), and a quota wall that answers the message makes it «limited», never «Enviado»
+    (pictures REQ-021's Planner, 2026-10-30 16:25)."""
     text = re.sub(r"\s+", " ", ANSI.sub("", text or "")).strip()[:MAX_SAY]
     if not text:
-        return "No hay nada que enviar."
+        return Said.of("No hay nada que enviar.", "empty")
     if not exists(name):
-        return "El agente ya no está en marcha."
+        return Said.of("El agente ya no está en marcha.", "gone")
+    answered: list[str] = []
+    if stop := _clear_modals(name, answered):
+        return stop
+    before = screen(name, 200)
     if _run("send-keys", "-t", f"={name}:", "-l", text).returncode != 0:
-        return "No pude escribirle al agente."
+        return Said.of("No pude escribirle al agente.", "error")
     time.sleep(0.4)                                   # let the TUI take the text before the Enter that submits it
     _run("send-keys", "-t", f"={name}:", "Enter")
     for _ in range(SUBMIT_TRIES):                     # a long text can wait in the composer as a paste (D-199)
         time.sleep(0.6)
         if not unsent(screen(name, 12), text):
-            return "Enviado."
+            break
         _run("send-keys", "-t", f"={name}:", "Enter")
-    time.sleep(0.6)
-    return "Enviado." if not unsent(screen(name, 12), text) else "Quedó escrito en el agente sin enviarse."
+    else:
+        time.sleep(0.6)
+        if unsent(screen(name, 12), text):
+            return Said.of("Quedó escrito en el agente sin enviarse.", "unsent", answered=answered)
+    return _watch(name, text, before, answered)
+
+
+def _watch(name: str, text: str, before: str, answered: list[str]) -> Said:
+    """After the submit: does a quota wall answer the message, or a modal stop it, within `WALL_WAIT` seconds?"""
+    deadline = time.monotonic() + WALL_WAIT
+    while True:
+        shown = screen(name, 200)
+        after = _after(shown, text, before)
+        hit, until = wall.limited(after, time.time(), fresh=True)
+        if hit:
+            when = wall.clock(until)
+            return Said.of("El agente no lo leyó: su cuenta se quedó sin cuota"
+                           + (f" (vuelve a las {when})." if when else "."), "limited", until, answered)
+        if stop := _clear_modals(name, answered, submitted=True):
+            return stop
+        if unsent(screen(name, 12), text):            # a modal that took the Enter left the message in the box
+            _run("send-keys", "-t", f"={name}:", "Enter")
+        if time.monotonic() >= deadline:
+            return Said.of("Enviado.", "sent", answered=answered)
+        time.sleep(0.4)
+
+
+def _after(shown: str, text: str, before: str) -> str:
+    """What the agent printed after the message (flattened): what follows its echo, or, when the echo is not found,
+    whatever walls are new since `before` (a wall left above from earlier never counts)."""
+    flat, said = " ".join((shown or "").split()), " ".join(text.split())
+    key = said[:60]
+    if key and (at := flat.rfind(key)) >= 0:          # the message's own words never count (it may quote a wall)
+        rest = flat[at:]
+        return rest[len(said):] if rest.startswith(said) else rest[len(key):]
+    found = list(wall.LIMITED.finditer(shown or ""))
+    if len(found) > len(wall.LIMITED.findall(before or "")):
+        return (shown or "")[found[-1].start():]
+    return ""
+
+
+def visible(name: str) -> str:
+    """What the agent's window shows right now (no scrollback): where a modal waits for a key."""
+    if not exists(name):
+        return ""
+    rows = [ANSI.sub("", line).rstrip() for line in _run("capture-pane", "-p", "-t", f"={name}:").stdout.splitlines()]
+    return "\n".join(row for row in rows if row.strip())
+
+
+def _clear_modals(name: str, answered: list[str], *, submitted: bool = False) -> Said | None:
+    """Answer the harmless modals at the bottom of the window; a question that is not ours to answer stops the send.
+    Once the message is `submitted`, a selection list is the agent acting on it (a question to the owner): left alone."""
+    for _ in range(3):
+        shown = "\n".join(visible(name).splitlines()[-16:])
+        kind, key = wall.modal(shown)
+        if kind == "owner":
+            return Said.of("El agente espera una respuesta que solo tú puedes dar; no le escribí.", "owner",
+                           answered=answered)
+        if kind == "blocking" and not submitted:
+            return Said.of("El agente espera que elijas una opción en su ventana; no le escribí para no elegir por ti.",
+                           "blocked", answered=answered)
+        if kind != "model-switch":
+            return None
+        _run("send-keys", "-t", f"={name}:", "-l", key)            # «Keep current model»: digits select in Codex lists
+        time.sleep(0.6)
+        still = "\n".join(visible(name).splitlines()[-16:])
+        if wall.MODEL_SWITCH.search(still) and re.search(rf"^\s*›\s*{key}\.", still, re.MULTILINE):
+            _run("send-keys", "-t", f"={name}:", "Enter")          # the digit only moved the selection there
+            time.sleep(0.6)
+        answered.append("Codex ofrecía cambiar a un modelo más barato: elegí «Keep current model»")
+    return Said.of("El agente muestra un aviso que no pude cerrar; no le escribí.", "blocked", answered=answered)
 
 
 SUBMIT_TRIES = 3
@@ -200,14 +300,6 @@ def remember_planner(rdir: Path, session_id: str, config_dir: str, cwd: str) -> 
     _save_record(rdir, {**_record(rdir), "session_id": session_id, "config_dir": config_dir, "cwd": str(cwd)})
 
 
-# What Claude Code prints when the account ran out: every notice typed into such a Planner is lost (pictures REQ-021,
-# 2026-10-29: claude-work hit its weekly limit and five notices from the web reached nobody).
-LIMITED = re.compile(r"hit your (?:weekly |usage |session )?limit|usage limit reached|/usage-credits", re.I)
-# A question only the owner may answer: Claude Code's first run under an account asks him to accept bypass-permissions
-# mode, and a Planner moved to that account waits on it (claude-luis, 2026-10-29); an operator may not accept it for him.
-OWNER_PROMPT = re.compile(r"Bypass Permissions mode.*Yes, I accept", re.S)
-
-
 def unattended(config_dir: str) -> bool:
     """Can Claude Code run under this account without asking the owner first? Only when its settings accept
     bypass-permissions mode (`skipDangerousModePermissionPrompt`), which only the owner sets."""
@@ -230,35 +322,43 @@ def planner_route(project: str, avoid: str = "") -> dict[str, str]:
 def role_route(project: str, role: str, avoid: str = "", *, override: str = "") -> dict[str, str]:
     """`planner_route` for any long-lived full-access session of a role (the Planner, the Solucionador of REQ-031):
     Claude Opus at high effort on the first unattended account the router ranks for `role`, else that ranking's first
-    Codex route, else ~/.claude-work. `override` names an environment variable that pins the Claude account."""
+    Codex route, else ~/.claude-work. `override` names an environment variable that pins the Claude account. When the
+    ranking leaves no account but `avoid` (every other one is spent or cooling), the fallback says so: `exhausted` and
+    `until`, the epoch the first one frees up ("" when unknown); a caller leaving a spent account waits instead."""
     if override and (pinned := os.environ.get(override)):
         return {"provider": "claude", "home": pinned, "model": "opus", "effort": "high"}
     codex: dict[str, str] | None = None
+    spent: dict[str, str] = {}
     try:
         import bt_agents
         import bt_profiles
         profiles = bt_profiles.load()
         pool = bt_agents.pool_for(project, bt_agents._config("routing.pool", []) or None)
-        routes, _ = bt_agents.candidates(project, pool, bt_agents.start_tier(None, "plan"), "plan", allow_explore=False,
-                                         role=role)
+        routes, frees = bt_agents.candidates(project, pool, bt_agents.start_tier(None, "plan"), "plan",
+                                             allow_explore=False, role=role)
+        others = 0
         for route in routes:
             env = (profiles.get(route.get("profile")) or {}).get("env") or {}
             if route.get("agent") == "claude":
                 path = env.get("CLAUDE_CONFIG_DIR") or str(Path.home() / ".claude")
+                others += path != avoid
                 if path != avoid and unattended(path):
                     return {"provider": "claude", "home": path, "model": "opus", "effort": "high"}
             elif route.get("agent") == "codex" and codex is None:
                 home = env.get("CODEX_HOME") or str(Path.home() / ".codex")
+                others += home != avoid
                 if home != avoid:
                     codex = {"provider": "codex", "home": home, "model": str(route.get("model") or ""),
                              "effort": str(route.get("effort") or "high")}
+        if not others:
+            spent = {"exhausted": "1", "until": str(frees or "")}
     except Exception:  # noqa: BLE001 - no ranking: the account it always used
         pass
     if codex:
         return codex
     work = Path.home() / ".claude-work"
     return {"provider": "claude", "home": str(work) if work.is_dir() and str(work) != avoid else "", "model": "opus",
-            "effort": "high"}
+            "effort": "high", **spent}
 
 
 def _prompt_file(project: str, name: str, text: str) -> Path:
@@ -269,7 +369,7 @@ def _prompt_file(project: str, name: str, text: str) -> Path:
 
 
 def start_planner(root: Path, project: str, rdir: Path, *, fresh: bool = False, avoid: str = "",
-                  message: str = "") -> tuple[bool, str]:
+                  message: str = "", route: dict[str, str] | None = None) -> tuple[bool, str]:
     """Start the dedicated Planner in tmux where it can run unattended (`planner_route`). On Claude it picks up its own
     earlier CONVERSATION (`claude --resume`) when that exists, copied to that account when it lived in another one, so
     killing it and starting another loses nothing; `fresh`, a missing transcript or Codex starts a new conversation that
@@ -278,7 +378,7 @@ def start_planner(root: Path, project: str, rdir: Path, *, fresh: bool = False, 
     name = name_for(project, req.group(0) if req else Path(rdir).name, "planner")
     if exists(name):
         return False, f"Ya hay un Planner en marcha para este plan ({name})."
-    route = planner_route(project, avoid)
+    route = route or planner_route(project, avoid)
     account = route["home"]
     extra = f"\n\n{message}" if message else ""
     if route["provider"] == "codex":
@@ -324,25 +424,10 @@ def start_planner(root: Path, project: str, rdir: Path, *, fresh: bool = False, 
 
 def notify_planner(project: str, req: str, text: str) -> bool:
     """Tell the dedicated Planner, if it runs here, what the owner just did on the web (an idle agent never learns it
-    otherwise). A Planner whose account ran out is started again on one with quota and told on start. Returns False
-    when there is no such Planner or the message could not be typed."""
-    name = name_for(project, req, "planner")
-    if not exists(name):
-        return False
-    notice = "[Automatic notice from the web, not typed by the owner] " + text
-    shown = screen(name, 20)
-    if OWNER_PROMPT.search(shown):
-        _ask_owner(project, req, name)
-        return False
-    if LIMITED.search(shown):
-        from bt_core import ROOT
-        rdir = next(iter(sorted((Path(ROOT) / project / "requirements").glob(f"{req}-*"))), None)
-        if rdir is not None:
-            record = _record(rdir)
-            avoid = record.get("codex_home", "") if record.get("provider") == "codex" else record.get("config_dir", "")
-            kill(name)
-            return start_planner(Path(ROOT), project, rdir, avoid=avoid, message=notice)[0]
-    return send(name, notice) == "Enviado."
+    otherwise). True when the Planner got it or was started again elsewhere with it (`bt_planner_notices.tell`: a
+    Planner whose account ran out moves to one with quota; with none, the notice is held and sent again on its own)."""
+    import bt_planner_notices as notices
+    return notices.tell(project, req, notices.WEB_NOTICE + text)[0] in ("sent", "moved")
 
 
 def _ask_owner(project: str, req: str, name: str) -> None:
@@ -404,24 +489,27 @@ def restart_planner(root: Path, project: str, rdir: Path) -> tuple[bool, str]:
 def main(argv: list[str] | None = None) -> int:
     """`bt_agent_terminal.py tell-planner <project> <REQ> <text>`: what the Solucionador (REQ-031) uses to send a plan
     change request to the run's Planner; a Planner that is not running is started with the request as its first notice
-    (on an account with quota, like any Planner start)."""
+    (on an account with quota, like any Planner start). It prints what really happened, and exits 0 when the Planner got
+    it (or was started with it), 3 when it is held to be sent again on its own (no account with quota), 1 otherwise."""
     import sys
     args = sys.argv[1:] if argv is None else argv
     if len(args) != 4 or args[0] != "tell-planner":
         print("usage: bt_agent_terminal.py tell-planner <project> <REQ> <text>", file=sys.stderr)
         return 2
     project, req, text = args[1:]
-    if notify_planner(project, req, text):
-        print("Enviado al Planner.")
-        return 0
-    from bt_core import ROOT
-    rdir = next(iter(sorted((Path(ROOT) / project / "requirements").glob(f"{req}-*"))), None)
-    if rdir is None or exists(name_for(project, req, "planner")):
-        print(f"No pude escribirle al Planner de {project} {req}: mira su ventana en el panel del plan.", file=sys.stderr)
-        return 1
-    ok, message = start_planner(Path(ROOT), project, rdir, message="[Automatic notice, not typed by the owner] " + text)
-    print(message, file=sys.stdout if ok else sys.stderr)
-    return 0 if ok else 1
+    import bt_planner_notices as notices
+    notice = "[Automatic notice, not typed by the owner] " + text
+    state, message = notices.tell(project, req, notice)
+    if state == "absent":
+        from bt_core import ROOT
+        rdir = notices._rdir(project, req)
+        if rdir is None:
+            print(f"No encuentro el plan {project} {req}.", file=sys.stderr)
+            return 1
+        ok, message = start_planner(Path(ROOT), project, rdir, message=notice)
+        state = "moved" if ok else "failed"
+    print(message, file=sys.stdout if state != "failed" else sys.stderr)
+    return {"sent": 0, "moved": 0, "held": 3}.get(state, 1)
 
 
 if __name__ == "__main__":
