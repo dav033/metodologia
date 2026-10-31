@@ -88,7 +88,11 @@ The Scheduler can run each owner-confirmed subplan before the whole plan is read
 acceptance criteria, resolved inputs, SPEC `## Pruebas` rows and ready UI draft make it eligible for «Ejecutar subplan»
 (`bitacora.py --project P stage run REQ-NNN SP-n[,SP-m]`, only when the owner authorizes approval).
 Approval freezes the cumulative subplan projection as a stage; unfinished subplans remain editable. Treat approved
-subplans as frozen scope: changes require re-confirmation and a new approval. Never use autonomous sessions to run
+subplans as frozen scope: changes require re-confirmation and a new approval, except a bounded repair of a confirmed
+defect (D-241: only new `implement`/`test` tasks that an approved task now waits for, nothing existing changed or
+removed). Freeze that yourself when the Solucionador asks, with the run evidence it names:
+`stage freeze REQ-NNN --repair-evidence <files> --by planner` (the touched subplans stay confirmed `by: policy`; a
+refusal `STAGE_REPAIR_UNBOUNDED` means it goes to the owner). Never use autonomous sessions to run
 planned tasks. Later stages join the same Scheduler run at a quiet point, keeping accepted unchanged work; the
 complete plan and D-131 owner verification are required before final closure. Every approval uses stages; old-plan
 compatibility is not required. `stage status REQ-NNN` shows frozen stages and remaining draft scope.

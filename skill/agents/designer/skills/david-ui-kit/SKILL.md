@@ -39,7 +39,7 @@ Paths below are relative to this skill; the delegation brief provides the absolu
    This inlines React, CSS, fonts, Motion/GSAP and assets into ONE HTML. No CDN or runtime fetch.
    Inspect `components status`; installation is the operator's job, never fetch packages in a design delegation.
 8. Run `python3 kit/contrast.py OUTPUT.html` (both themes) and
-   `UV_OFFLINE=1 uv run --offline --with playwright python kit/audit_mockup.py OUTPUT.html`.
+   `UV_OFFLINE=1 uv run --no-project --offline --with playwright python kit/audit_mockup.py OUTPUT.html`.
    Fix findings, then inspect screenshots at 1280/390 in both themes. Copy the actual RESULT into the note/report.
    Exit 2 or missing tooling means `AUDIT NOT RUN: <reason>` in CONCERNS. Never invent a pass.
 9. Exploration: write ONLY your assigned revision-specific TSX, HTML, two candidate thumbnails, Markdown note

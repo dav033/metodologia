@@ -91,7 +91,8 @@ class Auditor(Protocol):
 
 @runtime_checkable
 class Composer(Protocol):
-    """Composition gates: subplan versions and the gate's candidate (idempotent per member versions)."""
+    """Composition gates: subplan versions and the gate's candidate (idempotent per member versions). Optional:
+    `stale_members(run, gate_id, snapshot) -> list[str]`, the members a passed gate's snapshot was not verified with."""
     def compose(self, run: RunRef, gate_id: str, evidence: dict[str, list[dict]]) -> dict: ...
 
 

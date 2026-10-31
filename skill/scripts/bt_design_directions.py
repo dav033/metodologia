@@ -243,7 +243,7 @@ def compare(rdir: Path, ref: str, directions: list[dict]) -> dict:
     tool = drafts.KIT / "compare_directions.py"
     paths = [files(rdir, ref, d["revision"], d["id"])["html"] for d in directions]
     try:
-        proc = subprocess.run(["uv", "run", "--offline", "--with", "playwright", "python", str(tool),
+        proc = subprocess.run(["uv", "run", "--no-project", "--offline", "--with", "playwright", "python", str(tool),
                                *map(str, paths), "--json"], cwd="/tmp", capture_output=True, text=True, timeout=120,
                               env={**os.environ, "UV_OFFLINE": "1"}, check=False)
         report = json.loads(proc.stdout)

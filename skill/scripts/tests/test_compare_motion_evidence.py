@@ -30,7 +30,7 @@ class MotionEvidence(unittest.TestCase):
             page = Path(tmp) / "x@v1.r1.dir-a.html"
             page.write_text(PAGE.format(css=css, js=js), encoding="utf-8")
             page.with_suffix(".json").write_text(json.dumps({"name": "A", "evidence": CLAIMS}), encoding="utf-8")
-            proc = subprocess.run(["uv", "run", "--offline", "--with", "playwright", "python",
+            proc = subprocess.run(["uv", "run", "--no-project", "--offline", "--with", "playwright", "python",
                                    str(drafts.KIT / "compare_directions.py"), str(page), "--json"],
                                   cwd=tmp, capture_output=True, text=True, timeout=180, env={**os.environ, "UV_OFFLINE": "1"})
         if not proc.stdout.strip():

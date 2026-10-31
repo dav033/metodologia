@@ -85,7 +85,10 @@ class WebActions(Base):
         with patch("bt_agent_terminal.exists", return_value=False), patch("bt_agent_terminal.send") as send:
             self.assertFalse(terminal.notify_planner("pictures", "REQ-021", "hi"))
             send.assert_not_called()
-        with patch("bt_agent_terminal.exists", return_value=True), patch("bt_agent_terminal.send", return_value="Enviado.") as send:
+        # the screen is patched too: without it the test read the LIVE Planner's tmux screen, and a quota wall there sent
+        # it down the move/hold path against the real bitácora (2026-10-31 08:40, a false «sin cuota» in REQ-021's feed)
+        with patch("bt_agent_terminal.exists", return_value=True), patch("bt_agent_terminal.screen", return_value=""), \
+                patch("bt_agent_terminal.send", return_value="Enviado.") as send:
             self.assertTrue(terminal.notify_planner("pictures", "REQ-021", "hi"))
             self.assertIn("Automatic notice from the web", send.call_args.args[1])
 

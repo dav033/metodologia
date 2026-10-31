@@ -93,7 +93,7 @@ class OfflineBuild(unittest.TestCase):
     @unittest.skipUnless(shutil.which("uv") and shutil.which("chromium"), "cached Playwright/Chromium unavailable")
     def test_built_reference_passes_rendered_audit(self):
         ref = self.fresh_dist() / "reference/acceso.html"
-        output = self.run_tool(["uv", "run", "--offline", "--with", "playwright", "python",
+        output = self.run_tool(["uv", "run", "--no-project", "--offline", "--with", "playwright", "python",
                                 str(bt_kit.KIT / "audit_mockup.py"), str(ref)])
         self.assertIn("RESULT: PASS", output)
 
@@ -136,7 +136,7 @@ with sync_playwright() as p:
     browser.close()
 print('controls and reduced-motion: PASS')
 '''
-            output = self.run_tool(["uv", "run", "--offline", "--with", "playwright", "python", "-c", script,
+            output = self.run_tool(["uv", "run", "--no-project", "--offline", "--with", "playwright", "python", "-c", script,
                                     str(ref), str(demo), shutil.which("chromium")])
             self.assertIn("controls and reduced-motion: PASS", output)
 

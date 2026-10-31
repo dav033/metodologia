@@ -232,7 +232,7 @@ NOMAIN = """<!doctype html><html lang="es"><head><meta charset="utf-8"><style>bo
                      "needs uv and a Chromium to render")
 class AuditRender(unittest.TestCase):
     def audit(self, path: Path, *extra: str) -> subprocess.CompletedProcess:
-        return subprocess.run(["uv", "run", "-q", "--with", "playwright", "python", str(KIT / "audit_mockup.py"), str(path),
+        return subprocess.run(["uv", "run", "--no-project", "-q", "--with", "playwright", "python", str(KIT / "audit_mockup.py"), str(path),
                                "--json", str(path.with_suffix(".json")), *extra], capture_output=True, text=True, timeout=600)
 
     def test_failing_fixture_reports_each_defect(self):

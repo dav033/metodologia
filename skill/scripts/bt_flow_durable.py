@@ -75,6 +75,13 @@ def _message(r: dict[str, Any], task: str) -> tuple[str, str, str, str, dict[str
         what = (f"compuesta ({r.get('candidate_id')})" if r.get("state") == "candidate" else f"rechazada: {r.get('reason')}") \
             if name == "gate_composed" else "se compone otra vez"
         return "M1", "M1", "start_order", f"puerta {r.get('gate')} {what}", {}
+    if name == "gate_stale":
+        members = ", ".join(r.get("members") or [])
+        return "M1", "M1", "start_order", (f"puerta {r.get('gate')}: {members} cambió después de pasarla; se compone "
+                                           f"otra vez y {r.get('task_id')} vuelve a correr sus pruebas"), {}
+    if name == "gate_freshness_failed":
+        gates = ", ".join(r.get("gates") or [])
+        return "M1", "M1", "incident", f"no pude revisar si {gates} sigue al día: {r.get('reason') or ''}", {}
     if name == "run_line_conflict":
         return "M1", "M1", "incident", f"{task} choca en la línea del run (queda en la de su subplan)", {}
     if name == "run_reopened":
