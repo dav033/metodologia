@@ -185,6 +185,24 @@ class SolverTests(unittest.TestCase):
         self.solver().run_pass([])
         self.assertEqual(self.state()["sessions"][1]["summary"], "la sesión terminó sin escribir result.json")
 
+    def test_a_session_that_vanished_hands_its_cases_back_to_the_queue(self):
+        """2026-10-31: the machine was shut down while session 20261031-075511-d592 held T10.441 (stuck) and had
+        T10.45:d1 in its inbox; at 09:41 the engine read the missing tmux session as «gave up» and both cases were
+        left with nobody to answer them (D-251)."""
+        first = self.open_decision()
+        self.solver().run_pass([first])
+        later = self.open_decision(request="T7.4:d2", round_no=3)
+        self.solver().run_pass([first, later])                              # queued to the running session's inbox
+        self.terminal.live.clear()                                          # the machine went down
+        self.notified.clear()
+        self.solver().run_pass([])
+        state = self.state()
+        self.assertNotIn("gave_up", {t["status"] for t in state["triggers"].values()})   # nobody gave up on them
+        self.assertEqual(self.notified, [])                                 # nothing for the owner
+        self.assertEqual(state["triggers"][later["key"]]["status"], "running")   # the current case: a new session
+        self.assertEqual([s["status"] for s in state["sessions"]], ["gave_up", "running"])
+        self.assertTrue(any("vuelven a la cola" in line for line in self.activity))
+
     def test_the_watchdog_waits_for_the_sessions_own_integration_within_a_grace(self):
         """2026-10-30 11:52: session 20261030-100736-d494 was 105 min into its 120 while its `bt_integrate --session
         20261030-100736-d494` (a child of its agent in tmux) ran the regression; the watchdog would have killed the tmux
