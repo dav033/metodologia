@@ -27,11 +27,30 @@ from __future__ import annotations
 import hashlib
 import json
 import time
+import uuid
 from collections.abc import Iterable
 from pathlib import Path
 
 ERRORED = frozenset({"ERROR", "MAX_RECOVERY_ATTEMPTS_EXCEEDED"})
 QUIET = frozenset({"paused", "needs_decision"})
+# Solver objects are rebuilt each maintenance pass. Only an engine process restart changes this epoch.
+EPOCH = uuid.uuid4().hex
+
+
+def _observe(previous: dict, fingerprint: str, now: float) -> dict:
+    """Keep observed inactivity across recovery, excluding the unobserved gap between processes (D-242).
+
+    Legacy marks without a last observation start a fresh window once. Repeated deploys must not erase accumulated
+    inactivity or change trigger fingerprints. Durable failures/decisions do not use these observation clocks.
+    """
+    since = now
+    if previous.get("fp") == fingerprint:
+        since = float(previous.get("since", now))
+        if previous.get("epoch") != EPOCH:
+            observed = previous.get("observed_at")
+            elapsed = max(0.0, float(observed) - since) if isinstance(observed, (int, float)) else 0.0
+            since = now - elapsed
+    return {"fp": fingerprint, "since": since, "epoch": EPOCH, "observed_at": now}
 
 
 def _iso(epoch: float) -> str:
@@ -72,9 +91,7 @@ def stalled_triggers(run, status: dict, state: dict, now: float, cfg: dict, hand
     basis = json.dumps([status.get("workflow_id"), summary.get("status"), summary.get("tasks"), summary.get("gates")],
                        sort_keys=True, default=str)
     fingerprint = hashlib.sha256(basis.encode()).hexdigest()[:16]
-    mark = state.get("stall") or {}
-    if mark.get("fp") != fingerprint:
-        state["stall"] = mark = {"fp": fingerprint, "since": now}
+    state["stall"] = mark = _observe(state.get("stall") or {}, fingerprint, now)
     since = float(mark.get("since", now))
     if now < since + cfg["stuck_minutes"] * 60:
         return []
@@ -206,16 +223,16 @@ def stuck_triggers(run, status: dict, state: dict, now: float, cfg: dict) -> lis
         basis = json.dumps([item.get("workflow_id"), event, (decision or {}).get("request_id")], sort_keys=True,
                            default=str)
         fingerprint = hashlib.sha256(basis.encode()).hexdigest()[:16]
-        mark = watch.get(task_id) or {}
-        if mark.get("fp") != fingerprint:
-            watch[task_id] = mark = {"fp": fingerprint, "since": now}
+        watch[task_id] = mark = _observe(watch.get(task_id) or {}, fingerprint, now)
         name = event.get("state")
         if decision or name in QUIET:
             continue
         since = float(mark.get("since", now))
         limit = cfg["stuck_minutes"] * 60
         if name in ("waiting_quota", "recovering") and isinstance(event.get("until"), (int, float)):
-            deadline = max(since, float(event["until"])) + limit
+            # Only inactivity observed after the known wait counts, including when its deadline passes offline.
+            mark["since"] = since = max(since, float(event["until"]))
+            deadline = since + limit
         elif name == "running":
             deadline = since + cfg["attempt_minutes"] * 60 + limit
         else:
