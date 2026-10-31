@@ -85,12 +85,26 @@ class WebActions(Base):
         with patch("bt_agent_terminal.exists", return_value=False), patch("bt_agent_terminal.send") as send:
             self.assertFalse(terminal.notify_planner("pictures", "REQ-021", "hi"))
             send.assert_not_called()
-        # the screen is patched too: without it the test read the LIVE Planner's tmux screen, and a quota wall there sent
-        # it down the move/hold path against the real bitácora (2026-10-31 08:40, a false «sin cuota» in REQ-021's feed)
-        with patch("bt_agent_terminal.exists", return_value=True), patch("bt_agent_terminal.screen", return_value=""), \
+        # D-238 checks the screen before delivery: without patching it the test read the LIVE Planner's tmux screen, and a
+        # quota wall there sent it down the move/hold path against the real bitácora (2026-10-31 08:40, a false «sin
+        # cuota» in REQ-021's feed). The note directory is a temporary one for the same reason (D-247).
+        with patch("bt_agent_terminal.exists", return_value=True), \
+                patch("bt_agent_terminal.screen", return_value=""), \
+                patch("bt_planner_notices._rdir", return_value=self.rdir), \
                 patch("bt_agent_terminal.send", return_value="Enviado.") as send:
             self.assertTrue(terminal.notify_planner("pictures", "REQ-021", "hi"))
             self.assertIn("Automatic notice from the web", send.call_args.args[1])
+
+    def test_notify_planner_does_not_report_a_quota_hold_as_delivery(self):
+        import bt_agent_terminal as terminal
+        with patch("bt_agent_terminal.exists", return_value=True), \
+                patch("bt_agent_terminal.screen", return_value="You've hit your usage limit"), \
+                patch("bt_planner_notices.after_wall", return_value=("held", "Held for quota")) as hold, \
+                patch("bt_agent_terminal.send") as send:
+            self.assertFalse(terminal.notify_planner("pictures", "REQ-021", "hi"))
+            hold.assert_called_once()
+            self.assertIn("Automatic notice from the web", hold.call_args.args[2])
+            send.assert_not_called()
 
 
 if __name__ == "__main__":
