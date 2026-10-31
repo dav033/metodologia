@@ -131,8 +131,10 @@ class PlanningActions:
             servers.stop(ROOT, project, rdir, sid)
             msg = verification.close_local(ROOT, project, rdir, sid)
         else:
+            files = form.get("_files") if isinstance(form.get("_files"), list) else []    # the form's images (D-258)
             msg = verification.decide(project, rdir, sid, "approved" if action == "verify-approve" else "rejected",
-                                      form.get("comments", ""), "owner", "web")
+                                      form.get("comments", ""), "owner", "web",
+                                      attachments=files if action == "verify-reject" else None)
             commit(ROOT, f"{project}: {rid} verification ({action}, web)", push=False)
         if re.fullmatch(r"T\d+(?:\.\d+)*", sid):       # «Probar esto» on a decision card: back to that card
             return f"/plans/{quote(project)}/{quote(rid)}?msg={quote(msg)}"

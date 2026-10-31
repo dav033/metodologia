@@ -9,8 +9,9 @@ rejection of the subplan's current published version (state `rejected`) is one t
 version and commit the owner saw and his note (`bt_verification.rejection_key`), so it starts the Solucionador once;
 a new note on the same version is a new rejection. It stays current while that rejection stands: an approval, a newer
 published version (the repair landed) or another note makes it stale. The trigger carries what the panel offered the
-owner (the SPEC `## Pruebas` rows and the pages they name) and the P-item; the brief adds how to reproduce it on that
-exact commit (the version's copy, its test servers, the test accounts). The Solucionador reproduces it, records the
+owner (the SPEC `## Pruebas` rows and the pages they name), the P-item and the images he attached (D-258: absolute
+paths, opened with the agent's image-reading tool before anything else; their digests are part of the key); the brief
+adds how to reproduce it on that exact commit (the version's copy, its test servers, the test accounts). The Solucionador reproduces it, records the
 confirmed defect as run evidence and routes a bounded repair through the run's Planner (D-233); a change of scope or
 criteria stays the owner's. Standard library plus the verification module.
 """
@@ -41,6 +42,7 @@ def triggers(run, rdir: Path) -> list[dict]:
     """One trigger per standing rejection of a subplan's current version. Cheap when nothing is rejected."""
     if not any(isinstance(d, dict) and d.get("decision") == "rejected" for d in _ledger(rdir).values()):
         return []
+    import bt_rejection_images as images
     import bt_verification as verification
 
     from .solver import trigger
@@ -54,13 +56,16 @@ def triggers(run, rdir: Path) -> list[dict]:
             continue
         sid, dec = row["id"], row["decision"]
         note = " ".join(str(dec.get("note") or "").split())
+        shown = [str(p) for p in images.absolute(rdir, dec)]
         item = trigger(KIND, verification.rejection_key(sid, dec), run.run_id,
                        reason=f"the owner tried {sid} version {row['version']} (commit {str(row['commit'])[:10]}) and "
-                              f"rejected it: «{note[:300]}»")
+                              f"rejected it" + (f" with {len(shown)} image(s) (paths in its brief)" if shown else "")
+                              + f": «{note[:300]}»")
         tests = verification.tests_for(rdir, sid, rows)
         item.update(subplan=sid, title=row["title"], version=row["version"], commit=row["commit"], note=note[:1000],
                     pending=str(dec.get("pending") or ""), decided_at=str(dec.get("at") or ""), via=str(dec.get("via") or ""),
-                    tests=tests, pages=verification.test_paths(tests), evidence=evidence_path(sid, row["version"]))
+                    tests=tests, pages=verification.test_paths(tests), evidence=evidence_path(sid, row["version"]),
+                    images=shown, image_markdown=images.markdown(rdir, dec))
         out.append(item)
     return out
 
@@ -91,7 +96,7 @@ def brief(item: dict, run, rdir: Path) -> list[str]:
              f"- version {version}, commit `{commit}` (the integrated tree at that subplan's boundary)",
              f"- decided {item.get('decided_at') or '?'} via {item.get('via') or '?'}; the owner's note:", "",
              *[f"  > {line}" for line in str(item.get("note") or "").splitlines() or [""]], "",
-             record, "", "What the panel offered him (SPEC `## Pruebas`):", ""]
+             *_images(item), record, "", "What the panel offered him (SPEC `## Pruebas`):", ""]
     for row in item.get("tests") or []:
         lines.append(f"- {row.get('where')}: {row.get('how')}" + (f" — expect: {row.get('expect')}" if row.get("expect") else ""))
     if not item.get("tests"):
@@ -134,9 +139,21 @@ def brief(item: dict, run, rdir: Path) -> list[str]:
                f"log paths, the commit) to `{evidence}`, naming the {sid} task the repair must come before; route the "
                "bounded repair through the Planner (agents/solver.md, known case «the owner rejected a subplan "
                "version»)"),
+              *(([f"- the owner's images: in `{evidence.name}` add a section «Owner's images» with these lines, so the "
+                  "web shows them: " + " ".join(f"`{m}`" for m in item.get("image_markdown") or []),
+                  "- the Planner and the repair task must see them too: your request to the Planner lists every "
+                  "absolute image path above with the instruction to open them with the image-reading tool, and asks "
+                  "that the repair task's instructions carry the same lines"]) if item.get("images") else []),
               "- not reproduced: `asked_owner`, with what you tried in `question` (the owner's note stays open)",
               f"- trigger key for `handled`: `{item['key']}`"]
     return lines
+
+
+def _images(item: dict) -> list[str]:
+    """The owner's attached images (D-258), first thing after his note: what he saw, for the agent to look at."""
+    import bt_rejection_images as images
+    lines = images.instructions(item.get("images") or [])
+    return [*lines, ""] if lines else []
 
 
 __all__ = ["KIND", "brief", "current", "evidence_path", "triggers"]

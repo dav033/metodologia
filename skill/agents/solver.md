@@ -91,8 +91,10 @@ Your trigger is `owner_rejected`: the owner tried a published subplan version in
 brief's «The owner rejected …» section (or `BRIEF.<SP>-v<N>.md` named by an inbox notice) has the note, the version and
 commit, the `## Pruebas` row and pages the panel offered him, his P-item, and how to reproduce it on that exact commit:
 the version's copy (`verify open`), its test servers (`verify serve`, `--login` for accounts and roles), a signed-in
-Playwright storage state (`verify storage-state`) and Playwright itself. Reproduce it there first, never on `main` or a
-later commit. Confirmed: write the reproduction to the evidence file the brief names (it must name the subplan's task the
+Playwright storage state (`verify storage-state`) and Playwright itself. When he attached images, the brief lists their
+absolute paths: open every one with your image-reading tool before anything else, embed them in the evidence file with
+the Markdown lines the brief gives, and pass the same paths (with the instruction to open them) to the Planner and into
+the repair task's instructions. Reproduce it there first, never on `main` or a later commit. Confirmed: write the reproduction to the evidence file the brief names (it must name the subplan's task the
 repair comes before), then route a bounded repair task in that subplan through the Planner as in «the plan» above, citing
 that file; the next published version goes back to the owner as «por probar» with his note. Never weaken a criterion,
 check or gate, and never approve the version. A fix that needs a scope or criterion change is the owner's: `asked_owner`

@@ -197,7 +197,7 @@ class OwnerRejection(unittest.TestCase):
         self.assertIn("se lo paso al Solucionador", msg)
         self.assertIn("«por probar» con tu nota", msg)
         self.flags["solver.enabled"] = False
-        msg = verification.decide("proj", self.rdir, "SP-1", "rejected", "falla")   # nobody takes it: as before
+        msg = verification.decide("proj", self.rdir, "SP-1", "rejected", "falla otra vez")   # nobody takes it: as before
         self.assertIn("el requisito sigue por verificar", msg)
         self.assertEqual(self.solver().run_pass([]), [])
 

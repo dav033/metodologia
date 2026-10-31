@@ -35,14 +35,42 @@ def _shown(row: dict) -> str:
     return "to_test" if row.get("retest") else row["state"]
 
 
-def _previous(row: dict) -> str:
-    """Next to a version published after a rejection: what the owner rejected, to check in this one."""
+def _previous(ctx: dict, row: dict) -> str:
+    """Next to a version published after a rejection: what the owner rejected (and the images he attached), to check
+    in this one."""
     dec = row.get("decision") or {}
     if not row.get("retest"):
         return ""
     pid = f' <span class="pp-meta">({e(str(dec["pending"]))})</span>' if dec.get("pending") else ""
     return (f'<p class="pp-vprev">Rechazaste la versión {e(str(dec.get("version")))}: «{e(str(dec.get("note") or ""))}»; '
-            f'comprueba esto en la versión {e(str(row.get("version")))}.{pid}</p>')
+            f'comprueba esto en la versión {e(str(row.get("version")))}.{pid}</p>' + _thumbs(ctx, dec))
+
+
+def _thumbs(ctx: dict, dec: dict) -> str:
+    """The images the owner attached to his rejection (D-258), each a thumbnail that opens the full image."""
+    import bt_rejection_images as images
+    rels = images.project_relative(ctx["rdir"], dec)
+    if not rels:
+        return ""
+    items = "".join(f'<li><a href="{e(purl(ctx["project"], "doc", *rel.split("/")))}" target="_blank" rel="noopener" '
+                    f'title="Abrir la imagen {i} completa"><img src="{e(purl(ctx["project"], "doc", *rel.split("/")))}" '
+                    f'alt="Imagen {i} de tu rechazo" loading="lazy" decoding="async"></a></li>'
+                    for i, rel in enumerate(rels, 1))
+    return f'<ul class="pp-vthumbs" aria-label="Imágenes de tu rechazo">{items}</ul>'
+
+
+def _files() -> str:
+    """The rejection's image input (D-258): a plain multiple file input that works without JavaScript; verify-run.js
+    adds paste and drop on the note, a preview and the same limits before sending."""
+    import bt_rejection_images as images
+    lim = images.limits()
+    return (f'<label class="pp-vfiles"><span class="pp-vlabel">Imágenes (opcional)</span><input type="file" name="images" '
+            f'accept="image/png,image/jpeg,image/webp,image/gif" multiple data-max-images="{lim["max_images"]}" '
+            f'data-max-mb="{lim["max_image_mb"]}" data-max-total-mb="{lim["max_total_mb"]}"></label>'
+            f'<p class="pp-meta">Hasta {lim["max_images"]} imágenes PNG, JPEG, WebP o GIF, {lim["max_image_mb"]} MB cada una '
+            f'y {lim["max_total_mb"]} MB en total. También puedes pegarlas o arrastrarlas sobre la nota.</p>'
+            '<ul class="pp-vthumbs pp-vpreview" aria-live="polite" aria-label="Imágenes que vas a enviar"></ul>'
+            '<p class="pp-vstatus bad pp-vfiles-error" role="alert" hidden></p>')
 
 
 def _solver(row: dict) -> str:
@@ -65,11 +93,13 @@ def _text(value: str) -> str:
 
 def _form(ctx: dict, action: str, label: str, sp: str, *, cls: str = "", note: bool = False, danger: bool = False,
           blank: bool = False, path: bool = False, login: bool = False, extra: str = "") -> str:
-    field = ('<textarea name="comments" rows="3" required placeholder="Qué falló o qué esperabas ver"></textarea>' if note else "")
+    field = ('<textarea name="comments" rows="3" required placeholder="Qué falló o qué esperabas ver"></textarea>'
+             + _files() if note else "")
+    enctype = ' enctype="multipart/form-data"' if note else ""            # the note's images (D-258)
     target = ' target="_blank" rel="noopener"' if blank else ""
     page = '<input type="hidden" name="path" value="/">' if path else ""     # the page the new tab lands on (D-200)
     page += '<input type="hidden" name="login" value="1">' if login else ""   # start it as in production (D-202)
-    return (f'<form method="post" action="{purl(ctx["project"], "req", ctx["rid"], action)}" class="pp-vform{" note" if note else ""}"{target}>'
+    return (f'<form method="post" action="{purl(ctx["project"], "req", ctx["rid"], action)}" class="pp-vform{" note" if note else ""}"{enctype}{target}>'
             f'<input type="hidden" name="token" value="{e(ctx["token"])}"><input type="hidden" name="anchor" value="{e(sp)}">'
             f'{page}{field}{extra}<button type="submit" class="{e(cls)}{" danger" if danger else ""}">{e(label)}</button></form>')
 
@@ -319,7 +349,8 @@ def _actions(ctx: dict, row: dict) -> str:
     dec = row["decision"] or {}
     note = (f'<p class="pp-meta">Tu nota: «{e(dec.get("note") or "")}»'
             + (f' · pendiente {e(str(dec["pending"]))}' if dec.get("pending") else "") + "</p>"
-            if row["state"] == "rejected" and dec.get("note") else "") + _solver(row)
+            if row["state"] == "rejected" and dec.get("note") else "") + \
+        (_thumbs(ctx, dec) if row["state"] == "rejected" else "") + _solver(row)
     opened = ""
     try:
         target = verification.workdir(root, ctx["project"], verification._req(rdir), sid, row["version"]) if root else None
@@ -386,7 +417,7 @@ def panel(ctx: dict, s: dict) -> str:
         head = f'<p class="pp-vintro">{_state_pill("waiting")} Todavía no hay una versión de este subplan para probar.</p>'
         return f'<section class="pp-verify">{head}<h3>Dónde probarlo</h3>{where}</section>'
     stale = ('<p class="pp-vwarn">El motor publicó una versión nueva después de tu decisión: vuelve a probarla.</p>'
-             if row["state"] == "outdated" and not row.get("retest") else _previous(row))
+             if row["state"] == "outdated" and not row.get("retest") else _previous(ctx, row))
     head = (f'<p class="pp-vintro">{_state_pill(_shown(row))} Versión {e(str(row["version"]))} · commit '
             f'<code>{e(str(row["commit"])[:10])}</code>. {e(_tree_text(row))}</p>{stale}{_fold_warning(row)}')
     paths = test_paths(rows)

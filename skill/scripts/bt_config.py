@@ -165,6 +165,9 @@ DEFAULTS: dict = {
     # resolution_after_seconds
     "solver": {"enabled": True, "max_concurrent": 1, "max_per_task": 3, "max_minutes": 120, "stuck_minutes": 45,
                "resolution_after_seconds": 120},
+    # images the owner attaches to a rejection in «Probar» (bt_rejection_images, D-258): at most max_images per
+    # rejection, max_image_mb each and max_total_mb together; anything else is refused and nothing is recorded
+    "rejections": {"max_images": 8, "max_image_mb": 10, "max_total_mb": 30},
 }
 ALLOWED: dict[str, tuple] = {
     "executor.display": ("background", "window"),

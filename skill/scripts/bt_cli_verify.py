@@ -18,6 +18,8 @@ def register(subparsers: argparse._SubParsersAction) -> None:
     parser.add_argument("req", help="REQ-NNN")
     parser.add_argument("subplan", nargs="?", help="SP-n (every action but status)")
     parser.add_argument("--note", default="", help="why it is rejected (required to reject)")
+    parser.add_argument("--image", action="append", default=[], metavar="FILE",
+                        help="reject: an image the owner attached (PNG, JPEG, WebP or GIF; repeat for several, D-258)")
     parser.add_argument("--by", choices=("owner", "planner"),
                         help="approve/reject record the owner's decision: an agent passes `owner` only to relay the "
                              "owner's explicit words, never on its own judgment")
@@ -54,8 +56,10 @@ def dispatch(args: argparse.Namespace, root: Path, project: str) -> int:
     elif args.action == "revert-command":
         print(verification.revert_command(root, project, rdir, args.subplan) or "no revert range found")
     else:
-        print(verification.decide(project, rdir, args.subplan, "approved" if args.action == "approve" else "rejected",
-                                  args.note, "owner", via="conversation"))
+        rejecting = args.action == "reject"
+        print(verification.decide(project, rdir, args.subplan, "rejected" if rejecting else "approved",
+                                  args.note, "owner", via="conversation",
+                                  attachments=list(getattr(args, "image", None) or []) if rejecting else None))
     return 0
 
 

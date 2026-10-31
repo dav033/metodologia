@@ -110,6 +110,83 @@
     if (form.requestSubmit) form.requestSubmit(); else form.submit();
   });
 
+  // «Rechazar…» with images (D-258): the plain file input works without this; here a pasted or dropped image on the note
+  // joins it, a preview shows what goes, and the server's limits are checked before sending. The server checks again
+  // (by the bytes) and records nothing on a refusal. Delegated: the panel is swapped in live.
+  var KINDS = ["image/png", "image/jpeg", "image/webp", "image/gif"];
+  function filesOf(form) { return form && form.querySelector('input[type="file"][name="images"]'); }
+  function problem(input) {
+    var files = Array.prototype.slice.call(input.files || []), total = 0;
+    var most = +input.dataset.maxImages || 8, each = (+input.dataset.maxMb || 10) * 1048576,
+        all = (+input.dataset.maxTotalMb || 30) * 1048576;
+    if (files.length > most) return "Adjuntaste " + files.length + " imágenes; el máximo es " + most + " por rechazo.";
+    for (var i = 0; i < files.length; i++) {
+      if (files[i].type && KINDS.indexOf(files[i].type) < 0) return "«" + files[i].name + "» no es una imagen PNG, JPEG, WebP ni GIF.";
+      if (files[i].size > each) return "«" + files[i].name + "» pesa más de " + input.dataset.maxMb + " MB.";
+      total += files[i].size;
+    }
+    return total > all ? "Las imágenes pesan más de " + input.dataset.maxTotalMb + " MB en total." : "";
+  }
+  function preview(input) {
+    var form = input.form, list = form.querySelector(".pp-vpreview"), error = form.querySelector(".pp-vfiles-error");
+    if (list) {
+      list.textContent = "";
+      Array.prototype.forEach.call(input.files || [], function (file, i) {
+        var item = document.createElement("li");
+        if (KINDS.indexOf(file.type) >= 0 && window.FileReader) {   // a data: URL: the panel's CSP allows no blob:
+          var img = document.createElement("img");
+          img.alt = "Imagen " + (i + 1) + ": " + file.name;
+          var reader = new FileReader();
+          reader.onload = function () { img.src = reader.result; };
+          reader.readAsDataURL(file);
+          item.appendChild(img);
+        } else {
+          item.textContent = file.name;
+        }
+        list.appendChild(item);
+      });
+    }
+    var said = problem(input);
+    if (error) { error.textContent = said; error.hidden = !said; }
+    return said;
+  }
+  function add(input, files) {
+    var images = Array.prototype.filter.call(files || [], function (f) { return KINDS.indexOf(f.type) >= 0; });
+    if (!images.length || !window.DataTransfer) return false;
+    var both = new DataTransfer();
+    Array.prototype.forEach.call(input.files || [], function (f) { both.items.add(f); });
+    images.forEach(function (f, i) {
+      var name = f.name && f.name !== "image.png" ? f.name : "pegada-" + (Date.now() + i) + "." + f.type.split("/")[1];
+      both.items.add(new File([f], name, { type: f.type }));
+    });
+    input.files = both.files;
+    preview(input);
+    return true;
+  }
+  document.addEventListener("change", function (ev) {
+    if (ev.target && ev.target.matches && ev.target.matches('input[type="file"][name="images"]')) preview(ev.target);
+  });
+  document.addEventListener("paste", function (ev) {
+    var area = ev.target && ev.target.closest ? ev.target.closest("form.pp-vform.note textarea") : null;
+    var input = area && filesOf(area.form);
+    if (input && ev.clipboardData && add(input, ev.clipboardData.files)) ev.preventDefault();   // text pastes as text
+  });
+  ["dragover", "dragleave", "drop"].forEach(function (type) {
+    document.addEventListener(type, function (ev) {
+      var area = ev.target && ev.target.closest ? ev.target.closest("form.pp-vform.note textarea") : null;
+      if (!area || !filesOf(area.form)) return;
+      var files = ev.dataTransfer && Array.prototype.indexOf.call(ev.dataTransfer.types || [], "Files") >= 0;
+      if (!files) return;
+      ev.preventDefault();
+      area.classList.toggle("pp-vdrop", type === "dragover");
+      if (type === "drop") add(filesOf(area.form), ev.dataTransfer.files);
+    });
+  });
+  document.addEventListener("submit", function (ev) {
+    var input = filesOf(ev.target);
+    if (input && preview(input)) ev.preventDefault();             // the message is shown next to the input
+  });
+
   var run = document.querySelector(".pp-vrun");
   if (!run) return;
   var sp = run.dataset.sp;
