@@ -127,6 +127,52 @@ class Fingerprint(LiveBase):
         self.assertNotEqual(ps.fingerprint(self.root), before)
 
 
+class QuietStores(LiveBase):
+    """A live client checks the bus every POLL: unchanged stores cost a few stat calls, never a re-read (D-248)."""
+
+    def test_unchanged_stores_are_not_collected_again_and_a_new_row_is(self):
+        import bt_flow_bus as bus
+        live.flow_events(self.root, "global")
+        log = live._log(self.rdir, "demo")
+        log.collected_wall += 10 * live.QUIET_MARGIN          # as if the last read were long after the last write
+        with patch.object(bus, "collect", wraps=bus.collect) as collect:
+            for _ in range(3):
+                live.flow_events(self.root, "global", "", {})
+            self.assertEqual(collect.call_count, 0)
+            self.add_audit(77, "run_paused")
+            events, _, _ = live.flow_events(self.root, "global", "", {})
+            self.assertGreater(collect.call_count, 0)
+        self.assertIn("m1:77", [e["seq"] for e in events])
+
+    def test_a_write_right_after_a_read_is_never_skipped(self):
+        import bt_flow_bus as bus
+        live.flow_events(self.root, "global")                # just read: the newest mtime is within QUIET_MARGIN
+        with patch.object(bus, "collect", wraps=bus.collect) as collect:
+            live.flow_events(self.root, "global", "", {})
+            self.assertGreater(collect.call_count, 0)
+
+    def test_a_quiet_run_is_still_read_after_force_read(self):
+        import bt_flow_bus as bus
+        live.flow_events(self.root, "global")
+        log = live._log(self.rdir, "demo")
+        log.collected_wall += 10 * live.QUIET_MARGIN
+        log.collected_at -= live.FORCE_READ + 1
+        with patch.object(bus, "collect", wraps=bus.collect) as collect:
+            live.flow_events(self.root, "global", "", {})
+            self.assertGreater(collect.call_count, 0)
+
+    def test_subplan_scope_reparses_the_plan_only_when_it_changes(self):
+        plan = {**PLAN, "subplans": [{"id": "SP1"}], "tasks": [{**PLAN["tasks"][0], "subplan_id": "SP1"}]}
+        (self.rdir / "PLAN.json").write_text(json.dumps(plan), encoding="utf-8")
+        with patch.object(live.json, "loads", wraps=json.loads) as loads:
+            self.assertEqual(live.scope_tasks(self.rdir, "subplan:demo/REQ-001/SP1"), {"T1"})
+            self.assertEqual(live.scope_tasks(self.rdir, "subplan:demo/REQ-001/SP1"), {"T1"})
+            self.assertEqual(loads.call_count, 1)
+            plan["tasks"].append({**PLAN["tasks"][0], "id": "T2", "subplan_id": "SP1", "title": "Two more"})
+            (self.rdir / "PLAN.json").write_text(json.dumps(plan), encoding="utf-8")
+            self.assertEqual(live.scope_tasks(self.rdir, "subplan:demo/REQ-001/SP1"), {"T1", "T2"})
+
+
 class Sse(LiveBase):
     def open(self, scope="global", headers=None):
         c = http.client.HTTPConnection("127.0.0.1", self.port, timeout=6)
