@@ -57,6 +57,7 @@ PATCH_RUN_AUDITS = "bt-run-audit-remediation"
 PATCH_RUN_STEP_FAILURES = "bt-run-survives-step-failures"
 PATCH_RUN_REOPENED = "bt-run-reopened"
 PATCH_RUN_RECOMPOSE = "bt-run-recompose-gate"
+PATCH_RUN_FRESH_GATES = "bt-run-fresh-gates"
 # what a step the run workflow calls itself raises once its retries are spent; before PATCH_RUN_STEP_FAILURES the run
 # ended in ERROR there (never recovered), so no recorded history goes on past such a failure
 RUN_STEP_ERRORS = (steps.StepFailure, DBOSMaxStepRetriesExceeded)
@@ -125,6 +126,11 @@ def run_workflow(run_data: dict, settings_data: dict, legacy_data: dict) -> dict
     audits_on = False
     remediations: dict[str, dict] = {}
     compose_failures: dict[str, int] = {}
+    # a passed gate whose member's line moved on after it (a repair added by a later stage, D-213) composes again and
+    # its gate task runs again on the new candidate; `fresh_seen` is the accepted set each gate was last checked against
+    fresh_on = False
+    fresh_seen: dict[str, frozenset] = {}
+    fresh_failures: dict[str, int] = {}
     # an incarnation forked by `reopen` from a run that ended blocked waits for the owner's command that reopened it
     # (a retry) instead of ending again at once; the original run never takes this path. Incarnation `@N` replays the
     # reopenings of `@2`..`@N-1` from its history, so it waits once more than they did: N-1 reopenings in all
@@ -139,6 +145,9 @@ def run_workflow(run_data: dict, settings_data: dict, legacy_data: dict) -> dict
         if lines_on:
             accepted = _accepted_snapshots(states, results, inherit)
             if frozenset(accepted) != synced or not synced:
+                # right before a plain step (bt.sync_lines): an older history holds that step here
+                if not fresh_on and DBOS.patch(PATCH_RUN_FRESH_GATES):
+                    fresh_on = True
                 complete = True
                 for role, items in _line_items(plan, accepted).items():
                     try:
@@ -154,6 +163,9 @@ def run_workflow(run_data: dict, settings_data: dict, legacy_data: dict) -> dict
                     elif any(item["conflicts"] for item in report.values()):
                         steps.emit("subplan_line_conflict", {"run_id": run.run_id, "report": report})
                 synced = frozenset(accepted) if complete else frozenset()
+            if fresh_on and synced:                     # every line holds every accepted snapshot
+                _refresh_gates(run, plan, states, results, accepted, synced, rounds, settings,
+                               subplans.Gates(composed, rejected), composed, rejected, fresh_seen, fresh_failures)
             for gate in subplans.to_compose(plan, states, subplans.Gates(composed, rejected)):
                 try:
                     built = steps.compose(run_data, gate.id, {sp: subplans.evidence(plan, sp, results)
@@ -238,6 +250,8 @@ def run_workflow(run_data: dict, settings_data: dict, legacy_data: dict) -> dict
             gate_id = _rejected_gate(plan, command.task_id, rejected)
             steps.emit("gate_recompose", {"run_id": run.run_id, "gate": gate_id, "previous": rejected.pop(gate_id)})
             compose_failures.pop(gate_id, None)
+            fresh_seen.pop(gate_id, None)               # a passed gate rejected on recomposition is checked again
+            fresh_failures.pop(gate_id, None)
         elif command.kind == "retry_task" and command.task_id and states.get(command.task_id) in frontier.STOPPED:
             if command.task_id in remediations:         # the owner retrying a blocked audit grants it one more round
                 remediations[command.task_id]["extra"] += 1
@@ -252,6 +266,58 @@ def run_workflow(run_data: dict, settings_data: dict, legacy_data: dict) -> dict
     DBOS.set_event("summary", summary)
     steps.emit("run_settled", {"run_id": run.run_id, "status": summary["status"]})
     return summary
+
+
+def _refresh_gates(run: RunRef, plan, states: dict, results: dict, accepted: dict[str, str], synced: frozenset,
+                   rounds: dict, settings: Settings, gates: subplans.Gates, composed: dict, rejected: dict,
+                   fresh_seen: dict, fresh_failures: dict) -> None:
+    """Compose again a passed gate that no later gate supersedes when a member's line holds work its gate task was not
+    verified with, and run the gate task again on the new candidate (its checks judge the new combination). Checked
+    once per accepted set (`fresh_seen`), so an unchanged run takes no step; deterministic: every input is recorded."""
+    due = [gate for gate in subplans.fresh_targets(plan, states, gates)
+           if fresh_seen.get(gate.id) != synced and accepted.get(gate.task)]
+    if not due:
+        return
+    for gate in due:
+        fresh_seen[gate.id] = synced
+    try:
+        stale = steps.gate_freshness(run.model_dump(mode="json"), {gate.id: accepted[gate.task] for gate in due})
+    except RUN_STEP_ERRORS as error:                # reported; checked again next turn, at most COMPOSE_TURNS times
+        for gate in due:
+            fresh_failures[gate.id] = fresh_failures.get(gate.id, 0) + 1
+            if fresh_failures[gate.id] < COMPOSE_TURNS:
+                fresh_seen.pop(gate.id, None)
+        steps.emit("gate_freshness_failed", {"run_id": run.run_id, "gates": [gate.id for gate in due],
+                                             "reason": _step_error(error)})
+        return
+    for gate in due:
+        members = list(stale.get(gate.id) or ())
+        if not members:
+            continue
+        steps.emit("gate_stale", {"run_id": run.run_id, "gate": gate.id, "task_id": gate.task, "members": members,
+                                  "previous": composed.get(gate.id, "")})
+        try:
+            built = steps.compose(run.model_dump(mode="json"), gate.id,
+                                  {sp: subplans.evidence(plan, sp, results) for sp in gate.subplans})
+        except RUN_STEP_ERRORS as error:
+            fresh_failures[gate.id] = fresh_failures.get(gate.id, 0) + 1
+            if fresh_failures[gate.id] < COMPOSE_TURNS:
+                fresh_seen.pop(gate.id, None)       # composed again next turn
+                steps.emit("gate_compose_failed", {"run_id": run.run_id, "gate": gate.id,
+                                                   "turn": fresh_failures[gate.id], "reason": _step_error(error)})
+                continue
+            built = {"state": "rejected", "reason": f"COMPOSE_FAILED {COMPOSE_TURNS} turns: {_step_error(error)}"}
+        if built.get("state") == "rejected":
+            rejected[gate.id] = str(built.get("reason") or "rejected")[:300]
+            steps.emit("gate_composed", {"run_id": run.run_id, "gate": gate.id, **built})
+            continue
+        composed[gate.id] = str(built.get("candidate_id"))
+        steps.emit("gate_composed", {"run_id": run.run_id, "gate": gate.id, **built})
+        note = (f"RECOMPOSED. {gate.id} passed before, but its member subplan line(s) {', '.join(members)} have since "
+                f"taken newer accepted work (e.g. a repair). You start from the new composition candidate "
+                f"{built.get('candidate_id')} of {', '.join(gate.subplans)}. Run every check of this gate task on it. "
+                "If they pass, change nothing; if the new combination breaks something, fix only that.")
+        _start_round(run, gate.task, note, rounds, states, settings)
 
 
 def _is_audit(plan, task_id: str) -> bool:

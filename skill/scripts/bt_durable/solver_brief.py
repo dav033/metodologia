@@ -12,8 +12,8 @@ def _recent_logs(project_dir: Path, count: int = 2) -> list[Path]:
     return sorted(Path(project_dir).glob("20*/W*/20*.md"))[-count:]
 
 
-GATE_EVENTS = ("gate_compose_failed", "gate_composed", "gate_recompose", "subplan_lines_unavailable",
-               "subplan_line_conflict")
+GATE_EVENTS = ("gate_compose_failed", "gate_composed", "gate_recompose", "gate_stale", "gate_freshness_failed",
+               "subplan_lines_unavailable", "subplan_line_conflict")
 
 
 def gate_trail(telemetry: Path | None, run_id: str, limit: int = 12) -> list[str]:
@@ -35,7 +35,8 @@ def gate_trail(telemetry: Path | None, run_id: str, limit: int = 12) -> list[str
         return []
     out = []
     for row in rows[-limit:]:
-        what = {k: row[k] for k in ("gate", "turn", "state", "candidate_id", "reason", "role", "previous") if k in row}
+        what = {k: row[k] for k in ("gate", "turn", "state", "candidate_id", "reason", "role", "previous", "members")
+                if k in row}
         out.append(f"- {row['event']}: {json.dumps(what, ensure_ascii=False, default=str)[:700]}")
     return out
 

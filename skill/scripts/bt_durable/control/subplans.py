@@ -99,6 +99,27 @@ def held(plan: Plan, states: Mapping[str, str], gates: Gates, task_id: str) -> s
     return ""
 
 
+def superseded(plan: Plan, gate) -> bool:
+    """A later gate holds every member of `gate` (cumulative gates, pictures REQ-021 CG-1 ⊂ CG-4 ⊂ … ⊂ CG-12): that
+    gate verifies the combination again, so `gate` never needs to be composed again for a change of its members."""
+    ids = [item.id for item in plan.composition_gates]
+    mine, at = set(gate.subplans), ids.index(gate.id)
+    return any(set(other.subplans) > mine or (set(other.subplans) == mine and index > at)
+               for index, other in enumerate(plan.composition_gates) if other.id != gate.id)
+
+
+def fresh_targets(plan: Plan, states: Mapping[str, str], gates: Gates) -> tuple:
+    """Passed gates (their gate task accepted or inherited) that no later gate supersedes, whose members are complete
+    and whose candidate is not rejected: the gates whose verified combination a newer member version would leave
+    unverified (D-213 repairs integrate into their own subplan's line after the last gate holding it passed). A gate
+    that is not composed yet needs nothing: it composes from the members' current lines."""
+    if not enabled(plan):
+        return ()
+    return tuple(gate for gate in plan.composition_gates
+                 if states.get(gate.task) in DONE and gate.id not in gates.rejected and not superseded(plan, gate)
+                 and gate_ready(plan, states, gate))
+
+
 def evidence(plan: Plan, subplan_id: str, results: Mapping[str, Mapping]) -> list[dict[str, str]]:
     """The accepted member verdicts a subplan version is bound to (bt_composition version evidence)."""
     out = []
