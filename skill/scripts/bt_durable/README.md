@@ -40,6 +40,11 @@ install -Dm644 skill/scripts/bt_durable/deploy/bt-durable.service ~/.config/syst
 systemctl --user daemon-reload && systemctl --user enable --now bt-durable.service
 ```
 
+The engine's environment is what every attempt inherits and where the checks' toolchain (`node`, `uv`) is found, so
+give it a stable PATH in a drop-in (`~/.config/systemd/user/bt-durable.service.d/env.conf`): `Environment=BITACORA_ROOT=%h/bitacora`
+and a `PATH=` that names fnm's alias (`%h/.local/share/fnm/aliases/default/bin`), never a version directory or a
+`/run/user/…/fnm_multishells/…` entry (`bt_autostart.stable_path`, D-256).
+
 Hooks, the bitácora CLI and the legacy runtime keep running under the system interpreter (stdlib only,
 `test_stdlib_boundary`). Only the engine, the CLI below and the new tests need the uv environment.
 
