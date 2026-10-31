@@ -153,6 +153,19 @@ class HookTests(RelayCase):
     def test_unknown_profile_is_silent(self):
         self.assertEqual(self.run_hook({}, lambda: row(99), environ={}), "")
 
+    def test_the_cli_hook_skips_the_command_modules(self):
+        """`bitacora.py hook relay` runs on every tool call of every session: it must not import the whole CLI (D-249)."""
+        script = Path(__file__).resolve().parent.parent / "bitacora.py"
+        env = {k: v for k, v in os.environ.items() if not k.startswith(("BITACORA_RUN", "BITACORA_TASK"))}
+        env.update(BITACORA_ROOT=str(self.root), HOME=self.tmp.name)
+        payload = json.dumps({"session_id": "s1", "hook_event_name": "PostToolUse", "cwd": self.tmp.name})
+        done = subprocess.run([sys.executable, "-X", "importtime", str(script), "hook", "relay"], input=payload,
+                              capture_output=True, text=True, env=env, timeout=60)
+        self.assertEqual((done.returncode, done.stdout), (0, ""))
+        imported = {line.rsplit("|", 1)[-1].strip() for line in done.stderr.splitlines() if line.startswith("import time:")}
+        self.assertIn("bt_relay", imported)
+        self.assertFalse(imported & {"bt_cli_scheduler_run", "bt_cli_scheduler_recovery", "bt_views", "bt_hooks"})
+
     def test_stop_event_marks_the_turn_end_only_after_a_handoff(self):
         self.cfg["auto"] = False  # the automatic end-of-turn handoff has its own tests (AutoHandoffTests)
         self.run_hook({}, lambda: row(95))

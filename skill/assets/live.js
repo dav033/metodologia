@@ -52,5 +52,12 @@
   }
   window.liveNow = onNow;
   if (window.flowOwnsLive) return;     // /flow's stream already delivers the "now" frames (see flow.js)
-  new EventSource('/live?scope=global').addEventListener('now', onNow);
+  // a hidden tab holds no stream: every open one costs the server a read loop (D-248); a visible tab gets a fresh frame
+  var es = null;
+  function connect() {
+    if (document.hidden) { if (es) { es.close(); es = null; } return; }
+    if (!es) { es = new EventSource('/live?scope=global'); es.addEventListener('now', onNow); }
+  }
+  document.addEventListener('visibilitychange', connect);
+  connect();
 })();

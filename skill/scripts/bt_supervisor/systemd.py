@@ -47,6 +47,9 @@ POST_STATES = {"stop-post", "final-sigterm", "final-sigkill", "final-watchdog"} 
 PREFIX_PATTERN = re.compile(r"^[A-Za-z0-9_.-]{1,40}$")
 KILL_WINDOW_SECONDS = 15.0
 START_WAIT_SECONDS = 15.0
+# An attempt is background work: under contention the owner's desktop and terminals get the CPU first, and idle cores
+# still go to the agent (weights only bind when the CPU is full). Same values as the engine unit (D-250).
+BACKGROUND_PRIORITY = ("Nice=15", "CPUWeight=20", "IOWeight=20")
 
 
 ManagerError = ManagerUnavailable
@@ -209,6 +212,7 @@ class SystemdSupervisor(BaseSupervisor):
             f"StandardOutput=append:{adir / 'runner.log'}", f"StandardError=append:{adir / 'runner.log'}",
             # ':' = no $VAR expansion; transient units do not expand %-specifiers.
             f"ExecStopPost=:{_quote(self.python)} -I {_quote(tee)} exit-record {_quote(adir)}",
+            *BACKGROUND_PRIORITY,
         ]
         if limits.memory_max_bytes:
             properties += [f"MemoryMax={limits.memory_max_bytes}", "MemorySwapMax=0"]   # swap would hide the OOM

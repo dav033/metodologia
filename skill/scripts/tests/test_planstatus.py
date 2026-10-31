@@ -7,6 +7,7 @@ import sqlite3
 import sys
 import tempfile
 import unittest
+import unittest.mock
 from pathlib import Path
 
 SCRIPTS = Path(__file__).resolve().parents[1]
@@ -245,6 +246,84 @@ class Fingerprint(Base):
         self.assertNotEqual(second, first)
         (rdir / "RUN.json").write_text('{"status": "running"}', encoding="utf-8")
         self.assertNotEqual(ps.fingerprint(self.root), second)
+
+
+    def test_an_empty_write_ahead_log_is_no_change(self):
+        """Readers create and drop an empty -wal on every open: only a log with frames marks a write (D-248)."""
+        rdir = self.req()
+        db = ps.scheduler_.run_db_path(rdir)
+        db.parent.mkdir(parents=True, exist_ok=True)
+        db.write_bytes(b"x")
+        first = ps.fingerprint(self.root)
+        wal = db.with_name(db.name + "-wal")
+        wal.write_bytes(b"")
+        self.assertEqual(ps.fingerprint(self.root), first)
+        wal.write_bytes(b"frame")
+        self.assertNotEqual(ps.fingerprint(self.root), first)
+
+
+class Reuse(Base):
+    """Long-lived servers answer unchanged plans from the last computation (D-248); everything else always computes."""
+
+    def setUp(self):
+        super().setUp()
+        self.addCleanup(lambda: setattr(ps, "_memo", None))
+        self.rdir = self.req()
+        self.quiet()
+        self.calls = 0
+        real = ps._plan_status
+
+        def counted(project, rdir):
+            self.calls += 1
+            return real(project, rdir)
+        patcher = unittest.mock.patch.object(ps, "_plan_status", counted)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def quiet(self):
+        """Age every file past the margin, as files nobody wrote for a while."""
+        import os
+        import time
+        old = time.time() - 60
+        for path in self.root.rglob("*"):
+            os.utime(path, (old, old))
+
+    def test_off_by_default(self):
+        ps.plan_status("demo", self.rdir)
+        ps.plan_status("demo", self.rdir)
+        self.assertEqual(self.calls, 2)
+
+    def test_unchanged_files_are_answered_from_the_last_computation_as_private_copies(self):
+        ps.reuse()
+        first = ps.plan_status("demo", self.rdir)
+        first["milestones"][0]["tasks"].clear()
+        first["run_action"] = "mutated by a caller"
+        second = ps.plan_status("demo", self.rdir)
+        self.assertEqual(self.calls, 1)
+        self.assertNotIn("run_action", second)
+        self.assertEqual(len(second["milestones"][0]["tasks"]), 2)
+
+    def test_a_changed_file_a_recent_write_old_age_or_forget_computes_again(self):
+        ps.reuse()
+        ps.plan_status("demo", self.rdir)
+        (self.rdir / "RUN.json").write_text('{"status": "running"}', encoding="utf-8")
+        ps.plan_status("demo", self.rdir)           # a changed mark
+        ps.plan_status("demo", self.rdir)           # same marks, but written within the margin
+        self.assertEqual(self.calls, 3)
+        self.quiet()
+        ps.plan_status("demo", self.rdir)
+        ps.plan_status("demo", self.rdir)
+        self.assertEqual(self.calls, 4)
+        ps.forget()
+        ps.plan_status("demo", self.rdir)
+        self.assertEqual(self.calls, 5)
+        with unittest.mock.patch.object(ps, "MEMO_MAX_AGE", 0):
+            ps.plan_status("demo", self.rdir)
+        self.assertEqual(self.calls, 6)
+        (self.rdir / "SPEC.md").write_text("# Spec — REQ-001 — New title\n", encoding="utf-8")
+        self.quiet()
+        ps.plan_status("demo", self.rdir)
+        self.assertEqual(self.calls, 7)
 
 
 if __name__ == "__main__":

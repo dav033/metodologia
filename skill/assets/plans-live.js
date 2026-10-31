@@ -44,9 +44,16 @@
   function startPoll() { if (!poll) { poll = setInterval(refresh, 3000); state('● sondeo cada 3 s'); } }
   function stopPoll() { if (poll) { clearInterval(poll); poll = null; } }
   if (!/[?&]live=0(&|$)/.test(location.search) && window.EventSource) {
-    var es = new EventSource(live.dataset.events);
-    es.onopen = function () { stopPoll(); state('● en vivo'); refresh(); };
-    es.onerror = function () { startPoll(); };
-    es.addEventListener(live.dataset.event, function (ev) { try { apply(JSON.parse(ev.data).html); } catch (x) {} });
+    var es = null;
+    function connect() {      // a hidden tab holds no stream and no poll (D-248); back in view it reconnects and refreshes
+      if (document.hidden) { if (es) { es.close(); es = null; } stopPoll(); return; }
+      if (es) return;
+      es = new EventSource(live.dataset.events);
+      es.onopen = function () { stopPoll(); state('● en vivo'); refresh(); };
+      es.onerror = function () { if (!document.hidden) startPoll(); };
+      es.addEventListener(live.dataset.event, function (ev) { try { apply(JSON.parse(ev.data).html); } catch (x) {} });
+    }
+    document.addEventListener('visibilitychange', connect);
+    connect();
   } else if (!/[?&]live=0(&|$)/.test(location.search)) startPoll();
 })();

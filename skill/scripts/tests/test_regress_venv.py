@@ -7,6 +7,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+import unittest.mock
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -80,6 +81,59 @@ class Signals(unittest.TestCase):
                 signal.signal(s, handler)
         self.assertEqual(line.split()[:2], ["test_job_signals", "0"],
                          (Path(temp.name) / "scratch" / "logs" / "test_job_signals.log").read_text(encoding="utf-8"))
+
+
+
+class FastTemp(unittest.TestCase):
+    """The suites' temporary files go to a tmpfs with room, and leave with the suite (D-250)."""
+
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.worktree = Path(self.temp.name) / "wt"
+        self.tests = self.worktree / "skill" / "scripts" / "tests"
+        self.tests.mkdir(parents=True)
+        self.base = Path(self.temp.name) / "ram"
+        self.base.mkdir()
+
+    def run_probe(self, env):
+        suite = self.tests / "test_probe.py"
+        suite.write_text("import os, tempfile, unittest\n"
+                         "class P(unittest.TestCase):\n"
+                         "    def test_tmp(self):\n"
+                         "        print('TMP=' + tempfile.gettempdir())\n"
+                         "        open(os.path.join(tempfile.gettempdir(), 'left-behind'), 'w').close()\n",
+                         encoding="utf-8")
+        scratch = Path(self.temp.name) / "scratch"
+        with unittest.mock.patch.dict(bt_regress.os.environ, env):
+            line = bt_regress.run_suite(self.worktree, scratch, suite)
+        log = (scratch / "logs" / "test_probe.log").read_text(encoding="utf-8")
+        return line, log
+
+    def test_suites_get_a_private_temp_dir_on_the_fast_base_removed_after_them(self):
+        line, log = self.run_probe({"BT_REGRESS_TMPDIR": str(self.base)})
+        self.assertEqual(line.split()[1], "0", log)
+        used = next(row[4:] for row in log.splitlines() if row.startswith("TMP="))
+        self.assertEqual(Path(used).parent, self.base)
+        self.assertTrue(Path(used).name.startswith("bt-regress-test_probe-"))
+        self.assertEqual(list(self.base.iterdir()), [])
+
+    def test_an_empty_override_keeps_the_inherited_temp_dir(self):
+        inherited = Path(self.temp.name) / "inherited"
+        inherited.mkdir()
+        line, log = self.run_probe({"BT_REGRESS_TMPDIR": "", "TMPDIR": str(inherited)})
+        self.assertIn(f"TMP={inherited}", log)
+
+    def test_only_a_tmpfs_with_room_is_chosen(self):
+        with unittest.mock.patch.dict(bt_regress.os.environ, {}, clear=False):
+            bt_regress.os.environ.pop("BT_REGRESS_TMPDIR", None)
+            with unittest.mock.patch.object(bt_regress, "_tmpfs", return_value=False):
+                self.assertIsNone(bt_regress.fast_tmp())
+            with unittest.mock.patch.object(bt_regress, "_tmpfs", return_value=True), \
+                    unittest.mock.patch.object(bt_regress, "FAST_TMP_MIN_FREE", 1 << 62):
+                self.assertIsNone(bt_regress.fast_tmp())
+            with unittest.mock.patch.object(bt_regress, "_tmpfs", side_effect=lambda p: p == "/tmp"):
+                self.assertEqual(bt_regress.fast_tmp(), "/tmp")
 
 
 if __name__ == "__main__":

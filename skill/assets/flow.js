@@ -584,10 +584,18 @@
     }, delay);
   }
   var TASK_KINDS = { task_state: 1, state_change: 1, verdict: 1, assignment: 1, recommendation: 1, run_paused: 1, run_resumed: 1, run_created: 1 };
+  var flowES = null, watching = false;
   function follow() {
     if (!window.EventSource || staticPage) return;
+    if (!watching) {          // a hidden tab holds no stream (D-248); back in view it resumes after the last message it has
+      watching = true;
+      document.addEventListener('visibilitychange', function () {
+        if (document.hidden) { if (flowES) { flowES.close(); flowES = null; } } else if (!flowES) { follow(); refreshRuns(0); }
+      });
+    }
+    if (document.hidden || flowES) return;
     var lastOrd = all.length ? all[all.length - 1].ord : '0';    // '0': nothing yet, so whatever arrived since the fetch
-    var es = new EventSource('/live?scope=' + encodeURIComponent(scope) + '&last=' + encodeURIComponent(lastOrd));
+    var es = flowES = new EventSource('/live?scope=' + encodeURIComponent(scope) + '&last=' + encodeURIComponent(lastOrd));
     es.addEventListener('now', function (m) { if (window.liveNow) window.liveNow(m); });
     es.addEventListener('flow', function (m) {
       var ev = JSON.parse(m.data);
@@ -623,9 +631,9 @@
         follow();
       })
       .catch(function () { $('fl-runs').innerHTML = '<p class="muted">No se pudo leer el flujo. Recarga la página.</p>'; });
-    setInterval(function () { if (S.mode === 'live') refreshRuns(0); }, 15000);
+    setInterval(function () { if (S.mode === 'live' && !document.hidden) refreshRuns(0); }, 15000);
     setInterval(function () { if (S.mode === 'live') soon(); }, 5000);   // "hace N s" keeps counting
-    setInterval(function () { if (S.mode === 'live') refreshDoing(); }, 3000);
+    setInterval(function () { if (S.mode === 'live' && !document.hidden) refreshDoing(); }, 3000);
     requestAnimationFrame(frame);
   }
   start();
