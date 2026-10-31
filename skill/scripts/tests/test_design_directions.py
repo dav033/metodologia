@@ -224,6 +224,69 @@ class Directions(unittest.TestCase):
         self.assertIn("checkout@v1.r1.chosen.behavior.md", brief)
         self.assertFalse(drafts.rows(self.rdir)[0]["stale"])
 
+    def test_iterating_a_direction_after_a_plan_change_carries_the_delta_with_the_comments(self):
+        self.changed_after_exploring()   # pictures REQ-021 planes@v2, 2026-10-31 (D-263): refused and the text dropped
+        msg = iterate.iterate("demo", self.rdir, "checkout@v1", "c", "Bigger thumbnails", "web")
+        self.assertIn("cambio del plan", msg)
+        self.assertEqual(len(self.orders), 4)
+        brief = self.orders[3]["task"]
+        for needle in ("ITERATION OF ONE DIRECTION", "PLAN CHANGE", iterate.CARRIED_LEAD, "Changed behaviour",
+                       "Bigger thumbnails", "r1.dir-c.tsx", "r2.dir-c.html"):
+            self.assertIn(needle, brief)
+        row = drafts.rows(self.rdir)[0]
+        self.assertEqual((row["status"], row["stale"], row["reason"]), ("drafting", False, "iterate"))
+        self.assertEqual([(f["text"], f["direction"]) for f in row["feedback"]], [("Bigger thumbnails", "c")])
+        self.finish(2, revision=2, did="D-4", thumbnails=False)
+        row = drafts.rows(self.rdir)[0]
+        self.assertEqual((row["status"], row["stale"]), ("choosing", False))
+        self.assertTrue(all(f.get("consumed") == "D-4" for f in row["feedback"]))
+
+    def test_direction_feedback_routed_after_a_plan_change_iterates_instead_of_regenerating(self):
+        self.changed_after_exploring()
+        self.assertIn("Iterando la dirección B", drafts.add_feedback("demo", self.rdir, "checkout@v1", "Calmer", "web",
+                                                                      direction="b"))
+        self.assertEqual(len(self.orders), 4)
+        self.assertIn("PLAN CHANGE", self.orders[3]["task"])
+
+    def test_comment_refused_while_busy_is_kept_and_sync_iterates_it_with_the_plan_change(self):
+        import bt_planning_activity as activity
+        drafts.request("demo", self.rdir)
+        plan = json.loads((self.rdir / "PLAN.json").read_text())
+        plan["subplans"][1]["outcome"] = "Changed behaviour"
+        (self.rdir / "PLAN.json").write_text(json.dumps(plan))
+        with self.assertRaisesRegex(SystemExit, "ya está trabajando en checkout@v1.*quedó guardado"):
+            iterate.iterate("demo", self.rdir, "checkout@v1", "a", "Rounder", "web")
+        self.assertTrue(any(e["kind"] == "refused" for e in activity.events(self.rdir)))
+        for i in range(3):
+            self.finish(i)
+        row = drafts.rows(self.rdir)[0]
+        self.assertEqual((row["status"], row["stale"], row["pending_feedback"]), ("choosing", True, 1))
+        settled = time.time() + drafts.DEBOUNCE_SEC + 1
+        self.assertEqual(drafts.sync("demo", self.rdir, now=settled), ["checkout@v1"])
+        self.assertEqual(len(self.orders), 4)
+        brief = self.orders[3]["task"]
+        for needle in ("PLAN CHANGE", "Changed behaviour", "Rounder", "r2.dir-a.html"):
+            self.assertIn(needle, brief)
+
+    def test_a_refused_iteration_keeps_the_owner_text_without_starting_work(self):
+        import bt_planning_activity as activity
+        self.explored()
+        directions.choose("demo", self.rdir, "checkout@v1", "a", "cli")
+        md, html = drafts.paths(self.rdir, "checkout@v1")
+        md.write_text(CONTRACT)
+        html.write_text("<main>Chosen A</main>")
+        self.outcomes["D-4"] = {"status": "claimed", "summary": "Finalized"}
+        with self.assertRaisesRegex(SystemExit, "no está lista"):
+            iterate.iterate("demo", self.rdir, "checkout@v1", "b", "Rounder corners please", "web")
+        entry = drafts._load(self.rdir)["drafts"]["checkout@v1"]
+        self.assertEqual([(r["direction"], r["text"]) for r in entry["refused"]], [("b", "Rounder corners please")])
+        event = activity.events(self.rdir)[0]
+        self.assertEqual(event["kind"], "refused")
+        self.assertIn("Rounder corners please", event["text"])
+        self.assertEqual(drafts.rows(self.rdir)[0]["pending_feedback"], 0)
+        self.assertEqual(drafts.sync("demo", self.rdir, now=time.time() + drafts.DEBOUNCE_SEC + 1), [])
+        self.assertEqual(len(self.orders), 4)
+
     def test_the_owner_can_still_ask_for_new_directions_after_a_plan_change(self):
         self.changed_after_exploring()
         self.assertEqual(drafts.request("demo", self.rdir, ["checkout@v1"], force=True, fresh=True, reason="web"),

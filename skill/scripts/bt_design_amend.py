@@ -146,12 +146,15 @@ def _launch(project: str, rdir: Path, ref: str, brief: str, n: int) -> str:
     return f"Actualizando {ref} con el cambio del plan; el Designer revisa el diseño elegido (versión {n})."
 
 
-def preamble(rdir: Path, ref: str, change: dict) -> str:
-    """What changed in the plan, for any amendment brief."""
+LEAD = "The design below was confirmed by the owner; the plan changed afterwards. Extend it, do not redesign."
+
+
+def preamble(rdir: Path, ref: str, change: dict, *, lead: str = LEAD) -> str:
+    """What changed in the plan, for any amendment brief (and an owner's iteration that carries it, D-263)."""
     import bt_design_brief_diff as brief_diff
     previous = change["previous_path"] or "(no previous UI brief was recorded: check the whole contract against the new one)"
     return f"""
-PLAN CHANGE. The design below was confirmed by the owner; the plan changed afterwards. Extend it, do not redesign.
+PLAN CHANGE. {lead}
 Previous UI brief (what the current design was built from): {previous}
 Mechanical diff of the UI brief, previous → new (+ added, - removed, ~ changed):
 {brief_diff.render(change['changes'])}
