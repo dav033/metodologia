@@ -92,3 +92,74 @@ class DurableVersions(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class BuiltBeforeItsGate(unittest.TestCase):
+    """A subplan whose tasks are all accepted is offered to try from its line's tip, before any composition gate folds
+    it (D-243; pictures REQ-021 SP-11/SP-12 stayed «se está construyendo» while CG-11/CG-12 waited on other work)."""
+
+    def setUp(self):
+        import subprocess
+        self.root = Path(tempfile.mkdtemp(prefix="bt-built-"))
+        self.rdir = self.root / "proj" / "requirements" / "REQ-021-x"
+        (self.rdir / ".planning").mkdir(parents=True)
+        (self.rdir / ".planning" / "flow.json").write_text("{}")
+        plan = {"subplans": [{"id": "SP-1", "title": "one"}, {"id": "SP-2", "title": "two"}],
+                "tasks": [{"id": "T1", "subplan_id": "SP-1", "repository": "app"},
+                          {"id": "T2", "subplan_id": "SP-1", "repository": "app"},
+                          {"id": "T3", "subplan_id": "SP-2", "repository": "app"}]}
+        (self.rdir / "PLAN.json").write_text(json.dumps(plan))
+        (self.rdir / "plan-revisions").mkdir()
+        (self.rdir / "plan-revisions" / "PLAN.r3.json").write_text(json.dumps(plan))
+        (self.rdir / "RUN.owner.json").write_text(json.dumps({"backend": "dbos", "run_id": "proj:REQ-021:r3"}))
+        self.store = self.root / ".state" / "durable" / "composition"
+        self.store.mkdir(parents=True)
+        self.repo = self.root / "repo"
+        self.repo.mkdir()
+        self.git = lambda *args: subprocess.run(["git", "-C", str(self.repo), *args], check=True, capture_output=True,
+                                                text=True).stdout.strip()
+        self.git("init", "-q", "-b", "main")
+        self.git("config", "user.email", "t@example.invalid")
+        self.git("config", "user.name", "T")
+        self.repos = patch("bt_workspace.repos", lambda root, project, discover=True: {"app": self.repo})
+        self.repos.start()
+        self.addCleanup(self.repos.stop)
+
+    def commit(self, text: str) -> str:
+        (self.repo / "f.txt").write_text(text)
+        self.git("add", "f.txt")
+        self.git("commit", "-q", "--allow-empty", "-m", text)
+        return self.git("rev-parse", "HEAD")
+
+    def line(self, subplan: str, commit: str) -> None:
+        self.git("update-ref", f"refs/bt/subplan/proj/REQ-021/r3/app/{subplan}", commit)
+
+    def states(self, **states) -> None:
+        folder = self.root / ".state" / "durable" / "projections" / "proj"
+        folder.mkdir(parents=True, exist_ok=True)
+        (folder / "REQ-021-r3.json").write_text(json.dumps({"tasks": [{"id": k, "state": v} for k, v in states.items()]}))
+
+    def rows(self) -> dict:
+        return {r["id"]: r for r in verification.state(self.rdir)["subplans"]}
+
+    def test_a_complete_subplan_is_offered_from_its_line_and_an_unfinished_one_is_not(self):
+        one, two = self.commit("one"), self.commit("two")
+        self.line("SP-1", one)
+        self.line("SP-2", two)
+        self.states(T1="completed", T2="inherited", T3="running")
+        rows = self.rows()
+        self.assertEqual((rows["SP-1"]["state"], rows["SP-1"]["version"], rows["SP-1"]["commit"]), ("to_test", 1, one))
+        self.assertEqual(rows["SP-2"]["state"], "waiting")
+
+    def test_the_same_tree_keeps_the_published_version_and_a_new_tree_is_a_new_one(self):
+        published = self.commit("same")
+        DurableVersions.publish(self, 2, "SP-1", 1, published, "2026-10-30T01:00:00+00:00")
+        self.git("commit", "-q", "--allow-empty", "-m", "re-seeded, same tree")
+        self.line("SP-1", self.git("rev-parse", "HEAD"))
+        self.states(T1="completed", T2="completed", T3="running")
+        row = self.rows()["SP-1"]
+        self.assertEqual((row["version"], row["commit"]), (1, published))     # a re-seeded line is not a new version
+        changed = self.commit("repaired")
+        self.line("SP-1", changed)
+        row = self.rows()["SP-1"]
+        self.assertEqual((row["version"], row["commit"]), (2, changed))

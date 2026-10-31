@@ -201,6 +201,10 @@ def durable_versions(rdir: Path) -> list[dict] | None:
                 continue
             if isinstance(item.get("commit"), str) and SHA.fullmatch(item["commit"]):
                 seen.setdefault(str(sid), []).append((str(item.get("published_at") or ""), item["commit"]))
+    for sid, (tip, repo) in _built(rdir).items():
+        last = max(seen.get(sid, []), default=("", ""))[1]
+        if tip != last and not (last and _tree(repo, last) == _tree(repo, tip)):
+            seen.setdefault(sid, []).append(("~", tip))           # after every stored publication
     out = []
     for sid, items in sorted(seen.items()):
         commits: list[str] = []
@@ -208,6 +212,53 @@ def durable_versions(rdir: Path) -> list[dict] | None:
             if not commits or commits[-1] != commit:
                 commits.append(commit)
         out.append({"id": sid, "status": "published", "version": len(commits), "commit": commits[-1]})
+    return out
+
+
+_SAFE_REF = re.compile(r"[^A-Za-z0-9._-]+")
+
+
+def _tree(repo: Path, commit: str) -> str:
+    return _git(repo, "rev-parse", "-q", "--verify", f"{commit}^{{tree}}").stdout.strip()
+
+
+def _built(rdir: Path) -> dict[str, tuple[str, Path]]:
+    """Subplans of the current durable run whose every task is accepted, with their subplan line's tip: the tree the
+    owner tries. The composer publishes a subplan's version only when a composition gate folds it, and a gate can sit
+    behind unrelated work: pictures REQ-021 SP-11/SP-12 were complete on 2026-10-30 but stayed «se está construyendo»
+    because CG-11/CG-12 waited on SP-10 and the owner's manual check, while SP-13 waited on the owner approving SP-12
+    (D-243). The tip is the same commit the composer would publish (`refs/bt/subplan/...`)."""
+    root = rdir.parent.parent.parent
+    try:
+        run = json.loads((rdir / "RUN.owner.json").read_text(encoding="utf-8")).get("run_id") or ""
+        project, req, revision = run.split(":")[0], run.split(":")[1], int(run.rsplit(":r", 1)[1])
+        plan = json.loads((rdir / "plan-revisions" / f"PLAN.r{revision}.json").read_text(encoding="utf-8"))
+        projected = json.loads((root / ".state" / "durable" / "projections" / project / f"{req}-r{revision}.json")
+                               .read_text(encoding="utf-8"))
+    except (OSError, ValueError, IndexError, AttributeError):
+        return {}
+    states = {t.get("id"): t.get("state") for t in projected.get("tasks") or () if isinstance(t, dict)}
+    members: dict[str, list[dict]] = {}
+    for task in plan.get("tasks") or ():
+        if isinstance(task, dict) and task.get("subplan_id"):
+            members.setdefault(str(task["subplan_id"]), []).append(task)
+    try:
+        import bt_workspace as ws
+        repos = ws.repos(root, project, discover=False)
+    except Exception:  # noqa: BLE001 - no workspace record: nothing to read the lines from
+        return {}
+    out = {}
+    for sid, tasks in members.items():
+        if not all(states.get(t.get("id")) in ("completed", "inherited") for t in tasks):
+            continue
+        role = str(tasks[0].get("repository") or "default")
+        repo = repos.get(role)
+        if not repo or not Path(repo).exists():
+            continue
+        ref = f"refs/bt/subplan/{_SAFE_REF.sub('-', project)}/{req}/r{revision}/{_SAFE_REF.sub('-', role)}/{_SAFE_REF.sub('-', sid)}"
+        tip = _git(Path(repo), "rev-parse", "-q", "--verify", f"{ref}^{{commit}}").stdout.strip()
+        if SHA.fullmatch(tip):
+            out[sid] = (tip, Path(repo))
     return out
 
 
