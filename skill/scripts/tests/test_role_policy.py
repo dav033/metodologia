@@ -20,7 +20,7 @@ class RolePolicyTests(unittest.TestCase):
             "researcher": [("codex", "gpt-6-luna", "high"), ("claude", "sonnet", "low")],
             "runner": [("codex", "gpt-6-luna", "high"), ("claude", "sonnet", "low")],
             "antagonist": [("claude", "sonnet", "medium"), ("claude", "opus", "high")],
-            "solver": [("claude", "opus", "high"), ("codex", "gpt-6.1-sol", "high")],
+            "solver": [("claude", "sonnet", "high"), ("codex", "gpt-6.1-terra", "medium")],
         }
         self.assertEqual(set(policy.ROLES), set(expected))
         for role, choices in expected.items():
