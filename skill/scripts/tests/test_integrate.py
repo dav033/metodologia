@@ -212,15 +212,51 @@ class Integrate(unittest.TestCase):
             subprocess.run(["git", "-C", str(self.live), "commit", "-q", "-m", "bitácora", "--allow-empty"], check=True)
         self.assertEqual(self.run_it(Fake(self, during_regression=bitacora_commit)).code, 0)
 
-    def test_code_landing_on_main_during_the_regression_stops_it(self):
+    def other_on_main(self, path="skill/scripts/bt_y.py", text="y = 1\n", name="other"):
+        other = self.base / f"wt-{name}"
+        sh(self.live, "worktree", "add", "-q", "-b", name, str(other), "main")
+        commit(other, path, text, name)
+        sh(self.live, "merge", "-q", "--ff-only", name)
+
+    def test_code_landing_on_main_during_the_regression_is_merged_and_tested_again_in_the_same_turn(self):
+        """D-260: main moving during the regression no longer gives the turn up; it is merged and tested again."""
+        landed = []
         def code_commit():
-            other = self.base / "wt-other"
-            sh(self.live, "worktree", "add", "-q", "-b", "other", str(other), "main")
-            commit(other, "skill/scripts/bt_y.py", "y = 1\n", "y")
-            sh(self.live, "merge", "-q", "--ff-only", "other")
+            if not landed:
+                landed.append(1)
+                self.other_on_main()
+        fake = Fake(self, during_regression=code_commit)
+        outcome = self.run_it(fake)
+        self.assertEqual(outcome.code, 0, outcome.lines)
+        self.assertEqual([c for c in fake.calls if c[0] == "regress"], [("regress", "wt-fix")] * 2)
+        self.assertTrue(any("merging it and running again" in line for line in outcome.lines))
+        self.assertEqual(sh(self.live, "show", "main:skill/scripts/bt_y.py"), "y = 1")
+
+    def test_main_that_keeps_moving_gives_the_turn_up(self):
+        count = []
+        def code_commit():
+            count.append(1)
+            self.other_on_main(path=f"skill/scripts/bt_y{len(count)}.py", name=f"other{len(count)}")
         outcome = self.run_it(Fake(self, during_regression=code_commit))
         self.assertEqual(outcome.code, 1)
         self.assertIn("main moved with code", outcome.lines[-1])
+        self.assertEqual(len(count), integ.CATCH_UP_RUNS + 1)
+
+    def test_main_code_the_branch_lacks_is_merged_into_it_before_the_regression(self):
+        """D-260: 13 of 33 integrations on 2026-10-31 went back to the end of the queue for this."""
+        self.other_on_main()
+        outcome = self.run_it(Fake(self))
+        self.assertEqual(outcome.code, 0, outcome.lines)
+        self.assertTrue(any("merged main into fix" in line for line in outcome.lines))
+        self.assertEqual(sh(self.live, "show", "main:skill/scripts/bt_x.py"), "x = 2")
+
+    def test_a_conflicting_main_is_aborted_in_the_worktree_and_refused_with_its_files(self):
+        self.other_on_main(path="skill/scripts/bt_x.py", text="x = 3\n")
+        outcome = self.run_it(Fake(self))
+        self.assertEqual(outcome.code, 1)
+        self.assertIn("merging it conflicts (skill/scripts/bt_x.py)", outcome.lines[-1])
+        self.assertEqual(sh(self.wt, "status", "--porcelain", "--untracked-files=no"), "")    # the merge was aborted
+        self.assertEqual(sh(self.wt, "rev-parse", "HEAD"), self.tip)
 
     def test_preflight_refusals(self):
         commit(self.wt, "bitacora/metodologia/DECISIONS.md", "D-900\n", "decision in the branch")
@@ -232,8 +268,7 @@ class Integrate(unittest.TestCase):
         sh(self.live, "worktree", "add", "-q", "-b", "other", str(other), "main")
         commit(other, "skill/scripts/bt_y.py", "y = 1\n", "y")
         sh(self.live, "merge", "-q", "--ff-only", "other")
-        outcome = self.run_it(Fake(self))
-        self.assertIn("merge main into the branch", outcome.lines[-1])
+        sh(self.wt, "merge", "-q", "--no-edit", "main")                     # D-260 would merge it anyway
         (self.wt / "skill" / "scripts" / "bt_x.py").write_text("dirty\n", encoding="utf-8")
         self.assertIn("uncommitted changes", self.run_it(Fake(self)).lines[-1])
 

@@ -7,7 +7,8 @@ its abort reset them (D-160's integration). So the live checkout only ever sees 
 
 Under one machine-wide lock (flock on `<state>/integrate.lock`), in this order:
   1. preflight: the live checkout is on `main`; the branch is committed in its worktree, changes no `bitacora/` path
-     and already holds main's code (bitácora commits on main are fine);
+     and holds main's code: when main has code it lacks, main is merged into it in its worktree and this turn goes on
+     (`catch_up`, D-260; a conflict is aborted there and refused with its files; bitácora commits on main are fine);
   2. regression of the branch worktree (`bt_regress`; only `integrate.allowed_failures` may fail, any other failure is
      rerun alone once); a red regression integrates nothing and the branch stays. By `integrate.regression` (D-NNN):
      `staged` (default) runs first the suites the changes can reach (`bt_regress_select`) and refuses at once when
@@ -138,6 +139,9 @@ def git(cwd: Path, *args: str, check: bool = True) -> str:
         raise Refused(f"git {' '.join(args[:3])} in {cwd} failed: {(done.stderr or done.stdout).strip()[-400:]}")
     return done.stdout.strip() if not done.returncode else ""
 
+
+# how many times one turn merges main again when it moved during the regression, before giving the turn up
+CATCH_UP_RUNS = 2
 
 def runtime_path(path: str) -> bool:
     """Code a running unit imports: the engine and the web load ~30 skill/scripts modules lazily, so any of them counts."""
@@ -337,8 +341,29 @@ class Outcome:
     merge: str = ""
 
 
-def preflight(req: Request) -> list[str]:
-    """Refuse what the procedure cannot integrate safely; returns the branch's changed paths."""
+def catch_up(req: Request, note: Callable[[str], None] = lambda text: None) -> str:
+    """Merge main into the branch in its own worktree (never the live checkout), keeping this integration's turn in the
+    queue. A conflict is aborted in that worktree and refused with its files. Returns the new tip, or "" when main had
+    nothing for it. 2026-10-31: 13 of 33 integrations were refused for «main has code the branch lacks» and went back
+    to the end of the queue after a hand merge (D-260)."""
+    if not code_paths(git(req.live, "diff", "--name-only", f"{req.branch}...main").splitlines()):
+        return ""
+    merged = subprocess.run(["git", "-C", str(req.worktree), "merge", "--no-edit", "-q", "main"], capture_output=True,
+                            text=True)
+    if merged.returncode != 0:
+        conflicts = git(req.worktree, "diff", "--name-only", "--diff-filter=U", check=False).splitlines()
+        git(req.worktree, "merge", "--abort", check=False)
+        detail = ", ".join(conflicts[:4]) or merged.stderr.strip()[:200]
+        raise Refused(f"main has code {req.branch} lacks and merging it conflicts ({detail}): resolve the merge in its "
+                      "worktree, commit, then run this again")
+    tip = git(req.worktree, "rev-parse", "HEAD")
+    note(f"merged main into {req.branch} in its worktree ({tip[:12]}): this turn continues with it")
+    return tip
+
+
+def preflight(req: Request, note: Callable[[str], None] = lambda text: None) -> list[str]:
+    """Refuse what the procedure cannot integrate safely; returns the branch's changed paths. Main's newer code is
+    merged into the branch first (`catch_up`)."""
     if git(req.live, "symbolic-ref", "--short", "HEAD") != "main":
         raise Refused(f"the live checkout {req.live} is not on main: nothing is integrated there")
     tip = git(req.live, "rev-parse", "--verify", f"refs/heads/{req.branch}^{{commit}}", check=False)
@@ -357,11 +382,8 @@ def preflight(req: Request) -> list[str]:
     if touched:
         raise Refused(f"{req.branch} changes the live bitácora ({', '.join(touched[:3])}): bitácora files are written "
                       "in ~/bitacora directly, never merged")
-    missing = code_paths(git(req.live, "diff", "--name-only", f"{req.branch}...main").splitlines())
-    if missing:
-        raise Refused(f"main has code {req.branch} lacks ({', '.join(missing[:3])}): merge main into the branch in "
-                      "its worktree, then run this again")
-    return paths
+    catch_up(req, note)
+    return git(req.live, "diff", "--name-only", f"main...{req.branch}").splitlines()
 
 
 def _deploy_worktree(req: Request) -> Path:
@@ -466,7 +488,7 @@ def _selection(req: Request, services: Services, mode: str, note: Callable[[str]
 
 
 def _integrate(req: Request, services: Services, note: Callable[[str], None], lines: list[str]) -> Outcome:
-    paths = preflight(req)
+    paths = preflight(req, note)
     units = units_for(paths)
     note(f"preflight ok: {len(paths)} path(s) changed; restart: {', '.join(units) or 'none'}")
     mode = regression_mode(req)
@@ -478,15 +500,27 @@ def _integrate(req: Request, services: Services, note: Callable[[str], None], li
     scratch = Path(req.scratch or Path(req.deploy).parent / "regress" /     # fresh roots for every run
                    f"{req.branch.replace('/', '-')}-{dt.datetime.now():%Y%m%d-%H%M%S}")
     results = scratch / "results.txt"
-    regression = services.regress(Path(req.worktree), scratch, results, selection=selection, mode=mode)
-    note(f"regression: {regression.summary()} ({results})")
-    if not regression.ok:
-        stage = "the selected suites are" if getattr(regression, "stopped", "") else "the regression is"
-        raise Refused(f"{stage} red ({', '.join(regression.real)}): nothing was integrated, {req.branch} stays")
-    moved = code_paths(git(req.live, "diff", "--name-only", start_main, "main").splitlines())
-    if moved:
-        raise Refused(f"main moved with code while the regression ran ({', '.join(moved[:3])}): merge main into "
-                      f"{req.branch} and run this again")
+    for attempt in range(CATCH_UP_RUNS + 1):
+        regression = services.regress(Path(req.worktree), scratch, results, selection=selection, mode=mode)
+        note(f"regression: {regression.summary()} ({results})")
+        if not regression.ok:
+            stage = "the selected suites are" if getattr(regression, "stopped", "") else "the regression is"
+            raise Refused(f"{stage} red ({', '.join(regression.real)}): nothing was integrated, {req.branch} stays")
+        moved = code_paths(git(req.live, "diff", "--name-only", start_main, "main").splitlines())
+        if not moved:
+            break
+        if attempt == CATCH_UP_RUNS:
+            raise Refused(f"main moved with code while the regression ran ({', '.join(moved[:3])}), "
+                          f"{CATCH_UP_RUNS + 1} times: merge main into {req.branch} and run this again")
+        note(f"main moved with code while the regression ran ({', '.join(moved[:3])}): merging it and running again")
+        start_main = git(req.live, "rev-parse", "main")
+        catch_up(req, note)
+        paths = git(req.live, "diff", "--name-only", f"main...{req.branch}").splitlines()
+        units = units_for(paths)
+        scratch = scratch.with_name(f"{scratch.name}-{attempt + 2}")
+        results = scratch / "results.txt"
+        selection = _selection(req, services, mode, note)
+        selective = mode == "selective" and selection is not None and selection.trusted
     previous = git(req.live, "rev-parse", "main")
     backup = ""
     if ENGINE_UNIT in units:
