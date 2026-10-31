@@ -459,6 +459,12 @@ once per signature (D-167) → the Solucionador → the owner, only for what nee
 - **Where it runs.** In the engine's maintenance pass, right after healing (`service._heal_decisions`, every 30 s), never
   inside a workflow: bt.run/bt.task keep their sequence. Both rungs read each run's status once per pass (`_PassStatus`).
   It runs only while healing runs (`healing.enabled`, `healing.model_diagnosis`, `diagnosis.auto`) and `solver.enabled`.
+- **Inactivity after restart** (D-242, `bt_durable.solver_triggers`): `stuck` and `stalled` observation marks belong to
+  one engine process and checkpoint their last observation. Recovery preserves accumulated observed inactivity and
+  excludes the gap between processes; legacy marks without a last observation start a new window once. Rebuilding a
+  Solver each maintenance pass keeps its window. Quota/recovery deadlines still apply, even if they expire offline;
+  trigger keys and explicit failure/block/decision escalation rules stay unchanged. Repeated deploys cannot erase
+  already observed inactivity.
 - **Triggers**, each launched at most once per key: a decision healing left for the owner (`healing.heal(escalate=...)`:
   limit reached, diagnosis failed, unsure or unoffered choice, plan blamed, no retry offered); a failure signature that
   came back after healing's retry (`repeat`); a PENDING task whose state did not move for `solver.stuck_minutes` (45)
