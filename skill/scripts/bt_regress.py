@@ -24,8 +24,10 @@ import argparse
 import concurrent.futures as cf
 import os
 import re
+import shutil
 import subprocess
 import sys
+import tempfile
 import threading
 import time
 from collections.abc import Callable, Iterable
@@ -38,6 +40,37 @@ HEAVY = re.compile(r"^test_(durable_|supervisor_)")
 BASELINE: tuple[str, ...] = ()
 SYSTEM_PYTHON = "/usr/bin/python3"
 TIMEOUT = 1800
+FAST_TMP_MIN_FREE = 4 << 30     # bytes a RAM-backed temp dir must have free to take the suites' temporary files
+
+
+def _tmpfs(path: str) -> bool:
+    """Whether `path` is on a tmpfs mount (the longest mount point that contains it decides)."""
+    try:
+        real = os.path.realpath(path)
+        best, kind = "", ""
+        for line in Path("/proc/mounts").read_text(encoding="utf-8").splitlines():
+            bits = line.split()
+            if len(bits) > 2 and (real == bits[1] or real.startswith(bits[1].rstrip("/") + "/")) and len(bits[1]) >= len(best):
+                best, kind = bits[1], bits[2]
+        return kind == "tmpfs"
+    except OSError:
+        return False
+
+
+def fast_tmp() -> str | None:
+    """Where the suites' temporary files go (D-250): a tmpfs with room, so the thousands of fsyncs of their SQLite stores,
+    git repositories and atomic writes cost RAM instead of the disk the owner's desktop waits on (a btrfs log commit
+    per fsync kept io pressure ~6 % during regressions). `BT_REGRESS_TMPDIR` overrides it; empty keeps the inherited one."""
+    chosen = os.environ.get("BT_REGRESS_TMPDIR")
+    if chosen is not None:
+        return chosen or None
+    for base in ("/tmp", os.environ.get("XDG_RUNTIME_DIR") or ""):
+        try:
+            if base and _tmpfs(base) and shutil.disk_usage(base).free >= FAST_TMP_MIN_FREE:
+                return base
+        except OSError:
+            continue
+    return None
 
 
 @dataclass
@@ -148,6 +181,13 @@ def run_suite(worktree: Path, scratch: Path, path: Path, tag: str = "") -> str:
     if not interpreter:
         log.write_text(why, encoding="utf-8")
         return f"{name} 125 {round(time.monotonic() - started)} venv"
+    base, tmp = fast_tmp(), None
+    if base:
+        try:
+            tmp = tempfile.mkdtemp(prefix=f"bt-regress-{name}{tag}-", dir=base)
+            env.update(TMPDIR=tmp, TMP=tmp, TEMP=tmp)
+        except OSError:
+            tmp = None                 # the inherited temp dir still works
     try:
         done = subprocess.run([interpreter, "-c", UNITTEST, name], cwd=tests, env=env, capture_output=True,
                               text=True, timeout=TIMEOUT)
@@ -156,6 +196,9 @@ def run_suite(worktree: Path, scratch: Path, path: Path, tag: str = "") -> str:
     except subprocess.TimeoutExpired:
         code = 124
         log.write_text("TIMEOUT", encoding="utf-8")
+    finally:
+        if tmp:
+            shutil.rmtree(tmp, ignore_errors=True)      # RAM: what a suite left behind goes with it
     return f"{name} {code} {round(time.monotonic() - started)} {'venv' if new else 'python3'}"
 
 

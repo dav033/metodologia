@@ -16,6 +16,11 @@ RestartSec=5
 # Agents live in their own units and survive an engine stop.
 TimeoutStopSec=60
 KillMode=mixed
+# Background work (D-250): the engine's M6 verifications (next build, tsc, test suites) run in this cgroup. Under
+# contention the desktop gets the CPU first; idle cores still go to the checks. Attempt units carry the same values.
+Nice=15
+CPUWeight=20
+IOWeight=20
 
 [Install]
 WantedBy=default.target
