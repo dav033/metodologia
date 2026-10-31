@@ -16,6 +16,19 @@
   "SP-9": "3:3e53202ebe42b7649f9036786679a893f04d837e"
  },
  "subplans": {
+  "SP-14": {
+   "at": "2026-10-31T15:30:21-05:00",
+   "by": "owner",
+   "commit": "0715a331b72111afe085e35d773b284764924fe4",
+   "decision": "rejected",
+   "note": "Quitemos lalogica dela comparacion, ademas hagamos que los items de los planes sean tipo las cartas de subscricpiones normales",
+   "open_pending": [
+    "P-211"
+   ],
+   "pending": "P-211",
+   "version": 2,
+   "via": "web"
+  },
   "SP-2": {
    "at": "2026-10-31T13:15:02-05:00",
    "by": "owner",
