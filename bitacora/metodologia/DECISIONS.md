@@ -3111,3 +3111,37 @@ Solucionador 20261030-100736-d494 integrated merge fff622890f28b8093a9a0afda9c40
 - **Evidence:** `test_failure_digest.test_the_note_states_the_environment_the_checks_really_had`,
   `test_durable_m6_env.DigestEnvironment`, `test_durable_agent_env` (brief names / broken policy), red on main; same
   full regression. Product-side defects of the T10.45 harness relayed to pictures, not edited here.
+
+## D-258 — Owner rejections carry images the agents open
+
+- **Date:** 2026-10-31 · **Status:** Accepted
+- **Context:** owner, 2026-10-31: «let me attach images to the rejection comments so the agents can see them». A
+  rejection in «Probar» (`bt_verification.decide`) carried only a text note; the server read urlencoded forms only
+  (64 KiB), so a screenshot of what failed could not reach the Solucionador, the Planner or the repair task.
+- **Decision:** the «Rechazar…» form is `multipart/form-data` with a plain multiple file input (works without
+  JavaScript); `verify-run.js` adds paste and drop on the note, a preview and the same limits before sending. The server
+  reads a multipart body only for `verify-reject`, up to `rejections.max_total_mb` plus 256 KiB of fields (413 with a
+  Spanish page above it, before reading), and the token and Origin checks are unchanged. `bt_rejection_images` accepts
+  0..N images by their bytes (PNG, JPEG, WebP, GIF magic numbers, never the client name or MIME), at most
+  `rejections.max_images` (8), `max_image_mb` (10) each and `max_total_mb` (30) together; a refusal is one Spanish
+  sentence and nothing is recorded. They are stored as sent at
+  `<rdir>/evidence/owner-rejected/<SP>-v<N>/<n>-<sha256[:12]>.<ext>`; the decision entry lists `attachments`
+  ({path, sha256, type, bytes}), the P-item links them (`[imagen n](requirements/…)`), the panel shows thumbnails under
+  «Tu nota» and next to «Rechazaste la versión N» on the repaired version, served by a narrow route
+  (`/p/<project>/doc/requirements/<REQ-dir>/evidence/owner-rejected/<SP>-v<N>/<n>-<hex12>.<ext>`, bytes re-sniffed,
+  `nosniff`, sandbox CSP). The `owner_rejected` trigger carries their absolute paths; the brief lists them right after
+  the note with the instruction to open every one with the image-reading tool (Claude Code `Read`, Codex local image
+  view) before reproducing, gives the Markdown lines for the evidence file, and asks that the request to the Planner
+  and the repair task's instructions carry the same paths (agents/solver.md, agents/planner.md). CLI parity:
+  `verify reject --image FILE` (repeatable).
+- **Trigger key:** without images `rejection_key` is byte-for-byte the old one. With images their sorted digests join
+  the note before hashing: the same note with other images is a new rejection (the earlier trigger goes stale and the
+  Solucionador gets a new one); the same note with the same images, in any order, is the same trigger.
+- **Not versioned:** image bytes stay on this machine (the repository's `.gitignore` keeps `bitacora/**/*.png|jpg|…`
+  out of the remote, owner 2026-10-19); the decision entry with each path and digest is versioned. A missing file shows
+  its alt text in the panel and 404s on the route.
+- **DBOS:** no workflow step changed (the trigger and brief are maintenance-pass data).
+- **Evidence:** `test_rejection_images` (18: parsing 3, checking 4, decisions 7, real HTTP server 3, Solucionador
+  brief 1), red on main (the module does not exist there); `test_verification`, `test_owner_reject_solver`,
+  `test_durable_solver` and the server/verify/config suites green (226 tests). Built by an Opus subagent
+  (metodologia-95), branch `reject-images`.

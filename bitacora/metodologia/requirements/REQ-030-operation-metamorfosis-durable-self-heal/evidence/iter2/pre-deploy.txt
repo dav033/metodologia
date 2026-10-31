@@ -403,3 +403,10 @@ previous main: b9036179207550463e112d20a6a4ffd831c8f98f
 regression: 316 files, no failures [staged: first 28 in 1m04s, then the rest 288 in 33m07s] (/home/david/.local/share/bitacora-integrate/regress/approve-guard-20261031-142040/results.txt)
 rollback: git revert the merge of approve-guard on main, restart bt-durable.service and bitacora-web.service
 result: merged 8fda201627bb, restarted bt-durable.service, bitacora-web.service, smoke ok
+
+# integration of Live per-user resources belong to the live root; attempts and digests state the real check environment (D-256, D-257), local restart of engine + web, 2026-10-31 15:39, session metodologia-90
+previous main: 6b12d02c0fda3a452812d0c354a890d8d91eb5a0
+/home/david/bitacora/.state/durable/backups/bt_durable-20261031-153912.dump 46127384 bc454fdd509061450699675127368cacfee17e64a53acae19d06bfd99b0bb7b9
+regression: 318 files, no failures + test_durable_remote (load flake, passes alone) [staged: first 99 in 9m49s, then the rest 219 in 24m07s] (/home/david/.local/share/bitacora-integrate/regress/env-feed-20261031-150514/results.txt)
+rollback: git revert the merge of env-feed on main, restart bt-durable.service and bitacora-web.service
+result: merged 2655d78842a5, restarted bt-durable.service, bitacora-web.service, smoke ok

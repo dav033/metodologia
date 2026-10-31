@@ -4997,6 +4997,19 @@
    "ui_digest": "04b1c41557084c57"
   },
   "cuentas-admin@v2": {
+   "agent": "claude",
+   "amend": {
+    "behavior": "cuentas-admin@v2.amend-1.behavior.md",
+    "digest": "1cc5e3870809f19f",
+    "feedback_batch": [
+     "f8beae9b0fd2a40b"
+    ],
+    "from_revision": 1,
+    "n": 1,
+    "ui_digest": "9d5a40b035431397",
+    "via": "cli"
+   },
+   "amends": 1,
    "attempt": 1,
    "before": null,
    "before_html": null,
@@ -5577,7 +5590,7 @@
     "schema_version": 1
    },
    "continuation_choice": null,
-   "delegation": "D-20261031-152349-edcd",
+   "delegation": "D-20261031-153429-c163",
    "digest": "a6eb03895eb6e5c8",
    "directions": [
     {
@@ -5648,17 +5661,40 @@
     }
    ],
    "error": "",
-   "feedback": [],
+   "failures": 0,
+   "feedback": [
+    {
+     "direction": null,
+     "id": "f8beae9b0fd2a40b",
+     "text": "Review corrections against the precise new UI-brief delta; preserve the owner-chosen C composition/motion and all frozen v1/exploration artifacts. Classify version2 as BREAKING visual/interaction replacement scoped to /cuenta and shared menu, not minor/additive. PLAN binds T2.3/T2.5 and all SP2 UI to v2 incorporating unchanged v1 sections by reference. SP10 is remaining language, not theme ownership. Repair the demonstrated dangling aria-describedby on the repeat-password field in the new amendment source/mockup: reference only actual rendered help/error IDs. Verify blank/equal/mismatch states in ES/EN at390/1280, plus existing rendered/interaction checks. Do not merely document a known defect. Close Q1–Q4 using settled SPEC/Planner dispositions, not a new interview: inherit exact host shell, do not resurrect headers/nav removed by SP8; language remains in account menu. Optional actual-company projection already allowed/read-only. Native details versus equivalent button is a technical choice only with identical layout/dismissal/focus semantics. Owner chose C name truncation; full name remains in profile/popup/accessible name. Keep owner final contract/SP2 approval pending, P209 open and all permission/password/consent rules unchanged. Write only normal amendment paths, preserve ready explorations, reuse adjacent styles so source stays under500lines, and report fresh exact-artifact audit/ARIA results.",
+     "via": "cli",
+     "when": "2026-10-31T15:34:29-05:00"
+    }
+   ],
    "feedback_batch": [],
-   "finished": "2026-10-31T13:32:20-05:00",
+   "finished": "2026-10-31T15:31:13-05:00",
    "fresh": false,
+   "history": [
+    {
+     "at": "2026-10-31T15:31:13-05:00",
+     "rev": 1,
+     "summary": "Wrote the draft twelve-section cuentas-admin@v2 contract for the owner-chosen direction «Ficha en su sitio» (c) and rebuilt its unchanged TSX with the current offline builder into the canonical HTML. The plan delta (language in menu, Planes for all roles, theme unchanged, name fallback, EN role labels, 8–200 hints, generic network error, no ack button, T2.11) needed no composition/motion change an"
+    }
+   ],
    "iterate_from": null,
+   "mockup": true,
+   "model": "opus",
    "phase": "finalise",
-   "reason": "requested",
+   "questions": [],
+   "reason": "plan changed",
+   "report": "claimed",
+   "revision": 1,
    "selected_sha256": "7566cd4d4130c42cef81cd5d0648d2d022047a6afa054077f2ccbaa469f03649",
-   "started": "2026-10-31T15:23:49-05:00",
-   "status": "drafting",
+   "sha256": "da3b799d4881c2e9431d2666a2680a0d665e336162b98570e2b0a3b3aa37339b",
+   "started": "2026-10-31T15:34:29-05:00",
+   "status": "amending",
    "subplan_id": "SP-2",
+   "summary": "Wrote the draft twelve-section cuentas-admin@v2 contract for the owner-chosen direction «Ficha en su sitio» (c) and rebuilt its unchanged TSX with the current offline builder into the canonical HTML. The plan delta (language in menu, Planes for all roles, theme unchanged, name fallback, EN role labels, 8–200 hints, generic network error, no ack button, T2.11) needed no composition/motion change an",
    "ui_digest": "b9b0aadf583693db"
   },
   "decoraciones@v1": {

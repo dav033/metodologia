@@ -159,6 +159,11 @@
    "id": "D-257",
    "by": "metodologia-95 subagent: attempts and failure digests state the real check environment",
    "at": "2026-10-31T14:12:50"
+  },
+  {
+   "id": "D-258",
+   "by": "metodologia-95 subagent: image attachments on rejections",
+   "at": "2026-10-31T15:32:26"
   }
  ]
 }

@@ -1,14 +1,22 @@
 {
- "digest": "8997586b601e3d38c9a0dae5c8da0d193cfc78ec4a61673028d5cb660e626c83",
+ "digest": "2866f498de5084752bc331d14cdd3a8c9de3eea6ee89b681da16b67c43916271",
  "rows": [
   {
    "subplan": "SP-13",
    "tasks": 8,
-   "ok": true,
-   "problem": "",
+   "ok": false,
+   "problem": "PLAN_INVALID: the stage cannot be approved: COMPOSITION_INVALID: composition_gates[1]: invalid id, subplans, integration task or carried criteria; T14.11.ui: PLAN.md does not declare ui, PLAN.json says False; T94.ui: PLAN.md does not declare ui, PLAN.json says False",
    "depends_on_unfinished": "",
-   "errors": [],
-   "new_errors": []
+   "errors": [
+    "COMPOSITION_INVALID: composition_gates[1]: invalid id, subplans, integration task or carried criteria",
+    "T14.11.ui: PLAN.md does not declare ui, PLAN.json says False",
+    "T94.ui: PLAN.md does not declare ui, PLAN.json says False"
+   ],
+   "new_errors": [
+    "COMPOSITION_INVALID: composition_gates[1]: invalid id, subplans, integration task or carried criteria",
+    "T14.11.ui: PLAN.md does not declare ui, PLAN.json says False",
+    "T94.ui: PLAN.md does not declare ui, PLAN.json says False"
+   ]
   }
  ]
 }

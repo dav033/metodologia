@@ -41,6 +41,19 @@
    "pending": "P-210",
    "version": 2,
    "via": "operator (owner: the 13:04 approval was a mistake)"
+  },
+  "SP-3": {
+   "at": "2026-10-31T15:40:59-05:00",
+   "by": "owner",
+   "commit": "4aa221088d69db34dee43d496ffe61d34b0ea428",
+   "decision": "rejected",
+   "note": "las mesas quese arreglaron no sepuedn arrastrar y colocar, si el probelma es otro, investigalo y solucionalo",
+   "open_pending": [
+    "P-212"
+   ],
+   "pending": "P-212",
+   "version": 3,
+   "via": "web"
   }
  }
 }

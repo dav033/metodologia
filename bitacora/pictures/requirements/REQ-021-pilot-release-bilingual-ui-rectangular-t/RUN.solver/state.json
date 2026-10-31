@@ -1,10 +1,10 @@
 {
  "watch": {
   "T10.45": {
-   "fp": "ac12710123d014eb",
-   "since": 1793477604.423295,
-   "epoch": "041e56f40f0c44a7b04e3b1535006375",
-   "observed_at": 1793478602.5054054
+   "fp": "cf6d9d478c2712b1",
+   "since": 1793479192.019697,
+   "epoch": "a808f5e2b2714d53b411f66b6891d1ed",
+   "observed_at": 1793479254.2643259
   }
  },
  "tasks": {
@@ -13,7 +13,8 @@
   "T10.45": 3,
   "T2.55": 18,
   "T10.441": 1,
-  "SP-2": 1
+  "SP-2": 1,
+  "SP-14": 1
  },
  "triggers": {
   "pictures:REQ-021:r25:resolution:4378ebb94f72d6922c89d601ee5db484": {
@@ -1169,6 +1170,53 @@
    "reason": "healing's repair limit is reached",
    "status": "limit",
    "at": "2026-10-31T15:13:24"
+  },
+  "owner_rejected:SP-14:v2:0715a331b721:d9687e50c275": {
+   "kind": "owner_rejected",
+   "key": "owner_rejected:SP-14:v2:0715a331b721:d9687e50c275",
+   "run_id": "pictures:REQ-021:r30",
+   "task_id": "",
+   "request_id": "",
+   "round": null,
+   "reason": "the owner tried SP-14 version 2 (commit 0715a331b7) and rejected it: «Quitemos lalogica dela comparacion, ademas hagamos que los items de los planes sean tipo las cartas de subscricpiones normales»",
+   "subplan": "SP-14",
+   "title": "Plans section: the four access plans, public and informative",
+   "version": 2,
+   "commit": "0715a331b72111afe085e35d773b284764924fe4",
+   "note": "Quitemos lalogica dela comparacion, ademas hagamos que los items de los planes sean tipo las cartas de subscricpiones normales",
+   "pending": "P-211",
+   "decided_at": "2026-10-31T15:30:21-05:00",
+   "via": "web",
+   "tests": [
+    {
+     "subplans": [
+      "SP-14"
+     ],
+     "kind": "local",
+     "where": "Local Probar version with SP-1 and SP-2 built, REQ-021 test database",
+     "how": "With SP-1's setup: 1) `npm run dev`, open http://localhost:3000/login signed out and follow the plans link. 2) In /planes open the extra plan-selection view; select/highlight each plan, return to the full comparison, and verify the current account assignment is unchanged. 3) Switch browser language to English and repeat the comparison and selection view. 4) Sign in as entusiasta@prueba.local and open the plans entry from the account menu. 5) As admin@prueba.local move designer@prueba.local to «Usuario · Designer Plus» on the accounts screen; as designer@ open the cost calculator and /3d. 6) Try phone, tablet and desktop widths and keyboard (Tab).",
+     "expect": "The extra view only highlights a plan for comparison; it never assigns a plan or exposes purchase/request/sign-up controls. Existing account assignment and permissions remain unchanged after selection. Four plans and all tool lists stay visible, with no «Ocultar herramientas» control. Spanish uses COP and English USD; unavailable tools and chat copy match the catalogue. The sign-in and account-menu links still open /planes. On tablet there is no horizontal scroll and the four plans, prices and full tool lists remain legible; keyboard focus and activation work. Account-admin assignment still updates permissions through SP-2. Screens match approved planes@v1."
+    }
+   ],
+   "pages": [
+    "/login",
+    "/planes"
+   ],
+   "evidence": "evidence/owner-rejected/SP-14-v2.md",
+   "status": "asked_owner",
+   "at": "2026-10-31T15:30:33",
+   "session": "20261031-153033-1a41"
+  },
+  "pictures:REQ-021:r30:T10.45:T10.45:d14@k1": {
+   "kind": "decision",
+   "key": "pictures:REQ-021:r30:T10.45:T10.45:d14@k1",
+   "run_id": "pictures:REQ-021:r30",
+   "task_id": "T10.45",
+   "request_id": "T10.45:d14",
+   "round": 1,
+   "reason": "healing's repair limit is reached",
+   "status": "limit",
+   "at": "2026-10-31T15:39:52"
   }
  },
  "sessions": [
@@ -1448,6 +1496,31 @@
    "summary": "T10.45 reanudada con diagnóstico reproducido y nota de reparación; SP-2 requiere confirmar el cambio de contrato visual propuesto.",
    "question": "¿Confirmas el cambio de contrato propuesto en AMENDMENT.md para SP-2: nombre visible, «Plan» cuando corresponda, identidad correcta de administradores/empleados/roles personalizados, sin el aviso aceptado en el perfil, cierre del menú al pulsar fuera o Escape y rediseño de Mi cuenta y contraseña? Con tu confirmación se tramita la nueva versión visual y su aprobación antes de implementarla; si rechazas el cambio, el Planner conserva el contrato actual y separa la reparación del cierre del menú.",
    "report": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/RUN.solver/20261031-123425-067d/REPORT.md"
+  },
+  {
+   "id": "20261031-153033-1a41",
+   "name": "bit-pictures-REQ-021-solver",
+   "status": "asked_owner",
+   "started": 1793478633.6420193,
+   "started_at": "2026-10-31T15:30:33",
+   "triggers": [
+    "owner_rejected:SP-14:v2:0715a331b721:d9687e50c275"
+   ],
+   "queued": [],
+   "restarts": 0,
+   "dir": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/RUN.solver/20261031-153033-1a41",
+   "cwd": "/home/david/.local/share/bitacora-solver/pictures/20261031-153033-1a41",
+   "task": "SP-14",
+   "kind": "owner_rejected",
+   "reason": "the owner tried SP-14 version 2 (commit 0715a331b7) and rejected it: «Quitemos lalogica dela comparacion, ademas hagamos que los items de los planes sean tipo las cartas de subscricpiones normales»",
+   "provider": "codex",
+   "model": "gpt-6.1-terra",
+   "home": "/home/david/.codex-2",
+   "ended": 1793478727.3773715,
+   "ended_at": "2026-10-31T15:32:07",
+   "summary": "Reproducida la comparación de SP-14; Planner prepara la enmienda y se requiere reconfirmar el subplan.",
+   "question": "¿Confirmas la enmienda de SP-14 para eliminar la selección y lógica de comparación y presentar los cuatro planes como tarjetas de suscripción, conservando su carácter público e informativo, sin compras ni cambios de cuenta? Si confirmas, el Planner y Designer prepararán el contrato y el plan revisados para tu aprobación; si no, mantendremos el contrato actual y necesitaremos que indiques el alcance deseado.",
+   "report": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/RUN.solver/20261031-153033-1a41/REPORT.md"
   }
  ]
 }

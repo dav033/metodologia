@@ -591,7 +591,8 @@
           "No new route, product rebrand, new font/palette, self-service profile/plan/role editing, plan purchases or permission policy.",
           "No UI disclosure of accepted-notice version/date in ordinary profile; keep activation/reacceptance text, explicit consent, authoritative version/date storage and route enforcement unchanged.",
           "Keep current-password verification,8–200-character password validation, mismatch handling, session renewal for current browser and invalidation elsewhere; no client-only simulated success.",
-          "Keep every existing sign-in/invitation/reset/admin flow, plan links, permission-scoped navigation and ES/EN composition; no production actions or real personal data."
+          "Keep every existing sign-in/invitation/reset/admin flow, plan links, permission-scoped navigation and ES/EN composition; no production actions or real personal data.",
+          "The new version is a breaking scoped UI/interaction replacement, not a compatible additive change. All SP2 UI tasks bind v2, incorporating unchanged v1 sections by reference. Preserve the exact integrated host shell; do not reintroduce page-level account navigation/header removed by SP8 composition. Theme remains existing shell responsibility; SP10 supplies remaining language composition."
         ],
         "copy_rules": [
           "Spanish owner-facing preview with English parity. Explicit Nombre/Name and Correo/Email. Catalogue-backed Plan label/name for real plan identities only. Use real role identity for staff/custom accounts without inventing a subscription.",
@@ -600,11 +601,13 @@
           "Dropdown Escape returns focus to trigger; repeated-trigger closure leaves focus there; outside-pointer closure preserves focus on the clicked focusable target; Tab/Shift+Tab can leave without trapping focus and closes when focus leaves.",
           "Resolved existing-owner decisions for finalization: per round15 the language switch belongs in the account menu, and per round10 the public Plans menu entry is available to signed-in staff/custom accounts too. Preserve current theme composition. A chosen direction may not move language out of the account menu or restrict the plans link.",
           "Name fallback is already owner-confirmed: keep the explicit Name row and email when the stored name is absent, even when email is also separately shown. Translate canonical system-role labels for EN as Administrator and Internal employee; never translate user-authored custom-role names or infer a plan.",
-          "Hints and too-long copy may restate the existing8–200-character rule; no new password policy. Network errors can reuse existing generic change-password failure copy. Service-acknowledged success does not require a new human acknowledgment button. Non-modal popup overlap, initial-only narrow trigger and account/password grouping are visible choices in the mockup; preserve full name in the open popup and profile, accessible trigger name, outside/Escape/focus behavior and existing security."
+          "Hints and too-long copy may restate the existing8–200-character rule; no new password policy. Network errors can reuse existing generic change-password failure copy. Service-acknowledged success does not require a new human acknowledgment button. Non-modal popup overlap, initial-only narrow trigger and account/password grouping are visible choices in the mockup; preserve full name in the open popup and profile, accessible trigger name, outside/Escape/focus behavior and existing security.",
+          "Q1–Q4 finalization dispositions are settled: inherit the exact candidate host shell, optional read-only actual company is allowed through the local projection, equivalent disclosure HTML is technical if every required behavior matches, and owner-selected C truncation is accepted with full name in popup/profile/accessible name. No new owner interview for those settled points."
         ],
         "criteria": [
           "Full new /cuenta and password composition, actual identity and correct access label, no consent metadata in ordinary profile, responsive ES/EN, all password states, unchanged security invariants and tested dismissal/focus.",
-          "Only SP-2 changes contract; analyze shared menu composition with SP-8, SP-10 and SP-14, retaining their language/theme/plans controls without blanket contract replacement."
+          "Only SP-2 changes contract; analyze shared menu composition with SP-8, SP-10 and SP-14, retaining their language/theme/plans controls without blanket contract replacement.",
+          "Password-field aria-describedby references only help/error nodes actually rendered in blank, matching and mismatching states in ES/EN; the final mockup and production target must not retain a demonstrated dangling ARIA reference."
         ]
       }
     },
@@ -616,7 +619,10 @@
         "The sign-in screen and the account menu each show one link to the plans section that opens /planes, signed out from the sign-in screen and signed in from the menu.",
         "On a production build started with next start against the REQ-021 test database, a signed-out browser follows the sign-in screen's plans link to the four plans with COP prices, an English browser sees the same plans with USD prices, a signed-in Entusiasta reaches the section from the account menu, and the page fits 390 and 1280 pixel widths without horizontal scrolling with every link reachable by keyboard.",
         "An independent audit of SP-14 records every confirmed defect with the task that must redo it in the SP-14 findings ledger, and the ledger has no open critical or high finding.",
-        "The extra plans view lets a visitor select/highlight any plan for comparison and return to the full comparison; it never changes account assignment, and all tool lists remain visible without an «Ocultar herramientas» control."
+        "The /planes route presents four conventional informational subscription cards in catalogue order, each with plan name, monthly price and full included-tool list; no comparison/selection controls, highlighted/current/recommended plan or card action is rendered, and no hide-tools control is offered.",
+        "Reading the subscription cards and using language or navigation controls, including legacy selection query URLs, never changes the signed-in account assignment or next-request permissions and sends no account or purchase mutation.",
+        "Legacy /planes?vista=seleccionar and obsolete plan-selection query parameters show the same four informational cards without restoring a comparison mode, selection state, pressed plan, highlighted default plan or selection-specific controls.",
+        "The four cards and full cumulative tool lists remain legible in Spanish and English at360,390,768 and1280px without horizontal page scrolling, clipping or collapsed tools, and every remaining language, back and account-menu link works by keyboard."
       ],
       "audit_task": "T14.6",
       "consumes": [
@@ -648,12 +654,12 @@
       "id": "SP-14",
       "integration_test_task": "T14.4",
       "milestone_id": "M1",
-      "outcome": "Anyone, signed in or not, opens the plans section from the sign-in screen or the account menu and compares Entusiasta, Designer, Designer Plus and Master Designer with their monthly price (COP in Spanish, USD in English) and included tools read from the plan catalogue, with the tools not built yet marked «aún no disponible»; a separate view lets visitors select/highlight one plan for comparison only; nothing in it buys, requests, signs up or changes an account’s assigned plan.",
+      "outcome": "Anyone, signed in or not, reads four conventional informational subscription cards for Entusiasta, Designer, Designer Plus and Master Designer in catalogue order, with monthly price (COP in Spanish, USD in English), complete included-tool lists and unavailable-tool markers. There is no comparison/selection mode, highlighted/current/recommended plan, purchase, request, registration or account mutation.",
       "title": "Plans section: the four access plans, public and informative",
       "ui": {
         "contract": "planes",
-        "design_task": "T14.1",
-        "version": 1,
+        "design_task": "T14.11",
+        "version": 2,
         "visual_review_task": "T14.5"
       },
       "ui_brief": {
@@ -665,37 +671,43 @@
           "Tools not built yet say «aún no disponible» (Spanish) and «not available yet» (English)",
           "Chat limits are named without numbers: Entusiasta «con límites» / «with limits», Designer «con límites más altos» / «with higher limits» (owner, 2026-10-27)",
           "The Taller 3D line of Master Designer stands for the whole 3D balloon editor, the ready-made decorations explorer included; no separate explorer line (owner-confirmed 2026-10-27)",
-          "If the section says how a plan is obtained, it says only that an administrator assigns it"
+          "If the section says how a plan is obtained, it says only that an administrator assigns it",
+          "Use the heading Planes / Plans and ordinary subscription-card hierarchy: plan name,price/currency per month,full included tools. Remove Comparar planes,Seleccionar para comparar,Ir a un plan,Plan resaltado,selection-summary and return-to-comparison copy.",
+          "No recommended/popular/best-value/current-plan badges,discounts,testimonials or invented marketing claims. All four cards are peers and no card is selected/highlighted by default.",
+          "If explanatory access copy is useful,retain only the existing factual administrator-assignment statement; do not introduce a purchase/request action."
         ],
         "existing_surface": {
-          "components": [
-            "LoginForm",
-            "CabeceraApp",
-            "MenuApp",
-            "MenuCuenta (planned by SP-2 T2.4, not on main yet)"
-          ],
-          "notes": "The sign-in screen and the account menu are redesigned by SP-2 (cuentas-admin@v1, owner-chosen direction «Parte de acceso»); planes@v1 only adds one plans link in each and follows that direction and the tokens of src/app/globals.css. The page data comes only from the plan catalogue (src/lib/planes/catalogo.ts, SP-1 T1.2).",
-          "paths": [
-            "src/app/login/page.tsx",
-            "src/app/login/LoginForm.tsx",
-            "src/app/globals.css",
-            "src/app/layout.tsx",
-            "src/components/ui/shell/CabeceraApp.tsx",
-            "src/components/ui/shell/MenuApp.tsx"
-          ],
           "routes": [
-            "/login",
-            "/planes (new)"
-          ]
+            "/planes",
+            "/planes?vista=seleccionar (legacy query only; no separate mode after amendment)",
+            "existing plans link in /login and shared signed-in account menu"
+          ],
+          "paths": [
+            "src/app/planes/page.tsx",
+            "src/components/planes/ComparadorPlanes.tsx",
+            "src/components/planes/comparador-planes.module.css",
+            "src/components/planes/textos-planes.ts",
+            "src/lib/planes/catalogo.ts",
+            "src/components/cuentas/MenuCuenta.tsx",
+            "src/app/globals.css"
+          ],
+          "components": [
+            "ComparadorPlanes (legacy filename/export may remain; behavior becomes informational cards)",
+            "MenuCuenta (preserve active SP2 contract,including chosen cuentas-admin@v2 when composed)"
+          ],
+          "screenshots": [
+            "/home/david/.local/share/bitacora-solver/pictures/20261031-153033-1a41/planes.png",
+            "/home/david/.local/share/bitacora-solver/pictures/20261031-153033-1a41/seleccionar.png"
+          ],
+          "notes": "Owner P211 explicitly replaces comparison/selection with conventional subscription cards. Read exact published commit0715a331b72111afe085e35d773b284764924fe4 through git show in /home/david/dev/.pictures-wt/login-redirect; never read/write /home/david/dev/pictures. Reproduction evidence/owner-rejected/SP-14-v2.md. Approved planes@v1 is immutable history,not the new design; new planes@v2 is a breaking scoped presentation/interaction revision. Keep actual Pictures shell/tokens/fonts and approved sibling account-menu composition. SP2 chosen-C correction is independent; do not redesign its account/password surface or create a new login/menu layout."
         },
         "flows": [
           {
-            "name": "Signed-out visitor compares the plans",
+            "name": "Signed-out visitor reads the plan cards",
             "steps": [
-              "Opens the sign-in screen",
-              "Follows its plans link",
-              "Reads the four plans in order with name, monthly price and included tools",
-              "Goes back to the sign-in screen"
+              "Open sign-in and follow its existing plans link.",
+              "Read four conventional subscription cards in catalogue order with name, monthly price and full included tools.",
+              "Return through the existing back navigation without selecting or requesting a plan."
             ]
           },
           {
@@ -713,23 +725,36 @@
               "Opens /planes with an English browser",
               "Sees the same four plans and tools in English with prices in USD per month"
             ]
+          },
+          {
+            "name": "Legacy plan-selection URL",
+            "steps": [
+              "Open /planes?vista=seleccionar or an obsolete selected-plan query.",
+              "Read the same informational cards; no comparison, selection or highlighting mode appears and no account changes."
+            ]
           }
         ],
         "must_not_change": [
-          "The sign-in screen and account menu layout, copy and behavior defined by cuentas-admin@v1, except one plans link in each",
-          "No purchase, subscription, request, contact or sign-up action anywhere in the section",
-          "No limit values, counters or limit messages",
-          "Custom roles, staff roles and permission keys are never shown in the section"
+          "Four catalogue plans/order,canonical names,monthly COP/ES versus USD/EN prices,full cumulative tools,unavailable markers and existing chat-limit copy without numeric limits.",
+          "Public informational /planes route and existing sign-in/account-menu entry links for every signed-in role; no authentication/permission/role/catalogue/business contract change.",
+          "No buying,paying,requesting,contacting,signing up,changing plans or marking the current account plan. Cards are informational articles,not selection controls; do not add disabled or decorative purchase CTA.",
+          "Preserve exact current host shell/account-menu behavior and SP2 contract,including dismissal/focus/name/plan identity. No new theme,language placement,font,palette,brand,marketing badge or invented benefit.",
+          "Remove only owner-superseded comparison/selection features. Do not remove unrelated language,accessibility,responsive,public-route,entry-link or authorization regression coverage."
         ],
         "screens_states": [
-          "/planes in Spanish: Entusiasta, Designer, Designer Plus and Master Designer in that order, prices in COP per month, Entusiasta free",
-          "/planes in English: Enthusiast, Designer, Designer Plus and Master Designer with prices in USD per month",
-          "Cumulative plans: each plan includes everything of the plan before it; the contract decides whether a plan lists all its tools or what it adds",
-          "Chat lines without numbers: Entusiasta «Chat con límites» / «Chat with limits»; Designer «Chat con límites más altos» / «Chat with higher limits»",
-          "Tools not built yet (extended chat, structure detection, advanced balloon detection) shown under Designer Plus and Master Designer as «aún no disponible» / «not available yet»",
-          "Signed-out page (no account menu) and signed-in page (account menu present)",
-          "Phone 390 px and desktop 1280 px without horizontal scrolling; keyboard focus order",
-          "Plans link on the sign-in screen and plans entry in the account menu"
+          "/planes ES: four cards Entusiasta,Designer,Designer Plus,Master Designer in that order; monthly COP,Entusiasta Gratis.",
+          "/planes EN: Enthusiast,Designer,Designer Plus,Master Designer; monthly USD,Enthusiast Free; never both currencies together.",
+          "Each card contains its complete cumulative catalogue tool list, visible without accordion/hide control, plus unavailable markers and the existing chat-limit wording without numbers.",
+          "Signed-out and signed-in pages show identical public plan information; preserve host shell/account controls for its actual role without marking a current plan.",
+          "360/390px phone,768px tablet and1280px desktop; readable cards,normal vertical scrolling,no horizontal overflow,visible keyboard focus and ES/EN/light/dark/reduced-motion parity.",
+          "Loading/catalogue unavailable/error recovery follows the existing architecture without invented plans/prices or success from partial/invalid data; no comparison controls appear in any state.",
+          "Legacy selection query URLs resolve to the same non-selectable cards. No comparison tabs/side index/selection summary,default highlighted plan,per-plan pressed state,select/buy/request/register CTA or recommended/current-plan badge."
+        ],
+        "criteria": [
+          "The /planes route presents four conventional informational subscription cards in catalogue order, each with plan name, monthly price and full included-tool list; no comparison/selection controls, highlighted/current/recommended plan or card action is rendered, and no hide-tools control is offered.",
+          "Legacy /planes?vista=seleccionar and obsolete plan-selection query parameters show the same four informational cards without restoring a comparison mode, selection state, pressed plan, highlighted default plan or selection-specific controls.",
+          "The four cards and full cumulative tool lists remain legible in Spanish and English at360,390,768 and1280px without horizontal page scrolling, clipping or collapsed tools, and every remaining language, back and account-menu link works by keyboard.",
+          "The owner confirms the final planes@v2 design and SP14 before implementation. Preserve all unaffected catalogue/public-information/account invariants; full lists stay visible and reading cards never mutates account access."
         ]
       }
     },
@@ -4409,7 +4434,8 @@
         "The inherited local-session navigation and production/non-loopback refusal regression passes unchanged.",
         "Existing workspace packages build successfully using their current scripts before the strict account redesign type check, with the Node heap bounded to4096MB and no configuration weakening.",
         "Full strict repository TypeScript accepts the account redesign after workspace package build, with no cast, suppression or relaxed settings used to bypass an account boundary.",
-        "Owned account UI and browser regression files pass focused ESLint without new suppression or lint configuration changes."
+        "Owned account UI and browser regression files pass focused ESLint without new suppression or lint configuration changes.",
+        "In the real ES/EN account page at390x844 and1280x900, every password-field aria-describedby token resolves to a rendered help/error node in blank, matching and mismatching states; accessible names, validation and focus remain correct."
       ],
       "verification": [
         {
@@ -4529,6 +4555,16 @@
           "value": "npx --no-install eslint src/components/cuentas/MenuCuenta.tsx src/components/cuentas/CambiarContrasena.tsx src/components/cuentas/textos-cuenta.ts src/components/cuentas/BarraCuenta.tsx src/app/cuenta/page.tsx src/lib/cuentas/cuenta-actual.ts src/lib/cuentas/presentacion-cuenta.ts scripts/test/test-ui-mi-cuenta.ts scripts/test/test-ui-cuenta-redesign.ts",
           "purpose": "Owned account UI and browser regression files pass focused ESLint without new suppression or lint configuration changes.",
           "category": "static"
+        },
+        {
+          "type": "command",
+          "value": "npm run cuentas:test-ui-redesign -- --suite accesibilidad",
+          "purpose": "In the real ES/EN account page at390x844 and1280x900, every password-field aria-describedby token resolves to a rendered help/error node in blank, matching and mismatching states; accessible names, validation and focus remain correct.",
+          "created_by": "T2.57",
+          "category": "regression",
+          "requires": [
+            "PICTURES_REQ021_DATABASE_URL"
+          ]
         }
       ],
       "covers": [
@@ -13683,13 +13719,101 @@
       "ui": false
     },
     {
-      "id": "T14.2",
+      "id": "T14.11",
       "milestone_id": "M1",
-      "title": "Public plans page: the four plans from the plan catalogue, prices by language",
-      "objective": "A public /planes page renders the four access plans only from the plan catalogue, in the visitor's language with its currency, with all tool lists visible, no hide-tools control, and an extra informational view to select/highlight a plan for comparison without changing account assignment.",
+      "title": "Copy the independently owner-approved planes@v2 subscription-card contract",
+      "objective": "Copy only the exact independently owner-approved planes@v2 card contract to design/contracts/planes@v2.md after CG1. Unchanged T14.1 preserves the old approved v1 artifact; never overwrite it. The new contract removes comparison/selection and changes only the public plan presentation,not catalogue data,permissions or account/menu behavior. Exact owner visual and SP14 approval are prerequisites,not authority granted by the Planner or Designer.",
       "repository": "pictures",
       "after": [
-        "T14.1"
+        "T91"
+      ],
+      "complexity": "low",
+      "scope": "isolated_fix",
+      "estimated_minutes": 5,
+      "risk": "low",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "Provisional5 agent minutes to copy one owner-pinned card contract; no comparable measured duration or retries available.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "task:T14.1",
+            "task:T14.2"
+          ],
+          "justification": "The plans design task copies one exact owner-pinned card artifact without creating product behavior."
+        },
+        "scope": {
+          "evidence": [
+            "task:T14.1",
+            "task:T14.2"
+          ],
+          "justification": "Only the new planes v2 Markdown is added; v1 and product code remain untouched by this design copy."
+        },
+        "duration": {
+          "evidence": [
+            "task:T14.1",
+            "task:T14.2"
+          ],
+          "justification": "Five provisional agent minutes cover the single plans contract copy; no measured comparable history exists."
+        },
+        "risk": {
+          "evidence": [
+            "task:T14.1",
+            "task:T14.2"
+          ],
+          "justification": "Independent owner digest approval and immutable old planes v1 preservation bound this design-copy risk."
+        },
+        "coupling": {
+          "evidence": [
+            "task:T14.1",
+            "task:T14.2"
+          ],
+          "justification": "The new planes copy follows CG1 in parallel with T14.1; both UI consumers have the declared v2 design ancestor."
+        },
+        "confidence": {
+          "evidence": [
+            "task:T14.1",
+            "task:T14.2"
+          ],
+          "justification": "The ordinary approved-planning-artifact copy flow exists; the new card design is still pending owner approval."
+        }
+      },
+      "expected_paths": [
+        "design/contracts/planes@v2.md"
+      ],
+      "shared_resources": [
+        "design:planes@v2"
+      ],
+      "acceptance_criteria": [
+        "The independently owner-approved planes@v2 contract is copied byte for byte into design/contracts/planes@v2.md without changing the existing approved planes@v1 artifact."
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "test -s design/contracts/planes@v2.md",
+          "purpose": "The independently owner-approved planes@v2 contract is copied byte for byte into design/contracts/planes@v2.md without changing the existing approved planes@v1 artifact.",
+          "category": "static"
+        }
+      ],
+      "covers": [
+        "R17",
+        "R18",
+        "R19",
+        "R20"
+      ],
+      "kind": "design",
+      "subplan_id": "SP-14",
+      "ui": false
+    },
+    {
+      "id": "T14.2",
+      "milestone_id": "M1",
+      "title": "Replace comparison and selection with public subscription cards",
+      "objective": "Implement the independently owner-approved planes@v2 conventional subscription-card presentation on the exact candidate. The four informational cards read PLANES directly in catalogue order,with name,monthly currency/price,complete cumulative tools,unavailable markers and existing chat wording. Remove comparison/selection state and controls from the public page: selectionView/selectedPlanId/default highlighting,comparison tabs/side index,choose/return actions,summary and comparison-only metadata/copy. Do not add a purchase/request/contact/signup/current-plan/recommended action or badge. Preserve existing language/account-preference composition and sign-in/menu/back links,public route and all permission/catalogue contracts. Legacy vista=seleccionar and selected-plan query inputs are ignored and show the same canonical card page; no alternative comparison mode or account mutation is possible. Keep the legacy component/style filenames if appropriate to avoid unrelated renames; they must implement only cards/language presentation,not retain hidden comparison behavior. Update existing planes:test-ui cases only where the owner explicitly superseded selection/highlighting; replace those assertions with positive four-card and negative no-selection/no-action cases,without skip,relaxed checks or dropping unrelated catalogue/currency/public-route/tablet tests. CSS changes belong to comparador-planes.module.css. Add focused lint,workspace build and full strict types with4096MB Node heap before integration. No new dependency,provider,data migration,auth policy or production action.",
+      "repository": "pictures",
+      "after": [
+        "T14.1",
+        "T14.11"
       ],
       "complexity": "medium",
       "scope": "small_change",
@@ -13697,54 +13821,61 @@
       "risk": "medium",
       "coupling": "medium",
       "confidence": "medium",
-      "estimate_rationale": "Agent estimate in minutes: 50 page and comparison component + 20 strings and language selection + 10 public-route check + 40 static-render tests = 120. No comparable history.",
+      "estimate_rationale": "Uncalibrated provisional agent estimate retained at120minutes:60 layout/copy,30 replacement regressions,30 focused checks. Comparable duration,retries,quality and consumption unknown; not human time or a delivery promise.",
       "classification_evidence": {
         "complexity": {
           "evidence": [
-            "file:src/app/globals.css",
-            "file:scripts/test/test-ui-armado-columna.ts"
+            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 0715a331b72111afe085e35d773b284764924fe4:src/components/planes/ComparadorPlanes.tsx -> page owns selectionView,selectedPlanId,comparison navigation and highlightedPlanId; replace these with informational catalogue cards",
+            "task:T1.2",
+            "task:T14.4"
           ],
-          "justification": "A comparison of four cumulative plans at phone and desktop widths with two currencies needs care but no new data."
+          "justification": "Four responsive catalogue cards in ES/EN replace the existing comparison state without new data or account actions."
         },
         "scope": {
           "evidence": [
-            "file:src/app/layout.tsx",
-            "task:T1.2"
+            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 0715a331b72111afe085e35d773b284764924fe4:src/components/planes/ComparadorPlanes.tsx -> page owns selectionView,selectedPlanId,comparison navigation and highlightedPlanId; replace these with informational catalogue cards",
+            "task:T1.2",
+            "task:T14.4"
           ],
-          "justification": "One new page, one component, one strings module and one test; the public map entry for /planes is written by T1.2."
+          "justification": "Only the existing public plans page,component,styles,copy and focused UI tests change."
         },
         "duration": {
           "evidence": [
-            "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind implement -> status unknown, no comparable samples",
-            "file:scripts/test/test-ui-armado-columna.ts"
+            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 0715a331b72111afe085e35d773b284764924fe4:src/components/planes/ComparadorPlanes.tsx -> page owns selectionView,selectedPlanId,comparison navigation and highlightedPlanId; replace these with informational catalogue cards",
+            "task:T1.2",
+            "task:T14.4"
           ],
-          "justification": "Fifty page, twenty strings, ten public-route check and forty tests make one hundred twenty minutes."
+          "justification": "The unchanged provisional120 agent minutes cover60 layout/copy,30 replacement regressions and30 focused checks; comparable measured history remains unknown."
         },
         "risk": {
           "evidence": [
-            "spec:SPEC.md#requirements",
-            "file:src/proxy.ts"
+            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 0715a331b72111afe085e35d773b284764924fe4:src/components/planes/ComparadorPlanes.tsx -> page owns selectionView,selectedPlanId,comparison navigation and highlightedPlanId; replace these with informational catalogue cards",
+            "task:T1.2",
+            "task:T14.4"
           ],
-          "justification": "Public visitors would read a wrong price or a tool that does not exist, and a wrong map entry could open another route."
+          "justification": "The cards must preserve truthful prices/tools and the existing public-only access boundary while removing comparison controls."
         },
         "coupling": {
           "evidence": [
+            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 0715a331b72111afe085e35d773b284764924fe4:src/components/planes/ComparadorPlanes.tsx -> page owns selectionView,selectedPlanId,comparison navigation and highlightedPlanId; replace these with informational catalogue cards",
             "task:T1.2",
-            "task:T1.4"
+            "task:T14.4"
           ],
-          "justification": "Reads contract:plan-catalogue and the /planes entry of contract:permission-map from SP-1."
+          "justification": "The card presentation consumes existing plan-catalogue and route permissions and preserves the SP2 entry-link surface."
         },
         "confidence": {
           "evidence": [
-            "file:scripts/test/test-ui-armado-columna.ts",
-            "assumption:the planes@v1 contract keeps one comparison view without tabs"
+            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 0715a331b72111afe085e35d773b284764924fe4:src/components/planes/ComparadorPlanes.tsx -> page owns selectionView,selectedPlanId,comparison navigation and highlightedPlanId; replace these with informational catalogue cards",
+            "task:T1.2",
+            "task:T14.4"
           ],
-          "justification": "Static-render UI tests already exist in the repository; the contract layout is not drafted yet."
+          "justification": "The exact rejected page/component/tests were inspected; the new owner-approved card layout still needs Designer and owner confirmation."
         }
       },
       "expected_paths": [
         "src/app/planes/page.tsx",
         "src/components/planes/ComparadorPlanes.tsx",
+        "src/components/planes/comparador-planes.module.css",
         "src/components/planes/textos-planes.ts",
         "scripts/test/test-ui-planes.ts"
       ],
@@ -13759,8 +13890,11 @@
         "With a Spanish browser language the page shows every price in COP per month and with an English one in USD per month, never both, Entusiasta shows as free in each language and is named Enthusiast in English.",
         "Extended chat, structure detection and advanced balloon detection appear under Designer Plus and Master Designer marked «aún no disponible» in Spanish and «not available yet» in English, the Entusiasta chat reads «con límites» / «with limits» and the Designer chat «con límites más altos» / «with higher limits», and the page has no purchase, request or sign-up control and shows no limit value.",
         "Without a session the /planes page is served, because the route permission map lists /planes as public, and every other page and API keeps exactly one mapped entry.",
-        "The extra plans view lets a visitor select/highlight any plan for comparison and return to the full comparison; it never changes account assignment.",
-        "At tablet width all four plans and full tool lists remain legible without horizontal scrolling, and no hide-tools control is rendered."
+        "The /planes route presents four conventional informational subscription cards in catalogue order, each with plan name, monthly price and full included-tool list; no comparison/selection controls, highlighted/current/recommended plan or card action is rendered, and no hide-tools control is offered.",
+        "At tablet width all four plans and full tool lists remain legible without horizontal scrolling, and no hide-tools control is rendered.",
+        "The existing workspace packages build with their current scripts before the strict plans-card repository type check,without configuration changes and with the Node heap bounded to4096MB.",
+        "Full strict repository TypeScript accepts the subscription-card page after workspace build,without casts,suppressions or relaxed settings to bypass boundaries.",
+        "Owned plans-card TypeScript and UI regression files pass focused ESLint without new suppressions or lint configuration changes."
       ],
       "verification": [
         {
@@ -13793,8 +13927,8 @@
         },
         {
           "type": "command",
-          "value": "npm run planes:test-ui -- --solo vista-eleccion",
-          "purpose": "The extra plans view lets a visitor select/highlight any plan for comparison and return to the full comparison; it never changes account assignment.",
+          "value": "npm run planes:test-ui -- --solo tarjetas",
+          "purpose": "The /planes route presents four conventional informational subscription cards in catalogue order, each with plan name, monthly price and full included-tool list; no comparison/selection controls, highlighted/current/recommended plan or card action is rendered, and no hide-tools control is offered.",
           "created_by": "T14.2",
           "category": "functional"
         },
@@ -13804,6 +13938,24 @@
           "purpose": "At tablet width all four plans and full tool lists remain legible without horizontal scrolling, and no hide-tools control is rendered.",
           "created_by": "T14.2",
           "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "NODE_OPTIONS=--max-old-space-size=4096 npm run build --workspaces --if-present",
+          "purpose": "The existing workspace packages build with their current scripts before the strict plans-card repository type check,without configuration changes and with the Node heap bounded to4096MB.",
+          "category": "static"
+        },
+        {
+          "type": "command",
+          "value": "NODE_OPTIONS=--max-old-space-size=4096 npx --no-install tsc --noEmit --incremental false",
+          "purpose": "Full strict repository TypeScript accepts the subscription-card page after workspace build,without casts,suppressions or relaxed settings to bypass boundaries.",
+          "category": "static"
+        },
+        {
+          "type": "command",
+          "value": "npx --no-install eslint src/app/planes/page.tsx src/components/planes/ComparadorPlanes.tsx src/components/planes/textos-planes.ts scripts/test/test-ui-planes.ts",
+          "purpose": "Owned plans-card TypeScript and UI regression files pass focused ESLint without new suppressions or lint configuration changes.",
+          "category": "static"
         }
       ],
       "covers": [
@@ -13819,7 +13971,7 @@
       "id": "T14.3",
       "milestone_id": "M1",
       "title": "Plans links on the sign-in screen and in the account menu",
-      "objective": "The sign-in screen and the account menu each lead to the plans section without changing anything else the cuentas-admin@v1 screens do.",
+      "objective": "The sign-in screen and shared account menu each retain exactly one plans entry,without changing the active owner-approved SP2 account contract or its sign-in,dismissal,identity and password behavior; preserve cuentas-admin@v2 when composed rather than resurrect older v1 layout.",
       "repository": "pictures",
       "after": [
         "T14.2"
@@ -13933,7 +14085,7 @@
       "id": "T14.4",
       "milestone_id": "M1",
       "title": "Browser end-to-end of the plans section on a production build",
-      "objective": "Real browsers against next start prove the section is reachable signed out and signed in, follows the browser language and currency, fits phone, tablet and desktop, and choosing a plan in the informational view does not change assignment, and opens nothing else without a session.",
+      "objective": "Author and run the real production Next/browser card verification against an invocation-owned isolated REQ021 schema. Preserve all existing signed-out/signed-in,catalogue,currency,entry-link and public-route denial checks. Retire only the owner-superseded plan-selection assertions; replace them with four-card presence,absence of comparison/card actions,legacy-query equivalence and actual unchanged account/next-request permission assertions. Capture account/role state before and after reading/keyboard/language/back interactions; no purchase or account mutation request may originate from the card page after authenticated test setup. Expectations come independently from SPEC R17–R20 and the owner P211 amendment,not copied implementation state. Exercise ES/EN at360/390/768/1280 and preserve full tools/keyboard reachability. Keep no-account-change checks strong rather than treating missing buttons alone as proof. Existing authorized administration still changes plan through its own screen. No paid providers,production data,unowned schema cleanup or modified authorization.",
       "repository": "pictures",
       "after": [
         "T14.3"
@@ -13999,8 +14151,9 @@
       "acceptance_criteria": [
         "On a production build started with next start against the REQ-021 test database, a signed-out browser follows the sign-in screen's plans link to the four plans with COP prices, an English browser sees the same plans with USD prices, a signed-in Entusiasta reaches the section from the account menu, and the page fits 390 and 1280 pixel widths without horizontal scrolling with every link reachable by keyboard.",
         "Opening /planes without a session makes no other page or API reachable without a session.",
-        "A signed-in test account selects each plan in the public comparison view; its assigned plan and next-request permissions remain unchanged.",
-        "The extra plans view lets a visitor select/highlight any plan for comparison and return to the full comparison; it never changes account assignment, and all tool lists remain visible without an «Ocultar herramientas» control."
+        "Reading the subscription cards and using language or navigation controls, including legacy selection query URLs, never changes the signed-in account assignment or next-request permissions and sends no account or purchase mutation.",
+        "Legacy /planes?vista=seleccionar and obsolete plan-selection query parameters show the same four informational cards without restoring a comparison mode, selection state, pressed plan, highlighted default plan or selection-specific controls.",
+        "The four cards and full cumulative tool lists remain legible in Spanish and English at360,390,768 and1280px without horizontal page scrolling, clipping or collapsed tools, and every remaining language, back and account-menu link works by keyboard."
       ],
       "verification": [
         {
@@ -14025,8 +14178,8 @@
         },
         {
           "type": "command",
-          "value": "npm run planes:test-integracion -- --solo selector-sin-cambio",
-          "purpose": "A signed-in test account selects each plan in the public comparison view; its assigned plan and next-request permissions remain unchanged.",
+          "value": "npm run planes:test-integracion -- --solo tarjetas-sin-mutacion",
+          "purpose": "Reading the subscription cards and using language or navigation controls, including legacy selection query URLs, never changes the signed-in account assignment or next-request permissions and sends no account or purchase mutation.",
           "created_by": "T14.4",
           "category": "integration",
           "requires": [
@@ -14035,8 +14188,18 @@
         },
         {
           "type": "command",
-          "value": "npm run planes:test-integracion -- --solo selector-sin-cambio",
-          "purpose": "The extra plans view lets a visitor select/highlight any plan for comparison and return to the full comparison; it never changes account assignment, and all tool lists remain visible without an «Ocultar herramientas» control.",
+          "value": "npm run planes:test-integracion -- --solo legado-sin-comparacion",
+          "purpose": "Legacy /planes?vista=seleccionar and obsolete plan-selection query parameters show the same four informational cards without restoring a comparison mode, selection state, pressed plan, highlighted default plan or selection-specific controls.",
+          "created_by": "T14.4",
+          "category": "integration",
+          "requires": [
+            "PICTURES_REQ021_DATABASE_URL"
+          ]
+        },
+        {
+          "type": "command",
+          "value": "npm run planes:test-integracion -- --solo tarjetas-responsive",
+          "purpose": "The four cards and full cumulative tool lists remain legible in Spanish and English at360,390,768 and1280px without horizontal page scrolling, clipping or collapsed tools, and every remaining language, back and account-menu link works by keyboard.",
           "created_by": "T14.4",
           "category": "integration",
           "requires": [
@@ -14056,8 +14219,8 @@
     {
       "id": "T14.5",
       "milestone_id": "M1",
-      "title": "SP-14 visual review against the planes@v1 contract",
-      "objective": "A fresh reviewer compares the rendered plans section and its two entry points with the approved contract at phone, tablet and desktop widths and in both languages, including the extra selection view and records every mismatch with the task to redo.",
+      "title": "SP-14 visual review against the planes@v2 subscription-card contract",
+      "objective": "A fresh reviewer checks the owner-approved planes@v2 card presentation and unchanged entry-link composition at phone,tablet and desktop widths in ES/EN,with no comparison/selection controls,default highlighting,card actions or collapsed tools,recording every deviation with the responsible task. Preserve existing visual ledger and audit policy.",
       "repository": "pictures",
       "after": [
         "T14.4"
@@ -14121,13 +14284,13 @@
         "ledger:SP-14-visual"
       ],
       "acceptance_criteria": [
-        "The full plans comparison, extra select/highlight view and both entry links match the approved planes@v1 contract at phone, tablet and desktop widths in Spanish and English; every tool list is visible, no hide-tools control appears, and each finding names the repair task."
+        "The four subscription cards and both entry links match the approved planes@v2 contract at phone,tablet and desktop widths in Spanish and English; full tool lists stay visible without comparison/selection/highlighting or hide-tools controls,and every finding names the repair task."
       ],
       "verification": [
         {
           "type": "command",
           "value": "bitacora.py audit-ledger check .evidence/REQ-021/SP-14.visual.findings.json",
-          "purpose": "The full plans comparison, extra select/highlight view and both entry links match the approved planes@v1 contract at phone, tablet and desktop widths in Spanish and English; every tool list is visible, no hide-tools control appears, and each finding names the repair task.",
+          "purpose": "The four subscription cards and both entry links match the approved planes@v2 contract at phone,tablet and desktop widths in Spanish and English; full tool lists stay visible without comparison/selection/highlighting or hide-tools controls,and every finding names the repair task.",
           "created_by": "T14.5",
           "category": "static"
         }
@@ -14522,7 +14685,7 @@
       "id": "T94",
       "milestone_id": "M1",
       "title": "Composition check CG-4: access plans from the plans section to the accounts screen",
-      "objective": "On the integrated M1 candidate the plans section, the accounts screen and the permission guard agree on the four plans: the plans view, admin assignment and permission guard agree, and the public comparison selector never mutates assignment.",
+      "objective": "On the integrated M1 candidate the public subscription cards,authorized account administration and permission guard agree on the four catalogue plans;reading the cards or legacy selection URLs never changes account assignment or grants access.",
       "repository": "pictures",
       "after": [
         "T14.6"
@@ -14588,7 +14751,7 @@
       ],
       "acceptance_criteria": [
         "On the integrated M1 candidate started with next start against the REQ-021 test database, a signed-out visitor follows the sign-in screen's plans link to the four plans, an administrator moves a Designer account to Designer Plus on the accounts screen and that person's next request opens the cost calculator but not the Taller 3D, and the plan names offered on the accounts screen are exactly the four the plans section shows.",
-        "Selecting/highlighting a plan in the public plans view is comparison-only: the signed-in account’s assigned plan and server permissions do not change."
+        "Reading the subscription cards and using language or navigation controls, including legacy selection query URLs, never changes the signed-in account assignment or next-request permissions and sends no account or purchase mutation."
       ],
       "verification": [
         {
@@ -14603,9 +14766,9 @@
         },
         {
           "type": "command",
-          "value": "npm run planes:test-integracion -- --solo selector-sin-cambio",
-          "purpose": "Selecting/highlighting a plan in the public plans view is comparison-only: the signed-in account’s assigned plan and server permissions do not change.",
-          "created_by": "T94",
+          "value": "npm run planes:test-integracion -- --solo tarjetas-sin-mutacion",
+          "purpose": "Reading the subscription cards and using language or navigation controls, including legacy selection query URLs, never changes the signed-in account assignment or next-request permissions and sends no account or purchase mutation.",
+          "created_by": "T14.4",
           "category": "integration",
           "requires": [
             "PICTURES_REQ021_DATABASE_URL"
