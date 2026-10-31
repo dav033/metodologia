@@ -1,0 +1,12 @@
+# Solver checkpoint — 20261031-075511-d592
+
+- Trigger: pictures:REQ-021:r29:T10.441:stuck:dcd70c2e84a2797e. No open decision.
+- Canonical state read from live-status.json: T10.441 SUCCESS/completed, snapshot 147ee97f22d5394b6ff696ae902709e0cf6e7a45, integrated ref d6d397cf080ab5d5c99dd82b11e41b0a5660010b, PASS m6://result/6ba878b37594b79486dc8a3c37d16cd52c65b428f944b0411ad02397fdfad3eb. T10.45 running. Do NOT retry the completed task.
+- Origin: machine was shut down overnight; local PostgreSQL refused connections until Docker started at 07:54. Operator day log confirms docker.service was enabled (read-only check: enabled). Engine recovered 3 workflows at 07:54:39; persisted solver watch since 2026-10-30T20:09:14 caused a false stuck alert at 07:55:11, during recovery. Task settled at telemetry ts 1793451326.9775472.
+- Defect reproduced: fresh-process replay of persisted stuck/stalled marks fires immediately on unmodified code. restart-red.log / restart-red.json: 8 tests, 5 failures, exit 1 on refactor baseline 141eade8.
+- Worktree: /home/david/.local/share/bitacora-solver/pictures/20261031-075511-d592/wt, branch solver/20261031-075511-d592, main base 4a32ce2e7. Never edit or stash the live checkout.
+- D-242 reserved in metodologia. Structural commit 141eade8 moves detection to solver_triggers.py, keeping facade exports and sessions in solver.py (<500 lines). 24 original tests pass after extraction.
+- Fix: process-scoped observation epoch for stuck/stalled ONLY; stable fingerprint keys, known quota/recovery deadlines, durable decisions/blocks remain unchanged. Marks checkpoint observed_at; recovery preserves accumulated age and excludes the unobserved gap. Legacy marks restart once. Repeated deploys do not erase observed inactivity. New module/tests Ruff clean; solver.py has 3 preexisting lint diagnostics (baseline preserved in lint-baseline.log; current lint.log).
+- Current proof: 32 solver tests green (solver-green.log), diff whitespace clean. No bt.run/bt.task order changes, no DBOS.patch needed. No product edits, paid calls or owner approvals.
+- Fix committed as 09117e499 (after 141eade8 structural extraction). No uncommitted worktree changes. Dry-run waiting for global integration lock behind post-own-venv (D-240) and built-subplan-versions (D-243).
+- Next: merge main into branch if moved; run bt_integrate --dry-run then staged/full integration ONLY (no selective), monitor results, final status and inbox, write D-242 entry and one run-log line, REPORT.md, result.json LAST.

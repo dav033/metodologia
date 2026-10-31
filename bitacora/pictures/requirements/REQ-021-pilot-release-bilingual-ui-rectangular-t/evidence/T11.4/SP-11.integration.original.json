@@ -1,0 +1,42 @@
+{
+  "schema": "pictures-req021-integration@1",
+  "task": "REQ-021/SP-11/T11.3",
+  "status": "passed",
+  "verification": {
+    "command": "npm run trenza:test-integracion",
+    "exitCode": 0,
+    "runtime": {
+      "build": "Next.js production build and next start",
+      "browser": "headless Chromium; project reopened in a separate browser context",
+      "database": "disposable isolated REQ-021 PostgreSQL schema"
+    },
+    "database": {
+      "source": "PICTURES_REQ021_DATABASE_URL"
+    }
+  },
+  "assertions": {
+    "controls": {
+      "pieces": [
+        "column",
+        "arch",
+        "garland"
+      ],
+      "spacingAndThicknessControls": true,
+      "spacingChangesCounts": true,
+      "thicknessPreservesCounts": true,
+      "shoppingMaterialsFollowEditedScene": true
+    },
+    "savedProject": {
+      "productionApiCreateAndUpdate": true,
+      "productionApiReadAfterWrite": true,
+      "independentBrowserContextReopen": true,
+      "editedSpacingAndThicknessPersist": true
+    },
+    "geometry": {
+      "centrelineDimensionsRemainUnchanged": true,
+      "glbBoundsMatchRenderedGeometry": true,
+      "allRegisteredElementTypesCompared": 53
+    }
+  },
+  "limitations": []
+}

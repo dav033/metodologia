@@ -1,0 +1,3 @@
+npm ci --offline: exit 0 (576 packages added, 579 audited, 0 vulnerabilities).
+npm run trenza:test-integracion: exit 0. Nested checks passed: trenza:test-separacion; trenza:test-ui (controles); trenza:test-ui (guardar-y-exportar); Chromium export comparison (53 element types, 0 known defects); production project integration (edited PUT/GET, independent browser-context reopen, count and centreline invariants, disposable isolated REQ-021 PostgreSQL schema).
+python /home/david/.agents/skills/metodologia/scripts/bitacora.py audit-ledger check .evidence/REQ-021/SP-11.findings.json: exit 0, OK: audit ledger contract is valid.

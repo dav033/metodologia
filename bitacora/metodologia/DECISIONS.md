@@ -2786,3 +2786,88 @@ Solucionador 20261030-100736-d494 integrated merge fff622890f28b8093a9a0afda9c40
 - **Rule:** when an attempt fails twice with the same digest, check the digest names the real cause before blaming the
   agent.
 - **Evidence:** `test_failure_lines.test_uvs_hardlink_warning_is_never_the_decisive_line` (red before the fix).
+
+## D-237 — The system's role sessions never take the bitácora's secret alert
+
+- **Date:** 2026-10-30 · **Status:** Accepted · **Refines:** D-163, D-168
+- **Context:** (found by `metodologia-90`) at ~17:00 pictures REQ-021's Planner (Codex in tmux `bit-pictures-REQ-021-
+  planner`, HQ mode) received an owner-approved plan change (r28) and instead spent 8 minutes on the bitácora's secret
+  alert — a false positive on hex keys in RUN.solver/state.json and the translation cache — then added 130 fingerprints
+  to `.gitleaksignore` and ran `bitacora.py commit "fix: remove secret"`, committing on main (5bbac06d3, dbf506904,
+  cfdaac78d, including D-209's empty `.ids-reserved.json.lock`). D-168 had kept task attempts out of the alert; the
+  role sessions the system starts (Planner, Solucionador, Designer) were not.
+- **Decision:** `bt_agent_terminal.start` sets `BITACORA_AGENT_ROLE=<role>` on every `bit-<project>-<REQ>-<role>` session;
+  the hooks count it as a system run (no SessionStart warning, no Stop block); `bitacora.py commit` refuses to resolve a
+  secret alert from a role session. D-209's id lock moves to `<state>/ids-<project>.lock`, outside the versioned tree.
+- **Rule:** the secret alert is the owner's; agents report it, never resolve it.
+- **Not done:** the false positive at its source (gitleaks rules for those hex keys) — the owner declined touching the
+  gitleaks configuration earlier; noted for the owner.
+- **Evidence:** `test_hooks_system_runs` (3 new cases). A Planner already running keeps its old environment until it
+  is restarted.
+
+## D-239 — Durable runs take the operator's parallelism when they start or join
+
+- **Date:** 2026-10-30 · **Status:** Accepted · **Refines:** REQ-030 (durable runtime settings), D-149 (stage join)
+- **Context:** the owner approved more parallelism after the measurement of pictures REQ-021 (46.7 h, average
+  parallelism 1.2). With `execution.agent_concurrency` at 4 and r28 freed of false dependencies, T12.1/T12.2 still did
+  not start: `bt_durable.Settings.max_parallel` was a fixed 2, `cli` started runs with `Settings()` and every join copied
+  the previous run's settings, so `scheduler.max_parallel_tasks` (the legacy runtime's knob) never reached a durable run.
+- **Decision:** `settings.configured(base)` applies `scheduler.max_parallel_tasks` (clamped 1..16; invalid values keep
+  the base) when a run starts and when a join starts its next run; everything else a join carries is unchanged. It runs
+  outside any workflow, so the value is the new run's input and recovery replays it. `execution.agent_concurrency`
+  stays the machine-wide cap. Live: `scheduler.max_parallel_tasks` = 4 (17:3x); the running r28 keeps 2 until its next
+  join.
+- **Rule:** an operator knob reaches the runtime that runs the work; a carried-over default must not hide it.
+- **Evidence:** `test_durable_settings` (5; red on main: no `configured`). Branch `durable-parallel-config`.
+
+## D-238 — A message to an agent counts as delivered only if the agent can act on it
+
+- **Date:** 2026-10-30 · **Status:** Accepted · **Refines:** D-199, D-214
+- **Context:** ~16:25 `tell-planner` sent pictures REQ-021's Planner (Codex) the owner-approved r28 request and printed
+  «Enviado al Planner.»; the account answered «■ You've hit your usage limit … try again at 4:32 PM» and nobody was told.
+  Later the Codex modal «Switch to gpt-6-luna for lower credit usage?» caught every notice (Enter picks option 1, which
+  changes the model) until the operator pressed 2 at 17:00.
+- **Decision:** `send` answers that modal with «Keep current model» (never «never show again»), never types into another
+  selection list, and watches 4 s after the submit: a quota wall that answers the message makes it `limited` (with its
+  reset time), never «Enviado». The Planner then moves to an account with quota (`start_planner`, conversation and unread
+  notices along); with none, the notice is held in `.planning/notices-held.json` and the engine's maintenance pass sends
+  it once the reset passes. `tell-planner` exits 0 delivered/moved, 3 held, 1 failed. Screen parsing lives in
+  `bt_agent_wall` (extended `LIMITED` for Claude's 5-hour/weekly/extra-usage walls).
+- **Rule:** «sent» means the agent can act on it; anything else is said as what it is.
+- **Evidence:** `test_agent_terminal.AgentWalls` (real tmux, fake Codex printing the exact texts; red on main:
+  «Enviado.» / SWITCH), `test_planner_account` walls/move/hold/owner tests; full regression 308/309 before the pyproject
+  fix (`test_package_modules`). Built by an Opus subagent. Caveats: each `send` takes ~4 s longer; a wall later than the
+  window is caught by the next notice's pre-check; the Solucionador keeps its own account move.
+
+## D-240 — The post-merge regression never borrows the live venv
+
+- **Date:** 2026-10-30 · **Status:** Accepted · **Refines:** D-197 (selective integration's post-merge run), D-227
+- **Context:** 18:56–19:07 the live venv (`~/dev/metodologia/.venv`) could not import `bt_durable` (seen as
+  `No module named bt_durable` from the status CLI; the running engine kept its loaded modules, its next start would have
+  failed). The post-merge regression of `durable-parallel-config` ran in a worktree whose `.venv` was a symlink to the
+  live venv; the Designer kit suites run `uv run --with playwright` there, `uv run` re-syncs the project it finds, and
+  the live editable install was repointed at the post-merge worktree, which the run then removed. The operator repaired
+  the live venv with `uv sync --frozen` in the live checkout.
+- **Decision:** `bt_integrate_post` gives the post-merge worktree no venv link; `bt_regress.venv` (D-227) creates its
+  own (`uv sync --frozen`, seconds from the uv cache). Every `uv run --with playwright` (`bt_design_directions`, the
+  Designer kit instructions and its three suites) passes `--no-project`: the tool needs playwright only.
+- **Rule:** nothing a regression runs may write into the live environment.
+- **Evidence:** `test_integrate_post_venv` (red on main: the worktree's `.venv` was the live symlink); `test_integrate`,
+  `test_designer_kit`, `test_compare_motion_evidence` pass. Branch `post-own-venv`.
+
+## D-243 — A built subplan is offered to try before its composition gate
+
+- **Date:** 2026-10-31 · **Status:** Accepted · **Refines:** D-131 (owner verification per subplan), D-149
+- **Context:** the owner, on pictures REQ-021: «en SP-12 no me sale en ningún lugar para probar». SP-11 and SP-12 were
+  complete (audits passed) but «Probar» said «todavía no hay una versión»: the durable composer publishes a subplan's
+  version only when a composition gate folds it, and CG-11/CG-12 sit behind SP-10 and the owner's manual T10.5, while
+  SP-13's stage waits on the owner approving SP-12. The owner could try nothing.
+- **Decision:** `bt_verification.durable_versions` also offers each subplan of the current durable run whose every task
+  is accepted, from its subplan line's tip (`refs/bt/subplan/<project>/<REQ>/r<N>/<role>/<SP>`, the commit the composer
+  publishes). A tip whose tree equals the last published commit's tree is not a new version (a join that re-seeds lines
+  keeps the owner's decisions); a changed tree is a new version, as before. Read-only, no engine change.
+- **Rule:** a subplan can be tried as soon as it is built; composition gates judge how subplans meet, not when the owner
+  may look.
+- **Evidence:** `test_durable_verification.BuiltBeforeItsGate` (2, real git; red on main). Live read-only check: SP-11
+  and SP-12 appear as v1; SP-2 becomes v2 with T2.55/T2.56/T2.7's repairs; no owner decision existed to lose (all
+  «to_test»). Branch `built-subplan-versions` (staged/full regression, not selective, until D-240 is on main).

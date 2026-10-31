@@ -1,0 +1,15 @@
+
+> demo-decoracion@0.1.0 recomendaciones:test-ui
+> tsx --test scripts/test/test-ui-recomendaciones-3d.ts
+
+✔ every account sees localized gallery cards with their preview and engine balloon count (14.679512ms)
+✔ only accounts with the workshop permission get new-project links (3.789964ms)
+✔ no-match state explains the result and offers a composer recovery action (0.575028ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 504.074134

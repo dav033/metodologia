@@ -1271,7 +1271,13 @@
       "integration_test_task": "T10.5",
       "milestone_id": "M3",
       "outcome": "Every screen an external user reaches beyond the Taller and the navigation (home, guided chat, counter, calculator and professional quote, catalogue, gallery, saved projects and personal library, account) is complete in English, the chat tools and the Taller scene AI reply in the user's language while catalogue searches keep using the Spanish catalogue, and staff-only screens stay in Spanish.",
-      "title": "Remaining screens and AI replies in English"
+      "title": "Remaining screens and AI replies in English",
+      "checkpoints": [
+        {
+          "task": "T10.5",
+          "purpose": "Run the existing exhaustive real-entrypoint integration on the corrected producer snapshot before SP-10 audit; preserve the separate genuine provider observation and reject stale partial evidence."
+        }
+      ]
     },
     {
       "acceptance_criteria": [
@@ -11659,13 +11665,127 @@
       "ui": false
     },
     {
+      "id": "T10.441",
+      "milestone_id": "M3",
+      "title": "Translate the guided-chat example-photo control with rendered EN/ES regression",
+      "objective": "Repair only the proven product translation producer in snapshot 681bdc1f5368cfa18223a828e39087b1b532c9b9, after accepted T10.44 and before T10.45. In src/components/guiado/FotosEjemploGuiada.tsx replace the idle button label rendered directly from TEXTO_FOTOS_EJEMPLO with the existing useTextos(TEXTOS_CHAT_GUIADO) mechanism. Add the matching es/en entry to existing src/components/guiado/textos/chat-guiado.ts; Spanish is exactly \"o prueba con una de nuestras fotos\" and English is \"or try one of our photos\". Preserve the exported TEXTO_FOTOS_EJEMPLO as a compatibility alias derived from the Spanish dictionary because scripts/test/test-pulido-presentacion-guiada.ts imports it; do not render that fixed-Spanish alias for English. Keep the already translated loading key and every photo, selection, callback, focus, disabled/busy, telemetry and SP-9 name/data/fallback behavior. Author scripts/test/test-fotos-ejemplo-idioma.tsx and register only idioma:test-fotos-ejemplo. Render the actual exported component under the real IdiomaProvider in EN and ES, without replacing the component or mocking the language hook; assert the visible native button label independently against the two fixed expected strings and reject the Spanish phrase in English, including enabled/disabled variants. Dictionary-value-only checks are insufficient: demonstrate the current literal makes the rendered EN regression fail. Run the complete Spanish presentation suite and existing coverage guard for the component. The full legacy command has a demonstrated PREEXISTING stale source assertion at test-pulido-presentacion-guiada.ts:189 after its first seven cases pass. Within this task own that TEST file only to replace the obsolete esDev-newline shape oracle with checks for the actual esDev AND puedeVerAdministracion conjunction and its binding to permissions.includes(PERMISOS.herramientas_internas). Preserve every legacy case and other assertion; do not skip, disable, remove checks or edit CabeceraApp.tsx or any authorization rule. Add focused oracle negatives for dropping either conjunct or substituting the permission; none may pass. Do not adopt the superseded sinPermisos/laboratorio description. If any other preexisting failure appears, report the exact prerequisite rather than broadening this test repair. No new dependency, paid call, screenshot/oracle exemption or scan weakening. T10.45 owns only its existing harnesses/package wiring and retains every frozen criterion; configured-provider observation remains NOT_RUN until genuine observation.",
+      "repository": "pictures",
+      "after": [
+        "T10.44"
+      ],
+      "complexity": "low",
+      "scope": "isolated_fix",
+      "estimated_minutes": 45,
+      "risk": "low",
+      "coupling": "medium",
+      "confidence": "high",
+      "estimate_rationale": "Uncalibrated provisional agent estimate: 5 minutes for one bilingual entry, 10 for the bounded control/compatibility alias, 20 for actual component rendering, 10 for the demonstrated TEST-only source oracle correction and its negatives; no measured throughput claim.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:src/components/guiado/FotosEjemploGuiada.tsx",
+            "file:scripts/test/test-pulido-presentacion-guiada.ts"
+          ],
+          "justification": "A single existing label already has the language hook; real component rendering catches the proven bypass without a new state machine."
+        },
+        "scope": {
+          "evidence": [
+            "file:src/components/guiado/FotosEjemploGuiada.tsx",
+            "file:scripts/test/test-pulido-presentacion-guiada.ts"
+          ],
+          "justification": "One photo control and dictionary entry, a rendered regression and one proven stale legacy source assertion; product permission rules remain untouched."
+        },
+        "duration": {
+          "evidence": [
+            "file:src/components/guiado/FotosEjemploGuiada.tsx",
+            "file:scripts/test/test-pulido-presentacion-guiada.ts"
+          ],
+          "justification": "The provisional forty-five minute agent estimate includes the demonstrated stale TEST-only oracle and its negative fixtures; comparable calibrated history remains unknown."
+        },
+        "risk": {
+          "evidence": [
+            "file:src/components/guiado/FotosEjemploGuiada.tsx",
+            "file:scripts/test/test-pulido-presentacion-guiada.ts"
+          ],
+          "justification": "Preserving the imported Spanish alias and existing photo callbacks bounds regressions to one visible control."
+        },
+        "coupling": {
+          "evidence": [
+            "file:src/components/guiado/FotosEjemploGuiada.tsx",
+            "file:scripts/test/test-pulido-presentacion-guiada.ts",
+            "task:T10.44",
+            "task:T10.45"
+          ],
+          "justification": "The accepted producer provides the dictionary; exhaustive harness and dependent audits must consume this corrected product snapshot."
+        },
+        "confidence": {
+          "evidence": [
+            "file:src/components/guiado/FotosEjemploGuiada.tsx",
+            "file:scripts/test/test-pulido-presentacion-guiada.ts"
+          ],
+          "justification": "Exact snapshot inspection proves the literal bypass and the existing Spanish consumer, while the current provider supports direct rendering."
+        }
+      },
+      "expected_paths": [
+        "src/components/guiado/FotosEjemploGuiada.tsx",
+        "src/components/guiado/textos/chat-guiado.ts",
+        "scripts/test/test-fotos-ejemplo-idioma.tsx",
+        "scripts/test/test-pulido-presentacion-guiada.ts"
+      ],
+      "shared_resources": [
+        "package.json scripts:idioma:test-fotos-ejemplo",
+        "contract:idioma"
+      ],
+      "acceptance_criteria": [
+        "The real FotosEjemploGuiada control rendered under the existing IdiomaProvider shows \"or try one of our photos\" in English and exactly \"o prueba con una de nuestras fotos\" in Spanish; the English rendered button contains no Spanish idle label, both enabled and disabled variants retain their native button semantics, and the focused regression fails with the current untranslated literal.",
+        "The exported TEXTO_FOTOS_EJEMPLO remains exactly the existing Spanish text through a Spanish-dictionary-derived compatibility alias; the complete existing Spanish presentation suite passes with every legacy case retained and only its demonstrated stale header source oracle corrected, while loading copy, photo fetching, selection, attachment, focus return, disabled/busy behavior, telemetry and SP-9 catalogue data/fallback keep their existing semantics.",
+        "The unchanged language coverage guard scans FotosEjemploGuiada.tsx successfully with no new exemption or skipped control; exhaustive T10.45/T10.5 role, route, provider-call and rendered-language checks and the manual live-provider NOT_RUN boundary remain unchanged.",
+        "The TEST-only correction of test-pulido-presentacion-guiada.ts:189 requires both esDev and puedeVerAdministracion and independently checks that puedeVerAdministracion comes from permissions.includes(PERMISOS.herramientas_internas); negative source fixtures missing either gate or using another permission fail, all other legacy assertions remain, and CabeceraApp authorization code is unchanged."
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npm run idioma:test-fotos-ejemplo",
+          "purpose": "The real FotosEjemploGuiada control rendered under the existing IdiomaProvider shows \"or try one of our photos\" in English and exactly \"o prueba con una de nuestras fotos\" in Spanish; the English rendered button contains no Spanish idle label, both enabled and disabled variants retain their native button semantics, and the focused regression fails with the current untranslated literal.",
+          "created_by": "T10.441",
+          "category": "regression"
+        },
+        {
+          "type": "command",
+          "value": "npm run idioma:test-cobertura -- src/components/guiado/FotosEjemploGuiada.tsx",
+          "purpose": "The unchanged language coverage guard scans FotosEjemploGuiada.tsx successfully with no new exemption or skipped control; exhaustive T10.45/T10.5 role, route, provider-call and rendered-language checks and the manual live-provider NOT_RUN boundary remain unchanged.",
+          "created_by": "T8.3",
+          "category": "static"
+        },
+        {
+          "type": "command",
+          "value": "npx --no-install tsx scripts/test/test-pulido-presentacion-guiada.ts",
+          "purpose": "The exported TEXTO_FOTOS_EJEMPLO remains exactly the existing Spanish text through a Spanish-dictionary-derived compatibility alias; the complete existing Spanish presentation suite passes with every legacy case retained and only its demonstrated stale header source oracle corrected, while loading copy, photo fetching, selection, attachment, focus return, disabled/busy behavior, telemetry and SP-9 catalogue data/fallback keep their existing semantics.",
+          "category": "regression"
+        },
+        {
+          "type": "command",
+          "value": "npm run idioma:test-fotos-ejemplo -- --caso oraculo-cabecera",
+          "purpose": "The TEST-only correction of test-pulido-presentacion-guiada.ts:189 requires both esDev and puedeVerAdministracion and independently checks that puedeVerAdministracion comes from permissions.includes(PERMISOS.herramientas_internas); negative source fixtures missing either gate or using another permission fail, all other legacy assertions remain, and CabeceraApp authorization code is unchanged.",
+          "created_by": "T10.441",
+          "category": "regression"
+        }
+      ],
+      "covers": [
+        "R12"
+      ],
+      "kind": "implement",
+      "subplan_id": "SP-10",
+      "ui": false
+    },
+    {
       "id": "T10.45",
       "milestone_id": "M3",
       "title": "Implement the remaining-English browser verification harness",
       "objective": "Repair only scripts/test/test-integracion-idioma-resto.ts, scripts/test/test-harness-idioma-resto.ts and their package script wiring, after translation producer T10.44. Start real production Next and controlled local Python against disposable REQ-021 fixtures; deterministic execution makes no paid calls. Register idioma:test-integracion-resto and idioma:test-harness-resto. Enforce the complete frozen T10.5 matrix: English Designer Plus uses home, guided chat, counter, calculator and account; Master Designer opens gallery, saved projects and personal library. Record actual role/route, imported dictionary module/keys/values, meaningful visible readiness, rendered-language scan and result for every entry. Fail on omissions, wrong roles, redirects, empty/stale/partial evidence or untranslated interface text; catalogue visits never replace required screens. Capture an actual provider-emitted Spanish catalogue-search tool call correlated with an English guided-chat conversation, plus reply-language instructions and rendered response. A hard-coded direct catalogue request proves nothing. Negative regressions remove each matrix entry, substitute wrong roles/text, omit calls and emit English search arguments; all must fail. CG-10 mode additionally proves its frozen composed flow and unchanged Spanish behavior. Correct demonstrated locator/oracle defects with appropriate DOM-visible, accessible-name or placeholder assertions while preserving dictionary expectations. Classify harness_oracle_failure, product_translation_failure and candidate_identity_failure separately, never as success. Preserve SP-9 data/fallback and staff exclusions. T10.5 remains command-only; real configured-provider EN/ES observation stays NOT_RUN until genuine authorized observation, never satisfied by fixtures.\nFor gitless M6, read only SYSTEM /run/bt-m6/snapshot.json, schema m6.snapshot-context/1: snapshot_sha, base_sha, manifest_sha256, content_sha256, files. The envelope is generated after M3 provenance/commit/materialized-tree validation and read-only mounted outside writable workspace. Validate schema, field types and digest syntax. files is a canonical sorted relative-path map to {kind:file,sha256:<bytes SHA256>} or {kind:symlink,target:<exact target>}; reject absolute/traversal paths. Recompute content_sha256 as SHA256 of UTF-8 JSON(files, sorted keys, compact separators, ensure_ascii=false). Compare declared original source entries and both harness byte hashes; do not include generated build/evidence outputs or follow links outside the tree. Keep exact snapshot/base/manifest identities separate from content/harness digests. Never use env/repo input, agent HEAD or invented SHA as captured-snapshot authority. Standalone Git mode may identify verified HEAD plus dirty content explicitly. Test trusted gitless identity and missing/malformed/tampered envelope, source, harness and symlink cases. Absent D-205 metadata is a precise system prerequisite; product code must not patch methodology runtime. D-205 deployment/full regression is owned separately by solver.\nValidate identity before createIsolatedTestDatabase or mkdtemp. Establish try/finally cleanup before the first resource allocation and register ownership immediately, covering partial setup, readiness, provider/browser failures and success. Test early identity rejection and partial allocation leaks. Release only invocation-owned fixture databases, directories and child servers; never drop user/existing databases or infer ownership from name prefixes. Preserve the primary failure while reporting cleanup errors. Bind fresh SP-10/CG-10 evidence to exact verifier candidate, content, harness version/digests, coverage and captured requests.",
       "repository": "pictures",
       "after": [
-        "T10.44"
+        "T10.441"
       ],
       "complexity": "medium",
       "scope": "small_change",
