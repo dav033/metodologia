@@ -30,7 +30,10 @@ import copy
 import datetime as dt
 import hashlib
 import json
+import pickle
 import re
+import threading
+import time
 from pathlib import Path
 from typing import Any
 
@@ -295,8 +298,77 @@ def _mtime_iso(path: Path) -> str | None:
         return None
 
 
+MEMO_MAX_AGE = 15.0      # seconds a reused status may serve, however quiet its files look (titles, design drafts)
+MEMO_MARGIN = 2.0        # files written this close to the computation are never trusted to be unchanged (coarse mtimes)
+_memo: dict[tuple[str, str], tuple[tuple, float, float, bytes]] | None = None   # None: every call computes
+_memo_lock = threading.Lock()
+_paths_seen: dict[str, tuple[tuple, float, list[Path]]] = {}
+
+
+def reuse() -> None:
+    """Long-lived readers (the panel, the remote listener) turn this on: a requirement whose plan and run files did not
+    change is answered from the last computation instead of re-reading its stores (D-248). The CLI never does."""
+    global _memo
+    with _memo_lock:
+        if _memo is None:
+            _memo = {}
+
+
+def forget() -> None:
+    """Drop every reused status (after an action that may change a plan in a way its files do not show at once)."""
+    with _memo_lock:
+        if _memo is not None:
+            _memo.clear()
+
+
+def _stat_mark(path: Path) -> tuple[str, float]:
+    """A file's change mark and mtime. An empty or missing SQLite write-ahead log is "-": readers create and delete one
+    every time they open the database, so only a log holding frames (or the checkpointed database) marks a write."""
+    try:
+        st = path.stat()
+    except OSError:
+        return "-", 0.0
+    if st.st_size == 0 and path.name.endswith("-wal"):
+        return "-", 0.0
+    return f"{st.st_mtime_ns}:{st.st_size}", st.st_mtime
+
+
+def _marks(rdir: Path) -> tuple[tuple, float]:
+    """The change marks of the files a plan's status is read from, and the newest mtime; same set as `fingerprint`."""
+    key, owner = str(rdir), _stat_mark(rdir / "RUN.owner.json")[0]
+    seen = _paths_seen.get(key)
+    if seen and seen[0] == owner and time.monotonic() - seen[1] < MEMO_MAX_AGE:
+        paths = seen[2]                     # resolving the store paths costs more than stat-ing them
+    else:
+        paths = _watched_paths(rdir, always_owner=True)
+        _paths_seen[key] = (owner, time.monotonic(), paths)
+    marks, newest = [owner], 0.0
+    for path in paths:
+        mark, mtime = _stat_mark(path)
+        marks.append(mark)
+        newest = max(newest, mtime)
+    return tuple(marks), newest
+
+
 def plan_status(project: str, req_dir: Path) -> dict[str, Any]:
     """Full status of one requirement's plan; see the module docstring for the shape."""
+    if _memo is None:
+        return _plan_status(project, req_dir)
+    key = (project, str(Path(req_dir)))
+    marks, newest = _marks(Path(req_dir))
+    with _memo_lock:
+        hit = (_memo or {}).get(key)
+    if hit and hit[0] == marks and newest < hit[2] - MEMO_MARGIN and time.monotonic() - hit[1] < MEMO_MAX_AGE:
+        return pickle.loads(hit[3])         # a private copy: callers add keys to it (bt_plans_api.status_of)
+    at, wall = time.monotonic(), time.time()
+    value = _plan_status(project, req_dir)
+    with _memo_lock:
+        if _memo is not None:
+            _memo[key] = (marks, at, wall, pickle.dumps(value, protocol=pickle.HIGHEST_PROTOCOL))
+    return value
+
+
+def _plan_status(project: str, req_dir: Path) -> dict[str, Any]:
     rdir = Path(req_dir)
     contract = _read_json(rdir / "PLAN.json")
     contract = contract if isinstance(contract, dict) else None
@@ -448,24 +520,29 @@ def _asks(rdir: Path) -> int:
     return n
 
 
+def _watched_paths(rdir: Path, always_owner: bool = False) -> list[Path]:
+    """The plan and run files whose change means a plan's status may have changed."""
+    paths = [rdir / name for name in _WATCHED]
+    db = scheduler_.run_db_path(rdir)
+    paths += [db, db.with_name(db.name + "-wal")]
+    for store in (run_stores.paths(rdir).get(name) for name in ("m2", "m4", "m5", "m6")):
+        if store is not None:       # the module stores change the attempt facts (tokens, activity) too
+            paths += [store, store.with_name(store.name + "-wal")]
+    owner = durable_panel.owner(rdir)
+    if owner:                       # a durable run changes through its projection (rewritten only on change)
+        paths += [rdir / "RUN.owner.json", durable_panel.path(rdir, owner["run_id"])]
+    elif always_owner:              # a run handed to the durable runtime later: its owner file appearing is a change
+        paths.append(rdir / "RUN.owner.json")
+    if always_owner:
+        paths.append(rdir / "SPEC.md")                  # the title
+    return paths
+
+
 def fingerprint(root: Path | None = None) -> str:
     """Change token from (mtime_ns, size) of each plan/run file, with no content parsing and no file creation."""
     digest = hashlib.sha256()
     for project, rdir in _requirement_dirs(_root(root)):
-        paths = [rdir / name for name in _WATCHED]
-        db = scheduler_.run_db_path(rdir)
-        paths += [db, db.with_name(db.name + "-wal")]
-        for store in (run_stores.paths(rdir).get(name) for name in ("m2", "m4", "m5", "m6")):
-            if store is not None:       # the module stores change the attempt facts (tokens, activity) too
-                paths += [store, store.with_name(store.name + "-wal")]
-        owner = durable_panel.owner(rdir)
-        if owner:                       # a durable run changes through its projection (rewritten only on change)
-            paths += [rdir / "RUN.owner.json", durable_panel.path(rdir, owner["run_id"])]
-        for path in paths:
-            try:
-                stat = path.stat()
-                mark = f"{stat.st_mtime_ns}:{stat.st_size}"
-            except OSError:
-                mark = "-"
+        for path in _watched_paths(rdir):
+            mark = _stat_mark(path)[0]
             digest.update(f"{project}/{rdir.name}/{path.name}={mark}\n".encode())
     return digest.hexdigest()

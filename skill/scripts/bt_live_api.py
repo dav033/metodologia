@@ -31,8 +31,10 @@ import bt_presence
 import bt_planstatus as ps
 import bt_scheduler_adapter as scheduler_
 
-POLL = 0.25
+POLL = 0.5                   # seconds between bus checks of a live client; a check of unchanged stores is a few stat calls (D-248)
 NOW_EVERY = 5.0              # the "now" list is also refreshed on a timer so durations and token counts keep moving
+QUIET_MARGIN = 2.0           # a store modified this close to the last read is read again (file times are coarse)
+FORCE_READ = 30.0            # however quiet its files look, a run's bus is read again after this long
 KEEPALIVE_SEC = 15
 MAX_CLIENTS = 20
 KEEP = 5000                  # messages kept in memory per run (the newest); the stores keep everything
@@ -88,12 +90,26 @@ def scope_tasks(rdir: Path, scope: str) -> set[str] | None:
         return {last}
     if kind != "subplan":
         return None
+    path = Path(rdir) / "PLAN.json"
     try:
-        plan = json.loads((Path(rdir) / "PLAN.json").read_text(encoding="utf-8"))
+        st = path.stat()
+        mark = (str(path), last, st.st_mtime_ns, st.st_size)
+    except OSError:
+        return set()
+    hit = _scope_seen.get(mark[:2])
+    if hit and hit[0] == mark:          # a live client asks every POLL: parse the plan only when it changed
+        return set(hit[1])
+    try:
+        plan = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, ValueError):
         return set()
     gates = {g.get("task") for g in plan.get("composition_gates") or [] if last in (g.get("subplans") or [])}
-    return {t["id"] for t in plan.get("tasks") or [] if t.get("subplan_id") == last or t.get("id") in gates}
+    found = {t["id"] for t in plan.get("tasks") or [] if t.get("subplan_id") == last or t.get("id") in gates}
+    _scope_seen[mark[:2]] = (mark, frozenset(found))
+    return found
+
+
+_scope_seen: dict[tuple[str, str], tuple[tuple, frozenset]] = {}
 
 
 def runs_in_scope(root: Path | None, scope: str) -> list[tuple[str, Path]]:
@@ -204,6 +220,9 @@ class _RunLog:
         self.changed: dict[str, int] = {}                               # digest key -> serial of its last change
         self.files: dict[str, tuple[str, int]] = {}                     # store -> (path, inode) the cursor points into
         self.read_at = 0.0
+        self.signature: tuple = ()                                      # the stores' (mtime, size) at the last full read
+        self.collected_at = 0.0                                         # monotonic time of that read
+        self.collected_wall = 0.0                                       # and its wall-clock time, to compare with mtimes
         self.lock = threading.Lock()
 
     def advance(self, max_age: float = 0.0) -> None:
@@ -212,11 +231,18 @@ class _RunLog:
             if max_age and time.monotonic() - self.read_at < max_age:
                 return
             files = bus.sources(self.rdir, self.project)
+            signature, newest = _signature(files)
+            if (self.cursors is not None and files == self.files and signature == self.signature
+                    and newest < self.collected_wall - QUIET_MARGIN
+                    and time.monotonic() - self.collected_at < FORCE_READ):
+                self.read_at = time.monotonic()         # no store changed since the last read: nothing new to collect
+                return
             if self.cursors is not None:
                 for name, ident in files.items():
                     if self.files.get(name) != ident:
                         self.cursors[name] = 0          # a new ledger or a recreated store: read it from its start
             self.files = files
+            self.signature, self.collected_at, self.collected_wall = signature, time.monotonic(), time.time()
             added = False
             for _ in range(CATCH_UP):
                 batch, self.cursors = bus.collect(self.rdir, self.project, self.cursors)
@@ -265,6 +291,22 @@ class _RunLog:
         events = [e for s, e in self.fresh if s > serial]
         digests = [dict(self.digests[k]) for k, s in self.changed.items() if s > serial]
         return events, digests, self.serial
+
+
+def _signature(files: dict[str, tuple[str, int]]) -> tuple[tuple, float]:
+    """(mtime_ns, size) of every store a run's bus reads, with their SQLite write-ahead logs, and the newest mtime: the
+    bus is read again only when one of them changed (D-248). Collecting replays M1 and opens a dozen databases."""
+    marks, newest = [], 0.0
+    for path in sorted({p for p, _ in files.values() if p}):
+        for name in (path, path + "-wal"):
+            try:
+                st = Path(name).stat()
+            except OSError:
+                marks.append((name, None))
+                continue
+            marks.append((name, st.st_mtime_ns, st.st_size, st.st_ino))
+            newest = max(newest, st.st_mtime)
+    return tuple(marks), newest
 
 
 def _log(rdir: Path, project: str) -> _RunLog:
@@ -362,7 +404,7 @@ def run_summaries(root: Path | None, scope: str) -> list[dict[str, Any]]:
     return out
 
 
-NOW_TTL = 1.0                # one "now" frame serves every live client for a second (it reads every run's plan)
+NOW_TTL = 4.0                # one "now" frame serves every live client (it reads every run's plan): below NOW_EVERY
 _now_cache: dict[Path, tuple[float, bytes]] = {}
 _now_data_cache: dict[Path, tuple[float, dict[str, Any]]] = {}
 _now_lock = threading.Lock()

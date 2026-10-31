@@ -259,6 +259,12 @@ class Handler(PlanningActions, PlanListActions, BaseHTTPRequestHandler):
 
     # ------------------------------------------------------------ POST
     def do_POST(self):
+        try:
+            return self._post()
+        finally:
+            _forget_statuses()
+
+    def _post(self):
         u = urlparse(self.path)
         parts = [unquote(p) for p in u.path.strip("/").split("/") if p]
         try:
@@ -426,7 +432,10 @@ class RemoteHandler(Handler):
     def do_POST(self):
         if not self._remote_path_allowed():
             return self.send("Not found", 404, "text/plain")
-        return self.remote_api_post()
+        try:
+            return self.remote_api_post()
+        finally:
+            _forget_statuses()
 
     def remote_api_get(self):
         """Dispatch to the versioned API; never fall through to panel routes."""
@@ -451,7 +460,20 @@ def code_version() -> str:
     files = list(Path(__file__).parent.glob("*.py")) + list(ASSETS.glob("*"))
     return str(int(max(f.stat().st_mtime for f in files)))
 
+def _forget_statuses() -> None:
+    """An action may change a plan before its files show it: the next read recomputes every status (D-248)."""
+    import bt_planstatus
+    bt_planstatus.forget()
+
+
+def _reuse_statuses() -> None:
+    """A long-lived server answers polls of unchanged plans from the last computation (D-248)."""
+    import bt_planstatus
+    bt_planstatus.reuse()
+
+
 def serve(port: int = DEFAULT_PORT) -> None:
+    _reuse_statuses()
     token()
     (STATE / "server.json").write_text(json.dumps({"pid": os.getpid(), "port": port, "version": code_version(),
                                                    "root": str(ROOT)}), encoding="utf-8")
@@ -488,6 +510,7 @@ def create_http_server(port: int = DEFAULT_PORT) -> ThreadingHTTPServer:
 
 def serve_remote(port: int = REMOTE_PORT) -> None:
     """Serve the gateway-only API on loopback, without exposing the browser panel routes."""
+    _reuse_statuses()
     httpd = ThreadingHTTPServer(("127.0.0.1", port), RemoteHandler)
     import bt_live_api
     bt_live_api.warm(ROOT)
