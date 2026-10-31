@@ -391,7 +391,7 @@ class Solver:
                                                  "detenido"})
         if not self.terminal.exists(session["name"]):
             return said + self._finish(run, rdir, state, session, {
-                "outcome": "gave_up", "summary": "la sesión terminó sin escribir result.json"})
+                "outcome": "gave_up", "summary": "la sesión terminó sin escribir result.json", "vanished": True})
         import bt_agent_terminal
         shown = self.terminal.screen(session["name"], 20)
         if bt_agent_terminal.LIMITED.search(shown) or bt_agent_terminal.OWNER_PROMPT.search(shown):
@@ -455,18 +455,27 @@ class Solver:
         if self.terminal.exists(session["name"]):
             self.terminal.kill(session["name"])
         handled = set(result.get("handled") or ()) if isinstance(result.get("handled"), list) else None
+        # A session that vanished (its tmux session is gone with no result.json: a reboot or a power cut, 2026-10-31
+        # 09:41, pictures REQ-021 T10.45:d1) decided nothing: its cases go back to the queue for the next session,
+        # bounded by `max_per_task` like any start, instead of being given up with nobody left to answer them (D-251).
+        vanished = bool(result.get("vanished"))
         for key in [*session.get("triggers", []), *session.get("queued", [])]:
             item = state.get("triggers", {}).get(key)
             if item is None:
                 continue
-            if key in session.get("triggers", []) or handled is None or key in handled:
+            if vanished:
+                item["status"] = "pending"
+            elif key in session.get("triggers", []) or (handled is not None and key in handled):
                 item["status"] = outcome                 # a trigger that started a session never starts another
             else:
                 item["status"] = "pending"               # queued in its inbox and not handled: the next session's
         state.pop("active", None)
         text = f"{session['task']}: Solucionador · {OUTCOME_ES[outcome]}" + (f": {summary}" if summary else "")
+        if vanished:
+            text = (f"{session['task']}: la sesión del Solucionador se cerró sin terminar (¿reinicio del equipo?); "
+                    "sus casos vuelven a la cola")
         self.record(rdir, text[:400])
-        if outcome in ("asked_owner", "gave_up"):
+        if outcome in ("asked_owner", "gave_up") and not vanished:
             ask = session["question"] or summary or "mira su informe"
             self.notify("El Solucionador te necesita" if outcome == "asked_owner" else "El Solucionador no pudo",
                         f"{run.project} {run.req} {session['task']}: {ask}"[:400])
