@@ -173,3 +173,120 @@ def _classify_verdict(verify: VerifyOutcome, out: str, facts: AttemptFacts) -> F
     return _report(FailureClass.IMPLEMENTATION, "CHECK_FAILED",
                    "checks failed: " + ", ".join(verify.failing_checks[:5]) if verify.failing_checks else "checks failed",
                    [*ev, lines], note=note, basis=out or reason)
+
+
+# a `ui: true` task's contract on the base it would start from (bt_design_approval.check_tree state), D-262
+DESIGN_CONTRACT_CODES = {"missing": "DESIGN_CONTRACT_MISSING", "unapproved": "DESIGN_CONTRACT_UNAPPROVED",
+                         "hash-mismatch": "DESIGN_CONTRACT_HASH_MISMATCH"}
+
+
+def design_contract(gate: dict) -> FailureReport:
+    """The contract gate refused the start: an environment fact for the owner, never an agent attempt. pictures
+    REQ-021 r32 T2.57 ran five agents on a base without its approved v2 contract (D-262)."""
+    state = str(gate.get("state") or "unapproved")
+    code = str(gate.get("code") or DESIGN_CONTRACT_CODES.get(state, "DESIGN_CONTRACT_UNAPPROVED"))
+    path = str(gate.get("path") or "the UI contract")
+    why = {"missing": f"{path} is missing from the base the attempt would start from (the design task "
+                      f"{gate.get('design_task') or ''} has not delivered it to this line)",
+           "hash-mismatch": f"{path} in the base differs from the approved SHA-256 (base {gate.get('sha256') or 'none'})",
+           }.get(state, f"{path} is not approved by the owner")
+    if gate.get("detail"):
+        why += f" ({gate['detail']})"
+    return _report(FailureClass.ENVIRONMENT, code, f"{code}: {why}"[:500],
+                   [Evidence(kind="design_contract", ref=path[:200], excerpt=f"state={state}")], basis=f"{code} {path}")
+
+
+NO_CHANGE = "AGENT_NO_CHANGE"
+
+
+def unchanged(snapshot, agent) -> bool:
+    """The agent ended normally and its attempt left the tree exactly as it was given (snapshot == its base)."""
+    return (snapshot is not None and agent is not None and agent.status == "completed" and bool(snapshot.snapshot_sha)
+            and (snapshot.snapshot_sha == snapshot.base_sha or not snapshot.changed_paths))
+
+
+def no_change(failure: FailureReport, agent, verify) -> FailureReport:
+    """A failed verification of an attempt that changed nothing is not an implementation failure to retry: the agent
+    stopped on purpose and its final message says why. pictures REQ-021 r32 T2.57: five attempts refused a base without
+    the approved contract and changed nothing, each judged CHECK_FAILED and retried, and healing answered three
+    decisions with a note about an npm script the agent never got to (D-262). An environment fact for the owner, with
+    the agent's own reason; the signature is stable across such attempts (code + failing checks), so a repeat is seen."""
+    said = " ".join((agent.text if agent is not None else "").split())
+    quote = said[-700:] if said else "(no final message)"
+    failing = ", ".join(verify.failing_checks[:5]) if verify is not None else ""
+    evidence = [Evidence(kind="agent_report", excerpt=(agent.text if agent is not None else "")[-2000:]),
+                Evidence(kind="no_change", excerpt="the attempt changed nothing: its snapshot is the tree it started from"),
+                *failure.evidence[:2]]
+    note = ("Your previous attempt changed nothing and ended with: «" + quote + "». The checks then failed on the "
+            "unchanged tree.\n\n" + failure.agent_note)
+    return _report(FailureClass.ENVIRONMENT, NO_CHANGE,
+                   f"the attempt changed nothing and the agent said: «{quote[-400:]}»"
+                   + (f" (failing checks on the unchanged tree: {failing})" if failing else ""),
+                   evidence, note=note, basis=f"{NO_CHANGE} {failing}")
+
+
+# a V8 heap-limit abort (the process stopped itself at Node's heap cap) versus the sandbox killing it for memory
+_V8_HEAP = re.compile(r"Ineffective mark-compacts near heap limit|Reached heap limit|heap limit Allocation failed|"
+                      r"JavaScript heap out of memory")
+_SANDBOX_KILL = re.compile(r"^\s*Killed\s*$|SIGKILL|\bsignal 9\b|oom[-_ ]kill|\bexit(?: code)?[ =:]*137\b|memory\.events",
+                           re.MULTILINE | re.IGNORECASE)
+HEAP_LIMIT = "CHECK_HEAP_LIMIT"
+HEAP_LIMIT_PLAN = "CHECK_HEAP_LIMIT_PLAN"
+
+
+def heap_abort(out: str) -> str:
+    """The line showing a Node heap-limit abort, when the output shows one and no sandbox memory kill; '' otherwise."""
+    text = str(out or "")
+    match = _V8_HEAP.search(text)
+    if match is None or _SANDBOX_KILL.search(text):
+        return ""
+    start = text.rfind("\n", 0, match.start()) + 1
+    end = text.find("\n", match.end())
+    return text[start:end if end >= 0 else len(text)].strip()[:200]
+
+
+def own_check(failing: Sequence[str], *, known_paths: Sequence[str] = (), own: Sequence[str] = ()) -> str:
+    """The first failing check this task created: its command is one the plan marks `created_by` this task (`own`), or
+    it runs a file of the task's expected paths. '' when none is."""
+    import fnmatch
+    own_set = {" ".join(str(c).split()) for c in own}
+    for command in failing:
+        normal = " ".join(str(command).split())
+        if normal in own_set or any(o and o in normal for o in own_set):
+            return command
+        for token in normal.split():
+            token = token.strip("'\"").removeprefix("./")
+            if "/" in token and any(fnmatch.fnmatchcase(token, pattern) for pattern in known_paths):
+                return command
+    return ""
+
+
+def heap_limit(failure: FailureReport, verify, *, own: str, relaxed: bool) -> FailureReport | None:
+    """A Node heap-limit abort in a check is not a sandbox memory kill: a larger sandbox (the relaxed re-verification)
+    cannot raise a heap cap that a harness's child process sets for itself. pictures REQ-021 r32 T3.91 a1: the
+    harness the task wrote ran `next build` with an explicit environment without NODE_OPTIONS; it aborted at ~2 GB,
+    the relaxed re-verification aborted the same way and the owner was asked, the agent never told (D-262).
+    In a check this task created (`own`): an implementation failure with a concrete note, retried normally. In
+    another check, after the relaxed re-verification (which does raise the heap of a Node process that inherits
+    NODE_OPTIONS) aborted again: a plan/check problem for the owner. None: not a heap abort (a genuine sandbox kill)
+    or the relaxed re-verification is still to be tried."""
+    out = verify.digest if verify is not None else ""
+    line = heap_abort(out)
+    if not line:
+        return None
+    lines = Evidence(kind="output_line", ref=verify.result_ref if verify is not None else "", excerpt=out[:2000])
+    if own:
+        note = (f"A process in your check `{own[:300]}` hit Node's heap cap ({line}). It is not the sandbox's memory: "
+                "the child processes your harness spawns receive only the environment the harness gives them. Pass an "
+                "explicit, bounded NODE_OPTIONS (for example --max-old-space-size=4096) in the environment of the child "
+                "that ran out (e.g. the `next build` it starts). Do not change product code or the check commands for "
+                "this.\n\nDecisive lines:\n\n" + out)
+        return _report(FailureClass.IMPLEMENTATION, HEAP_LIMIT,
+                       f"a process in this task's own check hit Node's heap limit: {line}", [*failure.evidence[:1], lines],
+                       note=note, basis=f"{HEAP_LIMIT} {own}")
+    if not relaxed:
+        return None
+    return _report(FailureClass.CONTRACT, HEAP_LIMIT_PLAN,
+                   f"a check hit Node's heap limit again with a larger heap ({line}): a process it starts caps its own "
+                   "heap (an explicit environment without NODE_OPTIONS); the check or the plan must set it",
+                   [*failure.evidence[:1], lines], basis=f"{HEAP_LIMIT_PLAN} {', '.join(verify.failing_checks[:3])}")

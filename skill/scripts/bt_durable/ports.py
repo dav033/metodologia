@@ -79,7 +79,8 @@ class Integrator(Protocol):
                   home: str = "") -> tuple[str | None, str, str, dict[str, str]]: ...
     # (ref, conflict, run-line note, other subplan lines left out): a subplan member counts once its own subplan line
     # takes it (legacy SubplanLineRouter); a conflict on the run line or on another subplan's line is reported, left to
-    # the composition gates
+    # the composition gates. Optional: `continuation_base(run, task, snapshot_sha, *, home, lines) -> str`, a retry's
+    # snapshot caught up with its home line (D-262); without it a retry continues from the snapshot as it is
     def sync(self, run: RunRef, role: str, items: dict[str, list[tuple[str, str]]]) -> dict[str, dict]: ...
 
 
@@ -94,6 +95,12 @@ class Composer(Protocol):
     """Composition gates: subplan versions and the gate's candidate (idempotent per member versions). Optional:
     `stale_members(run, gate_id, snapshot) -> list[str]`, the members a passed gate's snapshot was not verified with."""
     def compose(self, run: RunRef, gate_id: str, evidence: dict[str, list[dict]]) -> dict: ...
+
+
+@runtime_checkable
+class DesignGate(Protocol):
+    """A `ui: true` task's contract approval read on the base an attempt would start from (D-262); {} = no contract."""
+    def check(self, run: RunRef, plan: Plan, task_id: str, base: str) -> dict: ...
 
 
 @runtime_checkable
@@ -114,3 +121,4 @@ class Ports:
     telemetry: Telemetry
     composer: Composer | None = None            # plan 1.3.0 composition gates
     auditor: Auditor | None = None              # milestone audits: findings ledger -> coordinated remediation
+    design_gate: DesignGate | None = None       # `ui: true` tasks: the contract approval on the chosen base (D-262)

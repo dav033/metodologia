@@ -155,7 +155,12 @@ def _design_instructions(brief: Brief, design: dict) -> list[str]:
     if design.get("mockup"):
         lines.append(f"The owner approved this static mockup with the contract; use it as the visual reference: "
                      f"`{design['mockup']}`.")
-    if design["ui"]:
+    if design["ui"] and design["approval"] == "missing":
+        # D-262: absent from the base tree, not a different file (pictures REQ-021 r32 T2.57 read «hash-mismatch»)
+        lines.append(f"`{design['path']}` is missing from the tree you start from: the design task's copy has not "
+                     "reached this base. Do not create, copy or edit the contract yourself; stop and report the task as "
+                     "blocked (contract missing from the base) without changing UI code.")
+    elif design["ui"]:
         lines.append(f"Owner approval: `{design['approval'] or 'unknown'}`, SHA-256 `{design['sha256'] or 'none'}`. "
                      f"Proceed only with approval status `approved` and `{design['path']}` matching the approved SHA-256"
                      + ("; the mockup is only a visual reference with its own hash, never compare it" if design.get("mockup")

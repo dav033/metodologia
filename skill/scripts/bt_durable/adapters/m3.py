@@ -192,19 +192,36 @@ def _continuation(ws, attempt: AttemptRef | None = None) -> str:
     """What the legacy retry continuation tells an agent whose tree is an earlier attempt's snapshot (`m3 snapshot
     <attempt>` commits, written by `handoff.capture`): its files are kept and must be checked, not redone."""
     import subprocess
-    done = subprocess.run(["git", "-C", str(ws.repo), "log", "-1", "--format=%s", ws.base_sha], capture_output=True,
-                          text=True, check=False)
-    subject = done.stdout.strip() if done.returncode == 0 else ""
-    earlier = subject.split()[-1] if subject.startswith("m3 snapshot ") else _own_handoff(ws, attempt)
+
+    from .integration import CATCH_UP
+
+    def subject_of(sha: str) -> str:
+        done = subprocess.run(["git", "-C", str(ws.repo), "log", "-1", "--format=%s", sha], capture_output=True,
+                              text=True, check=False)
+        return done.stdout.strip() if done.returncode == 0 else ""
+
+    snapshot, subject, caught_up = ws.base_sha, subject_of(ws.base_sha), False
+    if subject.startswith(CATCH_UP + " "):
+        # a retry base caught up with the task's line (D-262): the earlier attempt's snapshot is its first parent
+        parent = subprocess.run(["git", "-C", str(ws.repo), "rev-parse", "-q", "--verify", f"{ws.base_sha}^1"],
+                                capture_output=True, text=True, check=False).stdout.strip()
+        if parent:
+            snapshot, subject, caught_up = parent, subject_of(parent), True
+    if subject.startswith("m3 snapshot "):
+        earlier = subject.split()[-1]
+    else:
+        earlier = _own_handoff(ws, attempt, snapshot)
     if not earlier:
         return ""
+    newer = (" Work accepted on this task's integration line since that attempt started has been merged into your "
+             "tree as well; keep it.") if caught_up else ""
     return (f"Continue the preserved files of this task's earlier attempt {earlier} (snapshot "
-            f"{ws.base_sha[:12]}): your tree starts from its result. Fix what the notes say failed, keep what is "
+            f"{snapshot[:12]}): your tree starts from its result.{newer} Fix what the notes say failed, keep what is "
             "correct, and recheck the complete frozen acceptance and verification instructions. No private "
             "conversation or agent reasoning is transferred.")
 
 
-def _own_handoff(ws, attempt: AttemptRef | None) -> str:
+def _own_handoff(ws, attempt: AttemptRef | None, base_sha: str = "") -> str:
     """The earlier attempt of this task whose handoff ref is the tree this one starts from, when that attempt committed
     its work itself (its snapshot is its own commit, not an `m3 snapshot` one: pictures REQ-021 r30 T10.45 a6 and a8).
     Only this task's earlier attempts count (their ref names computed as `handoff.capture` writes them): a line tip can
@@ -213,7 +230,7 @@ def _own_handoff(ws, attempt: AttemptRef | None) -> str:
     scope = (ws.branch or "").rsplit("-", 1)[-1]
     if attempt is None or not (ws.branch or "").startswith("m3/") or not scope:
         return ""
-    done = subprocess.run(["git", "-C", str(ws.repo), "for-each-ref", "--points-at", ws.base_sha,
+    done = subprocess.run(["git", "-C", str(ws.repo), "for-each-ref", "--points-at", base_sha or ws.base_sha,
                            "--format=%(refname:lstrip=3)", "refs/m3/handoff/"], capture_output=True, text=True,
                           check=False)
     pointing = set(done.stdout.split()) if done.returncode == 0 else set()

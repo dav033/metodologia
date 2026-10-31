@@ -417,6 +417,45 @@ class StepFailureInTheRun(EngineCase):
     files = DurableSubplans.files
 
 
+
+class UiContractGate(EngineCase):
+    """D-262 (pictures REQ-021 r32 T2.57): a `ui: true` task runs no agent on a base without its approved contract."""
+
+    def freeze_ui_plan(self, design_scenario: str) -> RunRef:
+        design = task("D1", scenario=design_scenario, subplan="SP-1", kind="design",
+                      paths=["design/**", "D1.task", "out.txt"])
+        ui = {**task("U1", scenario="own", subplan="SP-1", kind="implement", after=["D1"]), "ui": True}
+        audit = task("A1", scenario="own", subplan="SP-1", kind="audit", after=["U1"])
+        sp = {**subplan("SP-1", "U1", "A1"),
+              "ui": {"contract": "shop", "version": 1, "design_task": "D1", "visual_review_task": "A1"}}
+        return RunRef.model_validate(self.lab.freeze([design, ui, audit], schema="1.3.0", subplans=[sp]))
+
+    def test_a_contract_missing_from_the_base_asks_the_owner_without_an_agent(self):
+        run = self.freeze_ui_plan("own")                         # the design task delivers no contract file
+        self.start_engine()
+        self.client.start(run, SERIAL)
+        decision = lab_support.wait_until(lambda: (self.client.status(run)["tasks"].get("U1") or {}).get("decision"),
+                                          240, interval=1, what="the contract decision")
+        self.assertEqual(decision["failure"]["code"], "DESIGN_CONTRACT_MISSING")
+        self.assertIn("design/contracts/shop@v1.md", decision["reason"])
+        self.assertEqual([item["task"] for item in self.lab.launches()], ["D1"])     # U1 never ran
+        from bt_contracts.owner import OwnerAnswer
+        self.client.answer(run, "U1", OwnerAnswer(request_id=decision["request_id"], action="stop"))
+        status = self.settled(run, timeout=120)
+        self.assertEqual(status["summary"]["status"], "blocked")
+        self.assertIn("DESIGN_CONTRACT_MISSING", status["summary"]["results"]["U1"]["decision"]["reason"])
+
+    def test_an_approved_contract_in_the_base_lets_the_ui_task_run(self):
+        import bt_design_approval
+        bt_design_approval.approve_planning_draft(self.lab.rdir, "shop@v1", b"# shop v1\n", draft="planning/shop.md")
+        run = self.freeze_ui_plan("contract")                     # the design task copies the approved bytes
+        self.start_engine()
+        self.client.start(run, SERIAL)
+        status = self.settled(run, timeout=300)
+        self.assertEqual(status["summary"]["status"], "completed", status)
+        self.assertEqual([item["task"] for item in self.lab.launches()], ["D1", "U1", "A1"])
+
+
 if __name__ == "__main__":
     unittest.main()
 

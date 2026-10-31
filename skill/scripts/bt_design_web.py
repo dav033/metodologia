@@ -107,7 +107,8 @@ def _release_ui_holds(project: str, rid: str, rdir: Path, ref: str) -> list[str]
         failure = current.get("failure") or attempt.get("failure") or (history[-1].get("failure") if history else "")
         reason = str(current.get("detail") or failure or current.get("reason") or "")
         if current.get("state") == "blocked" and current.get("reason") == "blocked_environment" and \
-                ("DESIGN_CONTRACT_UNAPPROVED" in reason or "DESIGN_CONTRACT_HASH_MISMATCH" in reason) and path in reason:
+                any(code in reason for code in ("DESIGN_CONTRACT_UNAPPROVED", "DESIGN_CONTRACT_HASH_MISMATCH",
+                                                 "DESIGN_CONTRACT_MISSING")) and path in reason:
             bt_scheduler_ops.apply(project, rid, Path(rdir), "reopen", task["id"],
                                    "design contract approval is now available", only=True, confirm=True)
             released.append(task["id"])

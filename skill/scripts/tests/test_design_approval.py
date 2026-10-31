@@ -77,6 +77,19 @@ class DesignApprovalTests(unittest.TestCase):
         self.assertEqual(approval.check_tree(self.rdir, self.repo, next_head, "design/contracts/checkout@v1.md")["state"],
                          "hash-mismatch")
 
+    def test_gate_reports_a_contract_absent_from_the_selected_tree_as_missing(self):
+        """D-262: pictures REQ-021 r32 T2.57's base lacked the approved file and the gate said `hash-mismatch`."""
+        approval.decide(self.rdir, self.repo, "checkout@v1", True, "", "david", "cli")
+        before = self._git("rev-parse", "HEAD")
+        self._git("rm", "-q", "design/contracts/checkout@v1.md")
+        self._git("commit", "-qm", "drop")
+        gone = approval.check_tree(self.rdir, self.repo, self._git("rev-parse", "HEAD"), "design/contracts/checkout@v1.md")
+        self.assertEqual((gone["state"], gone["sha256"]), ("missing", None))
+        self.assertEqual(approval.check_tree(self.rdir, self.repo, before, "design/contracts/checkout@v1.md")["state"],
+                         "approved")
+        unapproved = approval.check_tree(self.rdir, self.repo, before, "design/contracts/other@v1.md")
+        self.assertEqual(unapproved["state"], "missing")      # absent comes first: nothing to approve in that tree
+
     def test_web_digest_must_match_clean_regular_head_blob(self):
         with self.assertRaises(approval.DesignApprovalError):
             approval.decide(self.rdir, self.repo, "checkout@v1", True, "", "owner", "web",

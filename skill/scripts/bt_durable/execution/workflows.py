@@ -59,6 +59,15 @@ PATCH_RUN_STEP_FAILURES = "bt-run-survives-step-failures"
 PATCH_RUN_REOPENED = "bt-run-reopened"
 PATCH_RUN_RECOMPOSE = "bt-run-recompose-gate"
 PATCH_RUN_FRESH_GATES = "bt-run-fresh-gates"
+# D-262 (pictures REQ-021 r32 T2.57): readiness through inherited tasks, a round handed back while its ancestors are not
+# done, a continuing retry caught up with its line, and the UI contract checked on the base before an agent runs
+PATCH_RUN_TRANSITIVE = "bt-run-transitive-readiness"
+PATCH_RUN_REQUEUE = "bt-run-requeues-unready-task"
+PATCH_TASK_ANCESTORS = "bt-task-rechecks-ancestors"
+PATCH_TASK_CATCH_UP = "bt-task-retry-catches-up"
+PATCH_TASK_CONTRACT_GATE = "bt-task-contract-gate"
+PATCH_TASK_NO_CHANGE = "bt-task-no-change-is-not-check-failed"
+PATCH_TASK_HEAP_LIMIT = "bt-task-heap-limit-is-not-sandbox-oom"
 # what a step the run workflow calls itself raises once its retries are spent; before PATCH_RUN_STEP_FAILURES the run
 # ended in ERROR there (never recovered), so no recorded history goes on past such a failure
 RUN_STEP_ERRORS = (steps.StepFailure, DBOSMaxStepRetriesExceeded)
@@ -136,6 +145,9 @@ def run_workflow(run_data: dict, settings_data: dict, legacy_data: dict) -> dict
     # (a retry) instead of ending again at once; the original run never takes this path. Incarnation `@N` replays the
     # reopenings of `@2`..`@N-1` from its history, so it waits once more than they did: N-1 reopenings in all
     reopenings, awaiting_command = 0, False
+    # D-262: a dependency is satisfied only with all its ancestors done (frontier `transitive`), switched on by a patch
+    # so an iteration recorded before it replays the frontier it decided with
+    transitive_on = False
     incarnation = _incarnation(DBOS.workflow_id, run)
     DBOS.set_event("summary", _summary(run, states, results, paused))
     while True:
@@ -188,7 +200,13 @@ def run_workflow(run_data: dict, settings_data: dict, legacy_data: dict) -> dict
                     composed[gate.id] = str(built.get("candidate_id"))
                 steps.emit("gate_composed", {"run_id": run.run_id, "gate": gate.id, **built})
         gates = subplans.Gates(composed, rejected) if lines_on else None
-        front = frontier.compute(plan, states, max_parallel=settings.max_parallel, gates=gates)
+        # an older iteration records a task start or the summary event here (the patch returns False); a new history
+        # records the marker and then a plain step (bt.emit), never a wait
+        if not transitive_on and DBOS.patch(PATCH_RUN_TRANSITIVE):
+            transitive_on = True
+            steps.emit("frontier_transitive", {"run_id": run.run_id})
+        front = frontier.compute(plan, states, max_parallel=settings.max_parallel, gates=gates,
+                                 transitive=transitive_on)
         if not paused:
             for task_id in front.ready:
                 rounds[task_id] = rounds.get(task_id, 0) + 1
@@ -228,6 +246,17 @@ def run_workflow(run_data: dict, settings_data: dict, legacy_data: dict) -> dict
                         raise
                     verdict = {"audit": True, "ok": False, "gate_error": _step_error(error)}
                 _audit_judged(run, outcome.task_id, verdict, remediations, states, results, rounds, settings)
+            continue
+        if kind == "task_unready" and DBOS.patch(PATCH_RUN_REQUEUE):
+            # a round that found its ancestors not done before another attempt (D-262) ends without an outcome: the task
+            # is not started again until the frontier finds it ready. Only patched task workflows send this message, so
+            # no history recorded before the patch holds one; the patch sits right before a plain step (bt.emit)
+            task_id = str(message.get("task_id") or "")
+            applied = states.get(task_id) == "running" and rounds.get(task_id) == message.get("round")
+            if applied:
+                del states[task_id]
+            steps.emit("task_requeued", {"run_id": run.run_id, "task_id": task_id, "round": message.get("round"),
+                                         "waiting": list(message.get("waiting") or ())[:50], "applied": applied})
             continue
         try:
             command = RunCommand.model_validate(message)
@@ -494,13 +523,31 @@ def task_workflow(run_data: dict, task_id: str, round_no: int, settings_data: di
     run, settings = RunRef.model_validate(run_data), Settings.model_validate(settings_data)
     legacy = LegacyTask.model_validate(legacy_data) if legacy_data else None
     outcome = _run_task(run, task_id, round_no, settings, note, legacy, parent_id)
+    if isinstance(outcome, Requeued):
+        message = {"kind": "task_unready", "task_id": task_id, "round": round_no, "waiting": list(outcome.waiting)}
+        DBOS.send(parent_id, message, TOPIC_RUN, idempotency_key=f"{DBOS.workflow_id}:done")
+        return {**message, "status": "requeued", "attempts": outcome.attempts}
     DBOS.send(parent_id, {"kind": "task_done", "outcome": outcome.model_dump(mode="json")}, TOPIC_RUN,
               idempotency_key=f"{DBOS.workflow_id}:done")
     return outcome.model_dump(mode="json")
 
 
+class Requeued:
+    """A round that hands its task back to the run: an ancestor is not done (D-262). Not a TaskOutcome: the task did
+    not end, it waits for the frontier again."""
+
+    def __init__(self, waiting: tuple[str, ...], attempts: int):
+        self.waiting, self.attempts = tuple(waiting), attempts
+
+
+def _requeue(run: RunRef, task_id: str, waiting, outcomes: list, why: str) -> Requeued:
+    DBOS.set_event("state", {"task_id": task_id, "state": "requeued", "attempts": len(outcomes)})
+    steps.emit("task_unready", {"run_id": run.run_id, "task_id": task_id, "waiting": list(waiting)[:50], "why": why})
+    return Requeued(tuple(waiting), len(outcomes))
+
+
 def _run_task(run: RunRef, task_id: str, round_no: int, settings: Settings, note: str,
-              legacy: LegacyTask | None = None, parent_id: str = "") -> TaskOutcome:
+              legacy: LegacyTask | None = None, parent_id: str = "") -> TaskOutcome | Requeued:
     budget = settings.budget
     pause_on = False
     started = steps.now()
@@ -509,7 +556,12 @@ def _run_task(run: RunRef, task_id: str, round_no: int, settings: Settings, note
     limits = dict(settings.agent_limits)
     waits = repairs = route_changes = 0
     remediated = False
-    number = (round_no - 1) * 100
+    number = first = (round_no - 1) * 100
+    # D-262: a round the frontier started (no note of its own, no legacy snapshot) may hand its task back to the run
+    # when, before another attempt, its ancestors are not all done; ordered rounds (repairs, re-audits, recomposed
+    # gates, the owner's retry with a note) never are
+    requeue_ok = bool(parent_id) and not note and legacy is None
+    ancestors_on = catch_on = gate_on = nochange_on = heap_on = False
     base_override = ""
     # the newest candidate tree of this task (the last snapshot an attempt left, or the reconciled legacy one): what the
     # next attempt continues from, whichever path decided the retry (automatic, owner/healing answer, wait, memory
@@ -545,6 +597,8 @@ def _run_task(run: RunRef, task_id: str, round_no: int, settings: Settings, note
             # the escalated attempts' work (pictures REQ-021 r30 T10.45: a5..a9 all from a3's snapshot, D-254)
             carry_on = True
             base_override = latest
+        if not ancestors_on and requeue_ok and number > first and DBOS.patch(PATCH_TASK_ANCESTORS):
+            ancestors_on = True                 # also right before bt.now, at a retry boundary only (D-262)
         at = steps.now()
         if pause_on:
             # a paused run starts no agent attempt at all: neither a new task nor a retry of a running one
@@ -553,6 +607,17 @@ def _run_task(run: RunRef, task_id: str, round_no: int, settings: Settings, note
                 DBOS.set_event("state", {"task_id": task_id, "state": "paused", "attempts": len(outcomes)})
                 DBOS.sleep(settings.run_poll_seconds)
                 continue
+        if ancestors_on:
+            # a task started by a frontier that looked only at direct dependencies (an inherited one whose own ancestor
+            # runs again) or whose ancestor was re-run since: before another attempt, the run's view of its ancestors.
+            # Waiting here would keep its resource claims and could hold those very ancestors (pictures REQ-021 r32:
+            # T2.3/T2.4/T2.5 held by the running T2.57), so the round ends and the run starts the task again later
+            summary = DBOS.get_event(parent_id, "summary", timeout_seconds=0)
+            known = summary.get("tasks") if isinstance(summary, dict) else None
+            if isinstance(known, dict):
+                waiting = steps.unready_ancestors(run.model_dump(mode="json"), task_id, known)
+                if waiting:
+                    return _requeue(run, task_id, waiting, outcomes, "ancestors not done before another attempt")
         choice = RouteDecision.model_validate(steps.route(run.model_dump(mode="json"), task_id, exclude, at))
         if choice.kind == "wait":
             waits += 1
@@ -571,6 +636,23 @@ def _run_task(run: RunRef, task_id: str, round_no: int, settings: Settings, note
         number += 1
         attempt = AttemptRef(run=run, task_id=task_id, number=number, workflow_id=DBOS.workflow_id)
         base = base_override or steps.base_ref(run.model_dump(mode="json"), task_id)
+        if base_override and (catch_on or DBOS.patch(PATCH_TASK_CATCH_UP)):
+            # right before a plain step (bt.continue_base); older histories hold the agent child here. The earlier
+            # attempt's snapshot with the line's newer work merged in: a retry otherwise never saw what was integrated
+            # after its first attempt began (pictures REQ-021 r32 T2.57 a2..a5, D-262)
+            catch_on = True
+            base = steps.continue_base(run.model_dump(mode="json"), task_id, base_override)
+        if gate_on or DBOS.patch(PATCH_TASK_CONTRACT_GATE):
+            gate_on = True                      # right before a plain step (bt.contract_gate)
+            gate = steps.contract_gate(run.model_dump(mode="json"), task_id, base)
+            if gate and gate.get("state") != "approved":
+                number -= 1                     # no agent ran: the number is used by the next real attempt
+                refused = _contract_refused(run, task_id, gate, requeue_ok, parent_id, decisions, settings, outcomes)
+                if isinstance(refused, (TaskOutcome, Requeued)):
+                    return refused
+                decisions, answer = refused
+                note = answer.note or note
+                continue
         DBOS.set_event("state", {"task_id": task_id, "state": "running", "attempt": attempt.attempt_key})
         agent = _enqueue(engine.AGENTS, f"bt:{attempt.attempt_key}:agent", agent_workflow,
                          attempt.model_dump(mode="json"), choice.route.model_dump(mode="json"), base, note, limits,
@@ -582,6 +664,20 @@ def _run_task(run: RunRef, task_id: str, round_no: int, settings: Settings, note
             if outcome.status == AttemptStatus.ACCEPTED or outcome.failure is None:
                 outcomes.append(outcome)
                 return _finish(run, task_id, TaskStatus.COMPLETED, outcomes, outcome, None)
+            if outcome.failure.code == "CHECK_FAILED" and classify.unchanged(outcome.snapshot, outcome.agent) \
+                    and (nochange_on or DBOS.patch(PATCH_TASK_NO_CHANGE)):
+                # right before a plain step (bt.now); older histories classified it CHECK_FAILED here (D-262)
+                nochange_on = True
+                outcome = outcome.model_copy(update={"failure": classify.no_change(outcome.failure, outcome.agent,
+                                                                                    outcome.verify)})
+            if outcome.failure.code == "VERIFIER_OOM" and (heap_on or DBOS.patch(PATCH_TASK_HEAP_LIMIT)):
+                # right before a plain step (bt.now); older histories kept VERIFIER_OOM here (D-262)
+                heap_on = True
+                own = classify.own_check(outcome.verify.failing_checks if outcome.verify else (),
+                                         known_paths=tuple(agent.get("paths", ())), own=tuple(agent.get("own_checks", ())))
+                found = classify.heap_limit(outcome.failure, outcome.verify, own=own, relaxed=profile == RELAXED)
+                if found is not None:
+                    outcome = outcome.model_copy(update={"failure": found})
             now = steps.now()
             used = policy.spent([*outcomes, outcome], waits=waits, repairs=repairs, route_changes=route_changes,
                                 started_at=started, now=now)
@@ -634,6 +730,33 @@ def _run_task(run: RunRef, task_id: str, round_no: int, settings: Settings, note
                 exclude.append(_route_key(choice.route))
             budget = budget.model_copy(update={"max_attempts": budget.max_attempts + (answer.extra_attempts or 1)})
             remediated = False
+
+
+def _contract_refused(run: RunRef, task_id: str, gate: dict, requeue_ok: bool, parent_id: str, decisions: int,
+                      settings: Settings, outcomes: list[AttemptOutcome]
+                      ) -> TaskOutcome | Requeued | tuple[int, OwnerAnswer]:
+    """A `ui: true` task whose contract is not approved on its base runs no agent (D-262; the legacy start gate,
+    `CoreExecutionPort.start`). Missing while the subplan's design task is not done in this run: the task waits for it
+    (handed back to the run; the transitive frontier already prevents that start, this is the safety net). Otherwise
+    the environment-failure path: the owner decides (approve or fix, then retry; or stop: blocked, the decision names
+    the state), instead of agents refusing a base without the approved contract one attempt after another."""
+    design = str(gate.get("design_task") or "")
+    if gate.get("state") == "missing" and design and requeue_ok:
+        summary = DBOS.get_event(parent_id, "summary", timeout_seconds=0)
+        known = summary.get("tasks") if isinstance(summary, dict) else None
+        if isinstance(known, dict) and known.get(design) not in frontier.DONE:
+            return _requeue(run, task_id, (design,), outcomes, f"{gate.get('path')} missing: {design} not done")
+    failure = classify.design_contract(gate)
+    decision = RecoveryDecision(action=RecoveryAction.ESCALATE, reason=failure.summary, failure=failure,
+                                note_for_agent="")
+    steps.emit("design_contract_refused", {"run_id": run.run_id, "task_id": task_id, "code": failure.code,
+                                           "state": gate.get("state"), "path": gate.get("path")})
+    decisions, answer = _owner(run, task_id, decisions, decision, settings, outcomes, None)
+    if isinstance(answer, TaskOutcome):
+        return answer
+    if answer.action == "stop":
+        return _finish(run, task_id, TaskStatus.BLOCKED, outcomes, None, decision)
+    return decisions, answer
 
 
 def _legacy_target(run: RunRef, task_id: str, round_no: int, legacy: LegacyTask) -> tuple[AttemptRef, None, dict]:
@@ -848,7 +971,13 @@ def agent_workflow(attempt_data: dict, route_data: dict, base: str, note: str, l
     spec = frontier.task(steps.workflow_plan(AttemptRef.model_validate(attempt_data).run),
                          AttemptRef.model_validate(attempt_data).task_id)
     return {"prepared": material, "process": process, "agent": report, "snapshot": snapshot,
-            "requires": _requires(spec), "paths": list(spec.expected_paths)}
+            "requires": _requires(spec), "paths": list(spec.expected_paths), "own_checks": _own_checks(spec)}
+
+
+def _own_checks(task) -> list[str]:
+    """The commands of the checks the plan marks as created by this task (`created_by`), D-262."""
+    return [str(check.get("value") or "") for check in task.verification
+            if isinstance(check, dict) and check.get("created_by") == task.id and check.get("value")]
 
 
 def _requires(task) -> list[str]:

@@ -20,6 +20,7 @@ from ..legacy import (
     check_design_approval,
     contract_notes,
     design_execution_notes,
+    design_gates,
     joined_notes,
     legacy_attempts_doc,
     owner_notes,
@@ -61,3 +62,40 @@ class DurableBriefs:
 
         notes = owner_notes(rdir, plan, joined_notes(design), state=attempts, verify=not note.strip())
         return PlanBriefs(plan, notes=notes)
+
+
+class DurableDesignGate:
+    """The legacy start gate of a `ui: true` task, read on the base an attempt would start from (D-262).
+
+    `check(run, plan, task_id, base)` -> {} for a task without a UI contract, else {"path", "state", "sha256",
+    "design_task", "code"}: `state` is `bt_design_approval.check_tree`'s (approved | unapproved | missing |
+    hash-mismatch) and `code` the legacy blocked reason (`gates.approval_problem`, '' when approved). The legacy
+    scheduler refused such a start (`CoreExecutionPort.start`); the durable runtime only wrote the state into the brief
+    and ran the agent anyway: pictures REQ-021 r32 T2.57 spent five attempts on a base without its v2 contract."""
+
+    def __init__(self, *, repositories_for: Callable[[str], Mapping[str, Path] | Callable[[str], Path | None]],
+                 rdir_for: Callable[[object], Path] = requirement_dir):
+        self.repositories_for = repositories_for
+        self.rdir_for = rdir_for
+
+    def check(self, run, plan, task_id: str, base: str) -> dict:
+        path = design_gates.contract_path(plan, task_id)
+        if path is None:
+            return {}
+        task = plan.task(task_id)
+        subplan = next((item for item in plan.subplans if item.id == task.meta.get("subplan_id")), None)
+        design_task = subplan.ui.design_task if subplan is not None and subplan.ui is not None else ""
+        repos = self.repositories_for(run.project)
+        found = repos(task.repository) if callable(repos) else repos.get(task.repository)
+        if not path or not found:
+            detail = path or "invalid frozen UI contract"
+            return {"path": detail, "state": "unapproved", "sha256": "", "design_task": design_task,
+                    "code": "DESIGN_CONTRACT_UNAPPROVED"}
+        try:
+            gate = check_design_approval(self.rdir_for(run), Path(found), base, path)
+        except Exception as error:  # noqa: BLE001 - approval storage is a fail-closed boundary, as in the legacy gate
+            return {"path": path, "state": "unapproved", "sha256": "", "design_task": design_task,
+                    "code": "DESIGN_CONTRACT_UNAPPROVED", "detail": f"approval unavailable ({type(error).__name__})"}
+        state = str(gate.get("state") or "unapproved")
+        return {"path": path, "state": state, "sha256": str(gate.get("sha256") or ""), "design_task": design_task,
+                "code": design_gates.approval_problem(state) or ""}

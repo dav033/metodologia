@@ -73,6 +73,17 @@ uv run bt-durable attest pictures REQ-031 T2 --request T2:d1 --evidence "what wa
   owner or healing answer (`retry`, `retry_with_note`, `retry_other_route`), a quota wait or a memory raise. An attempt
   that left no snapshot keeps the earlier one. Only `RECONCILE_INTEGRATION` starts again from the line tip. Behind
   `bt-task-continues-latest-tree`: a pass recorded before it keeps the base it had.
+- **Readiness, retry bases and the UI contract** (D-262, pictures REQ-021 r32 T2.57/T3.91): a task is ready only when
+  every ancestor is done, not just its direct dependencies (an inherited dependency whose own ancestor runs again in
+  this stage does not count); before another attempt a round the frontier started asks the run whether its ancestors
+  are still done, and when not it hands the task back (`task_requeued`; it keeps no resource claim while it waits). A
+  continuing retry starts from its earlier attempt's snapshot with the newer work of its line merged in
+  (`bt.continue_base`; a conflicting line is left out). A `ui: true` task checks its contract on that base before an
+  agent runs (`bt.contract_gate`): not approved → no agent, a decision naming `DESIGN_CONTRACT_MISSING`/`_UNAPPROVED`/
+  `_HASH_MISMATCH`. An attempt that changed nothing and failed its checks is `AGENT_NO_CHANGE` (the agent's own reason,
+  to the owner), not a retried `CHECK_FAILED`; a Node heap-limit abort in a check the task wrote is an implementation
+  failure with a NODE_OPTIONS note (`CHECK_HEAP_LIMIT`), and in another check, once the relaxed heap did not help, a
+  check problem for the owner (`CHECK_HEAP_LIMIT_PLAN`); a sandbox memory kill keeps the relaxed re-verification.
 - **Manual checks** (`type: manual`): M6 accepts a coordinator receipt (`bt_attestation`, the same one the legacy owner
   uses) for its own check only. Without one, the task does not fail: it opens a decision `MANUAL_EVIDENCE_REQUIRED`
   with its request id, the attempt the receipt must be bound to (`verify_attempt`) and the `bt-durable attest` command;
@@ -260,7 +271,10 @@ still be on the old path, `deprecate_patch`, then remove it.
 
 Patches in use: `bt-run-subplans`, `bt-run-audit-remediation`, `bt-run-survives-step-failures`, `bt-run-reopened`,
 `bt-run-recompose-gate`, `bt-run-fresh-gates` (run workflow); `bt-task-respects-pause`, `bt-task-owner-reverify`,
-`bt-task-reconcile-asks-owner`, `bt-task-continues-latest-tree` (task workflow). A workflow body reads the plan only through `steps.workflow_plan()`:
+`bt-task-reconcile-asks-owner`, `bt-task-continues-latest-tree` (task workflow); D-262: `bt-run-transitive-readiness`,
+`bt-run-requeues-unready-task` (run workflow), `bt-task-rechecks-ancestors`, `bt-task-retry-catches-up`,
+`bt-task-contract-gate`, `bt-task-no-change-is-not-check-failed`, `bt-task-heap-limit-is-not-sandbox-oom` (task
+workflow). A workflow body reads the plan only through `steps.workflow_plan()`:
 the `bt.plan_text` step must run (or replay) every time, or a run recovered after another workflow warmed the process
 cache skips its first step. The control plane (`control/`: frontier, policy, classifier, subplan scopes) decides what a
 workflow does next from recorded step results, so a change to its decisions is a sequence change too.

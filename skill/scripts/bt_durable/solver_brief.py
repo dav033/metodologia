@@ -50,7 +50,8 @@ def _gate_tasks(run) -> dict[str, str]:
     return {str(g.get("id")): str(g.get("task")) for g in plan.get("composition_gates") or () if isinstance(g, dict)}
 
 
-def brief(run, rdir: Path, session: dict, items: list[dict], status: dict, *, telemetry: Path | None = None) -> str:
+def brief(run, rdir: Path, session: dict, items: list[dict], status: dict, *, telemetry: Path | None = None,
+          client=None) -> str:
     """Everything an operator would read first, in the order the prompt asks for it."""
     import bt_block_agent
     rdir = Path(rdir)
@@ -76,7 +77,9 @@ def brief(run, rdir: Path, session: dict, items: list[dict], status: dict, *, te
         lines += ["", f"## {item['task_id']}", "", f"Workflow `{task.get('workflow_id')}` "
                   f"({task.get('workflow_status')}); state: `{json.dumps(task.get('state'), default=str)}`"]
         if decision:
-            lines += ["", "```", healing.evidence(run, rdir, item["task_id"], decision, healing.round_of(task)), "```"]
+            facts = healing.attempt_facts(client, decision) if client is not None else {}   # D-262
+            lines += ["", "```", healing.evidence(run, rdir, item["task_id"], decision, healing.round_of(task), facts),
+                      "```"]
             found = bt_block_agent.cached(rdir, item["key"]) if item["kind"] in ("decision", "repeat") else None
             if found:
                 lines += ["", "Diagnosis (bt_block_agent, read-only, may be wrong):", "```json",

@@ -19,7 +19,7 @@ from bt_contracts.execution import AttemptRef, Route
 from dbos import DBOS
 
 from .adapters.audit import AuditGate
-from .adapters.briefs import DurableBriefs
+from .adapters.briefs import DurableBriefs, DurableDesignGate
 from .adapters.composition import CompositionComposer
 from .adapters.integration import GitLineIntegrator
 from .adapters.m3 import M3Attempts
@@ -56,7 +56,7 @@ def wire(cfg: EngineConfig, *, repositories_for: Callable[[str], object], driver
                  preparer=attempts, runtime=runtime or SupervisorRuntime(cfg.state_dir / "supervisor"), reader=attempts,
                  capturer=attempts, verifier=verifier or operator_verifier(cfg.state_dir / "m6-quality.sqlite3"),
                  integrator=integrator, telemetry=telemetry, composer=integrator,
-                 auditor=AuditGate(repositories_for))
+                 auditor=AuditGate(repositories_for), design_gate=DurableDesignGate(repositories_for=repositories_for))
 
 
 def requirement_dir(run) -> Path:
@@ -125,6 +125,9 @@ class _ProjectIntegrator:
 
     def base_ref(self, run, task, *, home="", lines=()):
         return self._for(run.project).base_ref(run, task, home=home, lines=lines)
+
+    def continuation_base(self, run, task, snapshot_sha, *, home="", lines=()):
+        return self._for(run.project).continuation_base(run, task, snapshot_sha, home=home, lines=lines)
 
     def integrate(self, run, task, snapshot, *, lines=(), home=""):
         return self._for(run.project).integrate(run, task, snapshot, lines=lines, home=home)

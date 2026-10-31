@@ -78,8 +78,35 @@ def round_of(item: dict) -> int | None:
     return int(found.group(1)) if found else None
 
 
-def evidence(run: RunRef, rdir: Path, task_id: str, decision: dict, round_no: int | None) -> str:
-    """What a person answering the decision would read: the failure, the task, its dependencies and its attempts."""
+def attempt_facts(client, decision: dict) -> dict:
+    """The decided attempt as it ended (`verify_attempt` of the request): whether it changed anything and the agent's
+    final message. pictures REQ-021 r32 T2.57: the diagnosis saw only the failing check and told three retries to add an
+    npm script, while every attempt had changed nothing and its agent had said why it stopped (D-262). {} when the
+    request names no attempt of this runtime or its output cannot be read."""
+    key = str(decision.get("verify_attempt") or "")
+    reader = getattr(client, "attempt_output", None)
+    if not key or reader is None:
+        return {}
+    try:
+        output = reader(key)
+    except Exception as error:  # noqa: BLE001 - evidence only: the diagnosis goes on without it
+        LOG.warning("healing: attempt %s unreadable: %s", key, type(error).__name__)
+        return {}
+    snapshot = output.get("snapshot") if isinstance(output.get("snapshot"), dict) else {}
+    agent = output.get("agent") if isinstance(output.get("agent"), dict) else {}
+    if not snapshot and not agent:
+        return {}
+    changed = list(snapshot.get("changed_paths") or ())
+    unchanged = bool(snapshot.get("snapshot_sha")) and (snapshot.get("snapshot_sha") == snapshot.get("base_sha")
+                                                        or not changed)
+    return {"attempt": key, "unchanged": unchanged, "changed": len(changed), "agent_status": agent.get("status"),
+            "agent_message": str(agent.get("text") or "")[-1500:]}
+
+
+def evidence(run: RunRef, rdir: Path, task_id: str, decision: dict, round_no: int | None,
+             facts: dict | None = None) -> str:
+    """What a person answering the decision would read: the failure, the task, its dependencies and its attempts, and
+    (`facts`, `attempt_facts`) what the decided attempt changed and its agent's final message."""
     try:
         plan = json.loads(Path(run.plan_path).read_text(encoding="utf-8"))
     except (OSError, ValueError):
@@ -97,6 +124,13 @@ def evidence(run: RunRef, rdir: Path, task_id: str, decision: dict, round_no: in
              f"Failure: {failure.get('failure_class')} {failure.get('code')}: {failure.get('summary')}",
              "Offered options in this runtime:", *[f"- {o}: {OPTIONS[o]}" for o in offered],
              "Failure evidence:", *[str(e.get("excerpt") or "")[:2500] for e in failure.get("evidence") or [] if isinstance(e, dict)]]
+    if facts:
+        lines += [f"Decided attempt {facts.get('attempt')}: " + (
+                      "it changed NOTHING (its snapshot is the tree it started from): the failing checks ran on the "
+                      "unchanged tree, so they say nothing about the agent's code; read why the agent stopped"
+                      if facts.get("unchanged") else f"it changed {facts.get('changed')} file(s)"),
+                  (f"The agent's final message ({facts.get('agent_status') or '?'}): "
+                   f"{facts.get('agent_message') or '(none)'}")]
     history = Path(rdir) / "RUN.notes" / f"{task_id}.history.jsonl"
     try:
         rows = [json.loads(line) for line in history.read_text(encoding="utf-8").splitlines() if line.strip()][-4:]
@@ -165,6 +199,20 @@ def _one(run, rdir, state, task_id, item, decision, client, diagnose, notify, st
         escalate(_left(run, task_id, decision, round_no, key, "repeat",
                        f"the failure healing already answered came back ({signature[:80]}): {decision.get('reason') or ''}"))
         return [f"{key}: the same failure again, left to the owner"]
+    facts = attempt_facts(client, decision)
+    code = str((decision.get("failure") or {}).get("code") or "")
+    again = [record for record in entry["signatures"].values() if record.get("option") and record.get("unchanged")
+             and record.get("code") == code and record.get("round") == round_no]
+    if facts.get("unchanged") and again:
+        # its last answer was followed by the same failure and again an attempt that changed nothing: another retry with
+        # a note would loop (pictures REQ-021 r32 T2.57 d1..d3, D-262); the operator and the Solucionador decide
+        state["seen"].append(key)
+        activity.record(rdir, "Autocuración", f"{task_id}: tras mi respuesta anterior el intento volvió a no cambiar "
+                        f"nada; {decision['request_id']} queda para ti", kind="flow")
+        escalate(_left(run, task_id, decision, round_no, key, "repeat",
+                       f"healing's answer {again[-1].get('request', '')} was followed by the same failure ({code}) and "
+                       f"again an attempt that changed nothing; the agent said: {facts.get('agent_message', '')[-200:]}"))
+        return [f"{key}: no change again after healing's answer, left to the owner"]
     if len(entry["signatures"]) >= _limit("max_per_task", 2) or int(state.get("actions", 0)) >= _limit("max_actions", 40):
         state["seen"].append(key)
         activity.record(rdir, "Autocuración", f"{task_id}: {decision['request_id']} queda para ti (límite de "
@@ -178,7 +226,7 @@ def _one(run, rdir, state, task_id, item, decision, client, diagnose, notify, st
                 return []
             _running.add(key)
         request = {"id": key, "options": [{"id": o} for o in offered], "recommended": "retry"}
-        text = evidence(run, rdir, task_id, decision, round_no)
+        text = evidence(run, rdir, task_id, decision, round_no, facts)
 
         def job() -> None:
             try:
@@ -228,11 +276,12 @@ def _one(run, rdir, state, task_id, item, decision, client, diagnose, notify, st
                       round_no=round_no)
     except Exception as error:  # noqa: BLE001 - a round that moved on, or a refused answer: the card stays for a person
         return [f"{key}: answer refused ({type(error).__name__}: {str(error)[:160]})"]
-    entry["signatures"][signature] = {"at": time.strftime("%Y-%m-%dT%H:%M:%S"), "option": option, "request": key}
+    entry["signatures"][signature] = {"at": time.strftime("%Y-%m-%dT%H:%M:%S"), "option": option, "request": key,
+                                      "code": code, "round": round_no, "unchanged": bool(facts.get("unchanged"))}
     state["actions"] = int(state.get("actions", 0)) + 1
     activity.record(rdir, "Autocuración", f"{task_id}: {option} automático ({found.get('label') or found.get('kind')}): "
                     f"{headline}", kind="flow")
     return [f"{key}: {option}"]
 
 
-__all__ = ["enabled", "evidence", "heal", "load", "round_of", "runs"]
+__all__ = ["attempt_facts", "enabled", "evidence", "heal", "load", "round_of", "runs"]

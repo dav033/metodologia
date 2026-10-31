@@ -225,7 +225,10 @@ def contract_snapshot(repo: Path, path: str, revision: str = "HEAD") -> tuple[st
 
 
 def check_tree(rdir: Path, repo: Path, base: str, path: str) -> dict[str, Any]:
-    """Return a gate state using the exact base tree blob (`approved`, `unapproved`, or `hash-mismatch`)."""
+    """Return a gate state using the exact base tree blob: `approved`, `unapproved`, `missing` (the contract file is
+    absent from `base`: the design task's copy is not in that tree yet) or `hash-mismatch` (present, but not the
+    approved bytes). An absent file used to read as `hash-mismatch`, and pictures REQ-021 r32 T2.57's brief said
+    «Approval: hash-mismatch, SHA-256 none» for a base the design task's copy had not reached (D-262)."""
     match = re.fullmatch(r"design/contracts/([a-z0-9][a-z0-9-]{0,63}@v[1-9][0-9]{0,5})\.md", path or "")
     if match is None:
         return {"state": "unapproved", "approval": None, "sha256": None}
@@ -233,6 +236,8 @@ def check_tree(rdir: Path, repo: Path, base: str, path: str) -> dict[str, Any]:
     approval = approvals(rdir).get(ref)
     blob = _read_blob(Path(repo), base, path)
     digest = hashlib.sha256(blob).hexdigest() if blob is not None else None
+    if blob is None:
+        return {"state": "missing", "approval": approval, "sha256": None}
     if not isinstance(approval, dict) or approval.get("status") != "approved":
         return {"state": "unapproved", "approval": approval, "sha256": digest}
     state = "approved" if digest == approval.get("sha256") else "hash-mismatch"
