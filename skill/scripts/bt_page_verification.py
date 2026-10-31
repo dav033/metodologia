@@ -30,6 +30,32 @@ def _state_pill(state: str) -> str:
     return f'<span class="pp-vstate {PILL.get(state, "none")}">{e(verification.STATES_ES.get(state, state))}</span>'
 
 
+def _shown(row: dict) -> str:
+    """The state the owner sees: a newer version after his rejection is simply «por probar» again."""
+    return "to_test" if row.get("retest") else row["state"]
+
+
+def _previous(row: dict) -> str:
+    """Next to a version published after a rejection: what the owner rejected, to check in this one."""
+    dec = row.get("decision") or {}
+    if not row.get("retest"):
+        return ""
+    pid = f' <span class="pp-meta">({e(str(dec["pending"]))})</span>' if dec.get("pending") else ""
+    return (f'<p class="pp-vprev">Rechazaste la versión {e(str(dec.get("version")))}: «{e(str(dec.get("note") or ""))}»; '
+            f'comprueba esto en la versión {e(str(row.get("version")))}.{pid}</p>')
+
+
+def _solver(row: dict) -> str:
+    """What the Solucionador did with the owner's rejection of this version."""
+    said = row.get("solver") or {}
+    if row["state"] != "rejected" or not said.get("text"):
+        return ""
+    extra = said.get("question") or said.get("summary") or ""
+    cls = "bad" if said["status"] in ("gave_up", "limit", "failed", "asked_owner") else "warn"
+    return (f'<p class="pp-vsolver pp-vstatus {cls}" role="status">{e(said["text"][:1].upper() + said["text"][1:])}'
+            + (f": {e(extra)}" if extra else ".") + "</p>")
+
+
 def _text(value: str) -> str:
     """Cell text: code spans and bare URLs become clickable; everything else is escaped."""
     import re
@@ -57,19 +83,7 @@ def _running(ctx: dict, row: dict) -> dict:
     return cache[row["id"]]
 
 
-# The pages a test row names: full local URLs and bare paths such as /3d or /proyectos (owner, 2026-10-29: «necesito que
-# salgan la url y las urls específicas que hay que probar»). Navigation through menus stays in «Cómo».
-_FULL_URL = re.compile(r"https?://(?:localhost|127\.0\.0\.1)(?::\d+)?(/[^\s`)|,;»\"']*)?")
-_BARE_PATH = re.compile(r"(?<![\w/.:@-])(/[a-z0-9][a-z0-9_\-]*(?:/[a-z0-9_\-\[\]]+)*)(?![\w.@/])")
-
-
-def test_paths(rows: list[dict]) -> list[str]:
-    found: list[str] = []
-    for r in rows:
-        text = f"{r.get('how') or ''} {r.get('expect') or ''}"
-        rest = _FULL_URL.sub(lambda m: found.append((m.group(1) or "/").rstrip(".")) or " ", text)
-        found += [m.group(1) for m in _BARE_PATH.finditer(rest)]
-    return list(dict.fromkeys(found))
+test_paths = verification.test_paths        # moved to bt_verification: the Solucionador's trigger uses it
 
 
 def _urls(ctx: dict, row: dict, paths: list[str]) -> str:
@@ -299,8 +313,9 @@ def _where(rows: list[dict]) -> str:
 def _actions(ctx: dict, row: dict) -> str:
     sid, root, rdir = row["id"], ctx.get("root"), ctx["rdir"]
     dec = row["decision"] or {}
-    note = (f'<p class="pp-meta">Tu nota: «{e(dec.get("note") or "")}»</p>'
-            if row["state"] == "rejected" and dec.get("note") else "")
+    note = (f'<p class="pp-meta">Tu nota: «{e(dec.get("note") or "")}»'
+            + (f' · pendiente {e(str(dec["pending"]))}' if dec.get("pending") else "") + "</p>"
+            if row["state"] == "rejected" and dec.get("note") else "") + _solver(row)
     opened = ""
     try:
         target = verification.workdir(root, ctx["project"], verification._req(rdir), sid, row["version"]) if root else None
@@ -338,8 +353,8 @@ def panel(ctx: dict, s: dict) -> str:
         head = f'<p class="pp-vintro">{_state_pill("waiting")} Todavía no hay una versión de este subplan para probar.</p>'
         return f'<section class="pp-verify">{head}<h3>Dónde probarlo</h3>{where}</section>'
     stale = ('<p class="pp-vwarn">El motor publicó una versión nueva después de tu decisión: vuelve a probarla.</p>'
-             if row["state"] == "outdated" else "")
-    head = (f'<p class="pp-vintro">{_state_pill(row["state"])} Versión {e(str(row["version"]))} · commit '
+             if row["state"] == "outdated" and not row.get("retest") else _previous(row))
+    head = (f'<p class="pp-vintro">{_state_pill(_shown(row))} Versión {e(str(row["version"]))} · commit '
             f'<code>{e(str(row["commit"])[:10])}</code>. Es el árbol integrado exactamente al terminar este subplan.</p>{stale}')
     paths = test_paths(rows)
     ctx["_try"] = run = _servers(ctx, row, paths) if ctx.get("root") else ""
@@ -377,7 +392,7 @@ def run_card(project: str, rid: str, rdir: Path) -> str:
     base = purl(project, "req", rid)
     rows = "".join(
         f'<a class="pp-vrow" href="{e(_link(base, r["id"]))}"><span class="pp-id">{e(r["id"])}</span>'
-        f'<span class="grow">{e(r["title"])}</span>{_state_pill(r["state"])}</a>' for r in st["subplans"])
+        f'<span class="grow">{e(r["title"])}</span>{_state_pill(_shown(r))}</a>' for r in st["subplans"])
     closed = st["approved"] == st["total"]
     lead = ("Todos los subplanes están aprobados: ya puedes fusionar en Revisar." if closed else
             f"El plan no está terminado hasta que pruebes y apruebes cada subplan ({st['approved']}/{st['total']}).")
