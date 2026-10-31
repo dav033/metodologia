@@ -122,6 +122,14 @@ class SolverTests(unittest.TestCase):
         state = self.state(req)
         return next(s for s in state["sessions"] if s["id"] == state.get("active", state["sessions"][-1]["id"]))
 
+    def test_a_claude_session_runs_the_routed_model_and_effort(self):
+        """D-253: the Claude command hard-coded `--model opus --effort high`, so the role policy's choice never ran."""
+        self.route = {"provider": "claude", "home": "/acc/luis", "model": "sonnet", "effort": "high"}
+        self.solver().run_pass([self.open_decision()])
+        command = self.terminal.started[0]["command"]
+        self.assertIn("--model sonnet --effort high", command)
+        self.assertNotIn("opus", command)
+
     def test_a_decision_healing_left_starts_one_full_access_session_with_its_brief(self):
         said = self.solver().run_pass([self.open_decision()])
         self.assertEqual(len(self.terminal.started), 1, said)

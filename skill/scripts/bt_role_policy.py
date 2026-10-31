@@ -21,9 +21,10 @@ _DEFAULTS = {
     "researcher": (("codex", "gpt-6-luna", "high"), ("claude", "sonnet", "low")),
     "runner": (("codex", "gpt-6-luna", "high"), ("claude", "sonnet", "low")),
     "antagonist": (("claude", "sonnet", "medium"), ("claude", "opus", "high")),
-    # the Solucionador (REQ-031): a full-access session that fixes a blocked run at its origin; owner 2026-10-29: Claude
-    # Opus high, Codex only when no Claude account with quota can run unattended
-    "solver": (("claude", "opus", "high"), ("codex", "gpt-6.1-sol", "high")),
+    # the Solucionador (REQ-031): a full-access session that fixes a blocked run at its origin; owner 2026-10-31
+    # (D-253, replaces 2026-10-29's Opus high / Sol high): Claude Sonnet high, Codex Terra medium only when no Claude
+    # account with quota can run unattended
+    "solver": (("claude", "sonnet", "high"), ("codex", "gpt-6.1-terra", "medium")),
 }
 _HIGH = {
     "planner": tuple(reversed(_DEFAULTS["planner"])),
