@@ -163,6 +163,9 @@ class PlanningActions:
                 msg = "No encuentro ese agente."
             else:
                 msg = terminal.send(name, text)
+                if kind == "planner" and getattr(msg, "state", "") == "limited":   # its account ran out: move it
+                    import bt_planner_notices as notices
+                    msg = notices.after_wall(project, rid, text, getattr(msg, "until", None))[1]
                 if msg == "Enviado.":
                     activity.record(rdir, "Tú", "Le escribiste al " + ("Planner" if kind == "planner" else f"agente de {anchor}")
                                     + ": «" + " ".join(text.split())[:100] + "»", kind="say", sp=anchor if kind == "session" else "")

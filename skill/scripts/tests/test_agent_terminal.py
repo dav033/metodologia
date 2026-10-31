@@ -1,4 +1,7 @@
+import contextlib
+import io
 import os
+import shlex
 import shutil
 import subprocess
 import tempfile
@@ -63,6 +66,135 @@ class RealTmux(unittest.TestCase):
         self.assertFalse(terminal.exists("bad name; rm -rf"))
         self.assertEqual(terminal.send("bit-x", "   "), "No hay nada que enviar.")
         self.assertEqual(terminal.name_for("pictures", "REQ-021", "planner"), "bit-pictures-REQ-021-planner")
+
+
+WALL = ("■ You've hit your usage limit. Upgrade to Pro (https://chatgpt.com/explore/pro), visit "
+        "https://chatgpt.com/codex/settings/usage to purchase more credits or try again at 4:32 PM.")
+MODAL = """  Approaching rate limits
+  Switch to gpt-6-luna for lower credit usage?
+
+› 1. Switch to gpt-6-luna
+  2. Keep current model
+  3. Keep current model (never show again)
+
+  enter select · esc back"""
+
+
+def fake_codex(folder: Path, *steps: str) -> str:
+    """A shell stand-in for the Codex TUI. Each step reads one message at the «› » prompt and logs it, then:
+    `wall` answers it with Codex's exact quota text, `ok` echoes GOT:<message>; `modal` first shows the rate-limit
+    modal and takes single keys like Codex's list (Enter picks the highlighted «Switch», a digit picks that option),
+    logging the choice and clearing the window."""
+    log = folder / "codex.log"
+    lines = ["#!/bin/bash"]
+    for step in steps:
+        if step == "modal":
+            lines += [f"cat <<'EOF'\n{MODAL}\nEOF",
+                      "while IFS= read -rsn1 k; do case \"$k\" in",
+                      f"  2) echo KEEP >> {log}; break;; 3) echo NEVER >> {log}; break;;",
+                      f"  1|'') echo SWITCH >> {log}; break;; esac; done", "printf '\\033[2J\\033[H'"]
+            continue
+        lines += [f"read -rp '› ' x; echo \"MSG:$x\" >> {log}"]
+        lines += [f"echo {shlex.quote(WALL)}" if step == "wall" else 'echo "GOT:$x"']
+    lines += ["echo '› '", "sleep 60"]
+    script = folder / "codex.sh"
+    script.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    return f"bash {script}"
+
+
+def wait_for(name: str, text: str, tries: int = 40) -> str:
+    for _ in range(tries):
+        shown = terminal.screen(name, 60)
+        if text in shown:
+            return shown
+        time.sleep(0.15)
+    return terminal.screen(name, 60)
+
+
+@unittest.skipUnless(terminal._tmux_path(), "tmux is not installed")
+class AgentWalls(unittest.TestCase):
+    """pictures REQ-021, 2026-10-30: `tell-planner` said «Enviado al Planner.» while the Planner's Codex account answered
+    «You've hit your usage limit … try again at 4:32 PM»; later Codex's model-switch modal took every notice."""
+
+    def setUp(self):
+        self.tmp = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, self.tmp, True)
+        patcher = patch.dict(os.environ, {"BITACORA_TMUX_SOCKET": f"bt-test-wall-{os.getpid()}"})
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        self.addCleanup(lambda: terminal._run("kill-server"))
+
+    def log(self) -> list[str]:
+        path = self.tmp / "codex.log"
+        return path.read_text(encoding="utf-8").splitlines() if path.is_file() else []
+
+    def test_a_quota_wall_that_answers_the_message_is_not_reported_as_sent(self):
+        name = "bit-test-REQ-1-wall"
+        terminal.start(name, self.tmp, fake_codex(self.tmp, "wall"))
+        wait_for(name, "›")
+        said = terminal.send(name, "Plan change request: add the 039 migration")
+        self.assertNotEqual(said, "Enviado.")
+        self.assertEqual(said.state, "limited")
+        self.assertIn("sin cuota", said)
+        self.assertGreater(said.until, time.time())
+        self.assertEqual(time.strftime("%H:%M", time.localtime(said.until)), "16:32")
+        self.assertIn("MSG:Plan change request: add the 039 migration", self.log())
+
+    def test_a_message_that_quotes_a_wall_is_still_sent(self):
+        name = "bit-test-REQ-1-quote"
+        terminal.start(name, self.tmp, fake_codex(self.tmp, "ok"))
+        wait_for(name, "›")
+        said = terminal.send(name, "Codex said «You've hit your usage limit» to the operator; plan for it")
+        self.assertEqual((said, said.state), ("Enviado.", "sent"))
+
+    def test_the_model_switch_modal_is_answered_keep_current_model_and_the_message_arrives(self):
+        name = "bit-test-REQ-1-modal"
+        terminal.start(name, self.tmp, fake_codex(self.tmp, "modal", "ok"))
+        wait_for(name, "enter select")
+        said = terminal.send(name, "SP-8 confirmado")
+        self.assertEqual(said, "Enviado.")
+        self.assertEqual(self.log()[0], "KEEP")                 # never Switch, never «never show again»
+        self.assertIn("MSG:SP-8 confirmado", self.log())
+        self.assertIn("GOT:SP-8 confirmado", wait_for(name, "GOT:"))
+        self.assertTrue(any("Keep current model" in a for a in said.answered))
+
+    def test_an_unknown_selection_list_is_never_typed_into(self):
+        name = "bit-test-REQ-1-list"
+        terminal.start(name, self.tmp, "printf '  Pick one\\n› 1. Yes\\n  2. No\\n\\n  enter select · esc back\\n'; "
+                       f"read -rsn1 k; echo \"KEY:$k\" >> {self.tmp / 'codex.log'}; sleep 30")
+        wait_for(name, "enter select")
+        said = terminal.send(name, "hola")
+        self.assertEqual(said.state, "blocked")
+        time.sleep(0.3)
+        self.assertEqual(self.log(), [])
+
+    def test_a_planner_without_quota_anywhere_holds_the_notice_and_delivers_it_after_the_reset(self):
+        import bt_core
+        import bt_planner_notices as notices
+        rdir = self.tmp / "pictures" / "requirements" / "REQ-021-demo"
+        (rdir / ".planning").mkdir(parents=True)
+        (rdir / terminal.RECORD).write_text('{"provider": "codex", "codex_home": "/acc/codex-luis"}')
+        name = terminal.name_for("pictures", "REQ-021", "planner")
+        terminal.start(name, self.tmp, fake_codex(self.tmp, "wall", "ok"))
+        wait_for(name, "›")
+        spent = {"provider": "claude", "home": "", "model": "opus", "effort": "high", "exhausted": "1", "until": ""}
+        with patch.object(bt_core, "ROOT", self.tmp), patch.object(terminal, "planner_route", return_value=spent), \
+                patch.object(terminal, "start_planner") as start:
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out):
+                self.assertEqual(terminal.main(["tell-planner", "pictures", "REQ-021", "add the 039 migration"]), 3)
+            self.assertNotIn("Enviado", out.getvalue())
+            self.assertIn("sin cuota y ninguna otra cuenta tiene: guardé el mensaje y se lo reenvío solo", out.getvalue())
+            [kept] = terminal.wall.held(rdir)
+            self.assertIn("add the 039 migration", kept["text"])
+            self.assertEqual(time.strftime("%H:%M", time.localtime(kept["due"])), "16:32")
+            self.assertEqual(notices.deliver_held(self.tmp, now=kept["due"] - 60), [])    # not before the reset
+            said = notices.deliver_held(self.tmp, now=kept["due"] + 1)
+        start.assert_not_called()
+        self.assertEqual(said, ["pictures/REQ-021: held notice sent"])
+        self.assertEqual(terminal.wall.held(rdir), [])
+        self.assertEqual([m for m in self.log() if "039" in m], [f"MSG:{kept['text']}"] * 2)
+        self.assertIn("GOT:[Automatic notice", wait_for(name, "GOT:"))
 
 
 class PlannerStart(unittest.TestCase):
@@ -174,6 +306,12 @@ class WebPieces(unittest.TestCase):
             events = (rdir / ".planning" / "activity.jsonl").read_text(encoding="utf-8")
             self.assertIn("Le escribiste al Planner", events)
             self.assertIn("sigue con SP-1", events)
+            limited = terminal.Said.of("El agente no lo leyó: su cuenta se quedó sin cuota.", "limited", 1793395920.0)
+            with patch.object(bt_server, "ROOT", Path(tmp)), patch("bt_agent_terminal.send", return_value=limited), \
+                    patch("bt_planner_notices.after_wall", return_value=("held", "guardé el mensaje")) as after:
+                self.assertIn("guardé el mensaje", unquote(call("127.0.0.1", {"kind": "planner", "text": "sigue con SP-2"})))
+            after.assert_called_once_with("pictures", "REQ-021", "sigue con SP-2", 1793395920.0)
+            self.assertNotIn("sigue con SP-2", (rdir / ".planning" / "activity.jsonl").read_text(encoding="utf-8"))
 
 
 if __name__ == "__main__":

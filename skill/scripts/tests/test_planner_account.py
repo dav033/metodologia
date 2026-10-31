@@ -5,13 +5,17 @@ import json
 import os
 import sys
 import tempfile
+import time
 import unittest
+from datetime import datetime
 from pathlib import Path
 from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import bt_agent_terminal as terminal
+import bt_agent_wall as wall
 import bt_agents
+import bt_planner_notices as notices
 import bt_profiles
 
 PROFILES = {"claude-work": {"provider": "claude", "env": {"CLAUDE_CONFIG_DIR": "/acc/work"}},
@@ -95,7 +99,8 @@ class PlannerAccount(unittest.TestCase):
             rdir = Path(tmp) / "pictures" / "requirements" / "REQ-021-x"
             (rdir / ".planning").mkdir(parents=True)
             (rdir / terminal.RECORD).write_text(json.dumps({"session_id": "sid-1", "config_dir": "/acc/work"}))
-            limited = "❯ notice\n  ⎿  You've hit your weekly limit · resets Oct 31, 6pm\n     /usage-credits to request more"
+            tomorrow = time.strftime("%b %d", time.localtime(time.time() + 86400))
+            limited = f"❯ notice\n  ⎿  You've hit your weekly limit · resets {tomorrow}, 6pm\n     /usage-credits to request more"
             with patch("bt_core.ROOT", Path(tmp)), patch.object(terminal, "exists", return_value=True), \
                     patch.object(terminal, "screen", return_value=limited), patch.object(terminal, "kill") as kill, \
                     patch.object(terminal, "send") as send, \
@@ -124,6 +129,92 @@ class PlannerAccount(unittest.TestCase):
         kill.assert_not_called()
         self.assertIn("attach -t bit-pictures-REQ-021-planner", notify.call_args.args[1])
         self.assertIn("Yes, I accept", notify.call_args.args[1])
+
+    def test_the_route_says_when_no_account_but_the_spent_one_is_left(self):
+        with patch.object(terminal, "unattended", return_value=True), \
+                patch.object(bt_agents, "candidates", return_value=([ROUTES[1]], 1793400000.0)):
+            self.assertEqual(terminal.planner_route("pictures", avoid="/acc/luis")["until"], "1793400000.0")
+            self.assertNotIn("exhausted", terminal.planner_route("pictures", avoid="/acc/work"))
+        with patch.object(bt_agents, "candidates", return_value=([], None)):
+            self.assertEqual(terminal.planner_route("pictures")["exhausted"], "1")
+
+    def test_a_wall_that_answers_a_notice_moves_the_planner_with_the_notices_it_had_not_read(self):
+        """2026-10-30 16:25: the request typed into a Planner whose Codex account had run out was lost."""
+        with tempfile.TemporaryDirectory() as tmp:
+            rdir = Path(tmp) / "pictures" / "requirements" / "REQ-021-x"
+            (rdir / ".planning").mkdir(parents=True)
+            (rdir / terminal.RECORD).write_text(json.dumps({"provider": "codex", "codex_home": "/acc/codex-luis"}))
+            wall.hold(rdir, "[older] SP-7 confirmado", time.time() + 600, "quota")
+            limited = terminal.Said.of("El agente no lo leyó: su cuenta se quedó sin cuota.", "limited")
+            with patch("bt_core.ROOT", Path(tmp)), patch.object(terminal, "exists", return_value=True), \
+                    patch.object(terminal, "screen", return_value="› listo"), patch.object(terminal, "kill") as kill, \
+                    patch.object(terminal, "send", return_value=limited), patch.object(terminal, "unattended", return_value=True), \
+                    patch.object(terminal, "start_planner", return_value=(True, "Planner abierto")) as start:
+                state, message = notices.tell("pictures", "REQ-021", "[notice] add the 039 migration")
+            self.assertEqual(state, "moved", message)
+            kill.assert_called_once()
+            self.assertEqual(start.call_args.kwargs["avoid"], "/acc/codex-luis")
+            self.assertEqual(start.call_args.kwargs["route"]["home"], "/acc/luis")
+            self.assertEqual(start.call_args.kwargs["message"], "[older] SP-7 confirmado\n\n[notice] add the 039 migration")
+            self.assertEqual(wall.held(rdir), [])
+
+    def test_a_wall_whose_reset_has_passed_is_stale_and_the_notice_is_typed(self):
+        past = datetime.fromtimestamp(time.time() - 3600).strftime("%-I:%M %p")
+        shown = f"› x\n■ You've hit your usage limit. Upgrade to Pro or try again at {past}.\n› "
+        with patch.object(terminal, "exists", return_value=True), patch.object(terminal, "screen", return_value=shown), \
+                patch.object(terminal, "send", return_value="Enviado.") as send, patch.object(terminal, "kill") as kill:
+            self.assertTrue(terminal.notify_planner("pictures", "REQ-021", "SP-8 confirmado"))
+        kill.assert_not_called()
+        send.assert_called_once()
+
+    def test_a_planner_waiting_on_the_owner_is_told_once_and_the_notice_held(self):
+        prompt = "  WARNING: Claude Code running in Bypass Permissions mode\n  ❯ No, exit\n    Yes, I accept"
+        with tempfile.TemporaryDirectory() as tmp:
+            rdir = Path(tmp) / "pictures" / "requirements" / "REQ-021-x"
+            (rdir / ".planning").mkdir(parents=True)
+            with patch("bt_core.ROOT", Path(tmp)), patch.object(terminal, "exists", return_value=True), \
+                    patch.object(terminal, "screen", return_value=prompt), patch.object(terminal, "send") as send, \
+                    patch("bt_runutil.notify") as notify:
+                self.assertEqual(notices.tell("pictures", "REQ-021", "a")[0], "held")
+                self.assertEqual(notices.tell("pictures", "REQ-021", "a", retry=True)[0], "held")
+            send.assert_not_called()
+            self.assertEqual(notify.call_count, 1)
+            self.assertEqual([n["text"] for n in wall.held(rdir)], ["a"])
+
+
+class Walls(unittest.TestCase):
+    NOW = datetime(2026, 10, 30, 16, 25).timestamp()
+    CODEX = ("■ You've hit your usage limit. Upgrade to Pro (https://chatgpt.com/explore/pro), visit "
+             "https://chatgpt.com/codex/settings/usage to purchase more credits or try again at 4:32 PM.")
+
+    def test_the_exact_codex_and_claude_walls_and_when_each_comes_back(self):
+        at = lambda shown, now=self.NOW, **kw: datetime.fromtimestamp(wall.reset_at(shown, now, **kw))
+        self.assertEqual(at(self.CODEX), datetime(2026, 10, 30, 16, 32))
+        self.assertEqual(at("You've hit your weekly limit · resets Oct 31, 6pm\n /usage-credits to request more"),
+                         datetime(2026, 10, 31, 18, 0))
+        self.assertEqual(at("5-hour limit reached ∙ resets 3am", fresh=True), datetime(2026, 10, 31, 3, 0))
+        self.assertEqual(at("You've hit your usage limit. try again in 2 hours 5 minutes"), datetime(2026, 10, 30, 18, 30))
+        self.assertEqual(at("You've hit your usage limit or try again at Nov 3rd, 2026 4:32 PM."),
+                         datetime(2026, 11, 3, 16, 32))
+        self.assertEqual(wall.reset_at("Claude usage limit reached|1761868800", self.NOW), 1761868800.0)
+        for text in ("You're out of extra usage · resets 3pm", "Weekly limit reached ∙ resets Nov 2",
+                     "Claude usage limit reached. Your limit will reset at 5pm"):
+            self.assertTrue(wall.LIMITED.search(text), text)
+        self.assertFalse(wall.LIMITED.search("Approaching rate limits"))
+
+    def test_a_wall_is_stale_once_its_reset_passed_but_never_when_it_just_answered(self):
+        later = datetime(2026, 10, 30, 17, 0).timestamp()
+        self.assertEqual(wall.limited(self.CODEX, self.NOW)[0], True)
+        self.assertEqual(wall.limited(self.CODEX, later)[0], False)
+        hit, until = wall.limited(self.CODEX, later, fresh=True)
+        self.assertEqual((hit, datetime.fromtimestamp(until)), (True, datetime(2026, 10, 31, 16, 32)))
+
+    def test_the_modals(self):
+        modal = ("  Approaching rate limits\n  Switch to gpt-6-luna for lower credit usage?\n\n› 1. Switch to gpt-6-luna\n"
+                 "  2. Keep current model\n  3. Keep current model (never show again)\n\n  enter select · esc back")
+        self.assertEqual(wall.modal(modal), ("model-switch", "2"))
+        self.assertEqual(wall.modal("› 1. Yes\n  2. No\n  enter select · esc back")[0], "blocking")
+        self.assertEqual(wall.modal("› Ask Codex to do anything\n  ⏎ send"), ("", ""))
 
 
 if __name__ == "__main__":

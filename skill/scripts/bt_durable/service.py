@@ -240,6 +240,10 @@ def _loop(cfg: EngineConfig, ports: Ports, stop: threading.Event, *, reap_second
                     _heal_decisions(cfg)
                 except Exception as error:  # noqa: BLE001 - an open decision is looked at again on the next pass
                     LOG.warning("healing pass failed: %s", error)
+                try:
+                    _deliver_held_notices()
+                except Exception as error:  # noqa: BLE001 - a held notice is tried again on the next pass
+                    LOG.warning("held notices pass failed: %s", error)
     finally:
         if stop.is_set():                           # a signal, not a failure: recorded before DBOS goes (D-181)
             try:
@@ -264,6 +268,14 @@ def _drain_joins(cfg: EngineConfig, ports: Ports) -> None:
             LOG.info("stage join: %s", outcome)
     finally:
         client.close()
+
+
+def _deliver_held_notices() -> None:
+    """Send again the Planner notices a quota wall held, once its reset time passed (bt_planner_notices)."""
+    import bt_core
+    import bt_planner_notices
+    for said in bt_planner_notices.deliver_held(Path(bt_core.ROOT)):
+        LOG.info("planner notices: %s", said)
 
 
 def _heal_decisions(cfg: EngineConfig) -> None:
