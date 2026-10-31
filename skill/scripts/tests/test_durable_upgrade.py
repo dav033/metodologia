@@ -4,7 +4,8 @@ A 1.3.0 run starts under the PREVIOUS engine code (exported from git: it ignores
 tasks waiting for the owner and its run loop waiting for news, and the engine is SIGKILLed. The CURRENT engine
 recovers the same workflows from the same database: their recorded steps replay unchanged (the three new patches return
 False where history already holds a step), and only what happens next takes the new paths — the subplan lines appear,
-an old open decision accepts `reverify`, and a classic `retry` still works. No workflow may end in ERROR."""
+an old open decision accepts `reverify`, and a classic `retry` continues from the escalated attempt's snapshot (D-254).
+No workflow may end in ERROR."""
 from __future__ import annotations
 
 import json
@@ -97,19 +98,16 @@ class EngineUpgrade(EngineCase):
                             what="the re-verification of T4 and its new decision")
         self.assertIn("reverify", second["options"])
         self.client.answer(run, "T4", OwnerAnswer(request_id="T4:d2", action="stop"))
-        # the retry after an escalation starts from the line (the escalation path keeps no snapshot base), so the
-        # fixlater agent fails again and the owner is asked again: the old path behaves exactly as before
-        wait_until(lambda: (self.client.status(run)["tasks"]["T2"].get("decision") or {}).get("request_id") == "T2:d2",
-                   240, interval=0.5, what="T2's second decision")
-        self.client.answer(run, "T2", OwnerAnswer(request_id="T2:d2", action="stop"))
+        # the owner's retry, answered after the upgrade, takes the new path (`bt-task-continues-latest-tree`, D-254):
+        # it continues from the escalated attempt's own snapshot, so the fixlater agent now passes
         status = self.settled(run, timeout=240)
 
         rows = self.client.workflows(f"bt:{run.run_id}")
         self.assertFalse([r.workflow_id for r in rows if r.status == "ERROR"], [(r.workflow_id, r.status) for r in rows])
         tasks_state = status["summary"]["tasks"]
-        self.assertEqual((tasks_state["T1"], tasks_state["T2"], tasks_state["T4"]), ("completed", "blocked", "blocked"),
+        self.assertEqual((tasks_state["T1"], tasks_state["T2"], tasks_state["T4"]), ("completed", "completed", "blocked"),
                          status)
-        self.assertNotIn("T1A", tasks_state)                                    # after a blocked task: never started
+        self.assertEqual(tasks_state["T1A"], "completed", status)                # T2 passed: its audit ran
         events = self.events()
         self.assertIn("subplans_enabled", events)
         self.assertIn("owner_reverify", events)

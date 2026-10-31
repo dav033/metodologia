@@ -2,6 +2,7 @@
 M2/M9). The engine is a separate process: tests SIGKILL it mid-run and prove recovery without duplicate launches."""
 from __future__ import annotations
 
+import itertools
 import json
 import os
 import signal
@@ -134,6 +135,36 @@ class DurableRuns(EngineCase):
         status = self.settled(run)
         self.assertEqual(status["summary"]["status"], "blocked")
 
+
+    def test_every_retry_continues_from_the_latest_attempt_after_owner_answers_too(self):
+        """pictures REQ-021 r30 T10.45 (D-254): after the first escalation every retry started from the snapshot the
+        last AUTOMATIC retry chose (a3's), so a7's fixes were gone in a8. Each attempt must build on the one before:
+        an automatic retry (a2), then two owner answers in a row (a3, a4); a2 and a4 commit their work themselves."""
+        run = RunRef.model_validate(self.lab.freeze([task("T1", scenario="accumulate",
+                                                          paths=["T1/**", "T1.task", "out.txt", "progress.txt"])]))
+        settings = FAST.model_copy(update={"budget": FAST.budget.model_copy(update={"max_attempts": 2})})
+        self.start_engine()
+        self.client.start(run, settings)
+
+        def decision(request_id):
+            return wait_until(lambda: ((self.client.status(run)["tasks"].get("T1") or {}).get("decision") or {})
+                              .get("request_id") == request_id, 240, interval=1, what=f"decision {request_id}")
+        for number in (1, 2):
+            decision(f"T1:d{number}")
+            self.client.answer(run, "T1", OwnerAnswer(request_id=f"T1:d{number}", action="retry_with_note",
+                                                      note=f"owner note {number}: keep the progress lines"))
+        decision("T1:d3")
+        self.client.answer(run, "T1", OwnerAnswer(request_id="T1:d3", action="stop"))
+        self.assertEqual(self.settled(run)["summary"]["status"], "blocked")
+        manifests = [json.loads(next(self.lab.state.glob(f"attempts-root/attempts/*T1-a{n}-*/handoff/manifest.json"))
+                                .read_text()) for n in (1, 2, 3, 4)]
+        for earlier, later in itertools.pairwise(manifests):
+            self.assertEqual(later["base_sha"], earlier["snapshot_sha"], "a retry dropped the previous attempt's work")
+        launches = self.lab.launches()
+        self.assertEqual([item["progress"] for item in launches], [0, 1, 2, 3])
+        self.assertEqual([item["continues"] for item in launches], [False, True, True, True])
+        last = manifests[-1]["snapshot_sha"]
+        self.assertEqual(len(lab_support.git(self.lab.repo, "show", f"{last}:progress.txt").splitlines()), 4)
 
     def _legacy_from_first_run(self, verdict):
         """Run T1 once, then describe its real snapshot as legacy progress for a second plan revision."""
