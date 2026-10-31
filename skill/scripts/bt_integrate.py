@@ -696,9 +696,11 @@ def _revert(req: Request, merge: str, services: Services, units: list[str], note
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="bt_integrate", description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--branch", required=True)
+    # --branch/--title are required by an integration, --post-merge and --revert (their logs, notices and revert
+    # command name both), never by --escaped: the D-261 command `--escaped TEXT --merge SHA` failed on them (D-264)
+    parser.add_argument("--branch", help="the branch to integrate (required except with --escaped)")
     parser.add_argument("--worktree", type=Path, help="the branch's own worktree (regressed as is)")
-    parser.add_argument("--title", required=True, help="what the change does, with its D-NNN")
+    parser.add_argument("--title", help="what the change does, with its D-NNN (required except with --escaped)")
     parser.add_argument("--session", default="", help="who integrates (session or Solucionador id), for the log")
     parser.add_argument("--live", type=Path, default=LIVE)
     parser.add_argument("--deploy", type=Path, default=DEPLOY, help="the deploy worktree (created when missing)")
@@ -732,6 +734,9 @@ def main(argv: list[str] | None = None) -> int:
         record_escape(args.escaped, args.merge)
         print(f"recorded in {ledger()}")
         return 0
+    missing = [flag for flag, value in (("--branch", args.branch), ("--title", args.title)) if not value]
+    if missing:
+        parser.error(f"the following arguments are required: {', '.join(missing)} (all but --escaped need them)")
     req = Request(branch=args.branch, worktree=args.worktree or Path("."), title=args.title, session=args.session,
                   live=args.live, deploy=args.deploy, scratch=args.scratch, log=args.release_log,
                   wait_seconds=args.wait_seconds, trailers=args.trailer, dry_run=args.dry_run,

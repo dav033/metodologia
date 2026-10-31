@@ -560,6 +560,55 @@ class Detached(unittest.TestCase):
         self.assertIn("without an exit code", shown)
 
 
+class Cli(unittest.TestCase):
+    """D-264: `--escaped TEXT --merge SHA` (the D-261 command) needs no --branch/--title; every other path still does."""
+
+    def main(self, argv):
+        import contextlib
+        import io
+        err = io.StringIO()
+        with mock.patch.object(integ, "detached", return_value=0) as detached, \
+                mock.patch.object(integ, "integrate") as integrate, \
+                mock.patch.object(integ, "_which", return_value="/usr/bin/systemd-run"), \
+                mock.patch.dict(integ.os.environ, {}, clear=False), contextlib.redirect_stderr(err), \
+                contextlib.redirect_stdout(io.StringIO()):
+            integ.os.environ.pop(integ.DETACHED, None)
+            try:
+                code = integ.main(argv)
+            except SystemExit as exit_:
+                code = exit_.code
+        return code, err.getvalue(), detached, integrate
+
+    def test_escaped_without_branch_or_title_records_in_the_ledger(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            ledger = Path(tmp) / "REGRESSION-OFF.md"
+            with mock.patch.object(integ, "ledger", return_value=ledger):
+                code, err, detached, integrate = self.main(
+                    ["--escaped", "T9 broke the panel; test_page_x would have failed", "--merge", "abcdef1234567890"])
+            self.assertEqual(code, 0, err)
+            escaped = ledger.read_text(encoding="utf-8").split("## Escaped defects")[1]
+            self.assertIn("merge `abcdef123456` · T9 broke the panel", escaped)
+            detached.assert_not_called()
+            integrate.assert_not_called()
+
+    def test_an_integration_without_branch_or_title_is_refused_before_anything_runs(self):
+        for argv, flag in ((["--title", "t", "--worktree", "."], "--branch"),
+                           (["--branch", "x", "--worktree", "."], "--title"),
+                           (["--post-merge", "abc", "--branch", "x"], "--title"),
+                           (["--revert", "abc", "--title", "t"], "--branch")):
+            code, err, detached, integrate = self.main(argv)
+            self.assertEqual(code, 2, argv)
+            self.assertIn(f"required: {flag}", err)
+            detached.assert_not_called()
+            integrate.assert_not_called()
+
+    def test_an_integration_with_branch_and_title_still_detaches_with_its_argv(self):
+        argv = ["--branch", "x", "--title", "t", "--worktree", "."]
+        code, err, detached, _ = self.main(argv)
+        self.assertEqual(code, 0, err)
+        detached.assert_called_once_with(argv, "x")
+
+
 class FairLock(unittest.TestCase):
     """D-230: waiters get the machine lock in arrival order; a dead waiter's ticket never blocks the queue."""
 
