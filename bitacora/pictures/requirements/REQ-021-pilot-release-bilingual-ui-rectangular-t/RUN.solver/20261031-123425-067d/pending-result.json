@@ -1,0 +1,12 @@
+{
+  "outcome": "asked_owner",
+  "summary": "T10.45 reanudada con diagnóstico reproducido y nota de reparación; SP-2 requiere confirmar el cambio de contrato visual propuesto.",
+  "handled": [
+    "owner_rejected:SP-2:v2:6ec74192eb01:11666d518588",
+    "pictures:REQ-021:r30:T10.45:T10.45:d6@k1"
+  ],
+  "decision": "T10.45:d6@k1",
+  "question": "¿Confirmas el cambio de contrato propuesto en AMENDMENT.md para SP-2: nombre visible, «Plan» cuando corresponda, identidad correcta de administradores/empleados/roles personalizados, sin el aviso aceptado en el perfil, cierre del menú al pulsar fuera o Escape y rediseño de Mi cuenta y contraseña? Con tu confirmación se tramita la nueva versión visual y su aprobación antes de implementarla; si rechazas el cambio, el Planner conserva el contrato actual y separa la reparación del cierre del menú.",
+  "commits": [],
+  "rule": "D-085; D-086"
+}

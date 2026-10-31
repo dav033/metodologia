@@ -2990,6 +2990,21 @@ Solucionador 20261030-100736-d494 integrated merge fff622890f28b8093a9a0afda9c40
 - **Decision:** `test_page_planning_asks` patches the screen and the notes directory, so a live Planner's quota wall can
   neither fail it nor write into the live plan feed (08:40 incident, false «sin cuota» line).
 
+## D-253 — The Solucionador runs Sonnet high, Terra medium as fallback
+
+- **Date:** 2026-10-31 · **Status:** Accepted · **Supersedes:** the 2026-10-29 owner order (Opus high, Codex Sol high)
+  in `bt_role_policy` for role `solver`
+- **Context:** the owner asked (12:40) for the Solucionador to be «un sonnet high o un terra medium». The SP-2 rejection
+  session ran Codex Sol high with 9 % of its 5 h quota left. Reading the launch path showed a second defect:
+  `Solver._start` built the Claude command with a fixed `--model opus --effort high`, so the routed model and effort
+  never reached a Claude session.
+- **Decision:** role `solver` ranks `("claude", "sonnet", "high")` then `("codex", "gpt-6.1-terra", "medium")`, still an
+  ordered role (owner order while quota allows, D-151). The Claude command passes the route's `--model`/`--effort`.
+- **Rule:** a role's session runs the model and effort its route chose; no launch path hard-codes a model.
+- **Evidence:** `test_durable_solver.test_a_claude_session_runs_the_routed_model_and_effort` (red on main),
+  `test_role_routing` solver case updated; test_durable_solver, test_role_policy, test_role_routing,
+  test_planner_profile: 67 tests OK. Sessions already running keep their model; the next one uses the new order.
+
 ## D-252 — Never type into a pane whose agent exited
 
 - **Date:** 2026-10-31 · **Status:** Accepted · **Refines:** D-199, D-238, D-251
