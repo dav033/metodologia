@@ -59,6 +59,51 @@
    "id": "D-237",
    "by": "metodologia-1a: agent sessions never take the secret alert",
    "at": "2026-10-30T17:10:53"
+  },
+  {
+   "id": "D-238",
+   "by": "agent-quota-wall subagent: a message to an agent counts as delivered only if it can act on it (quota wall, model-switch modal)",
+   "at": "2026-10-30T17:15:27"
+  },
+  {
+   "id": "D-239",
+   "by": "metodologia-90: durable runs take scheduler.max_parallel_tasks at start and join",
+   "at": "2026-10-30T17:31:20"
+  },
+  {
+   "id": "D-240",
+   "by": "metodologia-90: post-merge regression never borrows the live venv",
+   "at": "2026-10-30T19:10:44"
+  },
+  {
+   "id": "D-241",
+   "by": "bounded-repair subagent: bounded repair of a confirmed defect is re-confirmed by policy, frozen and joined without the owner",
+   "at": "2026-10-30T20:08:43"
+  },
+  {
+   "id": "D-242",
+   "by": "solver 20261031-075511-d592: restart-safe stuck observation clocks",
+   "at": "2026-10-31T07:58:21"
+  },
+  {
+   "id": "D-243",
+   "by": "metodologia-95: a built subplan is offered to try before its composition gate",
+   "at": "2026-10-31T08:00:22"
+  },
+  {
+   "id": "D-244",
+   "by": "owner-reject-solver subagent: the owner's rejection of a subplan version goes to the Solucionador and comes back as a repaired version por probar with his note",
+   "at": "2026-10-31T08:29:26"
+  },
+  {
+   "id": "D-245",
+   "by": "gate-recompose subagent: a passed gate is composed again when a member line moves on",
+   "at": "2026-10-31T08:34:44"
+  },
+  {
+   "id": "D-246",
+   "by": "gate-recompose subagent: Probar folds predecessors' current lines into a later subplan's tree",
+   "at": "2026-10-31T08:34:45"
   }
  ]
 }

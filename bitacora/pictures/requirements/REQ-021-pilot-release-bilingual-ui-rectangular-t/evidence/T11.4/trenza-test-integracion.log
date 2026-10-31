@@ -1,0 +1,10 @@
+
+> demo-decoracion@0.1.0 trenza:test-integracion
+> tsx --conditions=react-server scripts/test/test-integracion-separacion-trenza.ts
+
+ℹ duration_ms 2630.200291
+test-ui-separacion-trenza: PASS (controles)
+test-ui-separacion-trenza: PASS (guardar-y-exportar; schema round-trip and rendered GLB)
+Exportación Chromium completa: 53 elementos; defectos conocidos registrados: 0.
+test-integracion-proyectos: PASS (production build, edited trenza project PUT/GET, independent browser context reopen, rendered count and centreline invariants)
+test-integracion-separacion-trenza: PASS (SP-11; PICTURES_REQ021_DATABASE_URL)

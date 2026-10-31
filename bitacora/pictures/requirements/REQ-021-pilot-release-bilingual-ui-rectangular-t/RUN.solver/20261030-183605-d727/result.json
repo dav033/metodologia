@@ -1,0 +1,11 @@
+{
+  "outcome": "asked_owner",
+  "summary": "Causa reproducida: control de fotos sin traducir; reparación SP-10 preparada y validada, pendiente de reconfirmación del propietario.",
+  "handled": [
+    "pictures:REQ-021:r28:T10.45:T10.45:d1@k1"
+  ],
+  "decision": "T10.45:d1@k1",
+  "question": "¿Reconfirmas SP-10 con la reparación acotada T10.441 —traducción del control de fotos, regresión EN/ES y corrección del oráculo obsoleto— para congelar e incorporar la revisión y ejecutar el productor antes de T10.45? Con sí se continúa por ese flujo; con no se mantiene r28 y el bloqueo actual. Tu instrucción impide que el Solucionador confirme subplanes por el propietario.",
+  "commits": [],
+  "rule": "D-082"
+}

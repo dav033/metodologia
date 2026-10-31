@@ -315,3 +315,26 @@ previous main: f00131c4687780fcd707cc82b6982dc61575f855
 regression: 309 files, no failures [staged: first 16 in 1m31s, then the rest 293 in 32m05s] (/home/david/.local/share/bitacora-integrate/regress/audit-medium-blocks-20261030-161218/results.txt)
 rollback: git revert the merge of audit-medium-blocks on main, restart bt-durable.service and bitacora-web.service
 result: merged db232929a5dc, restarted bt-durable.service, bitacora-web.service, smoke ok
+
+# integration of a tool's warning is never the decisive line (D-236), local restart of engine + web, 2026-10-30 17:59, session 30499c90
+previous main: bb9f4f712268a21c5e4f6dee3c56f7ad939c5d25
+/home/david/bitacora/.state/durable/backups/bt_durable-20261030-175940.dump 36809271 07bdf1d08e311e612cb871100b6597a5fc854d45e630699c0c758f2765e98328
+regression: 309 files, no failures [staged: first 21 in 1m35s, then the rest 288 in 33m21s] (/home/david/.local/share/bitacora-integrate/regress/tool-noise-20261030-172443/results.txt)
+rollback: git revert the merge of tool-noise on main, restart bt-durable.service and bitacora-web.service
+result: merged 025abe27728f, restarted bt-durable.service, bitacora-web.service, smoke ok
+
+# integration of Durable runs take the operator's parallelism when they start or join (D-239), local restart of engine + web, 2026-10-30 18:25, session metodologia-90
+previous main: 025abe27728ff30e47a0dbfcfff4bb30c4956427
+/home/david/bitacora/.state/durable/backups/bt_durable-20261030-182522.dump 37947398 21493fbb5a93172c37f80fa0442d9e9aa2ac86af0952db0d4cabaa27a0a97e70
+regression: 61 files, no failures [selective: selected 61 in 25m14s] (/home/david/.local/share/bitacora-integrate/regress/durable-parallel-config-20261030-180007/results.txt); the full regression of the merge runs in the background after the smoke
+rollback: git revert the merge of durable-parallel-config on main, restart bt-durable.service and bitacora-web.service
+result: merged df1fe113807c, restarted bt-durable.service, bitacora-web.service, smoke ok
+post-merge: full regression of df1fe113807c started (unit bt-post-regress-durable-parallel-config-20261030-183507 (journalctl --user -u bt-post-regress-durable-parallel-config-20261030-183507))
+post-merge full regression of df1fe113807c (durable-parallel-config): 310 files, no failures (/home/david/.local/share/bitacora-integrate/regress/post-durable-parallel-config-20261030-183507/results.txt): green
+
+# integration of A message to an agent counts as delivered only if the agent can act on it (D-238), local restart of engine + web, 2026-10-30 19:42, session metodologia-90
+previous main: df1fe113807c969883102f0380fb121c10f75508
+/home/david/bitacora/.state/durable/backups/bt_durable-20261030-194159.dump 39012079 bc644942224875362081e4c22839e3c42b92071b27afd8d57543336aa7a8a17e
+regression: 310 files, no failures + test_verify_procs (load flake, passes alone) [staged: first 36 in 1m51s, then the rest 274 in 32m22s] (/home/david/.local/share/bitacora-integrate/regress/agent-quota-wall-20261030-183515/results.txt)
+rollback: git revert the merge of agent-quota-wall on main, restart bt-durable.service and bitacora-web.service
+result: merged 4a32ce2e72e6, restarted bt-durable.service, bitacora-web.service, smoke ok

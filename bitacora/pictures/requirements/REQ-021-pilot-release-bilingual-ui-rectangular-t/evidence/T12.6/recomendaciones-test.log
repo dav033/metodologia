@@ -1,0 +1,22 @@
+
+> demo-decoracion@0.1.0 recomendaciones:test
+> node scripts/test/run-recomendaciones-test.mjs
+
+✔ ranking: matches occasion, colour and approximate size, with stable ties (3.886953ms)
+✔ ranking: returns no weak or undersized result (0.627003ms)
+✔ ranking: general gallery decorations can match a named celebration (1.192139ms)
+✔ ranking: real gallery balloon totals come from the engine shopping list (26811.026963ms)
+✔ herramienta: collects occasion, size and colour before the third customer message (2.099359ms)
+✔ herramienta: exposes only validated gallery results and engine counts (1.989182ms)
+✔ herramienta: hides split fabricated names, ids and counts until the validated final event (1.794831ms)
+✔ herramienta: deterministic Spanish and English replies and no-match (0.686718ms)
+✔ herramienta: provider failure discards withheld recommendation assertions (1.444816ms)
+✔ herramienta: unrelated chat text remains streamed (0.470874ms)
+ℹ tests 10
+ℹ suites 0
+ℹ pass 10
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 29810.349482
