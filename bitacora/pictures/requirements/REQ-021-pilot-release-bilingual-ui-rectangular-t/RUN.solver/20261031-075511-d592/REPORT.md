@@ -7,6 +7,7 @@ Integration is queued; this is a checkpoint, not a completion claim. `result.jso
 - Trigger: `pictures:REQ-021:r29:T10.441:stuck:dcd70c2e84a2797e`; pending workflow with the same running-state observation since 2026-10-30 20:09:14.
 - The machine was shut down overnight. The local database at 127.0.0.1:5435 was unavailable on boot because Docker was socket-activated rather than enabled. The operator fixed that independently by enabling docker.service; my read-only check confirms `enabled` and running containers. I did not perform or claim that root-level repair.
 - Engine journal: local database connection refused repeatedly, then engine startup at 07:54:39 with 3 recovered workflows; solver escalation at 07:55:11. The solver used the persisted wall-clock observation from the previous day, so the machine's downtime counted as task inactivity.
+- Exact captured-status replay (`actual-trigger-replay.json`) reproduces the same trigger key on the unfixed baseline. At escalation the engine had only 32 seconds of uptime, compared with 42,357 seconds of persisted wall age. Corrected code emits no trigger for that same legacy mark.
 - Live status subsequently showed T10.441 SUCCESS/completed, one attempt, accepted snapshot `147ee97f22d5394b6ff696ae902709e0cf6e7a45`, integrated ref `d6d397cf080ab5d5c99dd82b11e41b0a5660010b`, verifier receipt `m6://result/6ba878b37594b79486dc8a3c37d16cd52c65b428f944b0411ad02397fdfad3eb`. Telemetry task_settled timestamp: 1793451326.9775472. Its dependent T10.45 is running. No task decision exists to answer.
 
 ## Origin and fix
@@ -19,7 +20,7 @@ The environment outage had already been repaired; the remaining system defect is
 - `skill/references/modules.md`: documents the observation contract: repeated restarts preserve already observed inactivity, while machine downtime is excluded.
 - No bt.run/bt.task workflow step sequence changed; no DBOS.patch is required. No product code, plan acceptance, owner confirmation, paid provider call or manual evidence receipt was changed.
 
-Commits on solver/20261031-075511-d592: `141eade8` (structural extraction), `09117e499` (fix and regression). Main merge: pending. Rule D-242 is reserved; final record follows successful integration.
+Commits on solver/20261031-075511-d592: `141eade8` (structural extraction), `09117e499` (fix and regression), `0c8efe98` (truthful observed-age diagnostics); main synchronized in the branch as `d7f3ecab`. Main integration merge: pending. Rule D-242 is reserved; final record follows successful integration.
 
 ## Verification so far
 
