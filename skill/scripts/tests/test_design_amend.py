@@ -247,8 +247,6 @@ class Amend(unittest.TestCase):
         self.change_plan()
         row = drafts.rows(self.rdir)[0]
         self.assertEqual((row["stale"], row["amend"]), (True, "direction"))
-        with self.assertRaisesRegex(SystemExit, "actualiza el diseño"):
-            iterate.iterate("demo", self.rdir, REF, "a", "Rounder again", "cli")
         self.assertEqual(drafts.request("demo", self.rdir), [REF])
         self.assertEqual(len(self.orders), 6)
         brief = self.orders[5]["task"]
@@ -260,6 +258,26 @@ class Amend(unittest.TestCase):
         self.assertEqual((row["status"], row["stale"], row["amend"], row["reason"]),
                          ("choosing", False, None, "plan changed"))
         self.assertEqual(amend.last_chosen(drafts._load(self.rdir)["drafts"][REF]), "a")
+
+    def test_owner_iteration_after_a_plan_change_carries_the_delta_and_a_retry_keeps_it(self):
+        self.finalised()                                   # D-263: iterating used to refuse «actualiza el diseño»
+        iterate.iterate("demo", self.rdir, REF, "a", "Rounder", "cli")
+        self.direction(0, revision=2, did="D-5", thumbnails=False)
+        self.change_plan()
+        self.assertEqual(drafts.rows(self.rdir)[0]["amend"], "direction")
+        iterate.iterate("demo", self.rdir, REF, "a", "Rounder again", "web")
+        self.assertEqual(len(self.orders), 6)
+        brief = self.orders[5]["task"]
+        for needle in ("PLAN CHANGE", iterate.CARRIED_LEAD, "+ The buyer pays in two steps.", "Rounder again",
+                       f"{REF}.r3.dir-a.html"):
+            self.assertIn(needle, brief)
+        self.outcomes["D-6"] = {"status": "claimed", "summary": "Done"}  # but no files written
+        row = drafts.rows(self.rdir)[0]
+        self.assertEqual((row["status"], row["stale"], row["amend"]), ("failed", False, None))
+        self.assertEqual(iterate.route(drafts._load(self.rdir)["drafts"][REF]), "a")
+        iterate.iterate("demo", self.rdir, REF, "a", "", "sync")
+        self.assertIn("+ The buyer pays in two steps.", self.orders[6]["task"])
+        self.assertIn("Rounder again", self.orders[6]["task"])
 
     def test_cli_amend_prints_the_status_line_and_ignores_the_pause(self):
         self.finalised()

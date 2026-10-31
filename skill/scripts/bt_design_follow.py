@@ -41,7 +41,8 @@ def sync(project: str, rdir: Path, *, now: float | None = None) -> list[str]:
         if r["status"] == "failed" and (drafts._age(r.get("finished")) < drafts.FAIL_BACKOFF_SEC or
                                         int(r.get("failures") or 0) >= drafts.MAX_FAILURES):
             continue  # do not relaunch a failing Designer on every page poll; after N failures only on drafts.request
-        key = None if r["stale"] else iterate.route(r)
+        # owner comments on one direction iterate it; a direction awaiting the owner carries the plan change (D-263)
+        key = None if r["stale"] and r["status"] != "choosing" else iterate.route(r)
         if key:  # owner comments on one direction while another Designer was busy
             return [r["ref"]] if iterate.follow(project, rdir, r["ref"], key, "sync") else []
         changed = settled and (r["status"] == "none" or r["stale"]) and int(r.get("auto_runs") or 0) < drafts.MAX_AUTO_RUNS

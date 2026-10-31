@@ -48,7 +48,9 @@ def add_feedback(project: str, rdir: Path, ref: str, text: str, via: str, *, dir
         if direction and direction not in {d["id"] for d in entry.get("directions", [])}:
             return "Dirección no válida para ese borrador."
         busy = entry.get("status") in drafts.ACTIVE
-        routed = bool(direction and not busy and not drafts.behind(entry, row) and source(entry, direction))
+        # a direction awaiting the owner is iterated even after a plan change: the iteration carries it (D-263)
+        late = drafts.behind(entry, row) and entry.get("status") != "choosing"
+        routed = bool(direction and not busy and not late and source(entry, direction))
         if not routed:
             entry.setdefault("feedback", []).append({"id": secrets.token_hex(8), "when": drafts._now(),
                                                     "text": text[:4000], "via": via, "direction": direction})
@@ -67,51 +69,68 @@ def add_feedback(project: str, rdir: Path, ref: str, text: str, via: str, *, dir
 
 def iterate(project: str, rdir: Path, ref: str, key: str, comments: str, via: str, *, plan_delta: str = "") -> str:
     """Revise direction `key` into a new revision; `plan_delta` (from bt_design_amend) applies a plan change instead
-    of owner comments to the direction that continues the owner's choice."""
+    of owner comments to the direction that continues the owner's choice.
+
+    When the subplan changed after the direction was drawn (`behind`), the iteration carries the plan delta together
+    with the owner's comments instead of refusing. A refusal never drops the owner's text: while the Designer works it
+    is kept as feedback that `follow` iterates on afterwards, otherwise under the entry's `refused` list; every refusal
+    is logged in the activity. Incident: pictures REQ-021 planes@v2, 2026-10-31 (D-263) — the owner's comments on
+    direction C were refused because the Planner had updated SP-14, the text was dropped, and «Actualizar diseño» did
+    not apply to a direction never chosen, so the owner could not move."""
     import bt_delegate
     import bt_design_directions as directions
     import bt_design_drafts as drafts
     comments = " ".join((comments or "").split())
     if not drafts.planning(rdir):
-        raise SystemExit("El plan ya no está en planificación.")
+        _refuse(rdir, ref, key, comments, "El plan ya no está en planificación.")
     row = next((s for s in drafts.subplans(rdir) if s["ref"] and s["ref"] == ref), None)
     if row is None:
-        raise SystemExit("Contrato de interfaz no válido.")
-    with drafts._locked(rdir) as data:
+        _refuse(rdir, ref, key, comments, "Contrato de interfaz no válido.")
+    amending, refusal = bool(plan_delta), ""
+    with drafts._locked(rdir) as data:  # a refusal leaves the lock normally so that what it records is saved
         for name, other in data["drafts"].items():
             drafts._settle(rdir, name, other)
-        if (data["drafts"].get(ref) or {}).get("status") in drafts.ACTIVE:
-            raise SystemExit(f"El Designer ya está trabajando en {ref}; itera cuando termine.")
         entry = data["drafts"].get(ref) or {}
         prior = source(entry, key)
-        if prior is None:
-            raise SystemExit("Esa dirección no está lista para iterar.")
-        if not plan_delta and drafts.behind(entry, row):
-            raise SystemExit("El subplan cambió: actualiza el diseño con el cambio del plan antes de iterar.")
-        if not directions.unchanged(rdir, ref, prior):
-            raise SystemExit("La dirección cambió después de la comparación; hay que rehacerla.")
-        if comments:
-            entry.setdefault("feedback", []).append({"id": secrets.token_hex(8), "when": drafts._now(),
-                                                     "text": comments[:4000], "via": via, "direction": key})
-            drafts._event(rdir, "Tú → Designer", f"{ref} · {key.upper()}: {comments[:200]}", entry, kind="feedback")
-        feedback = [f for f in entry.get("feedback", []) if not f.get("consumed")]
-        if not feedback and not plan_delta:
-            raise SystemExit("Escribe qué debe cambiar en la dirección.")
-        for f in feedback:
-            f.setdefault("id", secrets.token_hex(8))
-        rev = int(entry.get("attempt") or 0) + 1
-        continuation_choice = key if entry.get("chosen") == key else entry.get("continuation_choice")
-        if entry.get("directions"):
-            entry.setdefault("direction_history", []).append({"revision": entry["attempt"], "chosen": entry.get("chosen"),
-                "directions": entry["directions"], "comparison": entry.get("comparison")})
-        prior = json.loads(json.dumps(prior))
-        entry.update(status="drafting", phase="explore", attempt=rev, chosen=None, comparison=None, digest=row["digest"],
-                     ui_digest=row["ui_digest"], started=drafts._now(), error="",
-                     reason="plan changed" if plan_delta else "iterate", fresh=False, subplan_id=row["id"],
-                     feedback_batch=[f["id"] for f in feedback], iterate_from=prior, continuation_choice=continuation_choice,
-                     behavior=directions.write_behavior(rdir, ref, rev, row, project).name,
-                     directions=[{"id": key, "status": "queued", "seed": prior.get("seed"), "revision": rev,
-                                  "name": prior.get("name"), "iterated_from": prior["revision"]}])
+        if entry.get("status") in drafts.ACTIVE:
+            refusal = f"El Designer ya está trabajando en {ref}; itera cuando termine."
+            if comments and key in {d.get("id") for d in entry.get("directions") or []}:
+                _feedback(rdir, ref, key, comments, via, entry)
+                comments, refusal = "", (f"El Designer ya está trabajando en {ref}; tu comentario quedó guardado y se "
+                                         f"aplicará a la dirección {key.upper()} cuando termine.")
+        elif prior is None:
+            refusal = "Esa dirección no está lista para iterar."
+        elif not directions.unchanged(rdir, ref, prior):
+            refusal = "La dirección cambió después de la comparación; hay que rehacerla."
+        else:
+            plan_delta = plan_delta or _carried(project, rdir, row, key, entry)
+            if comments:
+                _feedback(rdir, ref, key, comments, via, entry)
+                comments = ""
+            feedback = [f for f in entry.get("feedback", []) if not f.get("consumed")]
+            if not feedback and not plan_delta:
+                refusal = "Escribe qué debe cambiar en la dirección."
+        if refusal:
+            _keep_refused(rdir, ref, key, comments, refusal, entry if ref in data["drafts"] else None)
+        else:
+            for f in feedback:
+                f.setdefault("id", secrets.token_hex(8))
+            rev = int(entry.get("attempt") or 0) + 1
+            continuation_choice = key if entry.get("chosen") == key else entry.get("continuation_choice")
+            if entry.get("directions"):
+                entry.setdefault("direction_history", []).append({"revision": entry["attempt"],
+                    "chosen": entry.get("chosen"), "directions": entry["directions"], "comparison": entry.get("comparison")})
+            prior = json.loads(json.dumps(prior))
+            entry.update(status="drafting", phase="explore", attempt=rev, chosen=None, comparison=None,
+                         digest=row["digest"], ui_digest=row["ui_digest"], started=drafts._now(), error="",
+                         reason="plan changed" if amending else "iterate", fresh=False, subplan_id=row["id"],
+                         feedback_batch=[f["id"] for f in feedback], iterate_from=prior,
+                         continuation_choice=continuation_choice, plan_delta=plan_delta,
+                         behavior=directions.write_behavior(rdir, ref, rev, row, project).name,
+                         directions=[{"id": key, "status": "queued", "seed": prior.get("seed"), "revision": rev,
+                                      "name": prior.get("name"), "iterated_from": prior["revision"]}])
+    if refusal:
+        raise SystemExit(refusal)
     brief = _brief(project, rdir, row, feedback, prior, rev) + plan_delta
     try:
         order = bt_delegate.create(project, brief, None, None, Path(rdir), [], None, drafts.TIMEOUT_MIN,
@@ -125,10 +144,13 @@ def iterate(project: str, rdir: Path, ref: str, key: str, comments: str, via: st
             data["drafts"][ref]["directions"][0].update(status="failed", error=str(exc)[:400])
         raise SystemExit(f"No se pudo iniciar la iteración: {exc}") from exc
     with drafts._locked(rdir) as data:
-        what = "actualizando por cambio del plan la" if plan_delta else "iterando"
+        what = ("actualizando por cambio del plan la" if amending else
+                "iterando con el cambio del plan la" if plan_delta else "iterando")
         drafts._event(rdir, "Designer", f"{ref}: {what} dirección {key.upper()} · {prior.get('name') or key}",
                       data["drafts"][ref])
-    return f"Iterando la dirección {key.upper()} de {ref}; el Designer prepara la revisión {rev}."
+    return (f"Iterando la dirección {key.upper()} de {ref}"
+            f"{' con tus comentarios y el cambio del plan' if plan_delta and not amending else ''}; "
+            f"el Designer prepara la revisión {rev}.")
 
 
 def follow(project: str, rdir: Path, ref: str, key: str, via: str) -> str | None:
@@ -137,6 +159,48 @@ def follow(project: str, rdir: Path, ref: str, key: str, via: str) -> str | None
         return iterate(project, rdir, ref, key, "", via)
     except SystemExit:
         return None
+
+
+def _feedback(rdir: Path, ref: str, key: str, text: str, via: str, entry: dict) -> None:
+    import bt_design_drafts as drafts
+    entry.setdefault("feedback", []).append({"id": secrets.token_hex(8), "when": drafts._now(),
+                                             "text": text[:4000], "via": via, "direction": key})
+    drafts._event(rdir, "Tú → Designer", f"{ref} · {key.upper()}: {text[:200]}", entry, kind="feedback")
+
+
+def _carried(project: str, rdir: Path, row: dict, key: str, entry: dict) -> str:
+    """The plan change an owner's iteration of `key` must carry: the delta since the direction was drawn when the
+    subplan changed (`behind`), plus the delta a failed iteration of the same direction had carried (the failed start
+    already moved the entry to the current brief, so a retry could not recompute it)."""
+    import bt_design_amend
+    import bt_design_drafts as drafts
+    parts = []
+    if entry.get("status") == "failed" and (entry.get("iterate_from") or {}).get("id") == key and entry.get("plan_delta"):
+        parts.append(entry["plan_delta"])
+    if drafts.behind(entry, row):
+        change = bt_design_amend.delta(project, rdir, row, entry)
+        parts.append(bt_design_amend.preamble(rdir, row["ref"], change, lead=CARRIED_LEAD))
+    return "".join(parts)
+
+
+CARRIED_LEAD = ("This direction was drawn before the plan changed and the owner now asks to revise it. Fold the plan "
+                "change into this revision together with the owner's comments; do not redesign.")
+
+
+def _keep_refused(rdir: Path, ref: str, key: str, text: str, reason: str, entry: dict | None) -> None:
+    """Log a refused iteration in the activity and keep the owner's unsaved text with the entry (not as feedback:
+    pending feedback would start Designer work the owner was just told did not start)."""
+    import bt_design_drafts as drafts
+    if text and entry is not None:
+        entry["refused"] = [*(entry.get("refused") or []), {"when": drafts._now(), "direction": key, "via": "iterate",
+                                                            "text": text[:4000], "reason": reason}][-20:]
+    drafts._event(rdir, "Designer", f"{ref} · {str(key).upper()}: iteración rechazada — {reason}"
+                  f"{f' · Tu texto: {text[:200]}' if text else ''}", entry or {}, kind="refused")
+
+
+def _refuse(rdir: Path, ref: str, key: str, text: str, reason: str) -> None:
+    _keep_refused(rdir, ref, key, text, reason, None)
+    raise SystemExit(reason)
 
 
 def _brief(project: str, rdir: Path, row: dict, feedback: list[dict], prior: dict, rev: int) -> str:
