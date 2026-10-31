@@ -1,10 +1,10 @@
 # Index — pictures
 
-_Generated 2026-10-30 12:10 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-31 08:40 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/pictures) · [graph](http://127.0.0.1:8765/p/pictures/graph)  
-**Last activity:** 2026-10-30
+**Last activity:** 2026-10-31
 
 ## Workspace
 
@@ -62,16 +62,16 @@ _Generated 2026-10-30 12:10 by `bitacora.py index`. Do not edit by hand._
 
 ## Recent decisions
 
+- D-082 — A remaining-language harness failure repairs its photo-control producer · 2026-10-30
+- D-081 — Recorded unions preserve the tool home, bilingual rendering and shared session resolution · 2026-10-30
 - D-080 — Account-menu resolutions retain plans and permission-gated administration · 2026-10-30
 - D-079 — Recomposition preserves accepted usage refinements and the tool home · 2026-10-30
 - D-078 — SP-10 keeps real-provider observation separate from complete deterministic coverage · 2026-10-30
-- D-077 — CG-9 keeps both interface translations and product-name translations · 2026-10-30
-- D-076 — REQ-021 SP-14 selected visual direction: Pliegues de consulta (c) · 2026-10-27
 
 ## Timeline
 
 - **2026-10** — [month summary](2026-10/MONTH.md)
-  - [W5](2026-10/W5/WEEK.md): [30](2026-10/W5/2026-10-30.md), [29](2026-10/W5/2026-10-29.md), [28](2026-10/W5/2026-10-28.md), [27](2026-10/W5/2026-10-27.md), [26](2026-10/W5/2026-10-26.md)
+  - [W5](2026-10/W5/WEEK.md): [31](2026-10/W5/2026-10-31.md), [30](2026-10/W5/2026-10-30.md), [29](2026-10/W5/2026-10-29.md), [28](2026-10/W5/2026-10-28.md), [27](2026-10/W5/2026-10-27.md), [26](2026-10/W5/2026-10-26.md)
   - [W4](2026-10/W4/WEEK.md): [23](2026-10/W4/2026-10-23.md), [22](2026-10/W4/2026-10-22.md), [21](2026-10/W4/2026-10-21.md), [20](2026-10/W4/2026-10-20.md), [19](2026-10/W4/2026-10-19.md)
   - [W3](2026-10/W3/WEEK.md): [18](2026-10/W3/2026-10-18.md), [16](2026-10/W3/2026-10-16.md), [15](2026-10/W3/2026-10-15.md), [14](2026-10/W3/2026-10-14.md), [13](2026-10/W3/2026-10-13.md)
   - [W2](2026-10/W2/WEEK.md): [11](2026-10/W2/2026-10-11.md), [10](2026-10/W2/2026-10-10.md), [09](2026-10/W2/2026-10-09.md), [08](2026-10/W2/2026-10-08.md)
