@@ -1,8 +1,10 @@
 {
  "watch": {
   "T10.45": {
-   "fp": "88e227291f666b90",
-   "since": 1793455007.6120043
+   "fp": "30f6fb10af31e8b4",
+   "since": 1793468033.6971734,
+   "epoch": "bb41079759f2432db6a2ef15bd07210e",
+   "observed_at": 1793468033.6971734
   }
  },
  "tasks": {
@@ -997,6 +999,50 @@
    "at": "2026-10-31T08:57:18",
    "session": "20261031-094746-c7c4",
    "requeued_by": "operator metodologia-95 2026-10-31: session d592 vanished with the shutdown (D-251)"
+  },
+  "pictures:REQ-021:r30:T10.45:T10.45:d2@k1": {
+   "kind": "repeat",
+   "key": "pictures:REQ-021:r30:T10.45:T10.45:d2@k1",
+   "run_id": "pictures:REQ-021:r30",
+   "task_id": "T10.45",
+   "request_id": "T10.45:d2",
+   "round": 1,
+   "reason": "the failure healing already answered came back (e3056101dce2adc9): the task used its attempts",
+   "status": "limit",
+   "at": "2026-10-31T11:22:46"
+  },
+  "pictures:REQ-021:r30:T10.45:T10.45:d3@k1": {
+   "kind": "decision",
+   "key": "pictures:REQ-021:r30:T10.45:T10.45:d3@k1",
+   "run_id": "pictures:REQ-021:r30",
+   "task_id": "T10.45",
+   "request_id": "T10.45:d3",
+   "round": 1,
+   "reason": "healing's repair limit is reached",
+   "status": "limit",
+   "at": "2026-10-31T11:46:13"
+  },
+  "pictures:REQ-021:r30:T10.45:T10.45:d4@k1": {
+   "kind": "decision",
+   "key": "pictures:REQ-021:r30:T10.45:T10.45:d4@k1",
+   "run_id": "pictures:REQ-021:r30",
+   "task_id": "T10.45",
+   "request_id": "T10.45:d4",
+   "round": 1,
+   "reason": "healing's repair limit is reached",
+   "status": "limit",
+   "at": "2026-10-31T12:10:49"
+  },
+  "pictures:REQ-021:r30:T10.45:T10.45:d5@k1": {
+   "kind": "decision",
+   "key": "pictures:REQ-021:r30:T10.45:T10.45:d5@k1",
+   "run_id": "pictures:REQ-021:r30",
+   "task_id": "T10.45",
+   "request_id": "T10.45:d5",
+   "round": 1,
+   "reason": "healing's repair limit is reached",
+   "status": "limit",
+   "at": "2026-10-31T12:32:20"
   }
  },
  "sessions": [

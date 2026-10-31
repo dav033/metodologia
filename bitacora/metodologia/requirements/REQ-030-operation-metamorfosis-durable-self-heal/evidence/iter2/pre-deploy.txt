@@ -345,3 +345,33 @@ previous main: d6dfbd2e8db57e6dd4861ccee79aaeb55eddbee9
 regression: 310 files, no failures + test_durable_remote (load flake, passes alone) [staged: selected 96 in 15m44s, then the rest 214 in 21m46s] (/home/david/.local/share/bitacora-integrate/regress/built-subplan-versions-20261031-084036/results.txt)
 rollback: git revert the merge of built-subplan-versions on main, restart bt-durable.service and bitacora-web.service
 result: merged e74c6ea8b414, restarted bt-durable.service, bitacora-web.service, smoke ok
+
+# integration of Live venv untouched by post-merge; role sessions skip bitácora chores; bounded repairs keep confirmation; owner rejections reach the Solucionador; fresh gates and tried trees (D-240, D-237, D-241, D-244, D-245, D-246), local restart of engine + web, 2026-10-31 10:21, session metodologia-90
+previous main: 2fbce90e965941055004205a000a08d37d1d4e57
+/home/david/bitacora/.state/durable/backups/bt_durable-20261031-102116.dump 41967813 d5c027dd4058a99febe3a3f09fc01e875314cd577bb04f9e7fb601c3e6159931
+regression: 314 files, no failures [staged: first 133 in 18m38s, then the rest 181 in 16m53s] (/home/david/.local/share/bitacora-integrate/regress/post-own-venv-20261031-094544/results.txt)
+rollback: git revert the merge of post-own-venv on main, restart bt-durable.service and bitacora-web.service
+result: merged cb4f151cee52, restarted bt-durable.service, bitacora-web.service, smoke ok
+
+# integration of A vanished Solucionador session hands its cases back to the queue (D-251), local restart of engine + web, 2026-10-31 10:48, session metodologia-90
+previous main: cb4f151cee52d3f43b900055daf59b87156967f1
+/home/david/bitacora/.state/durable/backups/bt_durable-20261031-104809.dump 42256035 87af7baeb11d12bf67af844cc2b2cac99929d441c8c3134a300bb3009de28338
+regression: 64 files, no failures [selective: selected 64 in 25m40s] (/home/david/.local/share/bitacora-integrate/regress/solver-vanished-requeue-20261031-102229/results.txt); the full regression of the merge runs in the background after the smoke
+rollback: git revert the merge of solver-vanished-requeue on main, restart bt-durable.service and bitacora-web.service
+result: merged 5350d977a991, restarted bt-durable.service, bitacora-web.service, smoke ok
+post-merge: full regression of 5350d977a991 started (unit bt-post-regress-solver-vanished-requeue-20261031-104822 (journalctl --user -u bt-post-regress-solver-vanished-requeue-20261031-104822))
+post-merge full regression of 5350d977a991 (solver-vanished-requeue): 314 files, no failures (/home/david/.local/share/bitacora-integrate/regress/post-solver-vanished-requeue-20261031-104822/results.txt): green
+
+# integration of The panel and remote stop recomputing per poll; the relay hook skips the CLI; background work yields CPU and keeps test fsyncs off the disk (D-248, D-249, D-250), local restart of engine + web, 2026-10-31 11:57, session metodologia-90
+previous main: 5350d977a9912b6beeed897105c7471a5eca5fa5
+/home/david/bitacora/.state/durable/backups/bt_durable-20261031-115701.dump 43460984 36603619915d083d1bab957b4354f44527ee38afabad6981249174a3620eb6f8
+regression: 314 files, no failures [staged: first 16 in 1m32s, then the rest 298 in 32m51s] (/home/david/.local/share/bitacora-integrate/regress/machine-responsive-20261031-104826/results.txt)
+rollback: git revert the merge of machine-responsive on main, restart bt-durable.service and bitacora-web.service
+result: merged aaf31a8d68d4, restarted bt-durable.service, bitacora-web.service, smoke ok
+
+# integration of Solucionador watches count only observed inactivity across engine restarts; hermetic planner-notice tests (D-242, D-247), local restart of engine + web, 2026-10-31 12:30, session metodologia-90
+previous main: aaf31a8d68d496bd40a0bfacd533b9730ab2c87a
+/home/david/bitacora/.state/durable/backups/bt_durable-20261031-123016.dump 43952916 fbaf1266b61f4a481a15fcc1c5e33472f450e33785f5ee2af504f6a4be0fc640
+regression: 315 files, no failures + test_verify_procs (load flake, passes alone) [staged: selected 108 in 25m11s, then the rest 207 in 7m39s] (/home/david/.local/share/bitacora-integrate/regress/solver-20261031-075511-d592-20261031-115725/results.txt)
+rollback: git revert the merge of solver/20261031-075511-d592 on main, restart bt-durable.service and bitacora-web.service
+result: merged de091646bc94, restarted bt-durable.service, bitacora-web.service, smoke ok

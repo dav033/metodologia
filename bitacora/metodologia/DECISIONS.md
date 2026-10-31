@@ -2971,3 +2971,38 @@ Solucionador 20261030-100736-d494 integrated merge fff622890f28b8093a9a0afda9c40
 - **Rule:** a machine restart must never turn work in flight into an abandoned case.
 - **Evidence:** `test_durable_solver.test_a_session_that_vanished_hands_its_cases_back_to_the_queue` (red on main).
   Branch `solver-vanished-requeue`.
+
+## D-242 — The Solucionador's watches count only inactivity someone observed
+
+- **Date:** 2026-10-31 · **Status:** Accepted · **Refines:** D-190, D-251
+- **Context:** after the overnight shutdown the `stuck`/`stalled` watches, which stored a wall-clock «since», counted the
+  downtime as inactivity: 32 s after the engine started they raised a false `stuck` for REQ-021 T10.441 (42 357 s of
+  stored age) although the task completed fine.
+- **Decision:** trigger detection moves to `bt_durable/solver_triggers.py`; each engine process has its own observation
+  epoch and marks record when they were last observed; a restart keeps the inactivity already observed and excludes
+  the time nobody observed; old marks start a new window once. Keys, quota/recovery deadlines, decisions and blocks
+  unchanged; no workflow step change. Built by the Solucionador (session d592), merged with main by an Opus subagent.
+- **Evidence:** `test_durable_solver_restart_clocks`, `test_durable_solver`, `test_owner_reject_solver` green.
+
+## D-247 — Planner-notice tests never read the live terminal
+
+- **Date:** 2026-10-31 · **Status:** Accepted
+- **Decision:** `test_page_planning_asks` patches the screen and the notes directory, so a live Planner's quota wall can
+  neither fail it nor write into the live plan feed (08:40 incident, false «sin cuota» line).
+
+## D-252 — Never type into a pane whose agent exited
+
+- **Date:** 2026-10-31 · **Status:** Accepted · **Refines:** D-199, D-238, D-251
+- **Context:** pictures REQ-021's Planner (Codex) exited at 09:53; its pane fell back to `start`'s `exec bash` shell. At
+  09:57 `tell-planner` printed «Enviado al Planner.» and typed the plan change request at the shell prompt (a submitted
+  line runs as a command: the test's `echo PWNED > …` trap fired on main). `exists` checked only the tmux session;
+  `#{pane_current_command}` reads `bash` while the agent runs too. Also: suites that patched `exists` but left tmux
+  real could reach the live `-L bitacora` socket.
+- **Decision:** `agent_state` is `running` only while `start`'s wrapper (or an agent the owner started by hand) is in
+  the pane's process tree; every keystroke checks it. A Planner left as a shell is killed (never cleared) and started
+  again like an absent one with its notices (`after_exit`, state `restarted`); a Solucionador left as a shell is closed
+  as vanished (D-251) unless its own integration runs. `bt_regress` gives each suite its own `BITACORA_TMUX_SOCKET`.
+- **Rule:** nothing is typed into a pane unless its agent is verified to be its running program.
+- **Evidence:** `test_agent_terminal.DeadPane` (4), `test_durable_solver.ExitedAgent`, `test_regress_venv.TmuxSocket`
+  (red on main); 140 selected suites green. Built by an Opus subagent. The owner authorized the operator to kill the
+  dead session by hand at 10:13 (the classifier had refused it).

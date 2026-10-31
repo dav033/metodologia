@@ -590,3 +590,34 @@
 {"at": "2026-10-31T09:56:35-05:00", "who": "Tú", "kind": "flow", "sp": "SP-10", "text": "Confirmaste SP-10 en la conversación; todos listos", "diff": ""}
 {"at": "2026-10-31T10:00:52-05:00", "who": "Planner", "kind": "plan", "sp": "SP-10", "text": "Actualizó SP-10", "diff": ""}
 {"at": "2026-10-31T10:00:52-05:00", "who": "Planner", "kind": "doc", "sp": "", "text": "PLAN.md: «M3 — English / Spanish», «Review focus — SP-3 (2026-10-27, contract and code changes)» cambió", "diff": ""}
+{"at": "2026-10-31T10:16:03-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-14", "text": "SP-14 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T10:16:03-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-2", "text": "SP-2 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T10:16:03-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-4", "text": "SP-4 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T10:16:03-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-5", "text": "SP-5 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T10:16:03-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-6", "text": "SP-6 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T10:16:03-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-7", "text": "SP-7 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T10:16:03-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-8", "text": "SP-8 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T10:16:03-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-9", "text": "SP-9 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T10:16:03-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-14", "text": "SP-14 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T10:16:03-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-2", "text": "SP-2 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T10:16:03-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-4", "text": "SP-4 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T10:16:03-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-5", "text": "SP-5 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T10:16:03-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-6", "text": "SP-6 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T10:16:03-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-7", "text": "SP-7 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T10:16:03-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-8", "text": "SP-8 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T10:16:03-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-9", "text": "SP-9 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T10:22:11-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-3", "text": "SP-3 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T10:22:11-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-4", "text": "SP-4 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T11:15:28-05:00", "who": "Autocuración", "kind": "flow", "sp": "", "text": "T10.45: retry_with_note automático (Integridad): El verificador rechazó la identidad del candidato: el mapa M6 incluye salidas generadas", "diff": ""}
+{"at": "2026-10-31T11:22:46-05:00", "who": "Solucionador", "kind": "flow", "sp": "", "text": "T10.45: el mismo fallo volvió; pasa al Solucionador (the failure healing already answered came back (e3056101dce2adc9): the task used its attempts)", "diff": ""}
+{"at": "2026-10-31T11:22:46-05:00", "who": "Solucionador", "kind": "flow", "sp": "", "text": "T10.45: el Solucionador ya lo intentó 3 veces; queda para ti (the failure healing already answered came back (e3056101dce2adc9): the task used its attempts)", "diff": ""}
+{"at": "2026-10-31T11:46:13-05:00", "who": "Autocuración", "kind": "flow", "sp": "", "text": "T10.45: T10.45:d3 queda para ti (límite de reparaciones automáticas alcanzado)", "diff": ""}
+{"at": "2026-10-31T11:46:13-05:00", "who": "Solucionador", "kind": "flow", "sp": "", "text": "T10.45: la autocuración dejó la decisión para ti; pasa al Solucionador (healing's repair limit is reached)", "diff": ""}
+{"at": "2026-10-31T11:46:13-05:00", "who": "Solucionador", "kind": "flow", "sp": "", "text": "T10.45: el Solucionador ya lo intentó 3 veces; queda para ti (healing's repair limit is reached)", "diff": ""}
+{"at": "2026-10-31T12:10:49-05:00", "who": "Autocuración", "kind": "flow", "sp": "", "text": "T10.45: T10.45:d4 queda para ti (límite de reparaciones automáticas alcanzado)", "diff": ""}
+{"at": "2026-10-31T12:10:49-05:00", "who": "Solucionador", "kind": "flow", "sp": "", "text": "T10.45: la autocuración dejó la decisión para ti; pasa al Solucionador (healing's repair limit is reached)", "diff": ""}
+{"at": "2026-10-31T12:10:49-05:00", "who": "Solucionador", "kind": "flow", "sp": "", "text": "T10.45: el Solucionador ya lo intentó 3 veces; queda para ti (healing's repair limit is reached)", "diff": ""}
+{"at": "2026-10-31T12:32:20-05:00", "who": "Autocuración", "kind": "flow", "sp": "", "text": "T10.45: T10.45:d5 queda para ti (límite de reparaciones automáticas alcanzado)", "diff": ""}
+{"at": "2026-10-31T12:32:20-05:00", "who": "Solucionador", "kind": "flow", "sp": "", "text": "T10.45: la autocuración dejó la decisión para ti; pasa al Solucionador (healing's repair limit is reached)", "diff": ""}
+{"at": "2026-10-31T12:32:20-05:00", "who": "Solucionador", "kind": "flow", "sp": "", "text": "T10.45: el Solucionador ya lo intentó 3 veces; queda para ti (healing's repair limit is reached)", "diff": ""}
+{"at": "2026-10-31T12:34:09-05:00", "who": "Tú", "kind": "verify", "sp": "SP-2", "text": "Rechazaste SP-2 (versión 2): El desplegable el menu del usuario se peude desplegar, epro no se peude cerrar de ninguna amnera, solamente si se entra ", "diff": ""}
