@@ -569,3 +569,24 @@
 {"at": "2026-10-31T07:55:11-05:00", "who": "Solucionador", "kind": "flow", "sp": "", "text": "T10.441: la tarea no avanza; pasa al Solucionador (state running unchanged since 2026-10-30T20:09:14 while its workflow is PENDING)", "diff": ""}
 {"at": "2026-10-31T07:55:11-05:00", "who": "Solucionador", "kind": "flow", "sp": "", "text": "T10.441: el Solucionador empezó (bit-pictures-REQ-021-solver, codex gpt-6.1-sol): state running unchanged since 2026-10-30T20:09:14 while its workflow is PENDING", "diff": ""}
 {"at": "2026-10-31T08:40:52-05:00", "who": "Planner", "kind": "flow", "sp": "", "text": "El Planner de REQ-021 se quedó sin cuota y no pude abrirlo en otra cuenta (Ya hay un Planner en marcha para este plan (bit-pictures-REQ-021-planner).): guardé el mensaje y se lo reenvío solo a las 08:45.", "diff": ""}
+{"at": "2026-10-31T08:57:18-05:00", "who": "Autocuración", "kind": "flow", "sp": "", "text": "T10.45: el diagnóstico no basta para decidir solo (stop, confianza media); T10.45:d1 queda para ti", "diff": ""}
+{"at": "2026-10-31T08:57:18-05:00", "who": "Solucionador", "kind": "flow", "sp": "", "text": "T10.45: la autocuración dejó la decisión para ti; pasa al Solucionador (the diagnosis is not enough to answer alone (option stop, confidence media): Falló la verificación del idioma inglés: texto en español y error de build)", "diff": ""}
+{"at": "2026-10-31T09:18:19-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-11", "text": "SP-11 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T09:18:19-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-12", "text": "SP-12 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T09:18:19-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-14", "text": "SP-14 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T09:18:19-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-2", "text": "SP-2 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T09:18:19-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-4", "text": "SP-4 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T09:18:19-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-5", "text": "SP-5 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T09:18:19-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-6", "text": "SP-6 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T09:18:19-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-7", "text": "SP-7 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T09:18:19-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-8", "text": "SP-8 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T09:18:19-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-9", "text": "SP-9 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T09:18:22-05:00", "who": "Planner", "kind": "plan", "sp": "SP-10", "text": "Actualizó SP-10 (tareas)", "diff": "+ tarea: Repair the typed language fixture and English fifteenth-birthday label"}
+{"at": "2026-10-31T09:18:22-05:00", "who": "Planner", "kind": "doc", "sp": "", "text": "PLAN.md: «M3 — English / Spanish», «Review focus — SP-3 (2026-10-27, contract and code changes)» cambió", "diff": ""}
+{"at": "2026-10-31T09:41:33-05:00", "who": "Solucionador", "kind": "flow", "sp": "", "text": "T10.441: Solucionador · no pudo resolverlo: la sesión terminó sin escribir result.json", "diff": ""}
+{"at": "2026-10-31T09:47:46-05:00", "who": "Solucionador", "kind": "flow", "sp": "", "text": "T10.45: el Solucionador empezó (bit-pictures-REQ-021-solver, codex gpt-6.1-sol): the diagnosis is not enough to answer alone (option stop, confidence media): Falló la verificación del idioma inglés: texto en español y error de build", "diff": ""}
+{"at": "2026-10-31T09:50:17-05:00", "who": "Planner", "kind": "flow", "sp": "", "text": "El Planner se quedó sin cuota: lo pasé a otra cuenta con los avisos que no había leído", "diff": ""}
+{"at": "2026-10-31T09:55:36-05:00", "who": "Solucionador", "kind": "flow", "sp": "", "text": "T10.45: Solucionador · te pregunta algo: Reparación de SP-10 validada; falta confirmación porque D-241 no está desplegada.", "diff": ""}
+{"at": "2026-10-31T09:56:35-05:00", "who": "Tú", "kind": "flow", "sp": "SP-10", "text": "Confirmaste SP-10 en la conversación; todos listos", "diff": ""}
+{"at": "2026-10-31T10:00:52-05:00", "who": "Planner", "kind": "plan", "sp": "SP-10", "text": "Actualizó SP-10", "diff": ""}
+{"at": "2026-10-31T10:00:52-05:00", "who": "Planner", "kind": "doc", "sp": "", "text": "PLAN.md: «M3 — English / Spanish», «Review focus — SP-3 (2026-10-27, contract and code changes)» cambió", "diff": ""}

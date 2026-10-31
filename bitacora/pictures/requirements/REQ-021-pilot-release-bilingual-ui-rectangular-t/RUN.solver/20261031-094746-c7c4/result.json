@@ -1,0 +1,11 @@
+{
+  "outcome": "asked_owner",
+  "summary": "Reparación de SP-10 validada; falta confirmación porque D-241 no está desplegada.",
+  "handled": [
+    "pictures:REQ-021:r29:T10.45:T10.45:d1@k1"
+  ],
+  "decision": "T10.45:d1@k1",
+  "question": "¿Confirmas la modificación exacta de SP-10: añadir T10.442 después de T10.441 y hacer que T10.45 dependa de ella, conservando todos los criterios, checks y gates? Con tu sí continuaré por freeze/join normal y reintentaré el arnés tras programar el productor; con tu no conservaré r29 sin reintentar.",
+  "commits": [],
+  "rule": "D-084"
+}

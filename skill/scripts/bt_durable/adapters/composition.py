@@ -90,6 +90,30 @@ class CompositionComposer:
                 "members": dict(candidate.members), "reason": candidate.reason_code or "",
                 "conflicts": {key: list(value) for key, value in (candidate.conflicts or {}).items()}}
 
+    def stale_members(self, run: RunRef, gate_id: str, snapshot: str) -> list[str]:
+        """The members of a passed gate whose subplan line now holds work the gate's accepted snapshot was not built on
+        (in plan order). Read-only. A candidate commit has each member's version commit as its second parent
+        (`compose <plan> <SP>@v<N>`), so the gate task's snapshot names, on its first-parent history, exactly which
+        member commits it was verified with, whichever revision composed it; a member is stale when its line's tree
+        differs from that commit's (a stage join that re-seeds a line with the same tree changes nothing). A member the
+        snapshot names no version of is stale when its line is neither in the snapshot's history nor already merged in."""
+        plan = self.plan_for(run)
+        gate = next(item for item in plan.composition_gates if item.id == gate_id)
+        repo = self.lines._repo(plan.task(gate.task).repository)
+        role = plan.task(gate.task).repository
+        used = _composed_members(repo, snapshot)
+        out = []
+        for subplan_id in _composition_order(plan, gate):
+            tip = self.lines._tip(repo, self.lines.subplan_ref(run, role, subplan_id))
+            if not tip:
+                continue                                 # no line: nothing newer than what the gate saw
+            if subplan_id in used:
+                if _tree(repo, tip) != _tree(repo, used[subplan_id]):
+                    out.append(subplan_id)
+            elif not _contains(repo, snapshot, tip):
+                out.append(subplan_id)
+        return out
+
     def candidate_commit(self, run: RunRef, task: TaskSpec, gate_id: str) -> str:
         plan = self.plan_for(run)
         gate = next(item for item in plan.composition_gates if item.id == gate_id)
@@ -183,6 +207,33 @@ def _prior_candidate(repo: Path, tip: str, built, folded: set[str]) -> str:
         if inside:
             return candidate.integrated_commit
     return ""
+
+
+_COMPOSED = re.compile(r"^compose \S+ (\S+)@v\d+$")
+
+
+def _composed_members(repo: Path, snapshot: str) -> dict[str, str]:
+    """Subplan -> the version commit the newest candidate on `snapshot`'s first-parent history folded for it."""
+    log = subprocess.run(["git", "-C", str(repo), "log", "--first-parent", "--format=%P%x00%s", snapshot],
+                         capture_output=True, text=True, check=False)
+    out: dict[str, str] = {}
+    for line in log.stdout.splitlines() if log.returncode == 0 else ():
+        parents, _, subject = line.partition("\0")
+        found = _COMPOSED.match(subject.strip())
+        parents = parents.split()
+        if found and len(parents) == 2:
+            out.setdefault(found.group(1), parents[1])
+    return out
+
+
+def _contains(repo: Path, snapshot: str, tip: str) -> bool:
+    """`tip` is in `snapshot`'s history, or merging it into `snapshot` changes nothing."""
+    if subprocess.run(["git", "-C", str(repo), "merge-base", "--is-ancestor", tip, snapshot], capture_output=True,
+                      check=False).returncode == 0:
+        return True
+    merged = subprocess.run(["git", "-C", str(repo), "merge-tree", "--write-tree", "--no-messages", snapshot, tip],
+                            capture_output=True, text=True, check=False)
+    return merged.returncode == 0 and merged.stdout.split("\n", 1)[0].strip() == _tree(repo, snapshot)
 
 
 def _merge_base(repo: Path, tip: str, other: str) -> str:

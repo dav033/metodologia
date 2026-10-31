@@ -104,6 +104,31 @@
    "id": "D-246",
    "by": "gate-recompose subagent: Probar folds predecessors' current lines into a later subplan's tree",
    "at": "2026-10-31T08:34:45"
+  },
+  {
+   "id": "D-247",
+   "by": "solver 20261031-075511-d592: isolate planner notification terminal fixture",
+   "at": "2026-10-31T08:42:53"
+  },
+  {
+   "id": "D-248",
+   "by": "machine-responsive subagent: panel and remote listener stop recomputing the read model per poll",
+   "at": "2026-10-31T08:44:21"
+  },
+  {
+   "id": "D-249",
+   "by": "machine-responsive subagent: frequent agent hooks take a fast path",
+   "at": "2026-10-31T08:44:21"
+  },
+  {
+   "id": "D-250",
+   "by": "machine-responsive subagent: background work yields CPU and keeps test fsyncs off the disk",
+   "at": "2026-10-31T08:44:22"
+  },
+  {
+   "id": "D-251",
+   "by": "metodologia-95: a vanished Solucionador session's triggers go back to the queue",
+   "at": "2026-10-31T09:46:08"
   }
  ]
 }

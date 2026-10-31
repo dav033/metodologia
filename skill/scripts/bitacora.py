@@ -253,6 +253,9 @@ def main() -> None:
     if a.cmd == "commit":
         from bt_secrets import alert
         from bt_vcs import commit
+        if os.environ.get("BITACORA_AGENT_ROLE") and alert(ROOT):
+            # a role session (Planner, Solucionador…) never resolves the secret alert: it is the owner's (D-237)
+            return print("REFUSED — the bitácora's secret alert is the owner's to resolve, not this agent session's")
         if commit(ROOT, a.message):
             return print("committed")
         return print(f"BLOCKED — possible secret:\n{alert(ROOT)}" if alert(ROOT) else "nothing to commit")

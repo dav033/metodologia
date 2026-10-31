@@ -20,7 +20,10 @@ Triggers (`Trigger`), each launched at most once per key:
   decision was open (2026-10-30). Once per block (the task's round workflow and the run's reason); a block already given
   to the Solucionador is not given again by `stalled` or `ended`;
 - `resolution`: a composition conflict waits in `<state>/composition/resolutions/<key>.json` without `<key>.resolved`
-  for `solver.resolution_after_seconds` (`bt_durable.resolutions`): no retry can settle it.
+  for `solver.resolution_after_seconds` (`bt_durable.resolutions`): no retry can settle it;
+- `owner_rejected`: the owner tried a published subplan version in «Probar» and rejected it with a note
+  (`bt_durable.rejections`): once per rejection (subplan, version, commit and note), current while it stands. Its
+  slot for `max_per_task` is the subplan.
 """
 from __future__ import annotations
 
@@ -55,6 +58,11 @@ def _observe(previous: dict, fingerprint: str, now: float) -> dict:
 
 def _iso(epoch: float) -> str:
     return time.strftime("%Y-%m-%dT%H:%M:%S", time.localtime(epoch))
+
+
+def slot(item: dict) -> str:
+    """What a trigger is about, for `max_per_task` and the activity lines: its task, its subplan, or the run."""
+    return str(item.get("task_id") or item.get("subplan") or "run")
 
 
 def trigger(kind: str, key: str, run_id: str, *, task_id: str = "", request_id: str = "", round_no: int | None = None,

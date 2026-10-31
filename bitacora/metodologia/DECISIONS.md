@@ -2871,3 +2871,103 @@ Solucionador 20261030-100736-d494 integrated merge fff622890f28b8093a9a0afda9c40
 - **Evidence:** `test_durable_verification.BuiltBeforeItsGate` (2, real git; red on main). Live read-only check: SP-11
   and SP-12 appear as v1; SP-2 becomes v2 with T2.55/T2.56/T2.7's repairs; no owner decision existed to lose (all
   «to_test»). Branch `built-subplan-versions` (staged/full regression, not selective, until D-240 is on main).
+
+## D-248 — The panel and the remote listener stop recomputing the read model per poll
+
+- **Date:** 2026-10-31 · **Status:** Accepted
+- **Context:** owner: «cuando los agentes están corriendo el sistema se vuelve bastante lento». Measured 08:28–09:10:
+  `bitacora-web` at 40–60% of a core writing ~2 MiB/s (each SSE client polled every 0.25 s, re-reading every store and
+  re-parsing an 800 KB PLAN.json four times a second; hidden tabs kept streaming); `bitacora-remote` at ~60% (the advin
+  gateway probes every 5 s and each probe rebuilt ~83 `plan_status` calls); it also runs an old pin (3519eec, P-144).
+- **Decision:** `bt_live_api` polls at 0.5 s and re-reads a run only when its store marks change (forced every 30 s),
+  caches the subplan scope by PLAN.json stat, `NOW_TTL` 4 s; `bt_planstatus.reuse()/forget()` memoizes `plan_status` by
+  file marks (≤15 s, private copies; only in `serve`/`serve-remote`, cleared after every POST); an empty WAL is not a
+  change; hidden tabs close their streams (`live.js`, `flow.js`, `plans-live.js`).
+- **Evidence:** panel 18.8% → 4.7% CPU, 1.93 → 0.09 MiB/s; a remote cycle 950 → 317 ms CPU; `test_live_api.QuietStores`,
+  `test_planstatus.Reuse`. A plan's status may lag a change outside the watched files by up to 15 s.
+
+## D-249 — The relay hook skips the CLI
+
+- **Date:** 2026-10-31 · **Status:** Accepted
+- **Decision:** `bitacora.py hook relay` (every PostToolUse/UserPromptSubmit/Stop of every session) goes straight to
+  `bt_relay` without importing ~20 CLI modules: ~450 → ~160 ms per tool call.
+- **Evidence:** `test_relay.test_the_cli_hook_skips_the_command_modules`.
+
+## D-250 — Background work yields CPU and keeps test fsyncs off the disk
+
+- **Date:** 2026-10-31 · **Status:** Accepted
+- **Context:** the desktop felt disk I/O most (system `io full` avg 8.7%, p95 15%): regression suites fsync on btrfs
+  (`TMPDIR=~/.local/tmp`), 182 MiB per 30 s; M6 checks (`next build` ~700%) ran at nice 0. IOWeight is inert here (io
+  controller not delegated to user@, scheduler `none`).
+- **Decision:** attempt units (`bt_supervisor/systemd.py`) and `bt-durable.service` get Nice=15, CPUWeight=20,
+  IOWeight=20; `bt_regress` gives each suite a private TMPDIR on a tmpfs with ≥4 GiB free (`BT_REGRESS_TMPDIR` overrides;
+  empty keeps the inherited one). A hand-made drop-in `~/.config/systemd/user/bt-.service.d/prioridad-baja.conf` (08:02,
+  not from this session) already lowers every `bt-*` unit and is kept.
+- **Evidence:** `test_supervisor_limits.SystemdPriority`, `test_regress_venv.FastTemp`. Built by an Opus subagent
+  (branch `machine-responsive`). Left: refresh the remote pin after integration (and make integrations do it); planners'
+  tmux in its own low-weight scope; Stop hook ~1 s per turn; real I/O weighting needs a system-level change.
+
+## D-241 — A bounded repair of a confirmed defect keeps the owner's confirmation
+
+- **Date:** 2026-10-31 · **Status:** Accepted · **Refines:** D-233, D-134 (stages)
+- **Context:** pictures REQ-021 r28 T10.45 failed five times on a real product defect; the Solucionador reproduced it and
+  prepared the bounded repair T10.441 with the Planner, then stopped `asked_owner` because a confirmed subplan's change
+  needed the owner's re-confirmation; the run sat idle 18:36→20:02. Owner (2026-10-30 ~20:02, «Sí, y que sea regla»): a
+  bounded repair of a confirmed defect that changes no criteria or gates needs no owner reconfirmation.
+- **Decision:** `bt_planner/repairs.py` classifies a draft against the latest frozen stage as a bounded repair only if
+  tasks are only added (implement/test, in an approved subplan, not UI, an approved task waits for each), approved tasks
+  keep every field except `after` (which may only gain the new tasks, keeping its dependencies transitively), subplans
+  only gain `checkpoints`, milestones/gates/interfaces/requirements and the SPEC text they cover are unchanged, the
+  owner's stored confirmation equals the frozen content, and an evidence file under `RUN.*`/`evidence/` names the
+  approved task that found the defect. Then `stage freeze|run --repair-evidence … --by planner|solver` re-confirms the
+  subplan `by: policy` (Plan tab, activity, planning note). Anything else goes to the owner.
+- **Evidence:** `test_bounded_repair` (13; the module fails to import on main); the live r28→r29 change (T10.441) is
+  classified bounded. Built by an Opus subagent.
+
+## D-244 — An owner's «No funciona» reaches the Solucionador and comes back as a version to try
+
+- **Date:** 2026-10-31 · **Status:** Accepted · **Refines:** D-131, D-235, D-241
+- **Context:** a rejection only recorded the decision and opened a P-item; nothing reacted. Owner: «mete lo que me
+  dijiste de que lo pase al solucionador y llena los huecos».
+- **Decision:** a rejection becomes an `owner_rejected` Solucionador trigger (once per subplan, version, commit and
+  note; to a running session's inbox) whose brief carries the owner's note, the `## Pruebas` row and pages and how to
+  reproduce on that exact commit (version copy, `verify serve`, test accounts, `storage-state`, Playwright); the
+  Solucionador routes a bounded repair (D-241) or answers the owner. The next version shows «por probar» with «Rechazaste
+  la versión N: …; comprueba esto en la versión M» and the Solucionador's answer; the P-item is linked and closed when a
+  later version is approved.
+- **Evidence:** `test_owner_reject_solver` (8) + `test_verification` (red on main). Built by an Opus subagent.
+
+## D-245 — A passed gate whose member took unverified work is composed again
+
+- **Date:** 2026-10-31 · **Status:** Accepted · **Refines:** D-171..D-174 (gates), PATCH `bt-run-recompose-gate`
+- **Context:** owner: «¿y qué pasa con los subplanes subsecuentes? ¿reciben el arreglo de SP-2?». A gate that already
+  composed was never recomposed when a member later changed; if no later cumulative gate held that member, nothing
+  verified the combination again.
+- **Decision:** behind `DBOS.patch("bt-run-fresh-gates")`, a passed gate with no later gate holding all its members is
+  composed again when a member's line takes work its gate task was not verified on; the gate task runs a new round on
+  the new candidate; telemetry `gate_stale`.
+- **Evidence:** `test_durable_fresh_gates` (2 real-DBOS e2e + 2 pure). Built by an Opus subagent.
+
+## D-246 — A subplan is tried with the current work of the subplans it builds on
+
+- **Date:** 2026-10-31 · **Status:** Accepted · **Refines:** D-243
+- **Decision:** «Probar» offers a subplan's version with its predecessors' current line tips folded in by the composer's
+  conflict rules (`bt_verification_tree.py`); the tried commit changes only when the tree changes; the panel names the
+  included versions or the one it could not combine. Real-data check on pictures r29: SP-14, SP-3, SP-4 include SP-2 v2;
+  SP-5, SP-7..SP-9, SP-11, SP-12 conflict in 8 files with SP-2's r27 repairs (CG-12 will likely meet the same).
+- **Evidence:** `test_durable_verification` (red on main). Built by an Opus subagent.
+
+## D-251 — A vanished Solucionador session hands its cases back to the queue
+
+- **Date:** 2026-10-31 · **Status:** Accepted · **Refines:** D-190, D-214
+- **Context:** the owner shut the machine down (emergency) while Solucionador session `20261031-075511-d592` held
+  pictures REQ-021 T10.441 (stuck) with T10.45:d1 in its inbox. At 09:41 the engine found its tmux session gone with no
+  result.json and marked both triggers `gave_up`, a final state: the open decision T10.45:d1 had nobody to answer it and
+  the owner was told «El Solucionador no pudo» although nothing had been tried. «Debe aguantar reinicios y seguir solo».
+- **Decision:** a session that vanished decided nothing: its triggers and the ones queued in its inbox go back to
+  `pending` for the next session (bounded by `max_per_task` like any start); the activity says it closed without
+  finishing and its cases return to the queue; no owner notice. The watchdog's timeout and an explicit gave_up keep their
+  meaning. Live: the operator re-queued T10.45:d1 by hand at 09:48 (`solver.save`, atomic), recorded in the trigger.
+- **Rule:** a machine restart must never turn work in flight into an abandoned case.
+- **Evidence:** `test_durable_solver.test_a_session_that_vanished_hands_its_cases_back_to_the_queue` (red on main).
+  Branch `solver-vanished-requeue`.

@@ -147,7 +147,13 @@ def status(ctx: dict, s: dict, shared: dict) -> dict:
     defined = bool(s["tasks"]) and not planner and not pending_inputs
 
     state = (flow or {}).get("state")
-    if state == "confirmed":
+    policy = (flow or {}).get("policy") if state == "confirmed" else None
+    if isinstance(policy, dict):            # D-241: re-confirmed by the owner's standing rule for a bounded repair
+        decisions.append({"when": (flow or {}).get("confirmed_at") or "", "text": (
+            f"Sigue confirmado por tu regla {policy.get('rule') or ''}: solo se añadió la reparación acotada "
+            f"{', '.join(policy.get('repair') or [])} de un defecto confirmado (lo pidió {policy.get('requested_by') or '?'}; "
+            f"evidencia: {', '.join(policy.get('evidence') or [])})")})
+    elif state == "confirmed":
         where = {"web": " en la web", "conversation": " en la conversación"}.get((flow or {}).get("via"), "")
         decisions.append({"when": (flow or {}).get("confirmed_at") or "", "text": f"Confirmaste el subplan{where}"})
     confirm_step = "done" if state == "confirmed" or flow is None else "todo"

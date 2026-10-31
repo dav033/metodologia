@@ -32,6 +32,12 @@ Evidence directory: `/home/david/.local/share/bitacora-solver/pictures/20261031-
 - `git diff --check` passes. No separate typecheck/build command is configured for this Python module; the integration runs the full repository regression and packaging suites.
 - Read-only selection: 104/311 suites first, then all remaining suites. Integration must be staged/full, never selective.
 
+## Integration prerequisite: hermetic notification fixture (D-247)
+
+The earlier post-own-venv integration completed 311 suites and was refused solely for test_page_planning_asks.test_notify_planner_types_only_into_a_running_planner (also failed its isolated retry). D-238's notification path now reads the terminal screen before sending; the old success fixture mocked only exists/send, so the live Planner quota/modal state decided its result. A later ordinary isolated run passed with the ambient screen changed, confirming environmental dependence rather than an unconditional product failure.
+
+`verify_planner_fixture.py` deterministically rejects any unmocked external screen: baseline fails (exit 1), corrected fixture passes (exit 0). Commit `9b608a6c` pins the neutral successful screen and temporary note directory, preserves the absent/running/prefix assertions, and adds a real pre-send quota-held false/no-send case. No runtime notice code or permission rule changed. The full page suite (8 tests), terminal suite (16 tests), and fixture's own Ruff check pass. This prerequisite is in the same isolated branch and will be covered by the full integration. D-247 is reserved for its independent rule record.
+
 ## Decision and remaining work
 
 No answer or retry was sent: the triggering task already completed and has no open request. Finish queued integration through bt_integrate only, inspect the smoke and current status/inbox, record D-242 and the single run day-log line, then write the final report and result.json last.

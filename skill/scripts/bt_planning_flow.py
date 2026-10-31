@@ -262,6 +262,7 @@ def state(rdir: Path, subplans: list[dict] | None = None, design_rows: dict | No
         else:
             st = "defining" if focus == sp["id"] else "pending"
         per[sp["id"]] = {"state": st, "confirmed_at": record.get("at", ""), "via": record.get("via", ""),
+                         "by": record.get("by", ""), "policy": record.get("policy") or None,
                          "problems": problems(rdir, sp, design_rows, input_rows) if st != "confirmed" else []}
     if not subplans:
         phase = "interview"
@@ -289,6 +290,44 @@ def keep_confirmed(rdir: Path, sids: list[str], note: str) -> list[str]:
             if record and sid in by_id:
                 record.update(digest=_digest(rdir, plan, by_id[sid], rows), repinned=f"{_now()} {note}")
                 kept.append(sid)
+    return kept
+
+
+def _row(plan: dict, sid: str) -> dict:
+    """The `drafts.subplans` row of `sid` built from a given plan document (a frozen revision, or the draft read once)."""
+    item = next((s for s in plan.get("subplans") or [] if isinstance(s, dict) and s.get("id") == sid), {})
+    ui = item.get("ui") if isinstance(item.get("ui"), dict) else None
+    ref = (f"{ui['contract']}@v{ui['version']}" if ui and isinstance(ui.get("contract"), str)
+           and type(ui.get("version")) is int else None)
+    return {"id": sid, "ref": ref if ref and drafts._REF.match(ref) else None,
+            "tasks": [t for t in plan.get("tasks") or [] if isinstance(t, dict) and t.get("subplan_id") == sid]}
+
+
+def confirmed_as(rdir: Path, sid: str, plan: dict) -> bool:
+    """The owner's stored confirmation of `sid` is exactly `plan`'s version of it with today's inputs, `## Pruebas` rows
+    and design: nothing but the plan moved since (a bounded repair checks the plan itself, D-241)."""
+    record = _load(rdir)["subplans"].get(sid) or {}
+    return bool(record.get("digest")) and record["digest"] == _digest(rdir, plan, _row(plan, sid), inputs(rdir))
+
+
+def policy_confirm(rdir: Path, sids: list[str], plan: dict, *, rule: str, by: str, repair: list[str],
+                   evidence: list[str]) -> list[str]:
+    """Re-confirm `sids` for the owner's standing rule `rule` (D-241, a bounded repair of a confirmed defect): the
+    record keeps who confirmed before (`owner`) and says `by: policy`, the rule, who asked, the repair tasks and the
+    evidence, so the Plan tab shows why it holds. `plan` is the draft the caller classified: a later edit reopens it."""
+    rows = inputs(rdir)
+    kept = []
+    with _locked(rdir) as data:
+        for sid in sids:
+            record = data["subplans"].get(sid)
+            if not record:
+                continue
+            previous = {k: record.get(k) for k in ("at", "by", "via") if record.get(k)}
+            data["subplans"][sid] = {"at": _now(), "by": "policy", "via": "policy",
+                                     "digest": _digest(rdir, plan, _row(plan, sid), rows),
+                                     "policy": {"rule": rule, "requested_by": by, "repair": list(repair),
+                                                "evidence": list(evidence), "previous": previous}}
+            kept.append(sid)
     return kept
 
 

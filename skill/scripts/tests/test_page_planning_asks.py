@@ -85,7 +85,9 @@ class WebActions(Base):
         with patch("bt_agent_terminal.exists", return_value=False), patch("bt_agent_terminal.send") as send:
             self.assertFalse(terminal.notify_planner("pictures", "REQ-021", "hi"))
             send.assert_not_called()
-        # D-238 checks the screen before delivery; the real Planner's quota/modal must not decide this fixture (D-247).
+        # D-238 checks the screen before delivery: without patching it the test read the LIVE Planner's tmux screen, and a
+        # quota wall there sent it down the move/hold path against the real bitácora (2026-10-31 08:40, a false «sin
+        # cuota» in REQ-021's feed). The note directory is a temporary one for the same reason (D-247).
         with patch("bt_agent_terminal.exists", return_value=True), \
                 patch("bt_agent_terminal.screen", return_value=""), \
                 patch("bt_planner_notices._rdir", return_value=self.rdir), \
