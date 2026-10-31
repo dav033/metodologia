@@ -86,7 +86,8 @@ def start(name: str, cwd: Path, command: str, env: dict[str, str] | None = None,
     if exists(name):
         raise RuntimeError(f"La sesión {name} ya existe.")
     args = ["new-session", "-d", "-s", name, "-c", str(cwd), "-x", "200", "-y", "50"]
-    for key, value in (env or {}).items():
+    role = name.rsplit("-", 1)[-1] if name.startswith("bit-") else ""
+    for key, value in {**({"BITACORA_AGENT_ROLE": role} if role else {}), **(env or {})}.items():   # D-237
         args += ["-e", f"{key}={value}"]
     line = f"bash -lc {shlex.quote(command + '; exec bash')}"
     runner = shutil.which("systemd-run") if scope else None

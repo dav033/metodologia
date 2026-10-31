@@ -237,6 +237,16 @@ def compose(run: dict, gate_id: str, evidence: dict) -> dict:
     return _port(lambda: composer.compose(ref, gate_id, evidence))
 
 
+@DBOS.step(name="bt.gate_freshness", retries_allowed=True, max_attempts=3, interval_seconds=2)
+def gate_freshness(run: dict, snapshots: dict) -> dict:
+    """Gate id -> the members whose subplan line holds work the gate's accepted snapshot was not verified with."""
+    ref = RunRef.model_validate(run)
+    stale = getattr(engine.ports().composer, "stale_members", None)     # optional: a composer without it sees none
+    if stale is None:
+        return {}
+    return _port(lambda: {gate_id: stale(ref, gate_id, snapshot) for gate_id, snapshot in snapshots.items()})
+
+
 @DBOS.step(name="bt.emit")
 def emit(event: str, fields: dict) -> None:
     engine.ports().telemetry.emit(event, **fields)

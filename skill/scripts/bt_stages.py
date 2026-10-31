@@ -12,16 +12,27 @@ A stage that would hold a single audit gets its independent cross-check first (`
 `<audit>b` to the plan and keeps the confirmations that held, instead of refusing.
 
 Pressing the button is the owner's approval of the stage; `bitacora.py stage run` is honor-system like
-`planning confirm` (an agent runs it only when the owner said so). Refusals carry a stable code.
+`planning confirm` (an agent runs it only when the owner said so). The one exception is the owner's standing rule
+D-241: when the only change to the approved stage is a bounded repair of a confirmed defect (`bt_planner.repairs`) and
+run evidence names the approved task that found it, an agent passes that evidence (`--repair-evidence`) and the
+subplans it touches are re-confirmed `by: policy`, so the stage freezes and the run joins without the owner. Refusals
+carry a stable code.
 """
 from __future__ import annotations
 
 import hashlib
+import re
 from collections.abc import Callable
 from pathlib import Path
 
 import bt_planning_activity as activity
 import bt_planning_flow as flow
+
+REPAIR_RULE = "D-241"
+# Where run evidence of a confirmed defect lives inside a requirement: what the run, its verifier, healing, the
+# diagnosis and the Solucionador wrote (`RUN.*`) and the evidence folder; never the planning documents themselves.
+_EVIDENCE_ROOTS = ("evidence",)
+_EVIDENCE_READ = 1 << 20
 
 
 class StageError(Exception):
@@ -149,14 +160,106 @@ def _add_second_auditor(rdir: Path, stage: list[str], add: list[str]) -> list[st
     return changed
 
 
-def freeze(project: str, rdir: Path, add: list[str]) -> dict:
-    """Approve the next stage (the approved subplans plus `add`) and freeze it; returns the manifest entry."""
+def _repair_evidence(rdir: Path, refs: list[str], detectors: list[str]) -> list[str]:
+    """The run evidence that confirms the defect (D-241): files inside the requirement under `RUN.*` or `evidence/`,
+    non-empty, and together naming (in their path or text) an approved task that now waits for the repair."""
+    root = Path(rdir).resolve()
+    out, named = [], False
+    for ref in dict.fromkeys(r.strip() for r in refs if r and r.strip()):
+        path = (root / ref).resolve()
+        rel = path.relative_to(root) if path.is_relative_to(root) else None
+        head = rel.parts[0] if rel and rel.parts else ""
+        if rel is None or not (head.startswith("RUN.") or head in _EVIDENCE_ROOTS):
+            raise StageError("STAGE_REPAIR_EVIDENCE", f"{ref}: la evidencia es un archivo del run dentro del "
+                             "requerimiento (RUN.* o evidence/), no un documento de planificación")
+        try:
+            if not path.is_file() or not path.stat().st_size:
+                raise OSError("empty or missing")
+            text = path.read_bytes()[:_EVIDENCE_READ].decode("utf-8", "replace")
+        except OSError as exc:
+            raise StageError("STAGE_REPAIR_EVIDENCE", f"{ref}: no se puede leer como evidencia ({exc})") from exc
+        named = named or any(re.search(rf"(?<![\w.]){re.escape(t)}(?!\w|\.\d)", f"{rel}\n{text}") for t in detectors)
+        out.append(str(rel))
+    if not out:
+        raise StageError("STAGE_REPAIR_EVIDENCE", "una reparación acotada necesita la evidencia del defecto confirmado "
+                         "(--repair-evidence: verificación fallida, diagnóstico, hallazgo de auditoría o informe)")
+    if not named:
+        raise StageError("STAGE_REPAIR_EVIDENCE", "la evidencia no nombra la tarea aprobada que encontró el defecto ("
+                         + ", ".join(detectors) + ")")
+    return out
+
+
+def repair_reconfirm(rdir: Path, evidence: list[str], by: str) -> list[str]:
+    """The owner's standing rule D-241: when the draft differs from the latest approved stage only by a bounded repair
+    of a confirmed defect, re-confirm the subplans it touches `by: policy` (the owner confirmed everything else, and
+    that confirmation is checked to be exactly the frozen content). Anything more raises STAGE_REPAIR_UNBOUNDED: the
+    owner re-confirms it as before. Returns the re-confirmed subplans (empty when they already held)."""
+    import bt_design_drafts as drafts
+    import bt_plan_adapter
+    import bt_planning_notes as notes
+    planner = bt_plan_adapter.planner
+    if not flow.active(rdir):
+        raise StageError("STAGE_REPAIR_UNBOUNDED", "el requerimiento no está en la planificación conjunta")
+    try:
+        found = planner.stages.latest(rdir)
+        pinned = planner.stages._pins(rdir)
+    except Exception as exc:  # noqa: BLE001 - an unreadable store never confirms anything
+        raise StageError(getattr(exc, "code", "PLAN_REVISIONS_UNREADABLE"), str(exc)) from exc
+    if not found:
+        raise StageError("STAGE_REPAIR_UNBOUNDED", "no hay etapa aprobada: una reparación acotada corrige una etapa aprobada")
+    entry, frozen = found
+    st = flow.state(rdir)
+    held = planner.stages.subplans_in(frozen)
+    if all((st["subplans"].get(sid) or {}).get("state") == "confirmed" for sid in held):
+        return []                   # already frozen (the Planner froze it, the Solucionador now joins): nothing to keep
+    plan = drafts._plan(rdir)
+    if not plan:
+        raise StageError("STAGE_APPROVAL_CHANGED", "PLAN.json se está editando (no se puede leer); inténtalo en unos segundos")
+    verdict = planner.repairs.classify(frozen, plan)
+    reasons = list(verdict["reasons"])
+    if pinned and (pins := pinned[0].get("stage") or {}).get("requirements_sha256") and planner.stages.requirements_digest(
+            rdir, pinned[1], all_requirements=bool(pins.get("complete"))) != pins["requirements_sha256"]:
+        reasons.append("cambió un requisito de SPEC que cubre la etapa")
+    changed = [sid for sid, item in st["subplans"].items() if sid in held and item["state"] != "confirmed"]
+    reasons += [f"{sid} cambió fuera de la reparación" for sid in changed if sid not in verdict["subplans"]]
+    todo = [sid for sid in verdict["subplans"] if st["subplans"].get(sid, {}).get("state") != "confirmed"]
+    reasons += [f"{sid}: lo que confirmó el propietario no es lo aprobado en r{entry['revision']} (cambió algo más: "
+                "entradas, pruebas o diseño)" for sid in todo if not flow.confirmed_as(rdir, sid, frozen)]
+    if reasons:
+        raise StageError("STAGE_REPAIR_UNBOUNDED", "no es una reparación acotada, la reconfirma el propietario: "
+                         + "; ".join(reasons[:6]))
+    rows = {row["id"]: row for row in flow._plan_order(rdir)}
+    blocked = [f"{sid}: {'; '.join(p[:2])}" for sid in todo if sid in rows and (p := flow.problems(rdir, rows[sid]))]
+    if blocked:
+        raise StageError("STAGE_SUBPLAN_UNCONFIRMED", "; ".join(blocked))
+    refs = _repair_evidence(rdir, evidence, verdict["detectors"])
+    if not todo:
+        return []
+    kept = flow.policy_confirm(rdir, todo, plan, rule=REPAIR_RULE, by=by, repair=verdict["added"], evidence=refs)
+    added, waits = ", ".join(verdict["added"]), ", ".join(verdict["detectors"])
+    text = (f"{', '.join(kept)} sigue confirmado por tu regla {REPAIR_RULE}: solo se añadió la reparación acotada {added} "
+            f"de un defecto confirmado, antes de {waits}; ningún criterio, verificación ni compuerta cambió respecto a "
+            f"r{entry['revision']}. Lo pidió {by}; evidencia: {', '.join(refs)}")
+    activity.record(rdir, "Política", text, kind="flow", sp=kept[0] if kept else "")
+    try:
+        notes.add(rdir, text, kind="decision", by="policy")
+    except SystemExit:
+        pass
+    return kept
+
+
+def freeze(project: str, rdir: Path, add: list[str], *, repair_evidence: list[str] | None = None,
+           by: str = "owner") -> dict:
+    """Approve the next stage (the approved subplans plus `add`) and freeze it; returns the manifest entry. With
+    `repair_evidence`, a bounded repair of the approved stage is re-confirmed by policy first (D-241)."""
     import bt_design_drafts as drafts
     import bt_plan_adapter
     import bt_scheduler_adapter
     from bt_requirements_gate import PLANNING_FILES, require_ready
 
     stage = list(dict.fromkeys([*approved(rdir), *add]))
+    if repair_evidence is not None:
+        repair_reconfirm(rdir, repair_evidence, by)
     _add_second_auditor(rdir, stage, add)
     snapshot, unchanged = _approval_snapshot(rdir, stage)
     if (missing := eligibility(rdir, stage)):
@@ -248,16 +351,20 @@ def start_or_join(project: str, rdir: Path, *, start: Callable[[str, str, Path],
     return f"La ejecución se unió a la etapa ({moved})." if moved else "La ejecución sigue con la etapa aprobada."
 
 
+_NEVER_QUEUED = ("STAGE_SUBPLAN_UNCONFIRMED", "STAGE_REPAIR_UNBOUNDED", "STAGE_REPAIR_EVIDENCE")
+
+
 def run(project: str, rdir: Path, add: list[str], *, by: str = "owner", via: str = "web",
-        start: Callable[[str, str, Path], bool] | None = None, join: Callable[[], dict] | None = None) -> str:
+        start: Callable[[str, str, Path], bool] | None = None, join: Callable[[], dict] | None = None,
+        repair_evidence: list[str] | None = None) -> str:
     """«Ejecutar subplan»: approve the stage with `add`, then have the Scheduler run it (a durable run: continue it in
     the stage). A stage that only needs subplans not run yet waits for them in the queue (`bt_stage_queue`) instead of
     being refused. Raises StageError."""
     try:
-        entry = freeze(project, rdir, add)
+        entry = freeze(project, rdir, add, repair_evidence=repair_evidence, by=by)
     except StageError as exc:
         import bt_stage_queue
-        after = [] if exc.code == "STAGE_SUBPLAN_UNCONFIRMED" or via == "stage-queue" else bt_stage_queue.needs(rdir, add)
+        after = [] if exc.code in _NEVER_QUEUED or via == "stage-queue" else bt_stage_queue.needs(rdir, add)
         if not after:
             raise
         return bt_stage_queue.queue(rdir, add, after, by=by, via=via)

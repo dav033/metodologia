@@ -9,6 +9,11 @@
    "id": "D-083",
    "by": "solver 20261031-075511-d592: complete SP10 producer and isolated-provider prerequisites",
    "at": "2026-10-31T09:28:04"
+  },
+  {
+   "id": "D-084",
+   "by": "solver 20261031-094746-c7c4: isolated language harness prerequisites and bounded producer repair",
+   "at": "2026-10-31T09:50:54"
   }
  ]
 }

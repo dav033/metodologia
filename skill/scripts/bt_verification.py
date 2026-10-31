@@ -95,6 +95,21 @@ def tests_for(rdir: Path, sp: str, rows: list[dict] | None = None) -> list[dict]
     return [r for r in rows if not r["subplans"] or sp in r["subplans"]]
 
 
+# The pages a test row names: full local URLs and bare paths such as /3d or /proyectos (owner, 2026-10-29: «necesito que
+# salgan la url y las urls específicas que hay que probar»). Navigation through menus stays in «Cómo».
+_FULL_URL = re.compile(r"https?://(?:localhost|127\.0\.0\.1)(?::\d+)?(/[^\s`)|,;»\"']*)?")
+_BARE_PATH = re.compile(r"(?<![\w/.:@-])(/[a-z0-9][a-z0-9_\-]*(?:/[a-z0-9_\-\[\]]+)*)(?![\w.@/])")
+
+
+def test_paths(rows: list[dict]) -> list[str]:
+    found: list[str] = []
+    for r in rows:
+        text = f"{r.get('how') or ''} {r.get('expect') or ''}"
+        rest = _FULL_URL.sub(lambda m: found.append((m.group(1) or "/").rstrip(".")) or " ", text)
+        found += [m.group(1) for m in _BARE_PATH.finditer(rest)]
+    return list(dict.fromkeys(found))
+
+
 def missing(rdir: Path, sp: str, rows: list[dict] | None = None) -> bool:
     """True when no row of `## Pruebas` names `sp` itself (a row for `all` only supplements) or the only row says `none`
     without a reason in its How cell."""
@@ -186,7 +201,8 @@ def durable_versions(rdir: Path) -> list[dict] | None:
                 continue
             if isinstance(item.get("commit"), str) and SHA.fullmatch(item["commit"]):
                 seen.setdefault(str(sid), []).append((str(item.get("published_at") or ""), item["commit"]))
-    for sid, (tip, repo) in _built(rdir).items():
+    lines = _lines(rdir)
+    for sid, (tip, repo) in _built(rdir, lines).items():
         last = max(seen.get(sid, []), default=("", ""))[1]
         if tip != last and not (last and _tree(repo, last) == _tree(repo, tip)):
             seen.setdefault(sid, []).append(("~", tip))           # after every stored publication
@@ -197,7 +213,8 @@ def durable_versions(rdir: Path) -> list[dict] | None:
             if not commits or commits[-1] != commit:
                 commits.append(commit)
         out.append({"id": sid, "status": "published", "version": len(commits), "commit": commits[-1]})
-    return out
+    import bt_verification_tree
+    return bt_verification_tree.folded(out, lines)
 
 
 _SAFE_REF = re.compile(r"[^A-Za-z0-9._-]+")
@@ -207,12 +224,10 @@ def _tree(repo: Path, commit: str) -> str:
     return _git(repo, "rev-parse", "-q", "--verify", f"{commit}^{{tree}}").stdout.strip()
 
 
-def _built(rdir: Path) -> dict[str, tuple[str, Path]]:
-    """Subplans of the current durable run whose every task is accepted, with their subplan line's tip: the tree the
-    owner tries. The composer publishes a subplan's version only when a composition gate folds it, and a gate can sit
-    behind unrelated work: pictures REQ-021 SP-11/SP-12 were complete on 2026-10-30 but stayed «se está construyendo»
-    because CG-11/CG-12 waited on SP-10 and the owner's manual check, while SP-13 waited on the owner approving SP-12
-    (D-243). The tip is the same commit the composer would publish (`refs/bt/subplan/...`)."""
+def _lines(rdir: Path) -> dict:
+    """The current durable run's plan, task states and subplan line tips (`refs/bt/subplan/...`, the commit the composer
+    itself publishes): {"plan", "states", "tips": {sid: (tip, repo, role)}, "project", "req", "revision"}; {} when the
+    run cannot be read."""
     root = rdir.parent.parent.parent
     try:
         run = json.loads((rdir / "RUN.owner.json").read_text(encoding="utf-8")).get("run_id") or ""
@@ -223,27 +238,40 @@ def _built(rdir: Path) -> dict[str, tuple[str, Path]]:
     except (OSError, ValueError, IndexError, AttributeError):
         return {}
     states = {t.get("id"): t.get("state") for t in projected.get("tasks") or () if isinstance(t, dict)}
-    members: dict[str, list[dict]] = {}
-    for task in plan.get("tasks") or ():
-        if isinstance(task, dict) and task.get("subplan_id"):
-            members.setdefault(str(task["subplan_id"]), []).append(task)
     try:
         import bt_workspace as ws
         repos = ws.repos(root, project, discover=False)
     except Exception:  # noqa: BLE001 - no workspace record: nothing to read the lines from
         return {}
-    out = {}
-    for sid, tasks in members.items():
-        if not all(states.get(t.get("id")) in ("completed", "inherited") for t in tasks):
-            continue
-        role = str(tasks[0].get("repository") or "default")
+    tips = {}
+    for sid in {str(t["subplan_id"]) for t in plan.get("tasks") or () if isinstance(t, dict) and t.get("subplan_id")}:
+        role = str(next(t for t in plan["tasks"] if isinstance(t, dict) and t.get("subplan_id") == sid)
+                   .get("repository") or "default")
         repo = repos.get(role)
         if not repo or not Path(repo).exists():
             continue
         ref = f"refs/bt/subplan/{_SAFE_REF.sub('-', project)}/{req}/r{revision}/{_SAFE_REF.sub('-', role)}/{_SAFE_REF.sub('-', sid)}"
         tip = _git(Path(repo), "rev-parse", "-q", "--verify", f"{ref}^{{commit}}").stdout.strip()
         if SHA.fullmatch(tip):
-            out[sid] = (tip, Path(repo))
+            tips[sid] = (tip, Path(repo), role)
+    return {"plan": plan, "states": states, "tips": tips, "project": project, "req": req, "revision": revision,
+            "resolutions": root / ".state" / "durable" / "composition" / "resolutions"}
+
+
+def _built(rdir: Path, lines: dict | None = None) -> dict[str, tuple[str, Path]]:
+    """Subplans of the current durable run whose every task is accepted, with their subplan line's tip: the tree the
+    owner tries. The composer publishes a subplan's version only when a composition gate folds it, and a gate can sit
+    behind unrelated work: pictures REQ-021 SP-11/SP-12 were complete on 2026-10-30 but stayed «se está construyendo»
+    because CG-11/CG-12 waited on SP-10 and the owner's manual check, while SP-13 waited on the owner approving SP-12
+    (D-243). The tip is the same commit the composer would publish (`refs/bt/subplan/...`)."""
+    lines = _lines(rdir) if lines is None else lines
+    if not lines:
+        return {}
+    states, out = lines["states"], {}
+    for sid, (tip, repo, _role) in lines["tips"].items():
+        tasks = [t for t in lines["plan"].get("tasks") or () if isinstance(t, dict) and t.get("subplan_id") == sid]
+        if tasks and all(states.get(t.get("id")) in ("completed", "inherited") for t in tasks):
+            out[sid] = (tip, repo)
     return out
 
 
@@ -301,9 +329,45 @@ def state(rdir: Path) -> dict:
             st = "to_test"
         rows.append({"id": sid, "title": item.get("title") or sid, "milestone_id": item.get("milestone_id"),
                      "state": st, "version": (fact or {}).get("version"), "commit": (fact or {}).get("commit"),
-                     "decision": dec, "ui": bool(item.get("ui"))})
+                     "decision": dec, "ui": bool(item.get("ui")),
+                     # a newer version after a rejection: «por probar» again, with what the owner rejected last time
+                     "retest": st == "outdated" and dec.get("decision") == "rejected",
+                     "solver": solver_reply(rdir, sid, dec) if dec.get("decision") == "rejected" else {},
+                     "includes": (fact or {}).get("includes") or [],
+                     "fold_conflict": (fact or {}).get("fold_conflict") or {}})
     counts = {k: sum(1 for r in rows if r["state"] == k) for k in STATES_ES}
     return {"applies": applies(rdir), "subplans": rows, "counts": counts, "approved": counts["approved"], "total": len(rows)}
+
+
+SOLVER_ES = {"pending": "pasó al Solucionador", "queued": "pasó al Solucionador", "running": "el Solucionador lo está "
+             "reproduciendo en esa versión", "fixed": "el Solucionador confirmó el fallo y pidió la reparación",
+             "answered": "el Solucionador respondió", "asked_owner": "el Solucionador te pregunta algo",
+             "gave_up": "el Solucionador no pudo resolverlo", "limit": "el Solucionador ya lo intentó varias veces; queda "
+             "para ti", "stale": "", "failed": "el Solucionador no pudo arrancar"}
+
+
+def rejection_key(sid: str, dec: dict) -> str:
+    """The Solucionador's trigger key of one rejection: the subplan, the version and commit it saw, and the note."""
+    import hashlib
+    note = hashlib.sha256(" ".join(str(dec.get("note") or "").split()).encode()).hexdigest()[:12]
+    return f"owner_rejected:{sid}:v{dec.get('version')}:{str(dec.get('commit') or '')[:12]}:{note}"
+
+
+def solver_reply(rdir: Path, sid: str, dec: dict) -> dict:
+    """What the Solucionador did with this rejection ({status, text, summary, question}), read from its state
+    (`RUN.solver/state.json`, bt_durable.solver); {} when it never got it (no durable run, or it is off)."""
+    try:
+        data = json.loads((Path(rdir) / "RUN.solver" / "state.json").read_text(encoding="utf-8"))
+        item = (data.get("triggers") or {}).get(rejection_key(sid, dec)) or {}
+        if not isinstance(item, dict) or not item.get("status"):
+            return {}
+        session = next((x for x in data.get("sessions") or [] if isinstance(x, dict) and x.get("id") == item.get("session")
+                        and x.get("status") != "running"), {})
+    except (OSError, UnicodeError, ValueError, AttributeError):
+        return {}
+    status = str(item["status"])
+    return {"status": status, "text": SOLVER_ES.get(status, status), "summary": str(session.get("summary") or ""),
+            "question": str(session.get("question") or "")}
 
 
 def gate(rdir: Path) -> list[str]:
@@ -329,13 +393,18 @@ def decide(project: str, rdir: Path, sid: str, decision: str, note: str = "", by
     if row["state"] == "waiting":
         return f"{sid} todavía se está construyendo: aún no hay una versión que probar."
     with _locked(rdir) as data:
+        # P-items of rejections no approval has answered yet travel with the subplan's latest decision
+        carried = [p for p in (data["subplans"].get(sid) or {}).get("open_pending") or [] if isinstance(p, str)]
         data["subplans"][sid] = {"decision": decision, "version": row["version"], "commit": row["commit"], "by": by,
-                                 "via": via, "at": _now(), "note": note.strip()[:1000]}
+                                 "via": via, "at": _now(), "note": note.strip()[:1000],
+                                 "open_pending": [] if decision == "approved" else carried}
     verb = "Aprobaste" if decision == "approved" else "Rechazaste"
     activity.record(rdir, "Tú", f"{verb} {sid} (versión {row['version']})" + (f": {note.strip()[:120]}" if note.strip() else ""),
                     kind="verify", sp=sid)
     left = gate(rdir)
     if decision == "approved":
+        for pid in carried:                      # the owner's rejections are answered by this approval
+            _close_pending(rdir, pid, f"the owner approved {sid} v{row['version']}")
         try:                                     # stages queued behind this subplan run now (bt_stage_queue)
             import bt_stage_queue
             ran = bt_stage_queue.drain(project, rdir)
@@ -344,8 +413,27 @@ def decide(project: str, rdir: Path, sid: str, decision: str, note: str = "", by
         return f"{sid} aprobado." + (" Todos los subplanes están aprobados: ya se puede fusionar en Revisar." if not left else
                                      f" Faltan {len(left)} por aprobar.") + "".join(f" {m}" for m in ran)
     pid = _open_pending(rdir, sid, row["version"], note.strip())
-    return f"{sid} rechazado. Tu nota quedó guardada" + (f" y abrí el pendiente {pid}" if pid else "") + \
-        "; el requisito sigue por verificar."
+    if pid:                                      # the owner-visible record, linked from the Solucionador's trigger
+        with _locked(rdir) as data:
+            if (data["subplans"].get(sid) or {}).get("note") == note.strip()[:1000]:
+                data["subplans"][sid]["pending"] = pid
+                data["subplans"][sid]["open_pending"] = [*data["subplans"][sid].get("open_pending", []), pid]
+    who = ("; se lo paso al Solucionador: lo reproduce en esta versión y, si confirma el fallo, pide la reparación "
+           "al Planner. Cuando se publique la versión nueva te aparecerá aquí «por probar» con tu nota"
+           if _solver_takes(rdir) else "; el requisito sigue por verificar")
+    return f"{sid} rechazado. Tu nota quedó guardada" + (f" y abrí el pendiente {pid}" if pid else "") + who + "."
+
+
+def _solver_takes(rdir: Path) -> bool:
+    """A rejection reaches the Solucionador: the requirement runs on the durable runtime and the Solucionador is on."""
+    try:
+        if durable_versions(rdir) is None or not (Path(rdir) / "RUN.durable-run.json").is_file():
+            return False
+        import bt_config
+        return all(bt_config.get(k) is True for k in ("solver.enabled", "healing.enabled", "healing.model_diagnosis",
+                                                       "diagnosis.auto"))
+    except Exception:  # noqa: BLE001 - the message is a courtesy; the decision stands
+        return False
 
 
 def _open_pending(rdir: Path, sid: str, version: object, note: str) -> str:
@@ -367,6 +455,24 @@ def _open_pending(rdir: Path, sid: str, version: object, note: str) -> str:
         return pid
     except Exception:  # noqa: BLE001 - the decision itself is already recorded
         return ""
+
+
+def _close_pending(rdir: Path, pid: str, why: str) -> bool:
+    """Close a rejection's P-item (bt_pending moves a CLOSED item to «Recently closed»); False when it is not open."""
+    try:
+        pdir = Path(rdir).resolve().parents[1]
+        target = pdir / "PENDING.md"
+        text = target.read_text(encoding="utf-8")
+        found = re.search(rf"(?m)^- {re.escape(pid)} · (?!CLOSED)", text)
+        if not found:
+            return False
+        import bt_pending
+        target.write_text(text[:found.end()] + f"CLOSED {dt.date.today().isoformat()}: {why} · " + text[found.end():],
+                          encoding="utf-8")
+        bt_pending.sort_file(pdir)
+        return True
+    except Exception:  # noqa: BLE001 - the decision itself is already recorded
+        return False
 
 
 # ------------------------------------------------------------------ trying a version on its own
@@ -485,17 +591,28 @@ def on_projection(rdir: Path) -> list[str]:
         if ledger.get("gated") and not fresh:
             return []                                    # nothing changed: no write, no churn in the bitácora
         announced = []
+        before = {sid: dec for sid, dec in ledger["subplans"].items() if isinstance(dec, dict)
+                  and dec.get("decision") == "rejected" and dec.get("version") != (facts.get(sid) or {}).get("version")}
         if fresh:
             import bt_runutil
+            again = "".join(f" {sid}: rechazaste la versión {before[sid].get('version')} («"
+                            f"{' '.join(str(before[sid].get('note') or '').split())[:120]}»); comprueba eso en esta."
+                            for sid in fresh if sid in before)
             bt_runutil.notify("Subplan listo para probar", f"{Path(rdir).parent.parent.name} · {_req(rdir)}: "
-                              + ", ".join(fresh) + ". Ábrelo en la pestaña Plan → Probar.")
+                              + ", ".join(fresh) + ". Ábrelo en la pestaña Plan → Probar." + again)
             announced = fresh
         with _locked(rdir) as data:
             data["gated"] = True
             for sid in announced:
                 data["seen"][sid] = f"{facts[sid]['version']}:{facts[sid]['commit']}"
         for sid in announced:
-            activity.record(rdir, "Scheduler", f"{sid} terminó y está listo para probar", kind="verify", sp=sid)
+            if sid in before:
+                note = " ".join(str(before[sid].get("note") or "").split())[:160]
+                text = (f"{sid} versión {facts[sid]['version']} está lista para probar de nuevo: rechazaste la versión "
+                        f"{before[sid].get('version')} («{note}»)")
+            else:
+                text = f"{sid} terminó y está listo para probar"
+            activity.record(rdir, "Scheduler", text, kind="verify", sp=sid)
         return announced
     except Exception:  # noqa: BLE001 - observing a run must never break it
         return []
