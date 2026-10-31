@@ -35,6 +35,32 @@ class SystemdLimits(SystemdCase, RuntimeLimit):
         self.assertEqual(done.live_pids, [])
 
 
+class SystemdPriority(SystemdCase):
+    def test_an_attempt_runs_at_background_priority(self):
+        """The owner's desktop wins CPU contention against agents (D-250): low weight, high nice, in the unit itself."""
+        import os
+        import subprocess
+        key = self.key("prio")
+        self.sup.launch(self.spec(key, ["sleep", "30"]))
+        self.wait_state(key, "running")
+        unit = self.sup.unit_name(key)
+        shown = subprocess.run(["systemctl", "--user", "show", unit, "-p", "FragmentPath", "-p", "MainPID"],
+                               capture_output=True, text=True, check=True).stdout
+        props = dict(line.split("=", 1) for line in shown.splitlines() if "=" in line)
+        own = Path(props["FragmentPath"]).read_text(encoding="utf-8")    # the transient unit, not an operator drop-in
+        for line in ("Nice=15", "CPUWeight=20", "IOWeight=20"):
+            self.assertIn(line, own.splitlines())
+        self.assertEqual(os.getpriority(os.PRIO_PROCESS, int(props["MainPID"])), 15)
+        self.sup.terminate(key)
+
+    def test_the_engine_unit_carries_the_same_priority(self):
+        """M6 verifications run in the engine's own cgroup: its unit yields like an attempt does (D-250)."""
+        from bt_supervisor import systemd
+        unit = (Path(__file__).resolve().parents[1] / "bt_durable" / "deploy" / "bt-durable.service").read_text()
+        for line in systemd.BACKGROUND_PRIORITY:
+            self.assertIn(line, unit.splitlines())
+
+
 class PgroupLimits(PgroupCase, RuntimeLimit):
     def test_memory_limit_is_recorded_as_unenforced(self):
         key = self.key("oomp")
