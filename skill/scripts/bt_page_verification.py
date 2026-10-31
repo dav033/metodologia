@@ -324,6 +324,34 @@ def _actions(ctx: dict, row: dict) -> str:
     return f'<div class="pp-vactions">{note}{opened}<div class="pp-vbuttons">{buttons}</div>{revert}</div>'
 
 
+def _named(items: list[dict]) -> str:
+    return ", ".join(f"{i['id']} v{i['version']}" if i.get("version") else str(i["id"]) for i in items)
+
+
+def _tree_text(row: dict) -> str:
+    """Which versions of the subplans it builds on the tried tree holds (D-246)."""
+    includes, conflict = row.get("includes") or [], row.get("fold_conflict") or {}
+    if conflict:
+        return ("Es el árbol de este subplan" + (f", con {_named(includes)}" if includes else "") +
+                f", pero sin la versión actual de {conflict.get('with')}.")
+    if not includes:
+        return "Es el árbol integrado exactamente al terminar este subplan."
+    return (f"Es el árbol de este subplan con la versión actual de los subplanes sobre los que se construye: "
+            f"{_named(includes)}.")
+
+
+def _fold_warning(row: dict) -> str:
+    """The tree could not take a predecessor's current work: say so instead of offering a stale tree silently."""
+    conflict = row.get("fold_conflict") or {}
+    if not conflict:
+        return ""
+    files = ", ".join(conflict.get("files") or [])
+    why = f"choca en {files}" if files else (conflict.get("error") or "git no pudo combinarlos")
+    return (f'<p class="pp-vwarn">Ojo: no pude combinar este subplan con la versión actual de {e(str(conflict.get("with")))} '
+            f'({e(why)}). Lo que abres es el árbol de este subplan sin los cambios recientes de '
+            f'{e(str(conflict.get("with")))}: puede seguir mostrando un defecto que allí ya se arregló.</p>')
+
+
 def panel(ctx: dict, s: dict) -> str:
     rdir = ctx["rdir"]
     st = verification.state(rdir)
@@ -340,7 +368,7 @@ def panel(ctx: dict, s: dict) -> str:
     stale = ('<p class="pp-vwarn">El motor publicó una versión nueva después de tu decisión: vuelve a probarla.</p>'
              if row["state"] == "outdated" else "")
     head = (f'<p class="pp-vintro">{_state_pill(row["state"])} Versión {e(str(row["version"]))} · commit '
-            f'<code>{e(str(row["commit"])[:10])}</code>. Es el árbol integrado exactamente al terminar este subplan.</p>{stale}')
+            f'<code>{e(str(row["commit"])[:10])}</code>. {e(_tree_text(row))}</p>{stale}{_fold_warning(row)}')
     paths = test_paths(rows)
     ctx["_try"] = run = _servers(ctx, row, paths) if ctx.get("root") else ""
     guide = _guide(ctx, row, ctx.get("_url", ""))
