@@ -394,6 +394,10 @@ class Solver:
         if not self.terminal.exists(session["name"]):
             return said + self._finish(run, rdir, state, session, {
                 "outcome": "gave_up", "summary": "la sesión terminó sin escribir result.json", "vanished": True})
+        if self._exited(session) and not self.integrating(session["id"]):   # a shell left: closed like a gone one
+            return said + self._finish(run, rdir, state, session, {
+                "outcome": "gave_up", "summary": "su agente terminó sin escribir result.json (la ventana quedó en una "
+                                                 "terminal; no se le escribió nada)", "vanished": True})
         import bt_agent_terminal
         shown = self.terminal.screen(session["name"], 20)
         if bt_agent_terminal.LIMITED.search(shown) or bt_agent_terminal.OWNER_PROMPT.search(shown):
@@ -410,6 +414,12 @@ class Solver:
             self.record(rdir, f"{session['task']}: el Solucionador cambió de cuenta (la anterior se quedó sin cuota)")
             return said + [f"{run.run_id}: solver {sid} moved off {left or 'its account'}"]
         return said
+
+    def _exited(self, session: dict) -> bool:
+        """The session's agent exited and its window is a shell (`bt_agent_terminal.agent_state` gone): nothing may be
+        typed into it, and nothing will ever write its result.json (pictures REQ-021's Planner, 2026-10-31)."""
+        state = getattr(self.terminal, "agent_state", None)
+        return bool(state) and state(session["name"]) == "gone"
 
     def _limited(self, session: dict) -> bool:
         """The session's screen asks for an account move (a spent quota, a prompt only the owner may answer)."""
@@ -485,7 +495,8 @@ class Solver:
         return [f"{run.run_id}: solver {session['id']} {outcome}"]
 
     def _queue(self, run, rdir, state) -> list[str]:
-        """Triggers that arrive while the run's session works go to its inbox and are typed into it."""
+        """Triggers that arrive while the run's session works go to its inbox and are typed into it (`send` refuses to
+        type into a session whose agent exited; the inbox file is what counts and the next pass closes that session)."""
         sid = state["active"]
         session = next((s for s in state.get("sessions", []) if s.get("id") == sid), None)
         if session is None:

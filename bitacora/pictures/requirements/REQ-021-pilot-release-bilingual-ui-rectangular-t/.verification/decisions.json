@@ -17,15 +17,12 @@
  },
  "subplans": {
   "SP-2": {
-   "at": "2026-10-31T12:34:09-05:00",
+   "at": "2026-10-31T13:04:44-05:00",
    "by": "owner",
    "commit": "6ec74192eb0175827a9005ae2c152955cb0d220d",
-   "decision": "rejected",
-   "note": "El desplegable el menu del usuario se peude desplegar, epro no se peude cerrar de ninguna amnera, solamente si se entra a algun  link, en la parte de rol no debe ser rol si no plan, tampoco que salga esto Aviso de datos aceptado es informacion que al usaurio no le importa, se debe agregar informacion del nombre del usuario que no veo en ingun lado, y la parte de la cuenta dl usuario ahzun rediseno comleto incluyendo la aprtedel actualizar contrasena,",
-   "open_pending": [
-    "P-209"
-   ],
-   "pending": "P-209",
+   "decision": "approved",
+   "note": "",
+   "open_pending": [],
    "version": 2,
    "via": "web"
   }

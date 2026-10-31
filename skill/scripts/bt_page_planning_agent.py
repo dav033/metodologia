@@ -110,7 +110,7 @@ def terminals(ctx: dict) -> list[dict]:
     """Agents running in a tmux session the web can read and type into: the Planner and the selected subplan's session."""
     found = []
     name = terminal.name_for(ctx["project"], ctx["rid"], "planner")
-    if terminal.exists(name):
+    if terminal.exists(name) and terminal.agent_state(name) != "gone":    # a shell left behind: offer to open one
         found.append({"label": "Planner", "name": name, "kind": "planner", "anchor": ""})
     sid = (ctx.get("opts") or {}).get("sp") or ""
     live = sessions.active(ctx["rdir"], sid) if sid else None

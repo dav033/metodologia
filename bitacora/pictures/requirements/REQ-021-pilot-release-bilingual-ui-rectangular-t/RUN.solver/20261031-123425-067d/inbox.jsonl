@@ -1,0 +1,1 @@
+{"kind": "decision", "key": "pictures:REQ-021:r30:T10.45:T10.45:d6@k1", "run_id": "pictures:REQ-021:r30", "task_id": "T10.45", "request_id": "T10.45:d6", "round": 1, "reason": "healing's repair limit is reached", "status": "queued", "at": "2026-10-31T12:41:49", "session": "20261031-123425-067d"}

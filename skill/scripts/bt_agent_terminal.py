@@ -75,6 +75,113 @@ def exists(name: str) -> bool:
         return False
 
 
+# `start` runs every command as `bash -lc '<command>; exec bash'`: while the command (the agent) runs, that wrapper bash is
+# in the pane's process tree with exactly this argv; when the agent exits, the wrapper execs a plain interactive `bash`
+# in its place, so the pane then shows a shell prompt that would EXECUTE any submitted line. pictures REQ-021's Planner
+# (Codex) exited at 09:53 on 2026-10-31 and `tell-planner` typed a plan change request into that prompt at 09:57 and
+# printed «Enviado al Planner.». `#{pane_current_command}` cannot tell them apart: the non-interactive wrapper runs the
+# agent in its own process group, so tmux reports `bash` while the agent runs too (probed with tmux 3.x).
+WRAP_TAIL = "; exec bash"                         # D-252
+
+
+def _processes() -> dict[int, tuple[int, list[str]]] | None:
+    """{pid: (ppid, argv)} for every process, from /proc (Linux) or `ps` (argv then split on spaces); None unknown."""
+    out: dict[int, tuple[int, list[str]]] = {}
+    proc = Path("/proc")
+    if (proc / "self" / "stat").is_file():
+        for entry in proc.iterdir():
+            if not entry.name.isdigit():
+                continue
+            try:
+                stat = (entry / "stat").read_text(encoding="utf-8", errors="replace")
+                argv = (entry / "cmdline").read_bytes().split(b"\0")
+            except OSError:
+                continue                              # a process that ended while we looked
+            fields = stat[stat.rfind(")") + 2:].split()
+            if len(fields) > 1 and fields[1].isdigit():
+                out[int(entry.name)] = (int(fields[1]), [a.decode("utf-8", "replace") for a in argv if a])
+        return out or None
+    ps = shutil.which("ps")
+    if not ps:
+        return None
+    try:
+        done = subprocess.run([ps, "-A", "-o", "pid=,ppid=,args="], capture_output=True, text=True, timeout=10,
+                              check=False)
+    except (OSError, subprocess.SubprocessError):
+        return None
+    for row in done.stdout.splitlines():
+        parts = row.split(None, 2)
+        if len(parts) >= 2 and parts[0].isdigit() and parts[1].isdigit():
+            out[int(parts[0])] = (int(parts[1]), (parts[2] if len(parts) > 2 else "").split(" "))
+    return out or None
+
+
+def _wrapper(argv: list[str]) -> bool:
+    """Is this the `bash -lc '<command>; exec bash'` that `start` runs, still in its first phase (the agent's)?"""
+    if len(argv) < 3 or Path(argv[0]).name.lstrip("-") != "bash" or argv[1] != "-lc":
+        return False
+    return " ".join(argv[2:]).endswith(WRAP_TAIL)
+
+
+# an agent the owner started by hand in that shell (`claude --resume …` after attaching): its program or script
+AGENT_PROGRAM = re.compile(r"(?:^|/)(?:claude|codex)[^/]*$|/claude-code/|/@openai/codex/")
+
+
+def _agent_program(argv: list[str]) -> bool:
+    return any(AGENT_PROGRAM.search(arg) for arg in argv[:2])
+
+
+def agent_state(name: str) -> str:
+    """Is the agent `start` launched still the pane's program? running (the wrapper is still in the pane's process
+    tree: the agent runs, or is still starting; or the owner started an agent by hand in the shell it left) | gone (the
+    pane is a shell: never type into it) | absent (no session) | unknown (tmux or the process table could not be read:
+    never type either)."""
+    if not exists(name):
+        return "absent"
+    try:
+        done = _run("display-message", "-p", "-t", f"={name}:", "#{pane_pid}\t#{pane_dead}")
+    except (RuntimeError, OSError, subprocess.SubprocessError):
+        return "unknown"
+    pid, _, dead = (done.stdout or "").strip().partition("\t")
+    if done.returncode != 0 or not pid.isdigit():
+        return "absent" if not exists(name) else "unknown"
+    if dead.strip() == "1":
+        return "gone"
+    table = _processes()
+    if table is None or int(pid) not in table:
+        return "unknown"
+    children: dict[int, list[int]] = {}
+    for child, (parent, _argv) in table.items():
+        children.setdefault(parent, []).append(child)
+    todo, seen, by_hand = [int(pid)], set(), False
+    while todo:
+        current = todo.pop()
+        if current in seen:
+            continue
+        seen.add(current)
+        argv = table.get(current, (0, []))[1]
+        if _wrapper(argv):
+            return "running"
+        by_hand = by_hand or (current != int(pid) and _agent_program(argv))
+        todo += children.get(current, [])
+    return "running" if by_hand else "gone"
+
+
+def alive(name: str) -> bool:
+    """The session exists and its agent still runs in it (`agent_state`)."""
+    return agent_state(name) == "running"
+
+
+GONE_TEXT = "El agente terminó y su ventana quedó en una terminal; no le escribí."
+
+
+def _keys(name: str, *keys: str) -> bool:
+    """`tmux send-keys` only while the agent is the pane's program; a shell would run what is typed into it."""
+    if agent_state(name) != "running":
+        return False
+    return _run("send-keys", "-t", f"={name}:", *keys).returncode == 0
+
+
 def start(name: str, cwd: Path, command: str, env: dict[str, str] | None = None, *, scope: str = "") -> None:
     """Run `command` (a shell line) in a new detached session; the shell stays open when the agent exits.
 
@@ -89,7 +196,7 @@ def start(name: str, cwd: Path, command: str, env: dict[str, str] | None = None,
     role = name.rsplit("-", 1)[-1] if name.startswith("bit-") else ""
     for key, value in {**({"BITACORA_AGENT_ROLE": role} if role else {}), **(env or {})}.items():   # D-237
         args += ["-e", f"{key}={value}"]
-    line = f"bash -lc {shlex.quote(command + '; exec bash')}"
+    line = f"bash -lc {shlex.quote(command + WRAP_TAIL)}"
     runner = shutil.which("systemd-run") if scope else None
     done = None
     if runner:
@@ -102,7 +209,7 @@ def start(name: str, cwd: Path, command: str, env: dict[str, str] | None = None,
 
 class Said(str):
     """What `send` reports, a plain Spanish text (callers compare it with «Enviado.»), plus `state`: sent | empty |
-    gone | error | unsent | limited (a quota wall answered the message; `until` is when the account comes back, epoch
+    gone (no session, or its agent exited and the window is a shell: nothing was typed) | error | unsent | limited (a quota wall answered the message; `until` is when the account comes back, epoch
     or None) | owner (a question only the owner answers) | blocked (a modal nobody here may answer); and `answered`,
     the harmless modals answered on the way."""
     state: str = "sent"
@@ -127,21 +234,29 @@ def send(name: str, text: str) -> Said:
     text = re.sub(r"\s+", " ", ANSI.sub("", text or "")).strip()[:MAX_SAY]
     if not text:
         return Said.of("No hay nada que enviar.", "empty")
-    if not exists(name):
+    state = agent_state(name)
+    if state == "absent":
         return Said.of("El agente ya no está en marcha.", "gone")
+    if state == "gone":                               # its window is a shell: a typed line would run as a command
+        return Said.of(GONE_TEXT, "gone")
+    if state != "running":
+        return Said.of("No pude comprobar que el agente siga en marcha; no le escribí.", "error")
     answered: list[str] = []
     if stop := _clear_modals(name, answered):
         return stop
     before = screen(name, 200)
-    if _run("send-keys", "-t", f"={name}:", "-l", text).returncode != 0:
-        return Said.of("No pude escribirle al agente.", "error")
+    if not _keys(name, "-l", text):
+        return Said.of(GONE_TEXT, "gone") if agent_state(name) in ("gone", "absent") else \
+            Said.of("No pude escribirle al agente.", "error")
     time.sleep(0.4)                                   # let the TUI take the text before the Enter that submits it
-    _run("send-keys", "-t", f"={name}:", "Enter")
+    if not _keys(name, "Enter"):
+        return Said.of(GONE_TEXT, "gone")
     for _ in range(SUBMIT_TRIES):                     # a long text can wait in the composer as a paste (D-199)
         time.sleep(0.6)
         if not unsent(screen(name, 12), text):
             break
-        _run("send-keys", "-t", f"={name}:", "Enter")
+        if not _keys(name, "Enter"):
+            return Said.of(GONE_TEXT, "gone")
     else:
         time.sleep(0.6)
         if unsent(screen(name, 12), text):
@@ -162,8 +277,8 @@ def _watch(name: str, text: str, before: str, answered: list[str]) -> Said:
                            + (f" (vuelve a las {when})." if when else "."), "limited", until, answered)
         if stop := _clear_modals(name, answered, submitted=True):
             return stop
-        if unsent(screen(name, 12), text):            # a modal that took the Enter left the message in the box
-            _run("send-keys", "-t", f"={name}:", "Enter")
+        if unsent(screen(name, 12), text) and not _keys(name, "Enter"):   # a modal took the Enter: the text waits
+            return Said.of(GONE_TEXT, "gone", answered=answered)
         if time.monotonic() >= deadline:
             return Said.of("Enviado.", "sent", answered=answered)
         time.sleep(0.4)
@@ -205,11 +320,13 @@ def _clear_modals(name: str, answered: list[str], *, submitted: bool = False) ->
                            "blocked", answered=answered)
         if kind != "model-switch":
             return None
-        _run("send-keys", "-t", f"={name}:", "-l", key)            # «Keep current model»: digits select in Codex lists
+        if not _keys(name, "-l", key):                             # «Keep current model»: digits select in Codex lists
+            return Said.of(GONE_TEXT, "gone", answered=answered)
         time.sleep(0.6)
         still = "\n".join(visible(name).splitlines()[-16:])
         if wall.MODEL_SWITCH.search(still) and re.search(rf"^\s*›\s*{key}\.", still, re.MULTILINE):
-            _run("send-keys", "-t", f"={name}:", "Enter")          # the digit only moved the selection there
+            if not _keys(name, "Enter"):                           # the digit only moved the selection there
+                return Said.of(GONE_TEXT, "gone", answered=answered)
             time.sleep(0.6)
         answered.append("Codex ofrecía cambiar a un modelo más barato: elegí «Keep current model»")
     return Said.of("El agente muestra un aviso que no pude cerrar; no le escribí.", "blocked", answered=answered)
@@ -374,9 +491,12 @@ def start_planner(root: Path, project: str, rdir: Path, *, fresh: bool = False, 
     """Start the dedicated Planner in tmux where it can run unattended (`planner_route`). On Claude it picks up its own
     earlier CONVERSATION (`claude --resume`) when that exists, copied to that account when it lived in another one, so
     killing it and starting another loses nothing; `fresh`, a missing transcript or Codex starts a new conversation that
-    relies on `planning resume` and the saved notes. `message` is told on start (a notice that found it unable to run)."""
+    relies on `planning resume` and the saved notes. `message` is told on start (a notice that found it unable to run).
+    A session whose agent exited (a shell left in its window, `agent_state` gone) is killed and replaced."""
     req = re.match(r"REQ-\d+", Path(rdir).name)
     name = name_for(project, req.group(0) if req else Path(rdir).name, "planner")
+    if agent_state(name) == "gone":                   # its agent exited: the session is a shell, never typed into
+        kill(name)
     if exists(name):
         return False, f"Ya hay un Planner en marcha para este plan ({name})."
     route = route or planner_route(project, avoid)
@@ -425,10 +545,11 @@ def start_planner(root: Path, project: str, rdir: Path, *, fresh: bool = False, 
 
 def notify_planner(project: str, req: str, text: str) -> bool:
     """Tell the dedicated Planner, if it runs here, what the owner just did on the web (an idle agent never learns it
-    otherwise). True when the Planner got it or was started again elsewhere with it (`bt_planner_notices.tell`: a
-    Planner whose account ran out moves to one with quota; with none, the notice is held and sent again on its own)."""
+    otherwise). True when the Planner got it or was started again with it (`bt_planner_notices.tell`: a Planner whose
+    account ran out moves to one with quota, one whose agent exited is started again; with no account the notice is held
+    and sent again on its own)."""
     import bt_planner_notices as notices
-    return notices.tell(project, req, notices.WEB_NOTICE + text)[0] in ("sent", "moved")
+    return notices.tell(project, req, notices.WEB_NOTICE + text)[0] in ("sent", "moved", "restarted")
 
 
 def _ask_owner(project: str, req: str, name: str) -> None:
@@ -455,7 +576,8 @@ _DONE = {"approved", "launched", "in-progress", "done", "cancelled"}
 def revive_planners(root: Path) -> list[str]:
     """Start again, after a reboot, the Planners that were running: tmux does not survive it and nothing else brought them
     back, so the owner's answers on the web reached nobody (REQ-021 SP-3). A Planner comes back only when its plan is still
-    being planned, it ran in the last `REVIVE_WITHIN_DAYS` days and it has a conversation to resume. Returns what was started."""
+    being planned, it ran in the last `REVIVE_WITHIN_DAYS` days and it has a conversation to resume; a session left as a
+    shell (its agent exited) counts as absent (`start_planner` replaces it). Returns what was started."""
     from bt_core import _front
 
     started: list[str] = []
@@ -467,7 +589,7 @@ def revive_planners(root: Path) -> list[str]:
             when = time.mktime(time.strptime(data.get("started_at", "")[:19], "%Y-%m-%dT%H:%M:%S"))
             req = re.match(r"REQ-\d+", rdir.name)
             if (not data.get("session_id") or when < limit or not req
-                    or _front(rdir / "PLAN.md", "status") in _DONE or exists(name_for(project, req.group(0), "planner"))):
+                    or _front(rdir / "PLAN.md", "status") in _DONE or alive(name_for(project, req.group(0), "planner"))):
                 continue
             ok, message = start_planner(Path(root), project, rdir)
             if ok:
@@ -489,9 +611,10 @@ def restart_planner(root: Path, project: str, rdir: Path) -> tuple[bool, str]:
 
 def main(argv: list[str] | None = None) -> int:
     """`bt_agent_terminal.py tell-planner <project> <REQ> <text>`: what the Solucionador (REQ-031) uses to send a plan
-    change request to the run's Planner; a Planner that is not running is started with the request as its first notice
-    (on an account with quota, like any Planner start). It prints what really happened, and exits 0 when the Planner got
-    it (or was started with it), 3 when it is held to be sent again on its own (no account with quota), 1 otherwise."""
+    change request to the run's Planner; a Planner that is not running, or whose agent exited to a shell (nothing is
+    typed into that shell), is started with the request as its first notice (on an account with quota, like any Planner
+    start). It prints what really happened, and exits 0 when the Planner got it (or was started with it), 3 when it is
+    held to be sent again on its own (no account with quota), 1 otherwise."""
     import sys
     args = sys.argv[1:] if argv is None else argv
     if len(args) != 4 or args[0] != "tell-planner":
@@ -510,7 +633,7 @@ def main(argv: list[str] | None = None) -> int:
         ok, message = start_planner(Path(ROOT), project, rdir, message=notice)
         state = "moved" if ok else "failed"
     print(message, file=sys.stdout if state != "failed" else sys.stderr)
-    return {"sent": 0, "moved": 0, "held": 3}.get(state, 1)
+    return {"sent": 0, "moved": 0, "restarted": 0, "held": 3}.get(state, 1)
 
 
 if __name__ == "__main__":

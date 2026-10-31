@@ -1,0 +1,37 @@
+[
+ {
+  "kind": "owner_rejected",
+  "key": "owner_rejected:SP-2:v2:6ec74192eb01:11666d518588",
+  "run_id": "pictures:REQ-021:r30",
+  "task_id": "",
+  "request_id": "",
+  "round": null,
+  "reason": "the owner tried SP-2 version 2 (commit 6ec74192eb) and rejected it: «El desplegable el menu del usuario se peude desplegar, epro no se peude cerrar de ninguna amnera, solamente si se entra a algun link, en la parte de rol no debe ser rol si no plan, tampoco que salga esto Aviso de datos aceptado es informacion que al usaurio no le importa, se debe agregar informacion»",
+  "subplan": "SP-2",
+  "title": "Sign-in, invitation and administration screens",
+  "version": 2,
+  "commit": "6ec74192eb0175827a9005ae2c152955cb0d220d",
+  "note": "El desplegable el menu del usuario se peude desplegar, epro no se peude cerrar de ninguna amnera, solamente si se entra a algun link, en la parte de rol no debe ser rol si no plan, tampoco que salga esto Aviso de datos aceptado es informacion que al usaurio no le importa, se debe agregar informacion del nombre del usuario que no veo en ingun lado, y la parte de la cuenta dl usuario ahzun rediseno comleto incluyendo la aprtedel actualizar contrasena,",
+  "pending": "P-209",
+  "decided_at": "2026-10-31T12:34:09-05:00",
+  "via": "web",
+  "tests": [
+   {
+    "subplans": [
+     "SP-2"
+    ],
+    "kind": "local",
+    "where": "Local",
+    "how": "With SP-1's setup: 1) `npm run dev` and open http://localhost:3000/login, sign in as admin@prueba.local. 2) Open Administración → Cuentas, invite yourself a new person with role «Usuario · Designer Plus», copy the link. 3) Open the link in a private window: set a password, read and accept the data notice. Then, as administrator, generate a new link for another invited person and open the old one. 4) Back as administrator change that person to «Usuario · Master Designer», create a custom role with two permissions, try to delete «Administrador» and the role in use. 5) In the private window use the account menu → Mi cuenta to change the password, then sign out.",
+    "expect": "2) The link appears once with a copy button. 3) The notice is in your browser's language; without ticking it the account cannot be activated; activation signs the person in directly; the old link of the other person says it is no longer valid. The person sees the chat and the costs tool, and /3d shows «sin acceso». 4) After the role change, reloading /3d opens the Taller; system roles are read-only and the role in use cannot be deleted, each with a clear reason. 5) The new password works and the old one does not. Screens match the approved `cuentas-admin@v1` mockup at phone and desktop width.  Verify local dev/no-cookie home and login use the same local administrator as API guards, mode-off retains login, and production/non-loopback/forged-forwarding never enable local access.  With local mode on and no cookie, click from home via header/account menu and Administración to accounts; mode-off signed-out and non-admin menus must not expose unauthorized administrator links."
+   }
+  ],
+  "pages": [
+   "/login",
+   "/3d"
+  ],
+  "evidence": "evidence/owner-rejected/SP-2-v2.md",
+  "status": "pending",
+  "at": "2026-10-31T12:34:24"
+ }
+]

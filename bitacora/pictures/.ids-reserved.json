@@ -14,6 +14,16 @@
    "id": "D-084",
    "by": "solver 20261031-094746-c7c4: isolated language harness prerequisites and bounded producer repair",
    "at": "2026-10-31T09:50:54"
+  },
+  {
+   "id": "D-085",
+   "by": "solver 20261031-123425-067d: reproduce SP-2 v2 rejection and route contract amendment",
+   "at": "2026-10-31T12:38:04"
+  },
+  {
+   "id": "D-086",
+   "by": "solver 20261031-123425-067d: guided-chat readiness must fall back on empty input text",
+   "at": "2026-10-31T12:44:16"
   }
  ]
 }
