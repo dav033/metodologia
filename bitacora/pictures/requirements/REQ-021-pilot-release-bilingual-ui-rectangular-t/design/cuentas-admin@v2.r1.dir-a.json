@@ -1,0 +1,19 @@
+{
+  "name": "Ficha dividida",
+  "axes": {
+    "concept": "Operational account sheet: Mi cuenta answers «who am I in Pictures and can I change my password?» in one divided paper — an identity ledger (Nombre, Correo, Plan or Rol, optional Empresa) beside the password form — and the shared account popup becomes a dense identity header plus grouped destinations. No profile editing, no notice metadata, no promotion.",
+    "layout": "Existing Pictures/Sempertex masthead (Idioma + account trigger) unchanged; page capped at 1040px with H1 and the existing Cuentas / Roles y permisos / Mi cuenta route nav sharing one heading row over a drawn rule. One 32px paper split 340px ledger | flexible form (300px from 840–1099px); below 840px the ledger stacks above the form. New/repeat passwords pair in two columns from 1100px. Ledger rows switch to label-over-value under 480px; masthead wraps tools to a second row.",
+    "navigation": "Account trigger is a native button with aria-expanded/aria-controls (initial + real name; name hidden under 400px, kept in aria-label). Popup: identity header, then Mi cuenta (current, check), Planes, permission-scoped Administración and Roles y permisos, then Cambiar tema, then Cerrar sesión. Escape closes and returns focus to the trigger; repeated trigger closes; outside pointer closes without moving focus; Tab/Shift+Tab leave freely and close it. In-page route nav keeps permission scoping.",
+    "typography": "Production Geist / Geist Mono only. Hierarchy by scale inside the ledger: H1 24px, section titles 17px, the person's name 20px semibold as the largest datum, access 15px semibold, email in Geist Mono 13px, labels 12px secondary; form labels 14px medium, hints/errors 12–13px.",
+    "density": "Dense but touchable: 12px ledger row padding with hairline rules, 28px paper insets (20px on phone), 16px form gaps, 44px inputs/buttons/menu rows, 320px popup with 8px inner padding. One paper instead of two stacked cards; no empty right half at desktop.",
+    "components": "shadcn/Base UI Input (password fields with aria-invalid/aria-describedby), Button (submit, 196px min width so pending does not jump), Spinner (pending), Skeleton (page and trigger loading), Separator (popup groups); native selects for Idioma and the mock fixture; custom disclosure popup (not role=menu) so Tab is never trapped. Lucide icons for theme, sign-out, success/error.",
+    "colour": "Pictures globals.css tokens mapped once per theme (fondo/superficie/borde/texto/acento; exito/error suaves). Colour only on the primary submit, field errors and the success/error status; navigation and popup rows are neutral with superficie-2 hover and weight for the current item. Access shown as a neutral superficie-2 pill.",
+    "motion": "Precise quick cuts with cubic-bezier(.32,.72,0,1): popup reveals by clip-path from its top-right corner (200ms expressive / 160 natural / 110 subtle) and closes instantly; its rows step in 4px with 28ms offsets; the heading rule draws left-to-right; ledger rows register 6px from the left in sequence; field errors open by grid-row height; status band rises 4px and the success check draws its stroke; chevron flips 180°. Reduced/still: no animation or transition, final content shown; hidden tabs pause."
+  },
+  "evidence": {
+    "layout": [".paper", ".ficha", ".pw-pair", ".page-head"],
+    "navigation": [".acct-trigger", ".acct-menu", ".route-nav"],
+    "typography": [".page-head h1", ".v-name", ".v-mail", ".v-access"],
+    "motion": [".acct-menu", ".ficha-row", ".head-rule", ".form-status"]
+  }
+}

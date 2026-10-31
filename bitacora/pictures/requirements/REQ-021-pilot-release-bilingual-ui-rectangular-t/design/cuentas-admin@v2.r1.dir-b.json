@@ -1,0 +1,19 @@
+{
+  "name": "Pase y panel de seguridad",
+  "axes": {
+    "concept": "Identity as a sticky pass beside a seated password security panel; a local rail spotlights one panel and turns into a sliding two-panel track on narrow screens.",
+    "layout": "Two-column workspace inside the unchanged shell: 340px sticky pass + fluid security panel (300px pass at 840–1099px), new/repeat fields paired from 1100px; below 840px a clipped horizontal track of two full-width panels.",
+    "navigation": "Unchanged masthead and route navigation plus a segmented local rail «Identidad · Contraseña» (aria-pressed buttons) that focuses/spotlights a panel or slides the track; native details/summary account menu with permission-scoped links and Escape/outside/repeat/Tab dismissal.",
+    "typography": "Product Geist: 24px page title, 20px panel titles, 18px semibold name row, 20px semibold access value, 13px labels and hints; Geist Mono kept for the Sempertex wordmark.",
+    "density": "28px desktop, 24px tablet and 20px phone panel insets; 16px pass row rhythm and 20px field rhythm with a rule between current and new password.",
+    "components": "Real shadcn/Base UI Button, Input, Skeleton, Spinner and Avatar with a Motion layoutId indicator; native details/summary menu and native selects; custom pass, security panel, receipt and track arrangement.",
+    "colour": "Exact Pictures light/dark tokens mapped onto kit roles; accent only on the primary action, focus ring, monogram and access chip; error/éxito tokens only for field errors, alert note and success receipt; neutral rail and navigation.",
+    "motion": "Glide-and-seat: pass seats from the left and panel from the right, pass rows stagger, rail indicator springs between segments, track slides one panel, menu unfolds from the trigger corner with staggered items; 560/380/200ms profiles, cubic-bezier(.3,1.18,.4,1), reduced-motion parity."
+  },
+  "evidence": {
+    "layout": [".account-track", ".identity-pass", ".security-panel", ".pw-pair"],
+    "navigation": [".local-nav", ".local-tab[aria-pressed='true']", ".route-nav", ".user-menu summary"],
+    "typography": [".heading h1", ".panel-title", ".pass-row.name dd", ".access-value"],
+    "motion": [".identity-pass", ".security-panel", ".pass-row", ".local-nav-indicator", ".chev"]
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "name": "Ficha en su sitio — direct manipulation",
+  "axes": {
+    "concept": "Direct manipulation inside the existing /cuenta column: identity is one read-only ruled sheet (Nombre, Correo, Plan or Rol, optional Empresa) and the only editable fact, the password, opens in place as a drawer under its own row; the shared account popup carries the real identity and settles under the trigger.",
+    "layout": "Production shell unchanged (full-width signed-in account bar, 676px centred column with Pictures ring-and-dot header, Idioma select, H1, route rule). One 32px-radius paper: 64px initial plate with stacked Nombre/Correo, then 132px label / value ruled rows, then the Contraseña row whose editor expands below it in the same paper. Phone: labels above values, full-width actions.",
+    "navigation": "Retained NavegacionCuentas route rule (Cuentas / Roles y permisos only with permission, Mi cuenta). Account trigger is a disclosure button (aria-expanded) whose popup closes on repeated trigger, outside pointer (clicked target keeps focus), Escape (focus back to trigger) and focus leaving; ES/EN pair, Mi cuenta, permitted Administración / Roles y permisos, Planes and Cerrar sesión. In-page: Cambiar contraseña reveals the editor and moves focus to Contraseña actual; Cancelar/Escape collapses it and returns focus.",
+    "typography": "Production Geist Sans / Geist Mono only. H1 24px/600; identity name 20px/600 (18px phone) as the sheet's largest text; 15px email; 13px muted labels; 14px field labels/600; 13px help and errors; mono 12px for the mockup footnote only.",
+    "density": "Sparse identity, dense editor: 24/28px sheet insets, 64px rows, 48px password fields with 18px gaps; phone 20px insets. The editor adds height only while open; closed, the page is three to four rows.",
+    "components": "Real shadcn/Base UI Button (outline row action, primary submit, outline cancel), Input (password, aria-invalid, aria-describedby), Skeleton (loading sheet); Motion AnimatePresence for popup and drawer; native select for Idioma; custom identity plate, ruled rows, length meter, inline field errors, success seal.",
+    "colour": "Exact Pictures globals.css tokens in both themes (fondo, superficie, superficie-suave for the open row/drawer, superficie-2 chips, acento only on the primary submit, focus rings and active trigger edge, exito for meter/check/success, error for invalid fields). No new value.",
+    "motion": "Tactile press/settle grammar: presses compress (trigger scale .95, row/menu actions .95–.97, ES/EN .92) over 90ms cubic-bezier(.4,0,.7,1); arrivals settle with overshoot cubic-bezier(.34,1.42,.64,1) at 460ms expressive / 300ms natural / 170ms subtle — sheet rise, initial press-settle, rows staggered 55ms, popup spring from the trigger corner, drawer height spring with staggered fields, invalid field nudge, success seal with a drawn check. Reduced motion, Quieto and ?still=1 remove all of it; hidden tabs pause."
+  },
+  "evidence": {
+    "layout": [".column", ".ficha", ".plate", ".fila"],
+    "navigation": [".route-nav", ".menu-trigger", "#pw-toggle"],
+    "typography": [".page-title", ".id-name", ".fila .k"],
+    "motion": [".ficha", ".fila", ".plate .initial", ".menu-trigger"]
+  }
+}

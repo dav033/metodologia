@@ -375,3 +375,31 @@ previous main: aaf31a8d68d496bd40a0bfacd533b9730ab2c87a
 regression: 315 files, no failures + test_verify_procs (load flake, passes alone) [staged: selected 108 in 25m11s, then the rest 207 in 7m39s] (/home/david/.local/share/bitacora-integrate/regress/solver-20261031-075511-d592-20261031-115725/results.txt)
 rollback: git revert the merge of solver/20261031-075511-d592 on main, restart bt-durable.service and bitacora-web.service
 result: merged de091646bc94, restarted bt-durable.service, bitacora-web.service, smoke ok
+
+# integration of Never type into a pane whose agent exited; each regression suite gets its own tmux socket (D-252), local restart of engine + web, 2026-10-31 13:05, session metodologia-90
+previous main: 25cb9f4d52545f64d4549dc0b8f138120d426a5c
+/home/david/bitacora/.state/durable/backups/bt_durable-20261031-130541.dump 44664792 6f3576afaae0914fd54e45f140a4c367f7747e9f4929cc47757d98529e0acb0d
+regression: 315 files, no failures [staged: first 16 in 0m54s, then the rest 299 in 32m05s] (/home/david/.local/share/bitacora-integrate/regress/agent-pane-alive-20261031-123241/results.txt)
+rollback: git revert the merge of agent-pane-alive on main, restart bt-durable.service and bitacora-web.service
+result: merged 9b7277605f1d, restarted bt-durable.service, bitacora-web.service, smoke ok
+
+# integration of Solucionador runs Sonnet high, Codex Terra medium as fallback; the Claude command uses the routed model (D-253), local restart of engine + web, 2026-10-31 13:46, session metodologia-90
+previous main: 9b7277605f1dacd5949f027f748a095f6de65a54
+/home/david/bitacora/.state/durable/backups/bt_durable-20261031-134615.dump 44910635 da3b1a1b9acdf9c667038c475d02a382e1fca3241ccb7ebc028e8dc99584b7a2
+regression: 315 files, no failures + test_verify_procs (load flake, passes alone) [staged: first 29 in 1m13s, then the rest 286 in 34m35s] (/home/david/.local/share/bitacora-integrate/regress/solver-model-20261031-131026/results.txt)
+rollback: git revert the merge of solver-model on main, restart bt-durable.service and bitacora-web.service
+result: merged 2e41cf180e2d, restarted bt-durable.service, bitacora-web.service, smoke ok
+
+# integration of Every retry continues from the task's latest attempt, owner and healing answers too (D-254), local restart of engine + web, 2026-10-31 14:20, session metodologia-90
+previous main: 2e41cf180e2dde29d399c284d9a2c9fa74cdd8c0
+/home/david/bitacora/.state/durable/backups/bt_durable-20261031-142019.dump 45163136 a0ba1d6910c4948ba095fcb852be61a60c773ae5e9f00a9679562c4ab3ac0e08
+regression: 316 files, no failures [staged: first 16 in 1m03s, then the rest 300 in 32m46s] (/home/david/.local/share/bitacora-integrate/regress/retry-base-20261031-134628/results.txt)
+rollback: git revert the merge of retry-base on main, restart bt-durable.service and bitacora-web.service
+result: merged b90361792075, restarted bt-durable.service, bitacora-web.service, smoke ok
+
+# integration of Approving a version the owner rejected needs an explicit tick (D-255), local restart of engine + web, 2026-10-31 14:54, session metodologia-90
+previous main: b9036179207550463e112d20a6a4ffd831c8f98f
+/home/david/bitacora/.state/durable/backups/bt_durable-20261031-145452.dump 45642355 f9311e1c916b0827a472f16009318cae5f49a5e4a001f78292a92c588150a3b8
+regression: 316 files, no failures [staged: first 28 in 1m04s, then the rest 288 in 33m07s] (/home/david/.local/share/bitacora-integrate/regress/approve-guard-20261031-142040/results.txt)
+rollback: git revert the merge of approve-guard on main, restart bt-durable.service and bitacora-web.service
+result: merged 8fda201627bb, restarted bt-durable.service, bitacora-web.service, smoke ok

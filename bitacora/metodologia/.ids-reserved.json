@@ -144,6 +144,21 @@
    "id": "D-254",
    "by": "metodologia-95 subagent: retries build on the previous attempt",
    "at": "2026-10-31T12:38:41"
+  },
+  {
+   "id": "D-255",
+   "by": "metodologia-95: approving a version the owner rejected needs an explicit confirmation",
+   "at": "2026-10-31T13:18:15"
+  },
+  {
+   "id": "D-256",
+   "by": "metodologia-95 subagent: live per-user resources (durable DB, tmux socket, secret/agent env defaults, test roots) belong to the live root only",
+   "at": "2026-10-31T14:12:49"
+  },
+  {
+   "id": "D-257",
+   "by": "metodologia-95 subagent: attempts and failure digests state the real check environment",
+   "at": "2026-10-31T14:12:50"
   }
  ]
 }

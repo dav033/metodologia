@@ -4996,6 +4996,671 @@
    "summary": "Finalized the owner-selected Parte de acceso (a), r14, as the complete twelve-section cuentas-admin@v1 draft and rebuilt its canonical HTML using the current offline builder. Composition and motion are preserved; independent contract approval remains outstanding.",
    "ui_digest": "04b1c41557084c57"
   },
+  "cuentas-admin@v2": {
+   "attempt": 1,
+   "before": null,
+   "before_html": null,
+   "behavior": "cuentas-admin@v2.r1.chosen.behavior.md",
+   "chosen": "c",
+   "comparison": {
+    "directions": [
+     {
+      "density": 68,
+      "evidence": {
+       "layout": [
+        {
+         "ok": true,
+         "selector": ".paper"
+        },
+        {
+         "ok": true,
+         "selector": ".ficha"
+        },
+        {
+         "ok": true,
+         "selector": ".pw-pair"
+        },
+        {
+         "ok": true,
+         "selector": ".page-head"
+        }
+       ],
+       "motion": [
+        {
+         "ok": true,
+         "selector": ".acct-menu"
+        },
+        {
+         "ok": true,
+         "selector": ".ficha-row"
+        },
+        {
+         "ok": true,
+         "selector": ".head-rule"
+        },
+        {
+         "ok": true,
+         "selector": ".form-status"
+        }
+       ],
+       "navigation": [
+        {
+         "ok": true,
+         "selector": ".acct-trigger"
+        },
+        {
+         "ok": true,
+         "selector": ".acct-menu"
+        },
+        {
+         "ok": true,
+         "selector": ".route-nav"
+        }
+       ],
+       "typography": [
+        {
+         "ok": true,
+         "selector": ".page-head h1"
+        },
+        {
+         "ok": true,
+         "selector": ".v-name"
+        },
+        {
+         "ok": true,
+         "selector": ".v-mail"
+        },
+        {
+         "ok": true,
+         "selector": ".v-access"
+        }
+       ]
+      },
+      "fonts": [
+       "\"Geist Mono\", monospace",
+       "\"Geist Mono\", ui-monospace, monospace",
+       "Geist, ui-sans-serif, system-ui, sans-serif"
+      ],
+      "id": "cuentas-admin@v2.r1.dir-a.html",
+      "motion": [
+       "@keyframes spin { \n  100% { transform: rotate(360deg); }\n}",
+       "@keyframes pulse { \n  50% { opacity: 0.5; }\n}",
+       "@keyframes menu-cut { \n  0% { clip-path: inset(0px 0px 100% 35% round 20px); opacity: 0.4; }\n  100% { clip-path: inset(0px round 20px); opacity: 1; }\n}",
+       "@keyframes item-in { \n  0% { transform: translateY(-4px); opacity: 0; }\n  100% { transform: none; opacity: 1; }\n}",
+       "@keyframes rule-draw { \n  0% { transform: scaleX(0); }\n  100% { transform: scaleX(1); }\n}",
+       "@keyframes reg-in { \n  0% { transform: translateX(-6px); opacity: 0; }\n  100% { transform: none; opacity: 1; }\n}",
+       "@keyframes status-in { \n  0% { transform: translateY(4px); opacity: 0; }\n  100% { transform: none; opacity: 1; }\n}",
+       "@keyframes draw { \n  0% { stroke-dashoffset: 24; }\n  100% { stroke-dashoffset: 0; }\n}",
+       "@keyframes swap-in { \n  0% { opacity: 0.2; }\n  100% { opacity: 1; }\n}",
+       "{\"duration\":260,\"easing\":\"linear\",\"frames\":[\"composite,computedOffset,easing,offset,opacity\",\"composite,computedOffset,easing,offset,opacity\"]}",
+       "{\"duration\":416.00000000000006,\"easing\":\"linear\",\"frames\":[\"composite,computedOffset,easing,offset,transform\",\"composite,computedOffset,easing,offset,transform\"]}",
+       "{\"duration\":260,\"easing\":\"linear\",\"frames\":[\"composite,computedOffset,easing,offset,opacity,transform\",\"composite,computedOffset,easing,offset,opacity,transform\"]}",
+       "{\"duration\":260,\"easing\":\"linear\",\"frames\":[\"composite,computedOffset,easing,offset,opacity,transform\",\"composite,computedOffset,easing,offset,opacity,transform\"]}",
+       "{\"duration\":260,\"easing\":\"linear\",\"frames\":[\"composite,computedOffset,easing,offset,opacity,transform\",\"composite,computedOffset,easing,offset,opacity,transform\"]}"
+      ],
+      "nav": [
+       "4:2:1:0:row"
+      ],
+      "shape": [
+       "MAIN:0:1:12:11",
+       "DIV:0:1:12:11",
+       "HEADER:0:1:11:1",
+       "DIV:0:1:2:0",
+       "SPAN:0:1:0:0",
+       "svg:0:1:0:0",
+       "circle:0:1:0:0",
+       "circle:0:1:0:0",
+       "SPAN:2:1:1:0",
+       "DIV:8:1:3:1",
+       "LABEL:8:1:1:1",
+       "SPAN:8:1:0:0",
+       "SELECT:9:1:1:1",
+       "DIV:9:1:2:1",
+       "BUTTON:9:1:2:1",
+       "SPAN:10:1:0:0",
+       "SPAN:10:1:1:0",
+       "svg:11:1:0:0",
+       "path:11:1:0:0",
+       "MAIN:1:2:10:9",
+       "DIV:1:2:10:1",
+       "LABEL:1:2:1:0",
+       "SELECT:3:2:3:1",
+       "DIV:1:3:10:6",
+       "DIV:1:3:10:1",
+       "DIV:1:3:1:1",
+       "H1:1:3:1:0",
+       "P:1:3:1:0",
+       "NAV:8:3:3:1",
+       "A:8:3:1:1",
+       "A:9:3:1:1",
+       "A:10:3:1:1",
+       "DIV:1:4:10:5",
+       "SECTION:1:4:3:5",
+       "H2:1:4:3:0",
+       "DL:1:5:3:2",
+       "DIV:1:5:3:1",
+       "DT:1:5:1:0",
+       "DD:2:5:2:1",
+       "SPAN:2:5:1:1",
+       "DIV:1:6:3:1",
+       "DT:1:6:1:0",
+       "DD:2:6:2:0",
+       "SPAN:2:6:1:0",
+       "DIV:1:7:3:1",
+       "DT:1:7:1:0",
+       "DD:2:7:2:0",
+       "SPAN:2:7:1:0",
+       "SECTION:4:4:7:5",
+       "H2:5:4:6:0",
+       "P:5:5:6:0",
+       "FORM:5:5:6:3",
+       "DIV:5:5:6:1",
+       "LABEL:5:5:6:0",
+       "INPUT:5:6:6:1",
+       "DIV:5:6:6:1",
+       "DIV:5:6:3:1",
+       "LABEL:5:6:3:0",
+       "INPUT:5:7:3:1",
+       "P:5:8:3:0",
+       "DIV:8:6:3:1",
+       "LABEL:8:6:3:0",
+       "INPUT:8:7:3:1",
+       "DIV:5:8:6:1",
+       "BUTTON:5:8:2:1",
+       "FOOTER:0:11:11:0",
+       "SPAN:0:11:2:0",
+       "SPAN:9:11:3:0"
+      ],
+      "sizes": [
+       "12px",
+       "13px",
+       "14px",
+       "15px",
+       "16px",
+       "17px",
+       "20px",
+       "24px"
+      ]
+     },
+     {
+      "density": 85,
+      "evidence": {
+       "layout": [
+        {
+         "ok": true,
+         "selector": ".account-track"
+        },
+        {
+         "ok": true,
+         "selector": ".identity-pass"
+        },
+        {
+         "ok": true,
+         "selector": ".security-panel"
+        },
+        {
+         "ok": true,
+         "selector": ".pw-pair"
+        }
+       ],
+       "motion": [
+        {
+         "ok": true,
+         "selector": ".identity-pass"
+        },
+        {
+         "ok": true,
+         "selector": ".security-panel"
+        },
+        {
+         "ok": true,
+         "selector": ".pass-row"
+        },
+        {
+         "ok": true,
+         "selector": ".local-nav-indicator"
+        },
+        {
+         "ok": true,
+         "selector": ".chev"
+        }
+       ],
+       "navigation": [
+        {
+         "ok": true,
+         "selector": ".local-nav"
+        },
+        {
+         "ok": true,
+         "selector": ".local-tab[aria-pressed='true']"
+        },
+        {
+         "ok": true,
+         "selector": ".route-nav"
+        },
+        {
+         "ok": true,
+         "selector": ".user-menu summary"
+        }
+       ],
+       "typography": [
+        {
+         "ok": true,
+         "selector": ".heading h1"
+        },
+        {
+         "ok": true,
+         "selector": ".panel-title"
+        },
+        {
+         "ok": true,
+         "selector": ".pass-row.name dd"
+        },
+        {
+         "ok": true,
+         "selector": ".access-value"
+        }
+       ]
+      },
+      "fonts": [
+       "\"Geist Mono\", monospace",
+       "Geist, system-ui, sans-serif"
+      ],
+      "id": "cuentas-admin@v2.r1.dir-b.html",
+      "motion": [
+       "@keyframes spin { \n  100% { transform: rotate(360deg); }\n}",
+       "@keyframes pulse { \n  50% { opacity: 0.5; }\n}",
+       "@keyframes menu-unfold { \n  0% { transform: translate(10px, -10px) scale(0.96); }\n  100% { transform: none; }\n}",
+       "@keyframes item-glide { \n  0% { transform: translateX(10px); }\n  100% { transform: none; }\n}",
+       "@keyframes seat-left { \n  0% { transform: translateX(-18px); }\n  100% { transform: none; }\n}",
+       "@keyframes seat-right { \n  0% { transform: translateX(18px); }\n  100% { transform: none; }\n}",
+       "@keyframes row-glide { \n  0% { transform: translateX(-10px); }\n  100% { transform: none; }\n}",
+       "@keyframes err-in { \n  0% { transform: translateY(-4px); }\n  100% { transform: none; }\n}",
+       "@keyframes receipt-drop { \n  0% { transform: translateY(-12px); }\n  100% { transform: none; }\n}",
+       "{\"duration\":560,\"easing\":\"linear\",\"frames\":[\"composite,computedOffset,easing,offset,transform\",\"composite,computedOffset,easing,offset,transform\"]}",
+       "{\"duration\":560,\"easing\":\"linear\",\"frames\":[\"composite,computedOffset,easing,offset,transform\",\"composite,computedOffset,easing,offset,transform\"]}",
+       "{\"duration\":560,\"easing\":\"linear\",\"frames\":[\"composite,computedOffset,easing,offset,transform\",\"composite,computedOffset,easing,offset,transform\"]}",
+       "{\"duration\":560,\"easing\":\"linear\",\"frames\":[\"composite,computedOffset,easing,offset,transform\",\"composite,computedOffset,easing,offset,transform\"]}",
+       "{\"duration\":560,\"easing\":\"linear\",\"frames\":[\"composite,computedOffset,easing,offset,transform\",\"composite,computedOffset,easing,offset,transform\"]}",
+       "{\"duration\":560,\"easing\":\"linear\",\"frames\":[\"composite,computedOffset,easing,offset,transform\",\"composite,computedOffset,easing,offset,transform\"]}"
+      ],
+      "nav": [
+       "5:1:1:0:row",
+       "0:1:6:0:row"
+      ],
+      "shape": [
+       "MAIN:0:1:12:11",
+       "DIV:0:1:12:11",
+       "HEADER:0:1:11:1",
+       "DIV:0:1:2:0",
+       "SPAN:0:1:0:0",
+       "svg:0:1:0:0",
+       "circle:0:1:0:0",
+       "circle:0:1:0:0",
+       "SPAN:2:1:1:0",
+       "DIV:8:1:3:1",
+       "LABEL:8:1:1:1",
+       "SELECT:9:1:1:1",
+       "DETAILS:10:1:2:1",
+       "SUMMARY:10:1:2:1",
+       "SPAN:10:1:0:0",
+       "SPAN:10:1:0:0",
+       "SPAN:10:1:1:0",
+       "svg:11:1:0:0",
+       "path:11:1:0:0",
+       "DIV:0:2:11:1",
+       "DIV:0:2:1:1",
+       "H1:0:2:1:0",
+       "P:0:2:1:0",
+       "NAV:9:2:3:1",
+       "BUTTON:9:2:1:1",
+       "SPAN:9:2:1:1",
+       "svg:9:2:0:0",
+       "path:9:2:0:0",
+       "circle:9:2:0:0",
+       "rect:9:2:0:0",
+       "SPAN:10:2:1:0",
+       "BUTTON:10:2:1:1",
+       "svg:10:2:0:0",
+       "path:10:2:0:0",
+       "SPAN:11:2:1:0",
+       "NAV:0:3:11:1",
+       "A:0:3:1:1",
+       "ASIDE:0:4:11:1",
+       "LABEL:1:4:3:0",
+       "SELECT:1:4:2:0",
+       "LABEL:4:4:3:0",
+       "SELECT:5:4:2:0",
+       "SPAN:6:4:2:0",
+       "DIV:0:5:11:5",
+       "DIV:0:5:11:5",
+       "SECTION:0:5:3:5",
+       "DIV:1:5:3:1",
+       "SPAN:1:5:1:1",
+       "SPAN:1:5:1:1",
+       "H2:1:6:1:0",
+       "DL:1:7:3:2",
+       "DIV:1:7:3:1",
+       "DT:1:7:3:0",
+       "DD:1:7:3:0",
+       "DIV:1:7:3:1",
+       "DT:1:7:3:0",
+       "DD:1:8:3:0",
+       "DIV:1:8:3:1",
+       "DT:1:8:3:0",
+       "DD:1:8:3:0",
+       "DL:1:9:3:1",
+       "DIV:1:9:3:1",
+       "DT:1:9:3:0",
+       "DD:1:10:3:0",
+       "SECTION:4:5:8:5",
+       "DIV:4:5:7:0",
+       "svg:4:5:0:0",
+       "path:4:5:0:0",
+       "H2:5:5:2:0",
+       "FORM:4:6:7:4",
+       "DIV:4:6:7:1",
+       "DIV:4:6:7:1",
+       "LABEL:4:6:7:0",
+       "INPUT:4:6:7:1",
+       "DIV:4:7:7:2",
+       "DIV:4:8:7:1",
+       "DIV:4:8:3:1",
+       "LABEL:4:8:3:0",
+       "INPUT:4:8:3:1",
+       "P:4:9:3:0",
+       "DIV:8:8:3:1",
+       "LABEL:8:8:3:0",
+       "INPUT:8:8:3:1",
+       "DIV:4:9:7:1",
+       "BUTTON:4:9:2:1"
+      ],
+      "sizes": [
+       "12px",
+       "13px",
+       "14px",
+       "15px",
+       "16px",
+       "18px",
+       "20px",
+       "24px",
+       "26px"
+      ]
+     },
+     {
+      "density": 47,
+      "evidence": {
+       "layout": [
+        {
+         "ok": true,
+         "selector": ".column"
+        },
+        {
+         "ok": true,
+         "selector": ".ficha"
+        },
+        {
+         "ok": true,
+         "selector": ".plate"
+        },
+        {
+         "ok": true,
+         "selector": ".fila"
+        }
+       ],
+       "motion": [
+        {
+         "ok": true,
+         "selector": ".ficha"
+        },
+        {
+         "ok": true,
+         "selector": ".fila"
+        },
+        {
+         "ok": true,
+         "selector": ".plate .initial"
+        },
+        {
+         "ok": true,
+         "selector": ".menu-trigger"
+        }
+       ],
+       "navigation": [
+        {
+         "ok": true,
+         "selector": ".route-nav"
+        },
+        {
+         "ok": true,
+         "selector": ".menu-trigger"
+        },
+        {
+         "ok": true,
+         "selector": "#pw-toggle"
+        }
+       ],
+       "typography": [
+        {
+         "ok": true,
+         "selector": ".page-title"
+        },
+        {
+         "ok": true,
+         "selector": ".id-name"
+        },
+        {
+         "ok": true,
+         "selector": ".fila .k"
+        }
+       ]
+      },
+      "fonts": [
+       "\"Geist Mono\", monospace",
+       "Geist, ui-sans-serif, system-ui, sans-serif"
+      ],
+      "id": "cuentas-admin@v2.r1.dir-c.html",
+      "motion": [
+       "@keyframes pulse { \n  50% { opacity: 0.5; }\n}",
+       "@keyframes settle-in { \n  0% { opacity: 0.001; transform: translateY(14px) scale(0.985); }\n  100% { opacity: 1; transform: none; }\n}",
+       "@keyframes press-settle { \n  0% { transform: scale(0.82); }\n  55% { transform: scale(1.04); }\n  100% { transform: scale(1); }\n}",
+       "@keyframes row-in { \n  0% { opacity: 0.001; transform: translateX(-10px); }\n  100% { opacity: 1; transform: none; }\n}",
+       "@keyframes field-in { \n  0% { opacity: 0.001; transform: translateY(-8px); }\n  100% { opacity: 1; transform: none; }\n}",
+       "@keyframes nudge { \n  0%, 100% { transform: none; }\n  30% { transform: translateX(-4px); }\n  65% { transform: translateX(3px); }\n}",
+       "@keyframes spin { \n  100% { transform: rotate(360deg); }\n}",
+       "@keyframes seal { \n  0% { opacity: 0.001; transform: scale(0.96); }\n  100% { opacity: 1; transform: none; }\n}",
+       "@keyframes draw { \n  100% { stroke-dashoffset: 0; }\n}",
+       "{\"duration\":460,\"easing\":\"linear\",\"frames\":[\"composite,computedOffset,easing,offset,opacity,transform\",\"composite,computedOffset,easing,offset,opacity,transform\"]}",
+       "{\"duration\":580.0000000000001,\"easing\":\"linear\",\"frames\":[\"composite,computedOffset,easing,offset,transform\",\"composite,computedOffset,easing,offset,transform\",\"composite,computedOffset,easing,offset,transform\"]}",
+       "{\"duration\":460,\"easing\":\"linear\",\"frames\":[\"composite,computedOffset,easing,offset,opacity,transform\",\"composite,computedOffset,easing,offset,opacity,transform\"]}",
+       "{\"duration\":460,\"easing\":\"linear\",\"frames\":[\"composite,computedOffset,easing,offset,opacity,transform\",\"composite,computedOffset,easing,offset,opacity,transform\"]}",
+       "{\"duration\":460,\"easing\":\"linear\",\"frames\":[\"composite,computedOffset,easing,offset,opacity,transform\",\"composite,computedOffset,easing,offset,opacity,transform\"]}"
+      ],
+      "nav": [
+       "2:2:3:0:row"
+      ],
+      "shape": [
+       "MAIN:0:1:12:11",
+       "DIV:0:1:12:11",
+       "HEADER:0:1:12:1",
+       "DIV:10:1:2:1",
+       "BUTTON:10:1:2:1",
+       "SPAN:10:1:0:0",
+       "SPAN:10:1:1:0",
+       "svg:11:1:0:0",
+       "path:11:1:0:0",
+       "MAIN:3:2:6:10",
+       "HEADER:3:2:6:1",
+       "DIV:3:3:2:0",
+       "SPAN:3:3:0:0",
+       "I:3:3:0:0",
+       "SPAN:4:3:1:0",
+       "SPAN:4:3:1:0",
+       "LABEL:8:2:1:1",
+       "SPAN:8:3:0:0",
+       "SELECT:8:2:1:1",
+       "H1:3:3:6:0",
+       "P:3:4:6:0",
+       "NAV:3:4:6:1",
+       "A:3:4:1:0",
+       "SECTION:3:5:6:5",
+       "H2:3:5:6:1",
+       "DIV:3:6:6:2",
+       "SPAN:3:6:1:1",
+       "DL:4:6:4:1",
+       "DIV:4:6:4:1",
+       "DT:4:6:4:0",
+       "DD:4:6:4:0",
+       "DIV:4:6:4:1",
+       "DT:4:6:4:0",
+       "DD:4:7:4:0",
+       "DL:3:7:6:2",
+       "DIV:3:7:6:1",
+       "DT:3:8:1:0",
+       "DD:5:8:4:0",
+       "DIV:3:8:6:1",
+       "DT:3:8:1:0",
+       "DD:5:8:4:0",
+       "DIV:3:9:6:1",
+       "SPAN:3:9:1:0",
+       "SPAN:5:9:2:0",
+       "SPAN:5:9:1:0",
+       "BUTTON:7:9:2:1",
+       "P:3:10:6:0"
+      ],
+      "sizes": [
+       "12px",
+       "13px",
+       "14px",
+       "15px",
+       "20px",
+       "24px",
+       "26px"
+      ]
+     }
+    ],
+    "evidence_ok": true,
+    "missing_evidence": [],
+    "ok": true,
+    "pairs": [
+     {
+      "a": "cuentas-admin@v2.r1.dir-a.html",
+      "b": "cuentas-admin@v2.r1.dir-b.html",
+      "layout_similarity": 0.133,
+      "ok": true,
+      "same_density": false,
+      "same_motion": false,
+      "same_navigation": false,
+      "same_typography": false
+     },
+     {
+      "a": "cuentas-admin@v2.r1.dir-a.html",
+      "b": "cuentas-admin@v2.r1.dir-c.html",
+      "layout_similarity": 0.055,
+      "ok": true,
+      "same_density": false,
+      "same_motion": false,
+      "same_navigation": false,
+      "same_typography": false
+     },
+     {
+      "a": "cuentas-admin@v2.r1.dir-b.html",
+      "b": "cuentas-admin@v2.r1.dir-c.html",
+      "layout_similarity": 0.048,
+      "ok": true,
+      "same_density": false,
+      "same_motion": false,
+      "same_navigation": false,
+      "same_typography": false
+     }
+    ],
+    "schema_version": 1
+   },
+   "continuation_choice": null,
+   "delegation": "D-20261031-152349-edcd",
+   "digest": "a6eb03895eb6e5c8",
+   "directions": [
+    {
+     "axes": {
+      "colour": "Pictures globals.css tokens mapped once per theme (fondo/superficie/borde/texto/acento; exito/error suaves). Colour only on the primary submit, field errors and the success/error status; navigation and popup rows are neutral with superficie-2 hover and weight for the current item. Access shown as a neutral superficie-2 pill.",
+      "components": "shadcn/Base UI Input (password fields with aria-invalid/aria-describedby), Button (submit, 196px min width so pending does not jump), Spinner (pending), Skeleton (page and trigger loading), Separator (popup groups); native selects for Idioma and the mock fixture; custom disclosure popup (not role=menu) so Tab is never trapped. Lucide icons for theme, sign-out, success/error.",
+      "concept": "Operational account sheet: Mi cuenta answers «who am I in Pictures and can I change my password?» in one divided paper — an identity ledger (Nombre, Correo, Plan or Rol, optional Empresa) beside the password form — and the shared account popup becomes a dense identity header plus grouped destinations. No profile editing, no notice metadata, no promotion.",
+      "density": "Dense but touchable: 12px ledger row padding with hairline rules, 28px paper insets (20px on phone), 16px form gaps, 44px inputs/buttons/menu rows, 320px popup with 8px inner padding. One paper instead of two stacked cards; no empty right half at desktop.",
+      "layout": "Existing Pictures/Sempertex masthead (Idioma + account trigger) unchanged; page capped at 1040px with H1 and the existing Cuentas / Roles y permisos / Mi cuenta route nav sharing one heading row over a drawn rule. One 32px paper split 340px ledger | flexible form (300px from 840–1099px); below 840px the ledger stacks above the form. New/repeat passwords pair in two columns from 1100px. Ledger rows switch to label-over-value under 480px; masthead wraps tools to a second row.",
+      "motion": "Precise quick cuts with cubic-bezier(.32,.72,0,1): popup reveals by clip-path from its top-right corner (200ms expressive / 160 natural / 110 subtle) and closes instantly; its rows step in 4px with 28ms offsets; the heading rule draws left-to-right; ledger rows register 6px from the left in sequence; field errors open by grid-row height; status band rises 4px and the success check draws its stroke; chevron flips 180°. Reduced/still: no animation or transition, final content shown; hidden tabs pause.",
+      "navigation": "Account trigger is a native button with aria-expanded/aria-controls (initial + real name; name hidden under 400px, kept in aria-label). Popup: identity header, then Mi cuenta (current, check), Planes, permission-scoped Administración and Roles y permisos, then Cambiar tema, then Cerrar sesión. Escape closes and returns focus to the trigger; repeated trigger closes; outside pointer closes without moving focus; Tab/Shift+Tab leave freely and close it. In-page route nav keeps permission scoping.",
+      "typography": "Production Geist / Geist Mono only. Hierarchy by scale inside the ledger: H1 24px, section titles 17px, the person's name 20px semibold as the largest datum, access 15px semibold, email in Geist Mono 13px, labels 12px secondary; form labels 14px medium, hints/errors 12–13px."
+     },
+     "delegation": "D-20261031-130543-b0d2",
+     "id": "a",
+     "json_sha256": "fb9e78cac9d271421d477b15240cb24742f88e7ba0292a5e1637c9f3a88b1065",
+     "name": "Ficha dividida",
+     "note_sha256": "1dfa18bc60f080781ffbee0800070cbb5bc4d5f4f87cb2765f35af670afbb9d1",
+     "revision": 1,
+     "seed": "Operational: dense working information in the existing shell; hierarchy by type scale and grouping, precise quick transitions.",
+     "sha256": "e2129b5466cd94bbf0924d2e1b99a0060b2276a856b103ac0c2b9bf1526a36aa",
+     "status": "ready",
+     "tsx_sha256": "ce2d5933209e0474dcd0c5c4e829265de17b9185f22827b68aeb230eafc12aa4"
+    },
+    {
+     "axes": {
+      "colour": "Exact Pictures light/dark tokens mapped onto kit roles; accent only on the primary action, focus ring, monogram and access chip; error/éxito tokens only for field errors, alert note and success receipt; neutral rail and navigation.",
+      "components": "Real shadcn/Base UI Button, Input, Skeleton, Spinner and Avatar with a Motion layoutId indicator; native details/summary menu and native selects; custom pass, security panel, receipt and track arrangement.",
+      "concept": "Identity as a sticky pass beside a seated password security panel; a local rail spotlights one panel and turns into a sliding two-panel track on narrow screens.",
+      "density": "28px desktop, 24px tablet and 20px phone panel insets; 16px pass row rhythm and 20px field rhythm with a rule between current and new password.",
+      "layout": "Two-column workspace inside the unchanged shell: 340px sticky pass + fluid security panel (300px pass at 840–1099px), new/repeat fields paired from 1100px; below 840px a clipped horizontal track of two full-width panels.",
+      "motion": "Glide-and-seat: pass seats from the left and panel from the right, pass rows stagger, rail indicator springs between segments, track slides one panel, menu unfolds from the trigger corner with staggered items; 560/380/200ms profiles, cubic-bezier(.3,1.18,.4,1), reduced-motion parity.",
+      "navigation": "Unchanged masthead and route navigation plus a segmented local rail «Identidad · Contraseña» (aria-pressed buttons) that focuses/spotlights a panel or slides the track; native details/summary account menu with permission-scoped links and Escape/outside/repeat/Tab dismissal.",
+      "typography": "Product Geist: 24px page title, 20px panel titles, 18px semibold name row, 20px semibold access value, 13px labels and hints; Geist Mono kept for the Sempertex wordmark."
+     },
+     "delegation": "D-20261031-130544-7884",
+     "id": "b",
+     "json_sha256": "f732e001553ac4a5cf7aeb4472b3a1d16b4543325625f4979fb8f46e6d77dd4b",
+     "name": "Pase y panel de seguridad",
+     "note_sha256": "69aee769cf1d3120b5787cf0a9c6cfe218da40598d7c3ff6c8e6572757bad7c9",
+     "revision": 1,
+     "seed": "Spatial: the same product shell with a different arrangement of the changed area (panels, inspector, canvas), alternative in-page navigation, spatial transitions.",
+     "sha256": "c46ddcb3bf86173b7eddd3bed48be87d9885b7d4ab9cbf2025aa49038cb524b9",
+     "status": "ready",
+     "tsx_sha256": "b88602af7696e0edbb03232b9b28bfe0d2d9280dfa42df7f9674ecf07df89b88"
+    },
+    {
+     "axes": {
+      "colour": "Exact Pictures globals.css tokens in both themes (fondo, superficie, superficie-suave for the open row/drawer, superficie-2 chips, acento only on the primary submit, focus rings and active trigger edge, exito for meter/check/success, error for invalid fields). No new value.",
+      "components": "Real shadcn/Base UI Button (outline row action, primary submit, outline cancel), Input (password, aria-invalid, aria-describedby), Skeleton (loading sheet); Motion AnimatePresence for popup and drawer; native select for Idioma; custom identity plate, ruled rows, length meter, inline field errors, success seal.",
+      "concept": "Direct manipulation inside the existing /cuenta column: identity is one read-only ruled sheet (Nombre, Correo, Plan or Rol, optional Empresa) and the only editable fact, the password, opens in place as a drawer under its own row; the shared account popup carries the real identity and settles under the trigger.",
+      "density": "Sparse identity, dense editor: 24/28px sheet insets, 64px rows, 48px password fields with 18px gaps; phone 20px insets. The editor adds height only while open; closed, the page is three to four rows.",
+      "layout": "Production shell unchanged (full-width signed-in account bar, 676px centred column with Pictures ring-and-dot header, Idioma select, H1, route rule). One 32px-radius paper: 64px initial plate with stacked Nombre/Correo, then 132px label / value ruled rows, then the Contraseña row whose editor expands below it in the same paper. Phone: labels above values, full-width actions.",
+      "motion": "Tactile press/settle grammar: presses compress (trigger scale .95, row/menu actions .95–.97, ES/EN .92) over 90ms cubic-bezier(.4,0,.7,1); arrivals settle with overshoot cubic-bezier(.34,1.42,.64,1) at 460ms expressive / 300ms natural / 170ms subtle — sheet rise, initial press-settle, rows staggered 55ms, popup spring from the trigger corner, drawer height spring with staggered fields, invalid field nudge, success seal with a drawn check. Reduced motion, Quieto and ?still=1 remove all of it; hidden tabs pause.",
+      "navigation": "Retained NavegacionCuentas route rule (Cuentas / Roles y permisos only with permission, Mi cuenta). Account trigger is a disclosure button (aria-expanded) whose popup closes on repeated trigger, outside pointer (clicked target keeps focus), Escape (focus back to trigger) and focus leaving; ES/EN pair, Mi cuenta, permitted Administración / Roles y permisos, Planes and Cerrar sesión. In-page: Cambiar contraseña reveals the editor and moves focus to Contraseña actual; Cancelar/Escape collapses it and returns focus.",
+      "typography": "Production Geist Sans / Geist Mono only. H1 24px/600; identity name 20px/600 (18px phone) as the sheet's largest text; 15px email; 13px muted labels; 14px field labels/600; 13px help and errors; mono 12px for the mockup footnote only."
+     },
+     "delegation": "D-20261031-130544-4658",
+     "id": "c",
+     "json_sha256": "59a54c0ae29735ab03795af7c90674fc77a09c315688a2969a7640deb35c032b",
+     "name": "Ficha en su sitio — direct manipulation",
+     "note_sha256": "cbf4ef8e91a61670725a057ef587432a24585cb02d0cbe17e8fd4181a450a9f8",
+     "revision": 1,
+     "seed": "Direct manipulation: the same product shell with in-place editing, progressive disclosure and tactile press/settle feedback on the changed controls.",
+     "sha256": "7566cd4d4130c42cef81cd5d0648d2d022047a6afa054077f2ccbaa469f03649",
+     "status": "ready",
+     "tsx_sha256": "5808b43ba87915a5a7e847c5edc9a833a345562b6b0c86b0acb740eca3b44c65"
+    }
+   ],
+   "error": "",
+   "feedback": [],
+   "feedback_batch": [],
+   "finished": "2026-10-31T13:32:20-05:00",
+   "fresh": false,
+   "iterate_from": null,
+   "phase": "finalise",
+   "reason": "requested",
+   "selected_sha256": "7566cd4d4130c42cef81cd5d0648d2d022047a6afa054077f2ccbaa469f03649",
+   "started": "2026-10-31T15:23:49-05:00",
+   "status": "drafting",
+   "subplan_id": "SP-2",
+   "ui_digest": "b9b0aadf583693db"
+  },
   "decoraciones@v1": {
    "approved": "2026-10-29T12:05:23-05:00",
    "attempt": 3,

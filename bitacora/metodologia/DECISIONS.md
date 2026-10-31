@@ -2990,21 +2990,6 @@ Solucionador 20261030-100736-d494 integrated merge fff622890f28b8093a9a0afda9c40
 - **Decision:** `test_page_planning_asks` patches the screen and the notes directory, so a live Planner's quota wall can
   neither fail it nor write into the live plan feed (08:40 incident, false «sin cuota» line).
 
-## D-253 — The Solucionador runs Sonnet high, Terra medium as fallback
-
-- **Date:** 2026-10-31 · **Status:** Accepted · **Supersedes:** the 2026-10-29 owner order (Opus high, Codex Sol high)
-  in `bt_role_policy` for role `solver`
-- **Context:** the owner asked (12:40) for the Solucionador to be «un sonnet high o un terra medium». The SP-2 rejection
-  session ran Codex Sol high with 9 % of its 5 h quota left. Reading the launch path showed a second defect:
-  `Solver._start` built the Claude command with a fixed `--model opus --effort high`, so the routed model and effort
-  never reached a Claude session.
-- **Decision:** role `solver` ranks `("claude", "sonnet", "high")` then `("codex", "gpt-6.1-terra", "medium")`, still an
-  ordered role (owner order while quota allows, D-151). The Claude command passes the route's `--model`/`--effort`.
-- **Rule:** a role's session runs the model and effort its route chose; no launch path hard-codes a model.
-- **Evidence:** `test_durable_solver.test_a_claude_session_runs_the_routed_model_and_effort` (red on main),
-  `test_role_routing` solver case updated; test_durable_solver, test_role_policy, test_role_routing,
-  test_planner_profile: 67 tests OK. Sessions already running keep their model; the next one uses the new order.
-
 ## D-252 — Never type into a pane whose agent exited
 
 - **Date:** 2026-10-31 · **Status:** Accepted · **Refines:** D-199, D-238, D-251
@@ -3021,3 +3006,108 @@ Solucionador 20261030-100736-d494 integrated merge fff622890f28b8093a9a0afda9c40
 - **Evidence:** `test_agent_terminal.DeadPane` (4), `test_durable_solver.ExitedAgent`, `test_regress_venv.TmuxSocket`
   (red on main); 140 selected suites green. Built by an Opus subagent. The owner authorized the operator to kill the
   dead session by hand at 10:13 (the classifier had refused it).
+
+## D-253 — The Solucionador runs Sonnet high, Terra medium as fallback
+
+- **Date:** 2026-10-31 · **Status:** Accepted · **Supersedes:** the 2026-10-29 owner order (Opus high, Codex Sol high)
+  in `bt_role_policy` for role `solver`
+- **Context:** the owner asked (12:40) for the Solucionador to be «un sonnet high o un terra medium». The SP-2 rejection
+  session ran Codex Sol high with 9 % of its 5 h quota left. Reading the launch path showed a second defect:
+  `Solver._start` built the Claude command with a fixed `--model opus --effort high`, so the routed model and effort
+  never reached a Claude session.
+- **Decision:** role `solver` ranks `("claude", "sonnet", "high")` then `("codex", "gpt-6.1-terra", "medium")`, still an
+  ordered role (owner order while quota allows, D-151). The Claude command passes the route's `--model`/`--effort`.
+- **Rule:** a role's session runs the model and effort its route chose; no launch path hard-codes a model.
+- **Evidence:** `test_durable_solver.test_a_claude_session_runs_the_routed_model_and_effort` (red on main),
+  `test_role_routing` solver case updated; test_durable_solver, test_role_policy, test_role_routing,
+  test_planner_profile: 67 tests OK. Sessions already running keep their model; the next one uses the new order.
+
+## D-254 — Every retry continues from the task's latest attempt
+
+- **Date:** 2026-10-31 · **Status:** Accepted · **Refines:** D-191 (closes its proposal «an owner retry after an
+  escalation reuses the last automatic retry's base»)
+- **Context:** pictures REQ-021 r30 T10.45: a1→a2→a3 chained (automatic retries), but a4..a10 all started from a3's
+  snapshot 38dfbf21 (`refs/heads/m3/...-aN-*`, handoff parents). a7 (0c4084af) fixed dictionary entries and a8
+  (b9a128d8) restarted from a3, so the same failure came back. Cause: in `_run_task`
+  (`bt_durable/execution/workflows.py`) only RETRY/REMEDIATE/RETRY_OTHER_ROUTE set `base_override = continued`; the
+  escalate branch (owner and healing answers: d1..d5 after a4..a8, the budget of 4 being spent), WAIT and the memory
+  raise left it at the last automatic retry's base. The README listed it as a verified limitation, not a rule.
+- **Decision:** the task workflow tracks `latest`, the newest snapshot an attempt of the task left (or its reconciled
+  legacy snapshot), and every new attempt starts from it whatever decided the retry; an attempt with no snapshot keeps
+  the earlier one; only RECONCILE_INTEGRATION starts again from the line tip. Behind
+  `DBOS.patch("bt-task-continues-latest-tree")`, placed right before `bt.now` and called only when `latest` differs
+  from the chosen base: a pass recorded by the previous engine replays with its base (and its `bt.base_ref` step).
+  The continuation note is also given when the earlier attempt committed its work itself (a6, a8, a9 did).
+- **Rule:** a retry builds on the previous attempt's candidate tree; starting over is an explicit decision.
+- **Live effect:** the running T10.45 (a10, from 38dfbf21) keeps its base; once deployed, the attempt after a10
+  continues from a10's snapshot. The work of a7/a9 is not recovered automatically (refs `.../a7-*`, `.../a9-*` hold it).
+- **Evidence:** `test_durable_e2e.test_every_retry_continues_from_the_latest_attempt_after_owner_answers_too` and
+  `test_durable_latest_tree_upgrade` (history recorded by de091646b replays, no ERROR; the next answer continues), both
+  red without the fix; `test_durable_upgrade` updated (its post-upgrade owner retry now continues and T2 passes). Full
+  `bt_regress --mode staged`: 316 files, no failures (3282 tests). Branch `retry-base`, commit 02075b623.
+
+## D-255 — Approving a version the owner rejected needs an explicit tick
+
+- **Date:** 2026-10-31 · **Status:** Accepted · **Refines:** D-244 (owner rejections reach the Solucionador)
+- **Context:** pictures REQ-021: the owner rejected SP-2 v2 at 12:34 with a long note; at 13:04 the web recorded an
+  approval of the same version and commit, without a note. `bt_verification.decide("approved")` closed P-209 and
+  would have drained stages queued behind SP-2. The owner confirmed it was a mistake; the operator restored the
+  rejection with the identical note (same Solucionador key, P-210).
+- **Decision:** while the current version's state is `rejected`, the «Aprobar» form carries a required checkbox «Ya no
+  aplica mi rechazo de esta versión», and `verify_post` refuses `verify-approve` without `over_rejection=1`
+  (`bt_verification.approval_over_rejection`), recording nothing and committing nothing. A new version after a
+  rejection approves normally.
+- **Rule:** the owner's own rejection of a version is answered only by a deliberate approval of that version.
+- **Evidence:** `test_verification.test_approving_a_version_the_owner_rejected_needs_the_tick`; test_verification 24
+  tests OK. Owner asked for it («si», 13:20).
+
+## D-256 — The owner's live resources belong to the live root alone
+
+- **Date:** 2026-10-31 · **Status:** Accepted · **Refines:** D-247, D-252
+- **Context:** owner, 2026-10-31: «there is a serious problem with the environments and how environment variables are
+  fed». Audit of every execution context (engine, attempts, M6, Probar, bt_regress, hand-run suites). A process whose
+  bitácora root is not `~/bitacora` still fell back to live defaults when a variable was missing:
+  `bt_durable.cli.database_url()` read `~/.config/bitacora/durable.env` (the live engine's PostgreSQL) for ANY root
+  without its own URL — reproduced: a scratch `BITACORA_ROOT` resolved `postgresql://…`; bt_regress drops
+  `BT_DURABLE_DATABASE_URL`, so that file was the next thing a suite read. `bt_agent_terminal.socket()` defaulted to
+  `-L bitacora` (D-252 fixed bt_regress only). A test runner got the live root when `BITACORA_ROOT` was missing OR named
+  it (engine-spawned agents and the Solucionador inherit `BITACORA_ROOT=~/bitacora`; D-247's 08:40 incident).
+  `verifier.secret_files` / `execution.agent_env_file` defaulted to the owner's files for every root (a scratch plan's
+  `requires` copied his real secret into a test policy). `bt_autostart.stable_path` resolved fnm's multishell link
+  fully, baking one node version (the engine drop-in carries `node-versions/v24.21.0`).
+- **Decision:** `bt_core.LIVE_ROOT`/`is_live_root()`. Only the live root falls back to durable.env (others: SQLite under
+  their own state), uses socket `bitacora` (others: `bitacora-<hash of root>`), and defaults to the owner's secret and
+  agent env files (`bt_config.LIVE_ROOT_ONLY`; a root's own config may still name files). Under `python -m unittest` /
+  pytest a root that is missing or live becomes a throwaway root, exported to subprocesses. `stable_path` follows one
+  link hop (fnm's alias). bt_durable README: the engine drop-in's PATH names `aliases/default/bin`.
+- **Rule:** a missing variable never resolves to a live resource; only the live root reaches the owner's per-user files.
+- **Not changed:** the live engine, web and remote units resolve to the live root (same socket, same database). The
+  installed `~/.config/systemd/user/bt-durable.service.d/env.conf` still hard-codes v24.21.0 (operator's file).
+- **Evidence:** `test_live_root_isolation` (9: TestRunnerRoot 4, TmuxSocket 2, OwnerFileDefaults 3),
+  `test_durable_live_database` (3), `test_autostart_path` alias case; red on main (12 of the new tests fail or error
+  there). `test_config` compares with `defaults()`. Full `bt_regress --mode staged`: 316 files, no failures (3305
+  tests). Branch `env-feed`, commits b5089147b, 1837e608d. Built by an Opus subagent.
+
+## D-257 — Attempts are told the environment their checks really get
+
+- **Date:** 2026-10-31 · **Status:** Accepted
+- **Context:** pictures REQ-021 r30 T10.45: every failure note said the checks run with «none of your environment
+  variables» (`quality_delivery._failure_digest`, a fixed sentence), while the live verifier gave them
+  `verifier-pictures.env` (5 names) and, under `verifier.inherit_env: ["*"]`, the engine's whole environment and every
+  variable of `secrets.env`; the attempt itself had a third set (engine env + `agent-pictures.env`), and Probar a fourth
+  (`.env.local`). No brief named what the checks receive, so the harness author could not know that a product server it
+  starts with an explicit env gets only what it sets (its `next start` omitted `CHAT_PYTHON_ENABLED`, so the guided chat
+  ran in Node instead of the Python fixture). The product's declared runtime has the flag off (`.env.example`,
+  `feature-flags.ts:156`, the owner's `.env.local` unset); every metodologia context leaves it unset, so they agree:
+  the flag itself was a harness defect, not a feed defect.
+- **Decision:** the digest names the variables of the policy the checks ran under (`bt_verifier_env.
+  check_environment_sentence`; durable `outcome_of(..., policy=)`, legacy port's `self.policy`), names only. The durable
+  attempt brief (`M3Attempts.check_policy_for` = `service.check_policy`, the verifier's own sandbox policy) adds a «Check
+  environment» paragraph: those names, how many inherited ones, which of the attempt's test variables are NOT there, and
+  that a harness starting the product with an explicit environment must set every product setting its scenario needs.
+  A new per-project «runtime env» file was not added: no non-secret flag diverged between the contexts.
+- **Rule:** what an agent is told about its verification environment is computed from that environment.
+- **DBOS:** prompt and digest text only; no step added, removed or reordered (no `DBOS.patch`).
+- **Evidence:** `test_failure_digest.test_the_note_states_the_environment_the_checks_really_had`,
+  `test_durable_m6_env.DigestEnvironment`, `test_durable_agent_env` (brief names / broken policy), red on main; same
+  full regression. Product-side defects of the T10.45 harness relayed to pictures, not edited here.
