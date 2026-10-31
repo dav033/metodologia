@@ -124,6 +124,14 @@ engine (`bt_composition`, through `bt_composition_adapter`).
   out, D-173), and nothing after the gate starts before the gate task is accepted. A text conflict between members, or
   a composition that fails `COMPOSE_TURNS` turns, is a rejected candidate: the gate task is held and the run summary
   says why (`gates.rejected`); the owner's `retry-task` of the gate task composes the gate again.
+- A gate that already passed is composed again when one of its members' lines takes newer accepted work (a repair a
+  later stage added to that subplan, D-213) and no later gate holds all its members (D-245, `bt-run-fresh-gates`; cumulative
+  gates need this only for the last one, and a gate not composed yet composes from the current lines anyway). Once per
+  accepted set the run asks `bt.gate_freshness` which members' line trees differ from the version commits the gate
+  task's snapshot was built on (the candidate's `compose <plan> <SP>@v<N>` commits); a stale gate reports `gate_stale`,
+  is composed again and its gate task runs a new round on the new candidate, so its checks judge the new combination
+  (nothing after the gate starts meanwhile). A rejected recomposition holds the gate as above. The re-run is at least
+  once, never exactly once: an engine restart mid-round replays the recorded steps.
 - Not ported: the legacy owner publishes a composition only with an M6 proof bound to the candidate's exact tree; here
   the gate passes when the gate task is accepted on a snapshot built on the candidate. The durable composition store
   and refs are namespaced and never touch the legacy owner's.
@@ -240,7 +248,7 @@ engine code (exported with `git archive`) is recovered by the current code from 
 still be on the old path, `deprecate_patch`, then remove it.
 
 Patches in use: `bt-run-subplans`, `bt-run-audit-remediation`, `bt-run-survives-step-failures`, `bt-run-reopened`,
-`bt-run-recompose-gate` (run workflow); `bt-task-respects-pause`, `bt-task-owner-reverify`,
+`bt-run-recompose-gate`, `bt-run-fresh-gates` (run workflow); `bt-task-respects-pause`, `bt-task-owner-reverify`,
 `bt-task-reconcile-asks-owner` (task workflow). A workflow body reads the plan only through `steps.workflow_plan()`:
 the `bt.plan_text` step must run (or replay) every time, or a run recovered after another workflow warmed the process
 cache skips its first step. The control plane (`control/`: frontier, policy, classifier, subplan scopes) decides what a

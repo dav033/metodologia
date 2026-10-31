@@ -26,7 +26,10 @@ Triggers (`Trigger`), each launched at most once per key:
   decision was open (2026-10-30). Once per block (the task's round workflow and the run's reason); a block already given
   to the Solucionador is not given again by `stalled` or `ended`;
 - `resolution`: a composition conflict waits in `<state>/composition/resolutions/<key>.json` without `<key>.resolved`
-  for `solver.resolution_after_seconds` (`bt_durable.resolutions`): no retry can settle it.
+  for `solver.resolution_after_seconds` (`bt_durable.resolutions`): no retry can settle it;
+- `owner_rejected`: the owner tried a published subplan version in «Probar» and rejected it with a note
+  (`bt_durable.rejections`): once per rejection (subplan, version, commit and note), current while it stands. Its
+  slot for `max_per_task` is the subplan.
 
 One session per run (`bit-<project>-<REQ>-solver` in the bitácora tmux socket), at most `solver.max_concurrent` on the
 machine and `solver.max_per_task` per task; a trigger that finds its run's session busy is queued in that session's
@@ -108,6 +111,11 @@ def _iso(epoch: float) -> str:
 
 def round_of(task: dict) -> int | None:
     return healing.round_of(task)
+
+
+def slot(item: dict) -> str:
+    """What a trigger is about, for `max_per_task` and the activity lines: its task, its subplan, or the run."""
+    return str(item.get("task_id") or item.get("subplan") or "run")
 
 
 def trigger(kind: str, key: str, run_id: str, *, task_id: str = "", request_id: str = "", round_no: int | None = None,
@@ -377,7 +385,8 @@ class Solver:
             if status is None:
                 continue
             found = by_run.get(run.run_id, []) + error_triggers(run, status) + \
-                stuck_triggers(run, status, state, self.now(), cfg) + blocked_triggers(run, status, state, self.now(), cfg)
+                stuck_triggers(run, status, state, self.now(), cfg) + blocked_triggers(run, status, state, self.now(), cfg) + \
+                self._rejections(run, rdir)
             for item in found:
                 said += self._register(run, rdir, state, item)
             handed = handed_blocks(run, status, state)      # a block given to the Solucionador is not given again
@@ -396,6 +405,15 @@ class Solver:
                 save(rdir, states[key])
         return said
 
+    @staticmethod
+    def _rejections(run, rdir) -> list[dict]:
+        from . import rejections
+        try:
+            return rejections.triggers(run, rdir)
+        except Exception as error:  # noqa: BLE001 - a ledger that cannot be read is tried on the next pass
+            LOG.warning("solver: %s rejections unreadable: %s", run.run_id, error)
+            return []
+
     def _register(self, run, rdir, state, item: dict) -> list[str]:
         triggers = state.setdefault("triggers", {})
         if item["key"] in triggers:
@@ -406,25 +424,33 @@ class Solver:
                 "stalled": "el run no avanza: nada corre y nada espera tu decisión",
                 "ended": "el run terminó bloqueado sin que nadie lo detuviera (una compuerta rechazada o una tarea)",
                 "resolution": "un conflicto de composición espera una resolución",
-                "blocked": "el run la dejó bloqueada mientras sigue, sin decisión que responder"}.get(item["kind"], item["kind"])
-        self.record(rdir, f"{item.get('task_id') or 'run'}: {what}; pasa al Solucionador ({item['reason'][:160]})")
+                "blocked": "el run la dejó bloqueada mientras sigue, sin decisión que responder",
+                "owner_rejected": f"rechazaste la versión {item.get('version')}"
+                                  + (f" ({item['pending']})" if item.get("pending") else "")
+                                  + "; el Solucionador la reproduce en ese commit y pide la reparación"
+                }.get(item["kind"], item["kind"])
+        if item["kind"] == "owner_rejected":
+            self.record(rdir, f"{slot(item)}: {what} («{str(item.get('note') or '')[:160]}»)")
+        else:
+            self.record(rdir, f"{slot(item)}: {what}; pasa al Solucionador ({item['reason'][:160]})")
         return [f"{item['key']}: {item['kind']} queued for the Solucionador"]
 
     def _pending(self, run, rdir, state, status, cfg) -> list[dict]:
         """Pending triggers still worth a session; stale ones (the decision moved on, the task moved) are dropped and
         those whose task used its sessions are left for the owner."""
+        from . import rejections
         out = []
         counts = state.setdefault("tasks", {})
         tasks = status.get("tasks") or {}
         for key, item in sorted(state.get("triggers", {}).items(), key=lambda kv: str(kv[1].get("at"))):
             if item.get("status") != "pending":
                 continue
-            if not self._current(item, tasks, status):
+            if not (self._current(item, tasks, status) if item["kind"] != "owner_rejected" else rejections.current(rdir, item)):
                 item["status"] = "stale"
                 continue
-            if int(counts.get(item.get("task_id") or "run", 0)) >= cfg["max_per_task"]:
+            if int(counts.get(slot(item), 0)) >= cfg["max_per_task"]:
                 item["status"] = "limit"
-                text = (f"{item.get('task_id') or 'run'}: el Solucionador ya lo intentó {cfg['max_per_task']} veces; "
+                text = (f"{slot(item)}: el Solucionador ya lo intentó {cfg['max_per_task']} veces; "
                         f"queda para ti ({item['reason'][:160]})")
                 self.record(rdir, text)
                 self.notify("El Solucionador necesita tu ayuda", f"{run.project} {run.req} {text}")
@@ -472,7 +498,7 @@ class Solver:
         cwd.mkdir(parents=True, exist_ok=True)
         session = {"id": sid, "name": name, "status": "running", "started": self.now(), "started_at": _iso(self.now()),
                    "triggers": [i["key"] for i in items], "queued": [], "restarts": 0, "dir": str(folder),
-                   "cwd": str(cwd), "task": items[0].get("task_id") or "run", "kind": items[0]["kind"],
+                   "cwd": str(cwd), "task": slot(items[0]), "kind": items[0]["kind"],
                    "reason": items[0]["reason"]}
         (folder / "triggers.json").write_text(json.dumps(items, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
         (folder / "status.json").write_text(json.dumps(status, ensure_ascii=False, indent=1, default=str) + "\n",
@@ -493,7 +519,7 @@ class Solver:
             return [f"{run.run_id}: solver could not start: {error}"]
         for item in items:
             item.update(status="running", session=sid)
-            task = item.get("task_id") or "run"
+            task = slot(item)
             state.setdefault("tasks", {})[task] = int(state["tasks"].get(task, 0)) + 1
         state.setdefault("sessions", []).append(session)
         state["active"] = sid
@@ -572,7 +598,7 @@ class Solver:
                                                  "detenido"})
         if not self.terminal.exists(session["name"]):
             return said + self._finish(run, rdir, state, session, {
-                "outcome": "gave_up", "summary": "la sesión terminó sin escribir result.json"})
+                "outcome": "gave_up", "summary": "la sesión terminó sin escribir result.json", "vanished": True})
         if self._exited(session) and not self.integrating(session["id"]):   # a shell left: closed like a gone one
             return said + self._finish(run, rdir, state, session, {
                 "outcome": "gave_up", "summary": "su agente terminó sin escribir result.json (la ventana quedó en una "
@@ -646,18 +672,27 @@ class Solver:
         if self.terminal.exists(session["name"]):
             self.terminal.kill(session["name"])
         handled = set(result.get("handled") or ()) if isinstance(result.get("handled"), list) else None
+        # A session that vanished (its tmux session is gone with no result.json: a reboot or a power cut, 2026-10-31
+        # 09:41, pictures REQ-021 T10.45:d1) decided nothing: its cases go back to the queue for the next session,
+        # bounded by `max_per_task` like any start, instead of being given up with nobody left to answer them (D-251).
+        vanished = bool(result.get("vanished"))
         for key in [*session.get("triggers", []), *session.get("queued", [])]:
             item = state.get("triggers", {}).get(key)
             if item is None:
                 continue
-            if key in session.get("triggers", []) or handled is None or key in handled:
+            if vanished:
+                item["status"] = "pending"
+            elif key in session.get("triggers", []) or (handled is not None and key in handled):
                 item["status"] = outcome                 # a trigger that started a session never starts another
             else:
                 item["status"] = "pending"               # queued in its inbox and not handled: the next session's
         state.pop("active", None)
         text = f"{session['task']}: Solucionador · {OUTCOME_ES[outcome]}" + (f": {summary}" if summary else "")
+        if vanished:
+            text = (f"{session['task']}: la sesión del Solucionador se cerró sin terminar (¿reinicio del equipo?); "
+                    "sus casos vuelven a la cola")
         self.record(rdir, text[:400])
-        if outcome in ("asked_owner", "gave_up"):
+        if outcome in ("asked_owner", "gave_up") and not vanished:
             ask = session["question"] or summary or "mira su informe"
             self.notify("El Solucionador te necesita" if outcome == "asked_owner" else "El Solucionador no pudo",
                         f"{run.project} {run.req} {session['task']}: {ask}"[:400])
@@ -677,13 +712,22 @@ class Solver:
                 continue
             item.update(status="queued", session=sid)
             session.setdefault("queued", []).append(key)
+            if item["kind"] == "owner_rejected":         # its reproduction section, as the brief would have it
+                from . import rejections
+                extra = Path(session["dir"]) / f"BRIEF.{item.get('subplan')}-v{item.get('version')}.md"
+                try:
+                    extra.write_text("\n".join(rejections.brief(item, run, rdir)).lstrip() + "\n", encoding="utf-8")
+                    item["brief"] = str(extra)
+                except Exception as error:  # noqa: BLE001 - the inbox line still carries the rejection
+                    LOG.warning("solver: %s brief for %s failed: %s", run.run_id, key, error)
             with (Path(session["dir"]) / "inbox.jsonl").open("a", encoding="utf-8") as stream:
                 stream.write(json.dumps(item, ensure_ascii=False) + "\n")
             try:
                 self.terminal.send(session["name"], f"[Automatic notice from the engine, not typed by the owner] A new "
                                    f"trigger is queued in inbox.jsonl: {key} ({item['kind']}, "
-                                   f"{item.get('task_id') or 'run'}): {item['reason'][:300]}. Handle it after the "
-                                   "current one and list it in result.json `handled`.")
+                                   f"{slot(item)}): {item['reason'][:300]}. "
+                                   + (f"Its brief: {item['brief']}. " if item.get("brief") else "")
+                                   + "Handle it after the current one and list it in result.json `handled`.")
             except Exception:  # noqa: BLE001 - the inbox file is what counts; typing it is a courtesy
                 pass
             said.append(f"{key}: queued to solver {sid}")
@@ -699,5 +743,5 @@ def read_result(folder: Path) -> dict | None:
 
 
 __all__ = ["Solver", "blocked_triggers", "enabled", "ended_triggers", "error_triggers", "handed_blocks", "load",
-           "owner_stops", "read_result", "round_of", "run_holds", "settings", "stalled_triggers", "stuck_triggers",
+           "owner_stops", "read_result", "round_of", "run_holds", "settings", "slot", "stalled_triggers", "stuck_triggers",
            "trigger"]

@@ -282,7 +282,9 @@ Designer build the plan together, in four phases the web Plan tab shows as a ste
    stage that needs earlier subplans not run yet waits in `.planning/stage-queue.json` («En cola · espera SP-n») and
    runs when the owner approves them in «Probar» (D-155). The Scheduler executes a frozen cumulative stage
    while the Planner continues the remaining draft. Keep approved scope fixed; changing it requires owner
-   re-confirmation and another approval. Later stages join the same run after live attempts drain, preserving accepted
+   re-confirmation and another approval, except a bounded repair of a confirmed defect (D-241, `bt_planner.repairs`):
+   `stage freeze|run REQ-NNN --repair-evidence <RUN.* files> --by planner|solver` re-confirms it `by: policy`, shown
+   on the Plan tab, and freezes and joins without the owner. Later stages join the same run after live attempts drain, preserving accepted
    unchanged work (a run the durable runtime owns continues in a new run of the stage's revision: `bt-durable join`,
    D-149). `stage freeze` approves without starting; `stage status` lists stages. Tasks and `## Pruebas`
    rows are mandatory for eligibility. Autonomous sessions are superseded by stages; hands-on sessions remain.

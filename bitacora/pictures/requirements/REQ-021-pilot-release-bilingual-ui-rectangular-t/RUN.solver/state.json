@@ -993,7 +993,7 @@
    "request_id": "T10.45:d1",
    "round": 1,
    "reason": "the diagnosis is not enough to answer alone (option stop, confidence media): Falló la verificación del idioma inglés: texto en español y error de build",
-   "status": "running",
+   "status": "asked_owner",
    "at": "2026-10-31T08:57:18",
    "session": "20261031-094746-c7c4",
    "requeued_by": "operator metodologia-95 2026-10-31: session d592 vanished with the shutdown (D-251)"
@@ -1228,7 +1228,7 @@
   {
    "id": "20261031-094746-c7c4",
    "name": "bit-pictures-REQ-021-solver",
-   "status": "running",
+   "status": "asked_owner",
    "started": 1793458066.0034885,
    "started_at": "2026-10-31T09:47:46",
    "triggers": [
@@ -1243,8 +1243,12 @@
    "reason": "the diagnosis is not enough to answer alone (option stop, confidence media): Falló la verificación del idioma inglés: texto en español y error de build",
    "provider": "codex",
    "model": "gpt-6.1-sol",
-   "home": "/home/david/.codex"
+   "home": "/home/david/.codex",
+   "ended": 1793458536.551814,
+   "ended_at": "2026-10-31T09:55:36",
+   "summary": "Reparación de SP-10 validada; falta confirmación porque D-241 no está desplegada.",
+   "question": "¿Confirmas la modificación exacta de SP-10: añadir T10.442 después de T10.441 y hacer que T10.45 dependa de ella, conservando todos los criterios, checks y gates? Con tu sí continuaré por freeze/join normal y reintentaré el arnés tras programar el productor; con tu no conservaré r29 sin reintentar.",
+   "report": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/RUN.solver/20261031-094746-c7c4/REPORT.md"
   }
- ],
- "active": "20261031-094746-c7c4"
+ ]
 }

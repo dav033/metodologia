@@ -121,13 +121,16 @@ def dirty_since_log(project: str, cwd: Path, day: Path) -> tuple[bool, str]:
     return (True, f"{newer} workspace file(s) changed since the bitácora was last updated") if newer else (False, "")
 
 
-SYSTEM_RUN = ("BITACORA_ATTEMPT", "BITACORA_TASK", "BITACORA_DELEGATION")
+SYSTEM_RUN = ("BITACORA_ATTEMPT", "BITACORA_TASK", "BITACORA_DELEGATION", "BITACORA_AGENT_ROLE")   # role sessions: D-237
 
 
 def system_run() -> bool:
     """A session the system started to do one task (a durable attempt, a legacy run session, a delegation): the
     bitácora's own chores (its secret alert, its day log) are never its job (D-168: pictures REQ-021 T93's agent read
-    the bitácora's secret alert at its Stop hook and committed a gitleaks exemption into the methodology's repository)."""
+    the bitácora's secret alert at its Stop hook and committed a gitleaks exemption into the methodology's repository).
+    The system's role sessions (Planner, Solucionador, Designer: `BITACORA_AGENT_ROLE`, set by bt_agent_terminal) too:
+    on 2026-10-30 pictures REQ-021's Planner spent 8 minutes on a false-positive alert, committed 130 fingerprints on
+    main and left the owner's plan change undone (D-237)."""
     return any(os.environ.get(key) for key in SYSTEM_RUN)
 
 
