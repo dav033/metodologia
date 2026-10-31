@@ -1,0 +1,23 @@
+{
+ "request": "pictures:REQ-021:r30:T10.5:T10.5:d1@k1",
+ "state": "done",
+ "kind": "manual",
+ "label": "Comprobación manual",
+ "tone": "lav",
+ "headline": "Falta la observación manual del chat con el proveedor de IA en inglés y español.",
+ "origin": "La tarea T10.5 tiene dos criterios: la prueba automática de navegador (idioma:test-integracion-resto) y una observación manual con el proveedor de IA ya configurado. La observación manual figura como NOT_RUN y la decisión T10.5:d1 la marca MANUAL_EVIDENCE_REQUIRED. El verificador no acepta pruebas de simulación para este criterio, así que el fallo viene del criterio manual y no del código. La evidencia no muestra fallo en la prueba automática. Reintentar sin la observación repetiría el mismo resultado.",
+ "steps": [
+  "Con el proveedor de IA configurado, abra el chat local y compruebe una conversación en inglés y otra en español.",
+  "Anote el proveedor usado y si cada respuesta llegó en el idioma correcto, sin secretos ni texto literal de las respuestas.",
+  "Registre la observación como evidencia manual para T10.5 y atestígüela. Luego ejecute: bitacora.py --project <project> scheduler-op REQ-021 decide T10.5:d1 reverify --reason \"<proveedor y resultado>\"",
+  "Si la observación falla o no puede hacerse, no reintente: revise el proveedor configurado y la prueba automática antes de decidir."
+ ],
+ "option": "reverify",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-31T16:06:00",
+ "seconds": 10.0
+}

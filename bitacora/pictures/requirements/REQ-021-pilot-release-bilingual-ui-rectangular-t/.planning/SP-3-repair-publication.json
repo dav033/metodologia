@@ -1,5 +1,5 @@
 {
-  "state": "publishing-approved-repair-view",
+  "state": "restored-proposals",
   "previous_revision": 30,
   "scope": "Only T3.91,T3.92 and T3.15.after; UI SP2/SP14 proposals are preserved for restoration,not approved.",
   "pending_files": {
@@ -16,5 +16,7 @@
     "--by",
     "planner"
   ],
-  "new_revision": null
+  "new_revision": 31,
+  "freeze_exit": 0,
+  "restoration_order_adjustment": "Only the two new repair tasks are ordered at the end as in approved r31; every task object/edge is unchanged. This preserves the policy digest without repinning."
 }
