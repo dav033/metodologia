@@ -101,7 +101,8 @@ def stalled_triggers(run, status: dict, state: dict, now: float, cfg: dict, hand
     rejected = ", ".join(sorted((summary.get("gates") or {}).get("rejected") or {}))
     return [trigger("stalled", f"{run.run_id}:stalled:{fingerprint}", run.run_id,
                     reason=f"the run workflow {status.get('workflow_id')} is PENDING with no live task and no open "
-                           f"decision since {_iso(since)}" + (f"; rejected gates: {rejected}" if rejected else ""))]
+                           f"decision for {int(now - since)} observed seconds" +
+                           (f"; rejected gates: {rejected}" if rejected else ""))]
 
 
 def owner_stops(rdir: Path, telemetry: Path | None, run_id: str) -> set[str]:
@@ -239,8 +240,8 @@ def stuck_triggers(run, status: dict, state: dict, now: float, cfg: dict) -> lis
             deadline = since + limit
         if now >= deadline:
             found.append(trigger("stuck", f"{run.run_id}:{task_id}:stuck:{fingerprint}", run.run_id, task_id=task_id,
-                                 reason=f"state {name or 'none'} unchanged since {_iso(since)} while its workflow is "
-                                        "PENDING"))
+                                 reason=f"state {name or 'none'} unchanged for {int(now - since)} observed seconds "
+                                        "while its workflow is PENDING"))
     for task_id in list(watch):
         if task_id not in seen:
             del watch[task_id]

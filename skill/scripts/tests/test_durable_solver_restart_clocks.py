@@ -63,6 +63,7 @@ class RestartClocks(unittest.TestCase):
         third = observe("stuck", status, [BOOT * 2, BOOT * 2 + 15 * 60 - 1, BOOT * 2 + 15 * 60], second["state"])
         self.assertEqual(third["events"][:2], [[], []])
         self.assertEqual(len(third["events"][2]), 1)
+        self.assertIn("2700 observed seconds", third["events"][2][0]["reason"])
 
     def test_known_wait_that_expires_offline_gets_its_unobserved_grace(self):
         status = pending("waiting_quota", until=START + 2 * 3600)
