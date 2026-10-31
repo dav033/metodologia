@@ -52,9 +52,12 @@ def _revert_command(req: integ.Request, merge: str) -> str:
 
 def post_merge(req: integ.Request, merge: str, services: integ.Services | None = None,
                say: Callable[[str], None] = print) -> int:
-    """The full regression of an integrated merge, in a worktree of its own (the live checkout's environment linked
-    in: a selective integration never changes dependencies). Green: one line in the release log. Red: a loud line,
-    a notification and the revert command; nothing is reverted here. One post-merge run at a time."""
+    """The full regression of an integrated merge, in a worktree of its own with a venv of its own (`bt_regress.venv`
+    creates it, `uv sync --frozen`, seconds from the uv cache). It never borrows the live checkout's venv: a suite's
+    `uv run` re-syncs the project it runs in, and through a linked `.venv` it pointed the live editable install at this
+    worktree, which is removed at the end — 2026-10-30 18:56–19:07 the live venv could not import `bt_durable` and the
+    engine's next start would have failed (D-240). Green: one line in the release log. Red: a loud line, a
+    notification and the revert command; nothing is reverted here. One post-merge run at a time."""
     services = services or integ.Services()
     log = req.log or integ.release_log()
     stamp, safe = _stamp(), req.branch.replace("/", "-")
@@ -68,14 +71,9 @@ def post_merge(req: integ.Request, merge: str, services: integ.Services | None =
         with integ.machine_lock(lock, POST_WAIT_SECONDS):
             worktree.parent.mkdir(parents=True, exist_ok=True)
             integ.git(req.live, "worktree", "add", "--detach", str(worktree), merge)
-            venv = worktree / ".venv"
-            if (Path(req.live) / ".venv").is_dir():
-                venv.symlink_to(Path(req.live).resolve() / ".venv")
             try:
                 result = services.regress(worktree, scratch, results)
             finally:
-                if venv.is_symlink():
-                    venv.unlink()
                 integ.git(req.live, "worktree", "remove", "--force", str(worktree), check=False)
     except Exception as error:  # noqa: BLE001 - a post-merge check that cannot run must still be heard
         text = f"POST-MERGE FULL REGRESSION of {merge[:12]} ({req.branch}) could not run: {error}"
