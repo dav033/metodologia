@@ -2,6 +2,7 @@
 and every suite starts with the job-control signals at their default (D-227, D-229)."""
 from __future__ import annotations
 
+import os
 import signal
 import subprocess
 import sys
@@ -9,6 +10,7 @@ import tempfile
 import unittest
 import unittest.mock
 from pathlib import Path
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
@@ -82,6 +84,27 @@ class Signals(unittest.TestCase):
         self.assertEqual(line.split()[:2], ["test_job_signals", "0"],
                          (Path(temp.name) / "scratch" / "logs" / "test_job_signals.log").read_text(encoding="utf-8"))
 
+
+class TmuxSocket(unittest.TestCase):
+    def test_a_suite_never_reaches_the_live_tmux_socket(self):
+        """D-252: a suite that half-mocks bt_agent_terminal (exists patched, tmux real) reached `-L bitacora`, where the
+        owner's live Planner runs, and could have typed into or killed it."""
+        temp = tempfile.TemporaryDirectory()
+        self.addCleanup(temp.cleanup)
+        worktree = Path(temp.name) / "wt"
+        tests = worktree / "skill" / "scripts" / "tests"
+        tests.mkdir(parents=True)
+        suite = tests / "test_job_socket.py"
+        suite.write_text("import os, unittest\n"
+                         "class T(unittest.TestCase):\n"
+                         "    def test_own_socket(self):\n"
+                         "        sock = os.environ.get('BITACORA_TMUX_SOCKET', '')\n"
+                         "        self.assertTrue(sock.startswith('btr-') and 'test_job_socket' in sock, sock)\n",
+                         encoding="utf-8")
+        with patch.dict(os.environ, {"BITACORA_TMUX_SOCKET": "bitacora"}):
+            line = bt_regress.run_suite(worktree, Path(temp.name) / "scratch", suite)
+        self.assertEqual(line.split()[:2], ["test_job_socket", "0"],
+                         (Path(temp.name) / "scratch" / "logs" / "test_job_socket.log").read_text(encoding="utf-8"))
 
 
 class FastTemp(unittest.TestCase):

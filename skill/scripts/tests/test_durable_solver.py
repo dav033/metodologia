@@ -9,12 +9,15 @@ import json
 import os
 import sys
 import tempfile
+import time
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import bt_agent_terminal
+from test_agent_terminal import DeadPaneBase
 from bt_durable import cli, solver
 from bt_durable.service import _PassStatus
 
@@ -634,6 +637,36 @@ class SolverTests(unittest.TestCase):
                 cli.main(["retry-task", "proj", "REQ-900", "T99"])
         self.assertEqual(seen, [("retry_task", "T99", "solver"), ("answer", "T7.4", "solver"),
                                 ("retry_task", "T99", "operator"), ("retry_task", "T99", "owner")])
+
+
+@unittest.skipUnless(bt_agent_terminal._tmux_path(), "tmux is not installed")
+class ExitedAgent(DeadPaneBase):
+    """The Solucionador's half of pictures REQ-021's 2026-10-31 dead pane: its inbox notices are typed into its session,
+    whose agent can exit to `start`'s shell just like the Planner's did. Real tmux on a private socket."""
+
+    def test_the_solucionadors_inbox_is_never_typed_into_its_exited_agents_shell(self):
+        name = bt_agent_terminal.name_for("proj", "REQ-900", "solver")
+        self.shell(name)
+        folder = self.tmp / "RUN.solver" / "s1"
+        folder.mkdir(parents=True)
+        session = {"id": "s1", "name": name, "status": "running", "started": time.time(), "dir": str(folder),
+                   "cwd": str(self.tmp), "task": "T1", "triggers": [], "queued": [], "restarts": 0}
+        state = {"active": "s1", "sessions": [session], "triggers": {
+            "k1": {"key": "k1", "kind": "error", "status": "pending", "at": "1", "task_id": "T1", "reason": self.trap}}}
+        run = SimpleNamespace(run_id="proj:REQ-900:r1", project="proj", req="REQ-900")
+        notes: list[str] = []
+        engine = solver.Solver(self.tmp, None, notify=lambda title, text: notes.append(text),
+                               record=lambda rdir, text: notes.append(text), work=self.tmp / "work",
+                               integrating=lambda sid: [])
+        self.assertEqual(engine._queue(run, self.tmp, state), ["k1: queued to solver s1"])
+        self.assertIn("k1", (folder / "inbox.jsonl").read_text())          # the inbox file is what counts
+        time.sleep(0.5)
+        self.assertFalse(self.pwned.exists(), "the trigger ran as a shell command")
+        self.assertNotIn("PWNED", bt_agent_terminal.screen(name))
+        said = engine._supervise(run, self.tmp, state, {"max_minutes": 120, "integrate_grace_minutes": 30})
+        self.assertEqual(said, ["proj:REQ-900:r1: solver s1 gave_up"])
+        self.assertIn("terminal", session["summary"])
+        self.assertFalse(bt_agent_terminal.exists(name))                            # closed like a vanished session
 
 
 if __name__ == "__main__":

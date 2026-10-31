@@ -111,6 +111,7 @@ class Revive(unittest.TestCase):
 
     def run_revive(self, root: Path, alive: bool = False) -> tuple[list[str], list]:
         with patch.object(terminal, "exists", return_value=alive), \
+                patch.object(terminal, "agent_state", return_value="running" if alive else "absent"), \
                 patch.object(terminal, "start_planner", return_value=(True, "ok")) as start:
             return terminal.revive_planners(root), start.call_args_list
 
@@ -129,6 +130,13 @@ class Revive(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             self.make(Path(tmp), status="draft", age_days=0.2)
             self.assertEqual(self.run_revive(Path(tmp), alive=True)[0], [])
+        with tempfile.TemporaryDirectory() as tmp:                 # a session left as a shell (its agent exited, D-252)
+            self.make(Path(tmp), status="draft", age_days=0.2)
+            with patch.object(terminal, "exists", return_value=True), \
+                    patch.object(terminal, "agent_state", return_value="gone"), \
+                    patch.object(terminal, "start_planner", return_value=(True, "ok")) as start:
+                self.assertEqual(terminal.revive_planners(Path(tmp)), ["pictures/REQ-021"])
+            start.assert_called_once()
 
 
 if __name__ == "__main__":
