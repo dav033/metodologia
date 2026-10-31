@@ -26,6 +26,9 @@ if count:
         stream.write(json.dumps({"cwd": os.getcwd(), "scenario": scenario, "pid": os.getpid(), "task": task_id,
                                  "seen": sorted(p.name for p in Path(".").glob("*.task")), "at": time.time(),
                                  "remediation": "REMEDIATION" in prompt, "has_note": "Decisive lines" in prompt,
+                                 "progress": len(Path("progress.txt").read_text().splitlines())
+                                 if Path("progress.txt").is_file() else 0,
+                                 "continues": "Continue the preserved files" in prompt,
                                  "account": os.environ.get("CLAUDE_CONFIG_DIR", "")}) + "\n")
 
 
@@ -90,6 +93,15 @@ elif scenario == "fixlater":                  # wrong first, right when it conti
     else:
         Path("attempt-marker.txt").write_text("first attempt\n")
         Path("out.txt").write_text("bad\n")
+    done()
+elif scenario == "accumulate":                # never right; each attempt adds one line to the work it was handed
+    with open("progress.txt", "a", encoding="utf-8") as handle:
+        handle.write(f"attempt {time.time()}\n")
+    Path("out.txt").write_text("bad\n")
+    if len(Path("progress.txt").read_text().splitlines()) % 2 == 0:     # every other attempt commits its work itself
+        subprocess.run(["git", "add", "-A"], check=False, capture_output=True)
+        subprocess.run(["git", "-c", "user.name=fake", "-c", "user.email=fake@t", "-c", "core.hooksPath=/dev/null",
+                        "commit", "-qm", "fake: own commit"], check=False, capture_output=True)
     done()
 elif scenario == "neverfix":
     Path("out.txt").write_text(f"bad {time.time()}\n")

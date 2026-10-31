@@ -53,6 +53,7 @@ PATCH_OWNER_REVERIFY = "bt-task-owner-reverify"
 PATCH_RECONCILE_ASKS_OWNER = "bt-task-reconcile-asks-owner"
 PATCH_RUN_SUBPLANS = "bt-run-subplans"
 PATCH_TASK_PAUSE = "bt-task-respects-pause"
+PATCH_TASK_LATEST_TREE = "bt-task-continues-latest-tree"
 PATCH_RUN_AUDITS = "bt-run-audit-remediation"
 PATCH_RUN_STEP_FAILURES = "bt-run-survives-step-failures"
 PATCH_RUN_REOPENED = "bt-run-reopened"
@@ -510,12 +511,18 @@ def _run_task(run: RunRef, task_id: str, round_no: int, settings: Settings, note
     remediated = False
     number = (round_no - 1) * 100
     base_override = ""
+    # the newest candidate tree of this task (the last snapshot an attempt left, or the reconciled legacy one): what the
+    # next attempt continues from, whichever path decided the retry (automatic, owner/healing answer, wait, memory
+    # raise); "" after RECONCILE_INTEGRATION, whose retry starts from the line tip (D-254)
+    latest = ""
+    carry_on = False
     decisions = 0
     if legacy is not None:                       # a legacy snapshot counts only after it passes verification again
         reconciled, failure_note, failure = _reconcile(run, task_id, round_no, legacy)
         if reconciled is not None:
             return reconciled
         base_override, note = legacy.snapshot_sha, failure_note or note
+        latest = legacy.snapshot_sha
         if failure is not None and failure.failure_class in OWNER_FIRST and DBOS.patch(PATCH_RECONCILE_ASKS_OWNER):
             # missing manual evidence or an authorization is not fixed by an agent: the owner attests or decides first
             steps.emit("reconcile_needs_owner", {"run_id": run.run_id, "task_id": task_id, "code": failure.code})
@@ -532,6 +539,12 @@ def _run_task(run: RunRef, task_id: str, round_no: int, settings: Settings, note
         DBOS.set_event("state", {"task_id": task_id, "state": "routing", "attempts": len(outcomes)})
         if not pause_on and parent_id and DBOS.patch(PATCH_TASK_PAUSE):
             pause_on = True                     # right before a plain step (bt.now); old histories hold bt.now here
+        if latest and latest != base_override and (carry_on or DBOS.patch(PATCH_TASK_LATEST_TREE)):
+            # also right before bt.now. Before it an owner answer, a wait or a memory raise kept the base the last
+            # automatic retry chose, so every retry after an escalation started from the same old snapshot and dropped
+            # the escalated attempts' work (pictures REQ-021 r30 T10.45: a5..a9 all from a3's snapshot, D-254)
+            carry_on = True
+            base_override = latest
         at = steps.now()
         if pause_on:
             # a paused run starts no agent attempt at all: neither a new task nor a retry of a running one
@@ -588,6 +601,7 @@ def _run_task(run: RunRef, task_id: str, round_no: int, settings: Settings, note
             break
         # a retry continues from the attempt's own snapshot (its partial work is kept), never from scratch
         continued = outcome.snapshot.snapshot_sha if outcome.snapshot and outcome.snapshot.snapshot_sha else ""
+        latest = continued or latest                 # an attempt that left no snapshot keeps the earlier work
         if decision.action in (RecoveryAction.RETRY, RecoveryAction.REMEDIATE):
             note = decision.note_for_agent if decision.action == RecoveryAction.RETRY else _remediation_note(outcomes)
             remediated = remediated or decision.action == RecoveryAction.REMEDIATE
@@ -605,7 +619,7 @@ def _run_task(run: RunRef, task_id: str, round_no: int, settings: Settings, note
             limits["memory_max_bytes"] = min(int(limits.get("memory_max_bytes") or 0) * 2 or settings.max_agent_memory_bytes,
                                              settings.max_agent_memory_bytes)
         elif decision.action == RecoveryAction.RECONCILE_INTEGRATION:
-            base_override = ""                                           # next base is the current line tip
+            base_override = latest = ""                                  # next base is the current line tip
             note = decision.note_for_agent
         else:                                                            # escalate / stop: the owner decides
             target = ((attempt, choice.route, agent) if agent.get("snapshot") else

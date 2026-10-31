@@ -95,7 +95,7 @@ class M3Attempts:
         ws = workspaces.allocate(request)
         adir = self.attempt_dir(attempt)
         test_env = agent_test_env(attempt.run.project)
-        brief = self._brief(attempt, request, "\n\n".join(x for x in (_continuation(ws), _test_env_note(test_env), note) if x))
+        brief = self._brief(attempt, request, "\n\n".join(x for x in (_continuation(ws, attempt), _test_env_note(test_env), note) if x))
         prompt = build_prompt(brief, request, workdir=ws.path, branch=ws.branch,
                               report_path=str(adir / "report.json"), handoff_mode="snapshot", rtk=self.prompt_rtk)
         atomic_write(adir / "prompt.txt", prompt.encode("utf-8"), 0o600)
@@ -173,19 +173,40 @@ def inherited_env(environ: Mapping[str, str] | None = None) -> dict[str, str]:
     return out
 
 
-def _continuation(ws) -> str:
+def _continuation(ws, attempt: AttemptRef | None = None) -> str:
     """What the legacy retry continuation tells an agent whose tree is an earlier attempt's snapshot (`m3 snapshot
     <attempt>` commits, written by `handoff.capture`): its files are kept and must be checked, not redone."""
     import subprocess
     done = subprocess.run(["git", "-C", str(ws.repo), "log", "-1", "--format=%s", ws.base_sha], capture_output=True,
                           text=True, check=False)
     subject = done.stdout.strip() if done.returncode == 0 else ""
-    if not subject.startswith("m3 snapshot "):
+    earlier = subject.split()[-1] if subject.startswith("m3 snapshot ") else _own_handoff(ws, attempt)
+    if not earlier:
         return ""
-    return (f"Continue the preserved files of this task's earlier attempt {subject.split()[-1]} (snapshot "
+    return (f"Continue the preserved files of this task's earlier attempt {earlier} (snapshot "
             f"{ws.base_sha[:12]}): your tree starts from its result. Fix what the notes say failed, keep what is "
             "correct, and recheck the complete frozen acceptance and verification instructions. No private "
             "conversation or agent reasoning is transferred.")
+
+
+def _own_handoff(ws, attempt: AttemptRef | None) -> str:
+    """The earlier attempt of this task whose handoff ref is the tree this one starts from, when that attempt committed
+    its work itself (its snapshot is its own commit, not an `m3 snapshot` one: pictures REQ-021 r30 T10.45 a6 and a8).
+    Only this task's earlier attempts count (their ref names computed as `handoff.capture` writes them): a line tip can
+    be another task's snapshot."""
+    import subprocess
+    scope = (ws.branch or "").rsplit("-", 1)[-1]
+    if attempt is None or not (ws.branch or "").startswith("m3/") or not scope:
+        return ""
+    done = subprocess.run(["git", "-C", str(ws.repo), "for-each-ref", "--points-at", ws.base_sha,
+                           "--format=%(refname:lstrip=3)", "refs/m3/handoff/"], capture_output=True, text=True,
+                          check=False)
+    pointing = set(done.stdout.split()) if done.returncode == 0 else set()
+    for number in range(attempt.number - 1, 0, -1):
+        earlier = attempt.model_copy(update={"number": number}).attempt_key
+        if f"{_m3.workspace.dirname_of(earlier)}-{scope}" in pointing:
+            return earlier
+    return ""
 
 
 def _count(value: object) -> int | None:
