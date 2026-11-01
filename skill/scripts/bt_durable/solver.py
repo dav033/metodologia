@@ -14,7 +14,7 @@ the subplan (`slot`).
 One session per run (`bit-<project>-<REQ>-solver` in the bitácora tmux socket), at most `solver.max_concurrent` on the
 machine and `solver.max_per_task` per task; a trigger that finds its run's session busy is queued in that session's
 `inbox.jsonl` and typed into it. A session gets a brief and a context bundle in `<rdir>/RUN.solver/<id>/`, runs on the
-account `role_route(..., "solver")` picks (Claude Opus high, unattended, with quota; Codex otherwise), is moved to
+account `role_route(..., "solver")` picks (Claude Sonnet high per D-253, unattended, with quota; Codex otherwise), is moved to
 another account when its own runs out, and is closed when it writes `result.json`, when its tmux session is gone, or
 after `solver.max_minutes` (then `gave_up`, and the trigger is the owner's). A session whose own integration
 (`bt_integrate.py --session <id>`) is running is neither stopped nor moved to another account until it ends, for at most
