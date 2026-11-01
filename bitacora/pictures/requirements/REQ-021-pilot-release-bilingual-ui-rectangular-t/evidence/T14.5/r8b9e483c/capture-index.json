@@ -2439,39 +2439,11 @@
         "id": "no_overflow_or_truncated_tool_text",
         "viewport": "360x780",
         "locale": "es",
-        "passed": false,
+        "passed": true,
         "observed": {
           "scrollWidth": 360,
           "viewport": 360,
-          "clipped": [
-            "Chat asistido con límites.",
-            "Contador de globos",
-            "Catálogo",
-            "Chat asistido con límites más altos.",
-            "Contador de globos",
-            "Catálogo",
-            "Chat asistido con límites más altos.",
-            "Contador de globos",
-            "Catálogo",
-            "Calculadora de costos",
-            "Chat extendido",
-            "aún no disponible",
-            "Detección de estructura",
-            "aún no disponible",
-            "Detección avanzada de globos",
-            "aún no disponible",
-            "Chat asistido con límites más altos.",
-            "Contador de globos",
-            "Catálogo",
-            "Calculadora de costos",
-            "Chat extendido",
-            "aún no disponible",
-            "Detección de estructura",
-            "aún no disponible",
-            "Detección avanzada de globos",
-            "aún no disponible",
-            "Taller 3D"
-          ]
+          "clipped": []
         }
       },
       {
@@ -2557,7 +2529,7 @@
         "id": "F1_cards_rows_taller3d",
         "viewport": "360x780",
         "locale": "en",
-        "passed": false,
+        "passed": true,
         "observed": {
           "cardCount": 4,
           "rows": [
@@ -2566,7 +2538,7 @@
             7,
             8
           ],
-          "taller3d": false,
+          "taller3d": true,
           "separateExplorer": false
         }
       },
@@ -2630,39 +2602,11 @@
         "id": "no_overflow_or_truncated_tool_text",
         "viewport": "360x780",
         "locale": "en",
-        "passed": false,
+        "passed": true,
         "observed": {
           "scrollWidth": 360,
           "viewport": 360,
-          "clipped": [
-            "Assisted chat with limits.",
-            "Balloon counter",
-            "Catalog",
-            "Assisted chat with higher limits.",
-            "Balloon counter",
-            "Catalog",
-            "Assisted chat with higher limits.",
-            "Balloon counter",
-            "Catalog",
-            "Cost calculator",
-            "Extended chat",
-            "not available yet",
-            "Structure detection",
-            "not available yet",
-            "Advanced balloon detection",
-            "not available yet",
-            "Assisted chat with higher limits.",
-            "Balloon counter",
-            "Catalog",
-            "Cost calculator",
-            "Extended chat",
-            "not available yet",
-            "Structure detection",
-            "not available yet",
-            "Advanced balloon detection",
-            "not available yet",
-            "3D workshop"
-          ]
+          "clipped": []
         }
       },
       {
@@ -2821,39 +2765,11 @@
         "id": "no_overflow_or_truncated_tool_text",
         "viewport": "390x844",
         "locale": "es",
-        "passed": false,
+        "passed": true,
         "observed": {
           "scrollWidth": 390,
           "viewport": 390,
-          "clipped": [
-            "Chat asistido con límites.",
-            "Contador de globos",
-            "Catálogo",
-            "Chat asistido con límites más altos.",
-            "Contador de globos",
-            "Catálogo",
-            "Chat asistido con límites más altos.",
-            "Contador de globos",
-            "Catálogo",
-            "Calculadora de costos",
-            "Chat extendido",
-            "aún no disponible",
-            "Detección de estructura",
-            "aún no disponible",
-            "Detección avanzada de globos",
-            "aún no disponible",
-            "Chat asistido con límites más altos.",
-            "Contador de globos",
-            "Catálogo",
-            "Calculadora de costos",
-            "Chat extendido",
-            "aún no disponible",
-            "Detección de estructura",
-            "aún no disponible",
-            "Detección avanzada de globos",
-            "aún no disponible",
-            "Taller 3D"
-          ]
+          "clipped": []
         }
       },
       {
@@ -2939,7 +2855,7 @@
         "id": "F1_cards_rows_taller3d",
         "viewport": "390x844",
         "locale": "en",
-        "passed": false,
+        "passed": true,
         "observed": {
           "cardCount": 4,
           "rows": [
@@ -2948,7 +2864,7 @@
             7,
             8
           ],
-          "taller3d": false,
+          "taller3d": true,
           "separateExplorer": false
         }
       },
@@ -3012,39 +2928,11 @@
         "id": "no_overflow_or_truncated_tool_text",
         "viewport": "390x844",
         "locale": "en",
-        "passed": false,
+        "passed": true,
         "observed": {
           "scrollWidth": 390,
           "viewport": 390,
-          "clipped": [
-            "Assisted chat with limits.",
-            "Balloon counter",
-            "Catalog",
-            "Assisted chat with higher limits.",
-            "Balloon counter",
-            "Catalog",
-            "Assisted chat with higher limits.",
-            "Balloon counter",
-            "Catalog",
-            "Cost calculator",
-            "Extended chat",
-            "not available yet",
-            "Structure detection",
-            "not available yet",
-            "Advanced balloon detection",
-            "not available yet",
-            "Assisted chat with higher limits.",
-            "Balloon counter",
-            "Catalog",
-            "Cost calculator",
-            "Extended chat",
-            "not available yet",
-            "Structure detection",
-            "not available yet",
-            "Advanced balloon detection",
-            "not available yet",
-            "3D workshop"
-          ]
+          "clipped": []
         }
       },
       {
@@ -3203,39 +3091,11 @@
         "id": "no_overflow_or_truncated_tool_text",
         "viewport": "768x1024",
         "locale": "es",
-        "passed": false,
+        "passed": true,
         "observed": {
           "scrollWidth": 768,
           "viewport": 768,
-          "clipped": [
-            "Chat asistido con límites.",
-            "Contador de globos",
-            "Catálogo",
-            "Chat asistido con límites más altos.",
-            "Contador de globos",
-            "Catálogo",
-            "Chat asistido con límites más altos.",
-            "Contador de globos",
-            "Catálogo",
-            "Calculadora de costos",
-            "Chat extendido",
-            "aún no disponible",
-            "Detección de estructura",
-            "aún no disponible",
-            "Detección avanzada de globos",
-            "aún no disponible",
-            "Chat asistido con límites más altos.",
-            "Contador de globos",
-            "Catálogo",
-            "Calculadora de costos",
-            "Chat extendido",
-            "aún no disponible",
-            "Detección de estructura",
-            "aún no disponible",
-            "Detección avanzada de globos",
-            "aún no disponible",
-            "Taller 3D"
-          ]
+          "clipped": []
         }
       },
       {
@@ -3321,7 +3181,7 @@
         "id": "F1_cards_rows_taller3d",
         "viewport": "768x1024",
         "locale": "en",
-        "passed": false,
+        "passed": true,
         "observed": {
           "cardCount": 4,
           "rows": [
@@ -3330,7 +3190,7 @@
             7,
             8
           ],
-          "taller3d": false,
+          "taller3d": true,
           "separateExplorer": false
         }
       },
@@ -3394,39 +3254,11 @@
         "id": "no_overflow_or_truncated_tool_text",
         "viewport": "768x1024",
         "locale": "en",
-        "passed": false,
+        "passed": true,
         "observed": {
           "scrollWidth": 768,
           "viewport": 768,
-          "clipped": [
-            "Assisted chat with limits.",
-            "Balloon counter",
-            "Catalog",
-            "Assisted chat with higher limits.",
-            "Balloon counter",
-            "Catalog",
-            "Assisted chat with higher limits.",
-            "Balloon counter",
-            "Catalog",
-            "Cost calculator",
-            "Extended chat",
-            "not available yet",
-            "Structure detection",
-            "not available yet",
-            "Advanced balloon detection",
-            "not available yet",
-            "Assisted chat with higher limits.",
-            "Balloon counter",
-            "Catalog",
-            "Cost calculator",
-            "Extended chat",
-            "not available yet",
-            "Structure detection",
-            "not available yet",
-            "Advanced balloon detection",
-            "not available yet",
-            "3D workshop"
-          ]
+          "clipped": []
         }
       },
       {
@@ -3585,39 +3417,11 @@
         "id": "no_overflow_or_truncated_tool_text",
         "viewport": "1280x900",
         "locale": "es",
-        "passed": false,
+        "passed": true,
         "observed": {
           "scrollWidth": 1280,
           "viewport": 1280,
-          "clipped": [
-            "Chat asistido con límites.",
-            "Contador de globos",
-            "Catálogo",
-            "Chat asistido con límites más altos.",
-            "Contador de globos",
-            "Catálogo",
-            "Chat asistido con límites más altos.",
-            "Contador de globos",
-            "Catálogo",
-            "Calculadora de costos",
-            "Chat extendido",
-            "aún no disponible",
-            "Detección de estructura",
-            "aún no disponible",
-            "Detección avanzada de globos",
-            "aún no disponible",
-            "Chat asistido con límites más altos.",
-            "Contador de globos",
-            "Catálogo",
-            "Calculadora de costos",
-            "Chat extendido",
-            "aún no disponible",
-            "Detección de estructura",
-            "aún no disponible",
-            "Detección avanzada de globos",
-            "aún no disponible",
-            "Taller 3D"
-          ]
+          "clipped": []
         }
       },
       {
@@ -3703,7 +3507,7 @@
         "id": "F1_cards_rows_taller3d",
         "viewport": "1280x900",
         "locale": "en",
-        "passed": false,
+        "passed": true,
         "observed": {
           "cardCount": 4,
           "rows": [
@@ -3712,7 +3516,7 @@
             7,
             8
           ],
-          "taller3d": false,
+          "taller3d": true,
           "separateExplorer": false
         }
       },
@@ -3776,39 +3580,11 @@
         "id": "no_overflow_or_truncated_tool_text",
         "viewport": "1280x900",
         "locale": "en",
-        "passed": false,
+        "passed": true,
         "observed": {
           "scrollWidth": 1280,
           "viewport": 1280,
-          "clipped": [
-            "Assisted chat with limits.",
-            "Balloon counter",
-            "Catalog",
-            "Assisted chat with higher limits.",
-            "Balloon counter",
-            "Catalog",
-            "Assisted chat with higher limits.",
-            "Balloon counter",
-            "Catalog",
-            "Cost calculator",
-            "Extended chat",
-            "not available yet",
-            "Structure detection",
-            "not available yet",
-            "Advanced balloon detection",
-            "not available yet",
-            "Assisted chat with higher limits.",
-            "Balloon counter",
-            "Catalog",
-            "Cost calculator",
-            "Extended chat",
-            "not available yet",
-            "Structure detection",
-            "not available yet",
-            "Advanced balloon detection",
-            "not available yet",
-            "3D workshop"
-          ]
+          "clipped": []
         }
       },
       {
@@ -3893,9 +3669,10 @@
     ],
     "summary": {
       "total": 56,
-      "passed": 44,
-      "failed": 12
+      "passed": 56,
+      "failed": 0
     },
-    "probeCorrection": "Initial supplemental probe used unscoped CSS-module class names and misreported F1/F3. Repeated using semantic article/list selectors and CSS-module animation-name substring; this matrix is the corrected result."
+    "probeCorrection": "Initial probe had two observer defects: CSS-module class names were not matched literally, and default lineClamp values were treated as clipping. Repeated F1 and overflow checks use semantic ul[aria-label] lists, CSS-module-safe animation-name matching, and actual scroll/client clipping measurements.",
+    "command": "node --input-type=module with Playwright Chromium /usr/bin/chromium; 56 F1–F5/check matrix entries over 360/390/768/1280 × ES/EN"
   }
 }

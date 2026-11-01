@@ -3586,17 +3586,26 @@ Solucionador 20261030-100736-d494 integrated merge fff622890f28b8093a9a0afda9c40
 - **Evidence:** `test_verify_copy` 8 on real git repos; 16 affected suites, 213 OK. Opus subagent (`db98d3aa2`, branch
   `probar-stale`); integrated with `--no-regression` (D-261).
 
-## D-281 — The repo pre-commit hook scans with the bitácora's gitleaks config, so its solver-key allowlist applies at commit time
 
-- **Context:** every bitácora commit was refused: the per-pass solver files (`RUN.solver/<pass>/inbox.jsonl`,
-  `triggers.json`) and `state.json` carry hex task/trigger keys that the `generic-api-key` rule mistakes for secrets.
-  The allowlist lived in `bitacora/.gitleaks.toml`, but the repo's `.git/hooks/pre-commit` ran `gitleaks git --staged`
-  without `-c`, so it only used the default rules (the allowlist was read by `bt_secrets.scan_staged`, not the hook).
-- **Decision:** the hook (`skill/githooks/pre-commit`) passes `-c bitacora/.gitleaks.toml` when present; the allowlist
-  covers any `RUN.solver/**/*.json(l)` with `regexTarget = "line"` and keys optionally prefixed `run:kind:`.
-- **Rule:** the same keys outside `RUN.solver/` are still refused. No secret was involved (values are md5 hex).
-- **Evidence:** `test_githook_gitleaks_config` (2 tests, real hook in a temp repo); installed into `.git/hooks`;
-  bitácora commit `13ae648a4`, code merge `683b58488` (`--no-regression`, D-261). Made by metodologia-97 by hand.
+## D-279 — An account at or above 90 % of its weekly quota is excluded from every route, whoever owns the work
+
+- **Date:** 2026-11-01 · **Status:** Accepted · **Refines:** D-151, D-253, D-267, `bt_agents.candidates`,
+  `bt_agents.route`, `bt_agent_terminal.role_route`
+- **Context:** owner, 2026-10-31: «cuando una cuenta tenga 90% de la cuota semanal no se tenga en cuenta ni se use más
+  en metodologia sin importar que una tarea tenga dicha cuenta como la propietaria, se debe rutear». The router only
+  excluded an account at 100 % of a window, and pins (a run's account, `--profile`, role overrides, ~/.claude-work,
+  `diagnosis.profile`, a running Planner/Solucionador) bypassed the ranking.
+- **Decision:** `bt_weekly_cap` judges a Claude/Codex account's seven-day window (`routing.weekly_cap_percent`, default
+  90; >100 = off) from the stored sample and the live globalusage cache, the higher one counting; a week that reset, a
+  stale reading without reset or no reading is unknown and never excludes (logged once). It applies in
+  `candidates` (plain and role-ranked), a pinned run, delegations (at create and before each attempt), `role_route`,
+  relay `--to`, hands-on subplan sessions, `diagnosis.profile` (another account of its provider), the M2 usage facts
+  and the durable `LiveQuota`/routers; a running Planner or Solucionador moves at its next safe boundary (between
+  turns, never while integrating). Each exclusion goes to `<state>/events/weekly-cap-YYYY-MM.jsonl` as «<cuenta>
+  excluida: N % de la cuota semanal; se ruteó a <otra>»; with every account capped the spent-pool path runs (NoRoute /
+  wait / exhausted), its reason naming the cap. `globalusage` marks a capped account.
+- **Rule:** ownership never overrides the weekly cap; the work is rerouted, or waits like a spent pool.
+- **Evidence:** `test_weekly_cap` 32; 102 affected suites, 1590 tests OK (repo venv, isolated roots). Merge `5a9713f68`; integrated with `--no-regression` (D-261).
 
 ## D-280 — One UI component pool, `@bitacora/ui`: projects keep only their theme, the pool reaches them directly, mockups render live and implementers start from the approved TSX
 
@@ -3622,3 +3631,15 @@ Solucionador 20261030-100736-d494 integrated merge fff622890f28b8093a9a0afda9c40
   `test_remote_panel`: `/ui/` lacked a production counterpart, fixed). Branch `ui-pool`; integrated with
   `--no-regression` (D-261). Left: no file watcher (integration trigger only); pictures not opted in yet — its
   adoption is a REQ-021 subplan; gateway/Vercel do not proxy `/ui/` (nor `/components`) yet.
+
+## D-281 — The repo pre-commit hook scans with the bitácora's gitleaks config, so its solver-key allowlist applies at commit time
+
+- **Context:** every bitácora commit was refused: the per-pass solver files (`RUN.solver/<pass>/inbox.jsonl`,
+  `triggers.json`) and `state.json` carry hex task/trigger keys that the `generic-api-key` rule mistakes for secrets.
+  The allowlist lived in `bitacora/.gitleaks.toml`, but the repo's `.git/hooks/pre-commit` ran `gitleaks git --staged`
+  without `-c`, so it only used the default rules (the allowlist was read by `bt_secrets.scan_staged`, not the hook).
+- **Decision:** the hook (`skill/githooks/pre-commit`) passes `-c bitacora/.gitleaks.toml` when present; the allowlist
+  covers any `RUN.solver/**/*.json(l)` with `regexTarget = "line"` and keys optionally prefixed `run:kind:`.
+- **Rule:** the same keys outside `RUN.solver/` are still refused. No secret was involved (values are md5 hex).
+- **Evidence:** `test_githook_gitleaks_config` (2 tests, real hook in a temp repo); installed into `.git/hooks`;
+  bitácora commit `13ae648a4`, code merge `683b58488` (`--no-regression`, D-261). Made by metodologia-97 by hand.
