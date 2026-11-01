@@ -3891,3 +3891,45 @@ Solucionador 20261030-100736-d494 integrated merge fff622890f28b8093a9a0afda9c40
   react-dom/server via tsx shows each new marker; `next build` (transpilePackages, no pool build step) exits 0 and
   its prerendered HTML holds the marker; `test-ui-pool-guardia` passes after every normal sync and fails at §1 after a
   dev write. **Not verified:** `next dev` hot reload in a running dev server; a push (disabled in the sandbox).
+
+## D-295 — `components dev`: the two-step pool loop, proven on a live `next dev`; the watcher never commits work in progress
+
+- **Context:** owner, 2026-11-01: «paso 1: se modifique en local los componentes; paso 2: cambie todo y se recargue en
+  caliente»: edit a pool component in the live checkout and, with no commit, integration or restart, every place in
+  pictures that uses it changes in the running `next dev`. Open since D-293/D-294: hot reload never verified; the
+  default mode (and `bitacora-ui-watch.service`) synced the live pool by digest, so it would commit the owner's
+  half-written `skill/ui` edits onto pictures `main`; no one-command loop. Sandbox findings (clone of pictures `main`
+  516e3f7ab, throwaway `BITACORA_ROOT`): pictures' `dev` script is `next dev` = Turbopack (Next 16.3.0), and the
+  baseline watcher already hot-reloaded there; under webpack (`next dev --webpack`) no pictures page renders at all
+  (`/login` 500: `src/lib/registro/contexto.ts` pulls `node:crypto` into the client bundle, unrelated to the pool), but
+  its log showed the writer's race: `_write_tree` deleted removed files before rewriting their importers («Failed to
+  read source code … zz-dev-probe.ts», import trace through `button.tsx`), and wrote in place (truncate + write).
+  `project.json`'s `pictures` role resolves to the linked worktree `~/dev/pictures-wt/asesor`, not the owner's
+  checkout `~/dev/pictures`, whose branch (`feat/req-014-…`) does not use `@bitacora/ui` at all.
+- **Decision:** (1) `bitacora.py components dev [PROJECT] [--from DIR] [--into PATH] [--keep] [--restore]`
+  (`bt_ui_watch.dev`): dev mode with the owner's defaults: source the live `skill/ui` including uncommitted edits;
+  target the MAIN working tree of the project's UI repository (whichever worktree the role names); refuses a target
+  whose branch does not depend on `@bitacora/ui`, a repository no opted-in project uses, and anyone's uncommitted edits
+  in `packages/bitacora-ui`; warns when `node_modules/@bitacora/ui` does not lead to the package; prints once the
+  target, that the copy is a DEV copy failing the project's guard on purpose (no `git commit -a` there) and how to
+  stop; Ctrl-C, SIGTERM or SIGHUP restore the committed package unless `--keep` (stop signals are deferred while a
+  poll writes, so a stop never lands mid-write). (2) The default mode waits while `git status --porcelain -- skill/ui`
+  of the live checkout is not empty (untracked included), logged once per digest and reason; it syncs once the pool is
+  committed. Dev mode and the integrate trigger (clean tree after a merge) are unaffected. (3) `_write_tree` writes new
+  files first, then changed ones, deletions last, each through a temporary sibling renamed over the target
+  (`.bt-tmp`, never counted as content). nextjs.md §Component pool documents the two-step loop.
+- **Evidence:** merge `bd726ad0f` (branch commit `10c09f46f`; `--no-regression`, D-261; smoke ok; no `skill/ui/`
+  change, so no project synced; pictures `main` still 516e3f7ab). `test_ui_watch` 24 (new: WIP gate with a real git
+  pool, write order + atomic replace, `components dev` main-worktree default / restore on Ctrl-C / `--keep` +
+  `--restore` / refusals / npm-link warning / SIGTERM through the CLI), `test_ui_sync` 16, `test_ui_pool` 15: OK.
+  Live proof (`next dev` Turbopack on the clone, `components dev pictures` with defaults, Playwright on `/login` and
+  `/?dev=1`, server pid unchanged, `window` marker kept = no full reload, no error in the dev log): edit `button.tsx`
+  → `InterruptorTema` on `/login` and in the header of `/`; NEW file imported by `button.tsx`; edit of the new file;
+  DELETE of it; `select.tsx` → two different consumers on `/` (`SelectorCreatividad` `#nivel-creatividad` and
+  `src/app/page.tsx` `#selector-modelo`); revert: all PASS, DOM updated 3.7–4.2 s after the save at the default 2 s
+  poll (0.9–1.4 s at 0.5 s), server render fresh ≤ 0.1 s later. Pictures' guard fails on the dev copy
+  (`dev-a9cc786ea020`) and passes after Ctrl-C restored it; SIGHUP restores too; a half-written live pool kept the
+  default mode «waiting» with the clone's `main` unmoved, and once clean it synced (`unchanged`). Note
+  `~/.local/tmp/.../pool-devloop-evidence.md`. **Not verified:** webpack HMR (pictures cannot run on webpack); the
+  owner's real checkout (its current branch has no `@bitacora/ui`: `components dev pictures` refuses there until a
+  wired branch, e.g. `main`, is checked out).

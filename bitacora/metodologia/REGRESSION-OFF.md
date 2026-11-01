@@ -40,6 +40,7 @@ Owner, 2026-10-31 17:05: until further notice metodologia integrations run no re
 - 2026-11-01 08:43 · `e9d61b4d768b` · Pool fixes found by pictures' adoption; pictures theme re-imported (D-291) · 4 path(s): skill/scripts/bt_ui_sync.py, skill/scripts/tests/test_ui_sync.py, skill/ui/package.json, skill/ui/themes/pictures.css
 - 2026-11-01 11:28 · `c3421a5a6fb4` · UI pool watcher: components watch (D-293) · 10 path(s): install.py, pyproject.toml, skill/references/documentation.md, skill/references/stacks/nextjs.md, skill/scripts/bitacora.py, skill/scripts/bt_ui.py …
 - 2026-11-01 12:19 · `e80d6015893c` · ui pool sync: plumbing and ignored node_modules fixes (D-294) · 2 path(s): skill/scripts/bt_ui_sync.py, skill/scripts/tests/test_ui_sync.py
+- 2026-11-01 13:08 · `bd726ad0f21f` · ui pool dev loop: components dev, WIP-safe watcher (D-295) · 6 path(s): skill/references/documentation.md, skill/references/stacks/nextjs.md, skill/scripts/bitacora.py, skill/scripts/bt_ui_sync.py, skill/scripts/bt_ui_watch.py, skill/scripts/tests/test_ui_watch.py
 
 ## Escaped defects
 
