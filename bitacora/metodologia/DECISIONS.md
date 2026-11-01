@@ -3585,3 +3585,15 @@ Solucionador 20261030-100736-d494 integrated merge fff622890f28b8093a9a0afda9c40
   owner's own edits wait for their choice.
 - **Evidence:** `test_verify_copy` 8 on real git repos; 16 affected suites, 213 OK. Opus subagent (`db98d3aa2`, branch
   `probar-stale`); integrated with `--no-regression` (D-261).
+
+## D-281 — The repo pre-commit hook scans with the bitácora's gitleaks config, so its solver-key allowlist applies at commit time
+
+- **Context:** every bitácora commit was refused: the per-pass solver files (`RUN.solver/<pass>/inbox.jsonl`,
+  `triggers.json`) and `state.json` carry hex task/trigger keys that the `generic-api-key` rule mistakes for secrets.
+  The allowlist lived in `bitacora/.gitleaks.toml`, but the repo's `.git/hooks/pre-commit` ran `gitleaks git --staged`
+  without `-c`, so it only used the default rules (the allowlist was read by `bt_secrets.scan_staged`, not the hook).
+- **Decision:** the hook (`skill/githooks/pre-commit`) passes `-c bitacora/.gitleaks.toml` when present; the allowlist
+  covers any `RUN.solver/**/*.json(l)` with `regexTarget = "line"` and keys optionally prefixed `run:kind:`.
+- **Rule:** the same keys outside `RUN.solver/` are still refused. No secret was involved (values are md5 hex).
+- **Evidence:** `test_githook_gitleaks_config` (2 tests, real hook in a temp repo); installed into `.git/hooks`;
+  bitácora commit `13ae648a4`, code merge `683b58488` (`--no-regression`, D-261). Made by metodologia-97 by hand.

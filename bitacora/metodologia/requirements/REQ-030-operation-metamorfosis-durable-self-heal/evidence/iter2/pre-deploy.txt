@@ -563,3 +563,10 @@ regression: skipped (D-261: integrate.regression = none)
 rollback: git revert the merge of probar-stale on main, restart bt-durable.service and bitacora-web.service and bitacora-remote-api.service
 remote API pin: ae74773d7c86 -> 8fc11a051aba (backup /home/david/.config/systemd/user/bitacora-remote-api.service.d/exec.conf.bak-ae74773d7c86)
 result: merged 8fc11a051aba, restarted bt-durable.service, bitacora-web.service, bitacora-remote-api.service, smoke ok
+
+# integration of The repo pre-commit hook scans with the bitácora's gitleaks config (D-281), local restart of no unit, 2026-11-01 00:32, session metodologia-97
+previous main: 13ae648a4d1a205e765d055a288f365c15dd9636
+backup: not needed (no runtime code changed)
+regression: skipped (D-261: integrate.regression = none)
+rollback: git revert the merge of hook-gitleaks-config on main
+result: merged 683b584887fa, restarted nothing, smoke ok
