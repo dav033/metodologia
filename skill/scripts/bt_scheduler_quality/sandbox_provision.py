@@ -25,6 +25,9 @@ TIMEOUT_SECONDS = 600
 CACHE_ENV = "M6_DEPS_CACHE"
 READY = ".m6-ready"
 KEPT_ENV = ("PATH", "HOME", "LANG", "LC_ALL", "TMPDIR")
+# offline: nothing is fetched; no install scripts: no package code runs on the host. An attempt worktree the engine
+# prepares installs with the same arguments, so the agent's tree matches the verifier's (D-273)
+NPM_CI_ARGS = ("ci", "--offline", "--ignore-scripts", "--no-audit", "--no-fund")
 
 
 def cache_root() -> Path:
@@ -75,7 +78,7 @@ def provision(package_root: Path, *, root: Path | None = None, run=subprocess.ru
             shutil.copy2(package_root / name, scratch / name)
         env = {name: os.environ[name] for name in KEPT_ENV if name in os.environ}
         env["npm_config_update_notifier"] = "false"
-        done = run([npm, "ci", "--offline", "--ignore-scripts", "--no-audit", "--no-fund"], cwd=scratch, env=env,
+        done = run([npm, *NPM_CI_ARGS], cwd=scratch, env=env,
                    stdin=subprocess.DEVNULL, capture_output=True, text=True, timeout=TIMEOUT_SECONDS, check=False)
         if done.returncode or not (scratch / "node_modules").is_dir():
             LOGGER.warning("dependencies not provisioned (npm ci exit %s): %s", done.returncode,

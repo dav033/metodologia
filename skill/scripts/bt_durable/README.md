@@ -271,6 +271,17 @@ Details: `references/modules.md` §Solver.
 - Rollback of the whole runtime: `migrate --rollback` per run, `execution.backend=legacy`, stop `bt-durable.service`.
   Legacy state was never modified, so the legacy owner resumes from where it stopped.
 
+## An attempt worktree starts as the verifier's copy (D-273)
+
+`bt.prepare` (step implementation, no workflow change) prepares the allocated worktree before the agent starts, as
+M6 prepares its clean copy before every check (`adapters/worktree_prepare.py`): with a `package-lock.json`, the
+verifier's toolchain and at least one `sandbox_prepare.detect_steps` step, it installs the lockfile with M6's own
+arguments (`sandbox_provision.NPM_CI_ARGS`, skipped when `node_modules` is complete) and runs those steps (workspace
+builds, `next typegen`) with the checks' environment, at most 900 s in all, stopping at the first failure. Nothing
+blocks the start: the brief names what ran, what failed (exit, last lines, `<attempt>/worktree-prepare.log`) and any
+generated file the repository does not git-ignore (it would be captured). `<attempt>/worktree-prepare.json` keeps the
+result, so a retried step writes the same brief and runs nothing again. pictures (169 MB, 576 packages): 11.7 s.
+
 ## Disk space: attempt worktrees, the free-space floor, the scratch subvolume (D-266)
 
 Each attempt works in its own git worktree under `<scratch>/ws/<project>/worktrees/` (`<scratch>` =

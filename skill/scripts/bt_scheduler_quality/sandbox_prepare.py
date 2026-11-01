@@ -26,6 +26,12 @@ def prepare_steps(policy: QualityPolicy, root: Path, mounts=()) -> tuple[tuple[s
     """Steps this snapshot needs before a check. Without installed dependencies there is nothing to run them with."""
     if not policy.toolchain or not any(m.target.endswith("/node_modules") for m in mounts):
         return ()
+    return detect_steps(root)
+
+
+def detect_steps(root: Path) -> tuple[tuple[str, ...], ...]:
+    """The steps `root`'s manifest calls for once its dependencies are installed: shared by the verifier's sandbox and
+    the attempt worktree the engine prepares the same way (`bt_durable.adapters.worktree_prepare`, D-273)."""
     try:
         manifest = json.loads((root / "package.json").read_text(encoding="utf-8"))
     except (OSError, ValueError):
@@ -46,13 +52,14 @@ def prepare_note(steps: tuple[tuple[str, ...], ...]) -> str:
     if not steps:
         return ""
     commands = " and ".join(f"`{' '.join(step)}`" for step in steps)
-    outputs = ", ".join(dict.fromkeys(filter(None, map(_output_of, steps))))
+    outputs = ", ".join(dict.fromkeys(filter(None, map(generated_by, steps))))
     left = f" They write git-ignored files the check then sees ({outputs})." if outputs else ""
     return (f"[M6] This check ran in a fresh copy of your captured files (nothing from other checks) after the "
             f"verifier ran {commands} in it.{left} Run them in your worktree first to reproduce.\n")
 
 
-def _output_of(step: tuple[str, ...]) -> str | None:
+def generated_by(step: tuple[str, ...]) -> str | None:
+    """The git-ignored files a preparation step leaves, in words, or None for an unknown step."""
     if step == BUILD_WORKSPACES:
         return "the workspace packages' build output"
     if step == NEXT_TYPEGEN:
