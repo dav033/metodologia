@@ -3,6 +3,12 @@
 A snapshot holds tracked and untracked files, never ignored build output, so `packages/*/dist` is missing and anything
 importing a workspace package fails. The step runs inside the sandbox right before each check, in the same
 isolation, from the repository's own `build` scripts.
+
+Every check gets its own fresh copy of the captured files (a new tmpfs per check, the snapshot bound read-only), so
+what one check or its preparation writes never reaches another check. What a check does see that the attempt's own
+worktree may lack is the preparation's ignored output: `next typegen` writes `next-env.d.ts` and `.next/types/**`,
+which a tsconfig including them type-checks against (Next's global `NodeJS.ProcessEnv` requires `NODE_ENV`). A
+failing prepared check's stdout therefore ends with `prepare_note`, so the builder can reproduce it (D-273).
 """
 
 from __future__ import annotations
@@ -20,6 +26,12 @@ def prepare_steps(policy: QualityPolicy, root: Path, mounts=()) -> tuple[tuple[s
     """Steps this snapshot needs before a check. Without installed dependencies there is nothing to run them with."""
     if not policy.toolchain or not any(m.target.endswith("/node_modules") for m in mounts):
         return ()
+    return detect_steps(root)
+
+
+def detect_steps(root: Path) -> tuple[tuple[str, ...], ...]:
+    """The steps `root`'s manifest calls for once its dependencies are installed: shared by the verifier's sandbox and
+    the attempt worktree the engine prepares the same way (`bt_durable.adapters.worktree_prepare`, D-273)."""
     try:
         manifest = json.loads((root / "package.json").read_text(encoding="utf-8"))
     except (OSError, ValueError):
@@ -33,6 +45,26 @@ def prepare_steps(policy: QualityPolicy, root: Path, mounts=()) -> tuple[tuple[s
     if "next" in dependencies:
         steps.append(NEXT_TYPEGEN)
     return tuple(steps)
+
+
+def prepare_note(steps: tuple[tuple[str, ...], ...]) -> str:
+    """The line a failing prepared check ends with: which steps ran first and the ignored files they left (D-273)."""
+    if not steps:
+        return ""
+    commands = " and ".join(f"`{' '.join(step)}`" for step in steps)
+    outputs = ", ".join(dict.fromkeys(filter(None, map(generated_by, steps))))
+    left = f" They write git-ignored files the check then sees ({outputs})." if outputs else ""
+    return (f"[M6] This check ran in a fresh copy of your captured files (nothing from other checks) after the "
+            f"verifier ran {commands} in it.{left} Run them in your worktree first to reproduce.\n")
+
+
+def generated_by(step: tuple[str, ...]) -> str | None:
+    """The git-ignored files a preparation step leaves, in words, or None for an unknown step."""
+    if step == BUILD_WORKSPACES:
+        return "the workspace packages' build output"
+    if step == NEXT_TYPEGEN:
+        return "next-env.d.ts and .next/types/**"
+    return None
 
 
 def _mapping(value: object) -> dict:

@@ -137,6 +137,16 @@ secret-like environment names require explicit registration for output redaction
 embedded in a plan command. Wall time, CPU/address-space/file-size, process count, output bytes, tmpfs sizes and
 per-runner concurrency are bounded. A Git worktree alone is never treated as a sandbox.
 
+Checks are isolated from each other (D-273): every check gets a new `/workspace` tmpfs copied from the materialised
+snapshot, which is bound read-only, and dependency directories are throwaway overlays, so nothing a check writes
+(build output, `next-env.d.ts`, caches) reaches the next one and an outcome never depends on check order; every check
+of a request is keyed to the same captured tree (`check_tree_digests`). What a check does see beyond the captured
+files is the preparation `sandbox_prepare` runs in its copy first (workspace builds, `next typegen`, which writes the
+git-ignored `next-env.d.ts` and `.next/types/**`); a failing prepared check's stdout ends with a note naming those
+steps. The durable engine prepares each attempt worktree the same way before the agent starts
+(`bt_durable.adapters.worktree_prepare`: `NPM_CI_ARGS` install, then `detect_steps`), so the agent checks the tree the
+verifier checks.
+
 Runner outcomes are `pass` (exit 0), `fail` (a started command exits nonzero), or `unknown`. Stable unknown issue
 codes include `SANDBOX_UNAVAILABLE`, `CHECK_UNAVAILABLE`, `CHECK_TIMEOUT`, `OUTPUT_LIMIT`, `CHECK_MANUAL`,
 `CHECK_UNSUPPORTED`, `SNAPSHOT_INVALID`, and `RUNNER_BUSY`. A missing binary, denied namespace, failed workspace

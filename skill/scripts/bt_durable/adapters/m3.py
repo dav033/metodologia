@@ -32,6 +32,7 @@ LOG = logging.getLogger("bt_durable.m3")
 
 from . import size_guard
 from .files import atomic_write
+from .worktree_prepare import prepare_worktree
 
 DEFAULT_TIMEOUT = 2 * 3600
 # the engine's own configuration (the DBOS database URL carries its password) never reaches an agent
@@ -103,7 +104,10 @@ class M3Attempts:
         policy = self._check_policy(attempt)
         _, divergent = agent_environment(test_env, policy)
         env_note = _environment_note(test_env, policy, divergent)
-        brief = self._brief(attempt, request, "\n\n".join(x for x in (_continuation(ws, attempt), env_note, note) if x))
+        # the tree the verifier checks: lockfile installed and its preparation run, before the agent starts (D-273)
+        prepared_note = prepare_worktree(Path(ws.path), adir, policy, agent_inherited_env())
+        brief = self._brief(attempt, request, "\n\n".join(
+            x for x in (_continuation(ws, attempt), env_note, prepared_note, note) if x))
         prompt = build_prompt(brief, request, workdir=ws.path, branch=ws.branch,
                               report_path=str(adir / "report.json"), handoff_mode="snapshot", rtk=self.prompt_rtk)
         atomic_write(adir / "prompt.txt", prompt.encode("utf-8"), 0o600)
