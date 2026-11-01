@@ -200,7 +200,10 @@ class GitWorkspaces:
                 tmp = manifest.with_name(f".{manifest.name}.tmp")
                 tmp.write_text(json.dumps(data, sort_keys=True), encoding="utf-8")
                 os.replace(tmp, manifest)
+            interrupted = self._interrupted(name)
             journal = self._journal(name, "allocating", kind=kind, base_sha=base_sha, worktree=str(worktree))
+            if interrupted and worktree.exists():
+                self._discard(repo, worktree)        # same as an attempt: a killed `git worktree add` left a half checkout
             if worktree.exists() and not self._registered(repo, worktree):
                 raise ExecutorError("WORKSPACE_ERROR", f"{worktree} exists but is not a worktree of {repo.name}")
             if not worktree.exists():
