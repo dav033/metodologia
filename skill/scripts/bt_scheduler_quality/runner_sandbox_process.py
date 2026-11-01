@@ -12,7 +12,7 @@ from pathlib import Path
 
 from .policy import CheckSpec, QualityPolicy
 from .sandbox_mounts import WORKSPACE, Mount, toolchain
-from .sandbox_prepare import prepare_steps
+from .sandbox_prepare import prepare_note, prepare_steps
 
 NAMESPACE_FIELDS = {
     "mnt": "mnt-namespace",
@@ -98,6 +98,8 @@ for step in config.get("prepare", []):
         raise SystemExit(fail("PREPARE"))
     if prepared:
         sys.stderr.write(config["start_marker"] + "\n")
+        sys.stderr.write("[M6] The verifier's preparation step `" + " ".join(step) + "` failed (exit " + str(prepared)
+                         + ") in a fresh copy of your captured files; the check itself did not run.\n")
         sys.stderr.flush()
         raise SystemExit(1)
 try:
@@ -106,7 +108,11 @@ except OSError:
     raise SystemExit(fail("EXEC"))
 sys.stderr.write(config["start_marker"] + "\n")
 sys.stderr.flush()
-raise SystemExit(child.wait())
+returned = child.wait()
+if returned and config.get("prepare_note"):    # last on stdout: the correction note shows stderr, then stdout's tail
+    sys.stdout.write(config["prepare_note"])
+    sys.stdout.flush()
+raise SystemExit(returned)
 """
 
 
@@ -224,6 +230,7 @@ def _sandbox_config(
 ) -> dict[str, object]:
     return {
         "prepare": [list(step) for step in prepare],
+        "prepare_note": prepare_note(prepare),          # a failing check names what ran before it in its copy (D-273)
         "argv": list(check.argv),
         "cwd": check.cwd,
         "start_marker": marker,
