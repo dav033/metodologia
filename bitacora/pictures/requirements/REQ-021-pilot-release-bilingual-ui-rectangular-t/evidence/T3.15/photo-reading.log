@@ -1,0 +1,5 @@
+
+> demo-decoracion@0.1.0 taller:test-lectura-backing-nuevos
+> tsx scripts/test/test-lectura-backing-nuevos.ts
+
+test-lectura-backing-nuevos: ok

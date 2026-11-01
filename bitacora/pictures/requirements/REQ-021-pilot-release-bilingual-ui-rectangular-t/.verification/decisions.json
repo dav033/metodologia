@@ -3,17 +3,17 @@
  "schema_version": 1,
  "seen": {
   "SP-1": "1:82885950bdfe1bc2c0ab8e169cce74c4c2332f02",
-  "SP-11": "1:305ab6e108d617b984ec950c6e839b32c1e8100b",
-  "SP-12": "1:cddba91624bd86a58d233ee0f63dbe82befc1138",
+  "SP-11": "1:648aa2b833f0cacdeabe1851a3947e27f9b699ef",
+  "SP-12": "1:b0cdfa0f2c491e3899ce84d33cbe2947594e67e8",
   "SP-14": "2:59649e4cbd8f16853f9842a186faaef31effe1f6",
-  "SP-2": "1:b3f997fe050f00d031f8ff7103d279b1f33f08c5",
+  "SP-2": "2:1c51118c003dbcaafd47ac33c195f30c2774aa99",
   "SP-3": "2:8ac04102674cedaf454623ad530837bd6c705b92",
-  "SP-4": "2:0708ce3e9e8bbf41dbb7c919ad0147f73027b9a4",
-  "SP-5": "3:0eaa45867a99b1b3b74f2ebc0aa97f10206212a3",
-  "SP-6": "2:b2dc877bbe89c3b3dbd92d6fbed8b613f5e42919",
-  "SP-7": "3:44f2ed65dbce456970b932f7bd74bab358eab00b",
-  "SP-8": "3:6e6f7740449f4b216467f9c029a7a4c70fceda6a",
-  "SP-9": "3:3e53202ebe42b7649f9036786679a893f04d837e"
+  "SP-4": "2:8f0cb2459405092b561ce1589bf84e84ceaf028f",
+  "SP-5": "3:b737055f767ef4bc36d09866c07bc786fc22e584",
+  "SP-6": "2:b4056f87723d4f660f813c516a683dbdb6eb714d",
+  "SP-7": "3:e8fdd4052c9140bcf5f73d47d6875f25ef14b1a8",
+  "SP-8": "3:a47cc4b6bd61e611f3ea2ba34ff0915e0e1ffd91",
+  "SP-9": "3:d680ede08a12433465196c81431ad1e8255259b2"
  },
  "subplans": {
   "SP-14": {
@@ -30,17 +30,14 @@
    "via": "web"
   },
   "SP-2": {
-   "at": "2026-10-31T13:15:02-05:00",
+   "at": "2026-10-31T23:32:56-05:00",
    "by": "owner",
-   "commit": "6ec74192eb0175827a9005ae2c152955cb0d220d",
-   "decision": "rejected",
-   "note": "El desplegable el menu del usuario se peude desplegar, epro no se peude cerrar de ninguna amnera, solamente si se entra a algun  link, en la parte de rol no debe ser rol si no plan, tampoco que salga esto Aviso de datos aceptado es informacion que al usaurio no le importa, se debe agregar informacion del nombre del usuario que no veo en ingun lado, y la parte de la cuenta dl usuario ahzun rediseno comleto incluyendo la aprtedel actualizar contrasena,",
-   "open_pending": [
-    "P-210"
-   ],
-   "pending": "P-210",
+   "commit": "1c51118c003dbcaafd47ac33c195f30c2774aa99",
+   "decision": "approved",
+   "note": "",
+   "open_pending": [],
    "version": 2,
-   "via": "operator (owner: the 13:04 approval was a mistake)"
+   "via": "web"
   },
   "SP-3": {
    "at": "2026-10-31T15:41:03-05:00",
@@ -54,6 +51,33 @@
    ],
    "pending": "P-213",
    "version": 3,
+   "via": "web"
+  },
+  "SP-4": {
+   "at": "2026-10-31T23:42:19-05:00",
+   "attachments": [
+    {
+     "bytes": 1377419,
+     "path": "evidence/owner-rejected/SP-4-v2/1-55917b07d4bc.png",
+     "sha256": "55917b07d4bca287225952b92b206d5596c6c2be024cd82d7cd15336752c7028",
+     "type": "image/png"
+    },
+    {
+     "bytes": 133730,
+     "path": "evidence/owner-rejected/SP-4-v2/2-7acf162346b0.png",
+     "sha256": "7acf162346b0cb516c55b5c8a9216ae36579e028ded132b3be3c2119be4f31d9",
+     "type": "image/png"
+    }
+   ],
+   "by": "owner",
+   "commit": "e744aa8f4d4fbd7b73e0e111e2a6adfad81a9173",
+   "decision": "rejected",
+   "note": "No se ve una opcion dodne recuperar los proyectos, l toast que me avisa lo de exportacion no se ve nada bien y los modales son horribles",
+   "open_pending": [
+    "P-214"
+   ],
+   "pending": "P-214",
+   "version": 2,
    "via": "web"
   }
  }

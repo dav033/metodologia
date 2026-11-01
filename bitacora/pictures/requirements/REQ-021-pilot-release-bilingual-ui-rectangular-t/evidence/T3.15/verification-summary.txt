@@ -1,0 +1,24 @@
+T3.15 audit verification summary
+Audited tree: 4ec9de3f5f45427904ba00761f5a134a88f7408e
+
+PASS npm run taller:test-registros-completos — 11 tables, 17 pieces, 7 chairs.
+PASS npm run taller:test-mesas-nuevas — 10 checks, 3 approved types, 8 existing types.
+PASS npm run taller:test-backing-nuevos — 6 approved Backings.
+PASS npm run taller:test-lectura-backing-nuevos.
+PASS npm run taller:test-mesas-piloto — 11 table types.
+PASS npm run taller:test-backing-piloto.
+PASS npx --no-install tsx --conditions=react-server scripts/test/test-catalogo-repositorios.ts — 12 tests.
+PASS npx --no-install tsx --conditions=react-server scripts/test/test-exportadores-escena-taller.ts.
+PASS npm run taller:test-glb-todos-los-tipos — 53 structural element types, zero known defects.
+PASS PYTHONDONTWRITEBYTECODE=1 python3 scripts/test/blender/test_comparar_glb.py — 3 tests.
+PASS npx --no-install tsx scripts/test/test-harness-taller-esenciales.ts. It writes historical SP-3/CG-2 evidence, which was restored to the committed contents.
+INTEGRATION NODE_OPTIONS='--max-old-space-size=4096' npm run taller:test-integracion-esenciales — process exit 0; produced status failed; Blender 4.5.15 imported 82 objects; 16 legacy element types failed numeric property comparisons; approved table/Backing types passed. Evidence: integration-current.log and SP-3.integration.current.json.
+PASS npm run lint — exit 0, 0 errors, 55 warnings.
+PASS npm run build --workspaces --if-present.
+FAIL npx --no-install tsc --noEmit — exit 134, Node heap exhausted near 2 GB.
+PASS NODE_OPTIONS='--max-old-space-size=4096' npx --no-install tsc --noEmit.
+PASS npm run build inside the integration harness; successful browser and Blender stages require that build to complete.
+PASS python3 /home/david/dev/metodologia/skill/scripts/bitacora.py audit-ledger check .evidence/REQ-021/SP-3.findings.json — OK: audit ledger contract is valid.
+PASS git diff --check — no whitespace errors.
+
+No secrets, database URLs, shell environment values or credentials are included in this summary.

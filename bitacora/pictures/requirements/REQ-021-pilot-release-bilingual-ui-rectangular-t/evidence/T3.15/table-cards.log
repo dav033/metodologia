@@ -1,0 +1,5 @@
+
+> demo-decoracion@0.1.0 taller:test-mesas-piloto
+> tsx scripts/test/test-taller-mesas-piloto.ts
+
+✓ test-taller-mesas-piloto (11 tipos)

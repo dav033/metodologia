@@ -1,0 +1,10 @@
+Role-change state at 360: selected=master_designer saveEnabled=true
+Role-change state at 768: selected=designer saveEnabled=true
+Role-change state at 1280: selected=master_designer saveEnabled=true
+AccountServiceError: CREDENCIALES_INVALIDAS
+    at fail (/home/david/dev/metodologia/bitacora/.state/durable/attempts-root/ws/pictures/worktrees/pictures-REQ-021-r32-T2-7-a101-d2fbfc66-95d0fd567339b0d2/src/lib/cuentas/servicio.ts:42:9)
+    at Object.signIn (/home/david/dev/metodologia/bitacora/.state/durable/attempts-root/ws/pictures/worktrees/pictures-REQ-021-r32-T2-7-a101-d2fbfc66-95d0fd567339b0d2/src/lib/cuentas/servicio.ts:294:21)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async login (/home/david/dev/metodologia/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T2.7/audit-r4/capture-rerun.ts:57:66)
+    at async main (/home/david/dev/metodologia/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T2.7/audit-r4/capture-rerun.ts:165:114)
+

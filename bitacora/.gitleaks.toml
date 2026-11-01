@@ -3,7 +3,8 @@
 useDefault = true
 
 [[allowlists]]
-description = "Durable solver state: task-id keys (hex hashes), rewritten live so line fingerprints drift"
+description = "Durable solver state and per-pass inbox/trigger files: task-id and trigger keys (hex hashes, optionally prefixed by run:kind), rewritten live so line fingerprints drift"
 condition = "AND"
-paths = ['''RUN\.solver/state\.json$''']
-regexes = ['''"key":\s*"[0-9a-f]{32}"''']
+regexTarget = "line"
+paths = ['''RUN\.solver/(?:[^/]+/)?[^/]+\.jsonl?$''']
+regexes = ['''"key":\s*"(?:[\w.-]+:)*[0-9a-f]{32}"''']

@@ -1,16 +1,16 @@
 {
  "watch": {
-  "T3.91": {
-   "fp": "b3ea401211429f0f",
-   "since": 1793492988.2064438,
-   "epoch": "e0f00093e0ab4073b79a00b8321f91b3",
-   "observed_at": 1793494538.3587549
+  "T3.11": {
+   "fp": "83524a1eee211ecd",
+   "since": 1793509873.5195756,
+   "epoch": "6f53c13f6f314eada02c0c13f260bd13",
+   "observed_at": 1793511121.1162982
   },
-  "T2.58": {
-   "fp": "2b30c7fb00aa3e26",
-   "since": 1793494441.7356753,
-   "epoch": "e0f00093e0ab4073b79a00b8321f91b3",
-   "observed_at": 1793494538.3587549
+  "T14.5": {
+   "fp": "5735679f56e4c293",
+   "since": 1793511056.4977493,
+   "epoch": "6f53c13f6f314eada02c0c13f260bd13",
+   "observed_at": 1793511121.1162982
   }
  },
  "tasks": {
@@ -23,7 +23,9 @@
   "SP-14": 1,
   "SP-3": 1,
   "T2.57": 1,
-  "T3.91": 1
+  "T3.91": 1,
+  "CG-4": 4,
+  "SP-4": 0
  },
  "triggers": {
   "pictures:REQ-021:r25:resolution:4378ebb94f72d6922c89d601ee5db484": {
@@ -1318,7 +1320,7 @@
    "request_id": "T3.91:d5",
    "round": 1,
    "reason": "healing's repair limit is reached",
-   "status": "running",
+   "status": "gave_up",
    "at": "2026-10-31T18:40:40",
    "session": "20261031-184040-40be"
   },
@@ -1330,7 +1332,7 @@
    "request_id": "T3.91:d6",
    "round": 1,
    "reason": "healing's repair limit is reached",
-   "status": "queued",
+   "status": "stale",
    "at": "2026-10-31T18:44:56",
    "session": "20261031-184040-40be"
   },
@@ -1342,9 +1344,203 @@
    "request_id": "T3.91:d7",
    "round": 1,
    "reason": "the agent says it could not run its checks: aces, TypeScript estricto, ESLint focalizado y `git diff --check`. Solo queda modificado ese harness; no hice commit. **La verificación independiente sigue pendiente; no declaro la tarea verificada.**; the task used its attempts",
-   "status": "queued",
+   "status": "stale",
    "at": "2026-10-31T19:18:57",
    "session": "20261031-184040-40be"
+  },
+  "pictures:REQ-021:r32:resolution:90898cae7193d81bf7697d1093de908e": {
+   "kind": "resolution",
+   "key": "pictures:REQ-021:r32:resolution:90898cae7193d81bf7697d1093de908e",
+   "run_id": "pictures:REQ-021:r32",
+   "task_id": "CG-4",
+   "request_id": "",
+   "round": null,
+   "reason": "the conflict in src/components/cuentas/MenuCuenta.tsx waits for a recorded resolution since 2026-10-31T18:17:29; no retry can settle it",
+   "resolution": {
+    "key": "90898cae7193d81bf7697d1093de908e",
+    "path": "src/components/cuentas/MenuCuenta.tsx",
+    "blobs": {
+     "base": "a48ce923956fb2574b6c3a76c6c7dd877f11a130",
+     "ours": "bd6d7cce1050c3c04ce6b591e140910d371ac874",
+     "theirs": "be6df01e3a31ca64b6d2f21c4a723e41de8440e1"
+    },
+    "commits": {
+     "base": "2d45cd5030b75c3d706dc6f2bea815f76eed7cce",
+     "ours": "59649e4cbd8f16853f9842a186faaef31effe1f6",
+     "theirs": "3faaf0953a48e7dda73a865b7d5e665e7830dd02"
+    },
+    "json": "/home/david/bitacora/.state/durable/composition/resolutions/90898cae7193d81bf7697d1093de908e.json",
+    "diff3": "/home/david/bitacora/.state/durable/composition/resolutions/90898cae7193d81bf7697d1093de908e.diff3",
+    "resolved": "/home/david/bitacora/.state/durable/composition/resolutions/90898cae7193d81bf7697d1093de908e.resolved",
+    "since": 1793488649.423815
+   },
+   "status": "gave_up",
+   "at": "2026-10-31T21:46:05",
+   "session": "20261031-214605-7850"
+  },
+  "pictures:REQ-021:r32:resolution:9c0b9c087c45e0f248214a095fa6d046": {
+   "kind": "resolution",
+   "key": "pictures:REQ-021:r32:resolution:9c0b9c087c45e0f248214a095fa6d046",
+   "run_id": "pictures:REQ-021:r32",
+   "task_id": "CG-4",
+   "request_id": "",
+   "round": null,
+   "reason": "the conflict in src/components/cuentas/MenuCuenta.tsx waits for a recorded resolution since 2026-10-31T19:53:24; no retry can settle it",
+   "resolution": {
+    "key": "9c0b9c087c45e0f248214a095fa6d046",
+    "path": "src/components/cuentas/MenuCuenta.tsx",
+    "blobs": {
+     "base": "a48ce923956fb2574b6c3a76c6c7dd877f11a130",
+     "ours": "bf8c36e445779b5180ffb4c68fed6aedbe1ff9ea",
+     "theirs": "4377350d966f26f51f6ae7acadcad7f08d7b78ab"
+    },
+    "commits": {
+     "base": "cd0ec7732462d300aba395dffaf472edf2853857",
+     "ours": "be3dcd80052b1f771c56014892738b7f986073d8",
+     "theirs": "7729d30cc88ad519869c8e2f9979f1793d876b2b"
+    },
+    "json": "/home/david/bitacora/.state/durable/composition/resolutions/9c0b9c087c45e0f248214a095fa6d046.json",
+    "diff3": "/home/david/bitacora/.state/durable/composition/resolutions/9c0b9c087c45e0f248214a095fa6d046.diff3",
+    "resolved": "/home/david/bitacora/.state/durable/composition/resolutions/9c0b9c087c45e0f248214a095fa6d046.resolved",
+    "since": 1793494404.4946318
+   },
+   "status": "gave_up",
+   "at": "2026-10-31T21:46:05",
+   "session": "20261031-214605-7850"
+  },
+  "pictures:REQ-021:r32:resolution:a3ffeff101bfacf8b2888bfd3d06bf5a": {
+   "kind": "resolution",
+   "key": "pictures:REQ-021:r32:resolution:a3ffeff101bfacf8b2888bfd3d06bf5a",
+   "run_id": "pictures:REQ-021:r32",
+   "task_id": "CG-4",
+   "request_id": "",
+   "round": null,
+   "reason": "the conflict in src/components/cuentas/MenuCuenta.tsx waits for a recorded resolution since 2026-10-31T19:53:24; no retry can settle it",
+   "resolution": {
+    "key": "a3ffeff101bfacf8b2888bfd3d06bf5a",
+    "path": "src/components/cuentas/MenuCuenta.tsx",
+    "blobs": {
+     "base": "a48ce923956fb2574b6c3a76c6c7dd877f11a130",
+     "ours": "bd6d7cce1050c3c04ce6b591e140910d371ac874",
+     "theirs": "4377350d966f26f51f6ae7acadcad7f08d7b78ab"
+    },
+    "commits": {
+     "base": "2d45cd5030b75c3d706dc6f2bea815f76eed7cce",
+     "ours": "59649e4cbd8f16853f9842a186faaef31effe1f6",
+     "theirs": "7729d30cc88ad519869c8e2f9979f1793d876b2b"
+    },
+    "json": "/home/david/bitacora/.state/durable/composition/resolutions/a3ffeff101bfacf8b2888bfd3d06bf5a.json",
+    "diff3": "/home/david/bitacora/.state/durable/composition/resolutions/a3ffeff101bfacf8b2888bfd3d06bf5a.diff3",
+    "resolved": "/home/david/bitacora/.state/durable/composition/resolutions/a3ffeff101bfacf8b2888bfd3d06bf5a.resolved",
+    "since": 1793494404.623271
+   },
+   "status": "gave_up",
+   "at": "2026-10-31T21:46:05",
+   "session": "20261031-214605-7850"
+  },
+  "pictures:REQ-021:r32:resolution:a9cba58a77795a21db0078a39fb0c06e": {
+   "kind": "resolution",
+   "key": "pictures:REQ-021:r32:resolution:a9cba58a77795a21db0078a39fb0c06e",
+   "run_id": "pictures:REQ-021:r32",
+   "task_id": "CG-4",
+   "request_id": "",
+   "round": null,
+   "reason": "the conflict in src/components/cuentas/MenuCuenta.tsx waits for a recorded resolution since 2026-10-31T18:17:29; no retry can settle it",
+   "resolution": {
+    "key": "a9cba58a77795a21db0078a39fb0c06e",
+    "path": "src/components/cuentas/MenuCuenta.tsx",
+    "blobs": {
+     "base": "a48ce923956fb2574b6c3a76c6c7dd877f11a130",
+     "ours": "bf8c36e445779b5180ffb4c68fed6aedbe1ff9ea",
+     "theirs": "be6df01e3a31ca64b6d2f21c4a723e41de8440e1"
+    },
+    "commits": {
+     "base": "cd0ec7732462d300aba395dffaf472edf2853857",
+     "ours": "be3dcd80052b1f771c56014892738b7f986073d8",
+     "theirs": "3faaf0953a48e7dda73a865b7d5e665e7830dd02"
+    },
+    "json": "/home/david/bitacora/.state/durable/composition/resolutions/a9cba58a77795a21db0078a39fb0c06e.json",
+    "diff3": "/home/david/bitacora/.state/durable/composition/resolutions/a9cba58a77795a21db0078a39fb0c06e.diff3",
+    "resolved": "/home/david/bitacora/.state/durable/composition/resolutions/a9cba58a77795a21db0078a39fb0c06e.resolved",
+    "since": 1793488649.3759992
+   },
+   "status": "gave_up",
+   "at": "2026-10-31T21:46:05",
+   "session": "20261031-214605-7850"
+  },
+  "pictures:REQ-021:r32:resolution:2a49ab6d27d4b6eddfe3fead986233c9": {
+   "kind": "resolution",
+   "key": "pictures:REQ-021:r32:resolution:2a49ab6d27d4b6eddfe3fead986233c9",
+   "run_id": "pictures:REQ-021:r32",
+   "task_id": "CG-4",
+   "request_id": "",
+   "round": null,
+   "reason": "the conflict in src/components/cuentas/MenuCuenta.tsx waits for a recorded resolution since 2026-10-31T21:45:34; no retry can settle it",
+   "resolution": {
+    "key": "2a49ab6d27d4b6eddfe3fead986233c9",
+    "path": "src/components/cuentas/MenuCuenta.tsx",
+    "blobs": {
+     "base": "a48ce923956fb2574b6c3a76c6c7dd877f11a130",
+     "ours": "4377350d966f26f51f6ae7acadcad7f08d7b78ab",
+     "theirs": "bd6d7cce1050c3c04ce6b591e140910d371ac874"
+    },
+    "commits": {
+     "base": "2d45cd5030b75c3d706dc6f2bea815f76eed7cce",
+     "ours": "1ce13a8f800f91060050a46d07d37f78a669889d",
+     "theirs": "59649e4cbd8f16853f9842a186faaef31effe1f6"
+    },
+    "json": "/home/david/bitacora/.state/durable/composition/resolutions/2a49ab6d27d4b6eddfe3fead986233c9.json",
+    "diff3": "/home/david/bitacora/.state/durable/composition/resolutions/2a49ab6d27d4b6eddfe3fead986233c9.diff3",
+    "resolved": "/home/david/bitacora/.state/durable/composition/resolutions/2a49ab6d27d4b6eddfe3fead986233c9.resolved",
+    "since": 1793501134.4595377
+   },
+   "status": "limit",
+   "at": "2026-10-31T21:47:40",
+   "session": "20261031-214605-7850"
+  },
+  "owner_rejected:SP-4:v2:e744aa8f4d4f:641dc98fa4f8": {
+   "kind": "owner_rejected",
+   "key": "owner_rejected:SP-4:v2:e744aa8f4d4f:641dc98fa4f8",
+   "run_id": "pictures:REQ-021:r35",
+   "task_id": "",
+   "request_id": "",
+   "round": null,
+   "reason": "the owner tried SP-4 version 2 (commit e744aa8f4d) and rejected it with 2 image(s) (paths in its brief): «No se ve una opcion dodne recuperar los proyectos, l toast que me avisa lo de exportacion no se ve nada bien y los modales son horribles»",
+   "subplan": "SP-4",
+   "title": "Saved projects",
+   "version": 2,
+   "commit": "e744aa8f4d4fbd7b73e0e111e2a6adfad81a9173",
+   "note": "No se ve una opcion dodne recuperar los proyectos, l toast que me avisa lo de exportacion no se ve nada bien y los modales son horribles",
+   "pending": "P-214",
+   "decided_at": "2026-10-31T23:42:19-05:00",
+   "via": "web",
+   "tests": [
+    {
+     "subplans": [
+      "SP-4"
+     ],
+     "kind": "local",
+     "where": "Local Probar version, isolated REQ-021 database, two independent browsers",
+     "how": "Run migrations and SP-1 account seeding; start dev and sign in as Master Designer account A. Save a named project with a table, Backing, balloons, room and attachments; open /proyectos in another browser signed in as A and reopen it. Change both copies from the same revision and save each. Sign in as B and try A's project URL; sign in as employee and open A's project, then copy it. Test offline save/retry and switch projects/accounts. Before first authenticated Taller visit, prepare a legacy `taller3d:escena:v1` fixture; import it twice/reload after response loss; try invalid raw JSON. Run `npm run proyectos:test-integracion` for the automated scenario.",
+     "expect": "Complete scene reopens unchanged across browsers. Automatic save follows first named save; employee reads/copies without modifying A's original. The second competing save shows a conflict and preserves the local draft; offline work is not labelled saved. B cannot read/write A's project or see A's local draft. Import requires consent, creates one project per account/source despite retries, and original raw local data remains unchanged; invalid data has an explanation and download option. Account deletion with a project is refused. Screens match proyectos@v1. Only name and complete scene travel across browsers; AI conversation/generated images stay local. Search must find a matching project beyond the first 50 rows and owner filters apply across authorized server results."
+    }
+   ],
+   "pages": [
+    "/proyectos"
+   ],
+   "evidence": "evidence/owner-rejected/SP-4-v2.md",
+   "images": [
+    "/home/david/dev/metodologia/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/owner-rejected/SP-4-v2/1-55917b07d4bc.png",
+    "/home/david/dev/metodologia/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/owner-rejected/SP-4-v2/2-7acf162346b0.png"
+   ],
+   "image_markdown": [
+    "![Imagen 1 del rechazo](SP-4-v2/1-55917b07d4bc.png)",
+    "![Imagen 2 del rechazo](SP-4-v2/2-7acf162346b0.png)"
+   ],
+   "status": "resolved",
+   "at": "2026-10-31T23:42:29",
+   "session": "20261031-234610-5a46",
+   "brief": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/RUN.solver/20261031-214605-7850/BRIEF.SP-4-v2.md"
   }
  },
  "sessions": [
@@ -1731,7 +1927,7 @@
   {
    "id": "20261031-184040-40be",
    "name": "bit-pictures-REQ-021-solver",
-   "status": "running",
+   "status": "gave_up",
    "started": 1793490040.9290624,
    "started_at": "2026-10-31T18:40:40",
    "triggers": [
@@ -1750,8 +1946,75 @@
    "session_id": "d791ae8f-cc36-455f-85ae-d9cef9894090",
    "provider": "claude",
    "model": "opus",
-   "home": "/home/david/.claude-work"
+   "home": "/home/david/.claude-work",
+   "ended": 1793497248.656327,
+   "ended_at": "2026-10-31T20:40:48",
+   "summary": "pasó 120 min sin escribir result.json; detenido",
+   "question": "",
+   "report": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/RUN.solver/20261031-184040-40be/REPORT.md"
+  },
+  {
+   "id": "20261031-214605-7850",
+   "name": "bit-pictures-REQ-021-solver",
+   "status": "gave_up",
+   "started": 1793501165.0730293,
+   "started_at": "2026-10-31T21:46:05",
+   "triggers": [
+    "pictures:REQ-021:r32:resolution:90898cae7193d81bf7697d1093de908e",
+    "pictures:REQ-021:r32:resolution:9c0b9c087c45e0f248214a095fa6d046",
+    "pictures:REQ-021:r32:resolution:a3ffeff101bfacf8b2888bfd3d06bf5a",
+    "pictures:REQ-021:r32:resolution:a9cba58a77795a21db0078a39fb0c06e"
+   ],
+   "queued": [
+    "pictures:REQ-021:r32:resolution:2a49ab6d27d4b6eddfe3fead986233c9",
+    "owner_rejected:SP-4:v2:e744aa8f4d4f:641dc98fa4f8"
+   ],
+   "restarts": 0,
+   "dir": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/RUN.solver/20261031-214605-7850",
+   "cwd": "/home/david/.local/share/bitacora-solver/pictures/20261031-214605-7850",
+   "task": "CG-4",
+   "kind": "resolution",
+   "reason": "the conflict in src/components/cuentas/MenuCuenta.tsx waits for a recorded resolution since 2026-10-31T18:17:29; no retry can settle it",
+   "session_id": "a59011bf-4be9-43ca-ba32-6d21b3a2c6cb",
+   "provider": "claude",
+   "model": "sonnet",
+   "home": "/home/david/.claude-work",
+   "superseded": "pictures:REQ-021:r35",
+   "ended": 1793508370.7293882,
+   "ended_at": "2026-10-31T23:46:10",
+   "summary": "pasó 120 min sin escribir result.json; detenido",
+   "question": "",
+   "report": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/RUN.solver/20261031-214605-7850/REPORT.md"
+  },
+  {
+   "id": "20261031-234610-5a46",
+   "name": "bit-pictures-REQ-021-solver",
+   "status": "superseded",
+   "started": 1793508370.914811,
+   "started_at": "2026-10-31T23:46:10",
+   "triggers": [
+    "owner_rejected:SP-4:v2:e744aa8f4d4f:641dc98fa4f8"
+   ],
+   "queued": [],
+   "restarts": 0,
+   "dir": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/RUN.solver/20261031-234610-5a46",
+   "cwd": "/home/david/.local/share/bitacora-solver/pictures/20261031-234610-5a46",
+   "task": "SP-4",
+   "kind": "owner_rejected",
+   "reason": "the owner tried SP-4 version 2 (commit e744aa8f4d) and rejected it with 2 image(s) (paths in its brief): «No se ve una opcion dodne recuperar los proyectos, l toast que me avisa lo de exportacion no se ve nada bien y los modales son horribles»",
+   "session_id": "e507ec1b-5378-4869-99d6-a84babbc800b",
+   "provider": "claude",
+   "model": "sonnet",
+   "home": "/home/david/.claude-work",
+   "resolved": {
+    "at": 1793508721.1688015,
+    "what": "SP-4 ya se resolvió (ya no está abierto)"
+   },
+   "ended": 1793509032.3420608,
+   "ended_at": "2026-10-31T23:57:12",
+   "summary": "SP-4 ya se resolvió (ya no está abierto)",
+   "question": "",
+   "report": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/RUN.solver/20261031-234610-5a46/REPORT.md"
   }
- ],
- "active": "20261031-184040-40be"
+ ]
 }

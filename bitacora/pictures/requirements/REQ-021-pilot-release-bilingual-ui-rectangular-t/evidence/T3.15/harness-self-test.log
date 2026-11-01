@@ -1,0 +1,3 @@
+Wrote blocked self-test evidence for 53 element types: /home/david/dev/metodologia/bitacora/.state/durable/attempts-root/ws/pictures/worktrees/pictures-REQ-021-r35-T3-15-a101-5143cf59-fccecff3aa4e1f58/.evidence/REQ-021/SP-3.integration.json
+Wrote blocked self-test evidence for 53 element types: /home/david/dev/metodologia/bitacora/.state/durable/attempts-root/ws/pictures/worktrees/pictures-REQ-021-r35-T3-15-a101-5143cf59-fccecff3aa4e1f58/.evidence/REQ-021/CG-2.integration.json
+test-harness-taller-esenciales: ok (missing prerequisites block; comparison diagnostics; evidence schemas)

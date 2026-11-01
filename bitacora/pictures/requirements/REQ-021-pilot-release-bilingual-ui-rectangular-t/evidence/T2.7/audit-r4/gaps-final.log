@@ -1,0 +1,12 @@
+Role-change state at 360: selected=master_designer saveEnabled=true
+Role-change state at 768: selected=designer saveEnabled=true
+Role-change state at 1280: selected=master_designer saveEnabled=true
+locator.click: Error: strict mode violation: getByRole('button', { name: 'Cambiar contraseña', exact: true }) resolved to 2 elements:
+    1) <button type="button" class="min-h-11 rounded-xl border border-borde px-4 text-sm font-medium text-texto hover:border-acento hover:text-acento focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-acento max-[639px]:w-full">Cambiar contraseña</button> aka getByRole('definition').filter({ hasText: 'Cambiar contraseña' }).getByRole('button')
+    2) <button type="submit" class="ui-button-primary min-h-11 min-w-40 disabled:cursor-wait">Cambiar contraseña</button> aka getByLabel('Contraseña', { exact: true }).getByRole('button', { name: 'Cambiar contraseña' })
+
+Call log:
+[2m  - waiting for getByRole('button', { name: 'Cambiar contraseña', exact: true })[22m
+
+    at main (/home/david/dev/metodologia/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T2.7/audit-r4/capture-rerun.ts:148:907)
+
