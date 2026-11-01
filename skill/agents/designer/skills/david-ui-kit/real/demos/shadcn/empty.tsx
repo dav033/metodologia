@@ -1,6 +1,6 @@
 import { CalendarX, PackageSearch, Plus } from "lucide-react";
-import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
-import { Button } from "@/components/ui/button";
+import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@bitacora/ui/components/ui/empty";
+import { Button } from "@bitacora/ui/components/ui/button";
 import { Example } from "@kit/demo";
 
 export default function EmptyDemo() {

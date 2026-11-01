@@ -1,6 +1,6 @@
 import "@fontsource-variable/fraunces/full.css";
 import * as React from "react";
-import VariableProximity from "@/components/react-bits/VariableProximity";
+import VariableProximity from "@bitacora/ui/components/react-bits/VariableProximity";
 import { Effect } from "@kit/effect";
 import { Example } from "@kit/demo";
 

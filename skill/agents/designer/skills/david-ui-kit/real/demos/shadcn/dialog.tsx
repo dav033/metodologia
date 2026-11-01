@@ -1,7 +1,7 @@
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Field, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
+import { Button } from "@bitacora/ui/components/ui/button";
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@bitacora/ui/components/ui/dialog";
+import { Field, FieldLabel } from "@bitacora/ui/components/ui/field";
+import { Input } from "@bitacora/ui/components/ui/input";
 import { Example } from "@kit/demo";
 
 export default function DialogDemo() {

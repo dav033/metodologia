@@ -1,5 +1,5 @@
-import { Balance } from "@/components/bencho/pull/Balance";
-import "@/components/bencho/pull/Balance.css";
+import { Balance } from "@bitacora/ui/components/bencho/pull/Balance";
+import "@bitacora/ui/components/bencho/pull/Balance.css";
 import { Example } from "@kit/demo";
 
 export default function PullToRefreshDemo() {

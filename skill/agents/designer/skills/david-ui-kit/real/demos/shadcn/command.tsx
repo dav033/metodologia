@@ -1,7 +1,7 @@
 import * as React from "react";
 import { Calendar, Package, Plus, Search, Settings, Users } from "lucide-react";
-import { Command, CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator, CommandShortcut } from "@/components/ui/command";
-import { Button } from "@/components/ui/button";
+import { Command, CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator, CommandShortcut } from "@bitacora/ui/components/ui/command";
+import { Button } from "@bitacora/ui/components/ui/button";
 import { Example } from "@kit/demo";
 
 function Items() {

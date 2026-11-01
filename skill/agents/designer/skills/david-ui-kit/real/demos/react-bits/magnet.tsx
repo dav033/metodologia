@@ -1,4 +1,4 @@
-import Magnet from "@/components/react-bits/Magnet";
+import Magnet from "@bitacora/ui/components/react-bits/Magnet";
 import { Example, Row } from "@kit/demo";
 
 export default function MagnetDemo() {

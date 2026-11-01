@@ -1,5 +1,5 @@
 import * as React from "react";
-import ScrollVelocity from "@/components/react-bits/ScrollVelocity";
+import ScrollVelocity from "@bitacora/ui/components/react-bits/ScrollVelocity";
 import { Effect } from "@kit/effect";
 import { Example } from "@kit/demo";
 

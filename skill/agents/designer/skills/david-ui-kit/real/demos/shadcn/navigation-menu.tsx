@@ -1,5 +1,5 @@
 import { Link as LinkIcon } from "lucide-react";
-import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuPositioner, NavigationMenuTrigger } from "@/components/ui/navigation-menu";
+import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuPositioner, NavigationMenuTrigger } from "@bitacora/ui/components/ui/navigation-menu";
 import { Example } from "@kit/demo";
 
 const catalog = [

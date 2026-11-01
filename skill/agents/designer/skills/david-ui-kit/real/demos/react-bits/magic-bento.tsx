@@ -1,5 +1,5 @@
 import * as React from "react";
-import MagicBento from "@/components/react-bits/MagicBento";
+import MagicBento from "@bitacora/ui/components/react-bits/MagicBento";
 import { Effect } from "@kit/effect";
 import { Example } from "@kit/demo";
 

@@ -1,12 +1,17 @@
-// Builds self-contained HTML from TSX that uses the REAL installed libraries (kit workspace, outside git).
+// Builds HTML from TSX that uses the component pool `@bitacora/ui` (skill/ui, D-280) with the kit workspace's toolchain.
 //
-//   node build.mjs mockup <entry.tsx> --out <file.html> [--ws <workspace>] [--title <t>]
+//   node build.mjs mockup <entry.tsx> --out <file.html> [--ws <workspace>] [--title <t>] [--project <p>]
+//        self-contained export: one <style> and one <script>, the project's theme and mockup fonts inlined
+//   node build.mjs mockup <entry.tsx> --live --registry <pool dir> --project <p> --out <file.html>
+//        live page: links the built pool (/ui/<digest>/bitacora-ui.{css,js}) and /ui/theme/<p>.css; only the entry's
+//        own code and utilities are inlined, every pool import is read from the pool at view time
+//   node build.mjs pool --out <dir> [--version <v>]       # the pool registry: bitacora-ui.js/.css/.json
 //   node build.mjs gallery --out <dir> [--ws <workspace>] [--only id,id]
 //   node build.mjs check <file.tsx> [...]          # compile only (no output): for demo authors
 //
 // Everything runs from the workspace's node_modules (esbuild, Tailwind 4) with no network and no temporary files: the
-// bundle and the CSS are produced in memory and written only to --out. `@/…` resolves to the workspace's src (shadcn
-// components, React Bits, Bencho), `@kit/…` to this folder's runtime. Output HTML carries one <style> and one <script>.
+// bundle and the CSS are produced in memory and written only to --out. `@bitacora/ui/…` and the legacy `@/…` resolve
+// to the package's src (skill/ui/src), `@kit/…` to this folder's runtime.
 import fs from "node:fs";
 import path from "node:path";
 import { createRequire } from "node:module";
@@ -19,6 +24,12 @@ const WS = path.resolve(flag("--ws", process.env.BITACORA_KIT_WORKSPACE || path.
 const OUT = flag("--out", "");
 const TITLE = flag("--title", "");
 const ONLY = (flag("--only", "") || "").split(",").filter(Boolean);
+const REGISTRY = flag("--registry", "");
+const PROJECT = flag("--project", "");
+const VERSION = flag("--version", "");
+const LIVE = (() => { const i = args.indexOf("--live"); return i >= 0 ? (args.splice(i, 1), true) : false; })();
+const UI = path.resolve(flag("--ui", process.env.BITACORA_UI_ROOT || path.resolve(HERE, "../../../../../ui")));   // the package (skill/ui)
+const UI_SRC = path.join(UI, "src");
 const [mode, ...rest] = args;
 
 function die(msg, code = 2) { console.error(`BUILD FAILED: ${msg}`); process.exit(code); }
@@ -29,7 +40,17 @@ const esbuild = await load("esbuild");
 const tw = await load("@tailwindcss/node");
 const { Scanner } = await load("@tailwindcss/oxide");
 
-const CSS_INPUT = `@import "tailwindcss";\n@import "tw-animate-css";\n@import "shadcn/tailwind.css";\n@import "${path.join(HERE, "theme.css")}";\n@import "${path.join(HERE, "bencho-theme.css")}";\n@import "${path.join(HERE, "overrides.css")}";\n`;
+const CSS_STRUCTURE = `@import "tailwindcss";\n@import "${path.join(UI_SRC, "styles.css")}";\n`;
+const CSS_INPUT = CSS_STRUCTURE + `@import "${path.join(UI_SRC, "theme.css")}";\n`;
+if (PROJECT && !/^[a-z0-9][a-z0-9_-]{0,63}$/.test(PROJECT)) die(`invalid --project ${PROJECT}`);
+/** The project's theme for a self-contained export: its file and the fontsource packages it names for mockups. */
+function projectTheme() {
+  const file = PROJECT ? path.join(UI, "themes", `${PROJECT}.css`) : "";
+  if (!file || !fs.existsSync(file)) return "";
+  const fonts = (/@mockup-fonts:\s*([^*]+)\*\//.exec(fs.readFileSync(file, "utf8")) || [, ""])[1]
+    .split(",").map((x) => x.trim()).filter((x) => /^@fontsource(-variable)?\/[a-z0-9-]+$/.test(x));
+  return fonts.map((f) => `@import "${f}";\n`).join("") + `@import "${file}";\n`;
+}
 const FONT_EXT = /\.(woff2?|ttf|otf)$/i;
 
 function esbuildOptions(extra) {
@@ -37,7 +58,7 @@ function esbuildOptions(extra) {
     bundle: true, write: false, format: "iife", platform: "browser", target: "es2020", minify: true, metafile: true,
     jsx: "automatic", legalComments: "none", logLevel: "silent", absWorkingDir: WS, outdir: path.join(WS, ".virtual-out"),
     nodePaths: [path.join(WS, "node_modules")],
-    alias: { "@": path.join(WS, "src"), "@kit": path.join(HERE, "runtime") },
+    alias: { "@bitacora/ui": UI_SRC, "@": UI_SRC, "@kit": path.join(HERE, "runtime") },
     define: { "process.env.NODE_ENV": '"production"' },
     loader: { ".png": "dataurl", ".jpg": "dataurl", ".jpeg": "dataurl", ".webp": "dataurl", ".gif": "dataurl", ".svg": "dataurl",
               ".woff": "dataurl", ".woff2": "dataurl", ".ttf": "dataurl", ".glsl": "text", ".css": "css" },
@@ -46,8 +67,8 @@ function esbuildOptions(extra) {
 }
 
 /** Tailwind CSS for exactly the files in the bundle (+ any CSS they import), fonts inlined as data: URIs. */
-async function cssFor(files, importedCss) {
-  const compiler = await tw.compile(CSS_INPUT + importedCss.map((f) => `@import "${f}";\n`).join(""), {
+async function cssFor(files, importedCss, input = CSS_INPUT) {
+  const compiler = await tw.compile(input + importedCss.map((f) => `@import "${f}";\n`).join(""), {
     base: WS, onDependency: () => {}, shouldRewriteUrls: true,
   });
   const scanner = new Scanner({ sources: [] });
@@ -84,9 +105,9 @@ function page({ title, css, js, kitAttrs = "" }) {
     `<script data-kit="real">${safeJs(js)}</script></body></html>\n`;
 }
 
-async function bundle(entryCode, resolveDir, name, entryFile) {
-  const result = await esbuild.build(esbuildOptions(entryFile ? { entryPoints: [entryFile] }
-    : { stdin: { contents: entryCode, resolveDir, loader: "tsx", sourcefile: name } }));
+async function bundle(entryCode, resolveDir, name, entryFile, plugins = [], banner = "") {
+  const result = await esbuild.build(esbuildOptions({ plugins, ...(banner ? { banner: { js: banner } } : {}), ...(entryFile ? { entryPoints: [entryFile] }
+    : { stdin: { contents: entryCode, resolveDir, loader: "tsx", sourcefile: name } }) }));
   const js = result.outputFiles.find((f) => f.path.endsWith(".js"));
   const extraCss = "";   // CSS a component imports goes through Tailwind (cssFor), not esbuild's own CSS output
   return { js: js ? js.text : "", extraCss, meta: result.metafile };
@@ -100,17 +121,103 @@ async function buildMockup(entry, out) {
   if (!entry || !out) die("usage: node build.mjs mockup <entry.tsx> --out <file.html>");
   const abs = path.resolve(entry);
   if (!fs.existsSync(abs)) die(`${entry} does not exist`);
+  if (LIVE) return buildLive(abs, out);
   let b;
   try {
     b = await bundle("", "", "", abs);
   } catch (e) { die(fmtErrors(e), 1); }
   if (!/mountMockup/.test(fs.readFileSync(abs, "utf8"))) die(`${entry} never calls mountMockup(App, {...}) from "@kit/mockup"`, 1);
   const { files, css } = inputsOf(b.meta);
-  const sheet = (await cssFor(files, css)) + "\n" + b.extraCss;
+  const sheet = (await cssFor(files, css, CSS_INPUT + projectTheme())) + "\n" + b.extraCss;
   const html = page({ title: TITLE || path.basename(out, ".html"), css: sheet, js: b.js });
   fs.mkdirSync(path.dirname(path.resolve(out)), { recursive: true });
   fs.writeFileSync(out, html);
   console.log(`built ${out} (${Math.round(html.length / 1024)} KB, ${files.length} source files, offline)`);
+}
+
+// ------------------------------------------------------------------------------------------------ pool registry
+const walk = (d) => fs.existsSync(d) ? fs.readdirSync(d, { withFileTypes: true }).flatMap((x) => x.isDirectory() ? walk(path.join(d, x.name)) : [path.join(d, x.name)]) : [];
+const CODE = /\.(tsx?|jsx?|mjs)$/;
+/** Every module a mockup may import from the pool, by the key mockups use: the package's own modules
+ *  (`@bitacora/ui/<path>`), the kit runtime (`@kit/<name>`) and every bare package the pool imports (one React, one
+ *  Base UI, one Motion for the pool and the mockup alike). */
+// packages that hold React context or module state: one copy for the pool and every mockup. Stateless libraries
+// (icons, charts, class helpers) stay inside whatever imports them, so the registry carries only what it must.
+const SHARED = /^(react|react-dom|@base-ui\/react|@animate-ui\/react|motion|framer-motion|sonner|next-themes|gsap|@gsap\/react)(\/[\w./-]+)?$/;
+function poolModules() {
+  const own = walk(UI_SRC).filter((f) => CODE.test(f) && !f.endsWith(".d.ts"))
+    .map((f) => ({ key: "@bitacora/ui/" + path.relative(UI_SRC, f).replace(/\\/g, "/").replace(CODE, ""), file: f }));
+  const runtime = walk(path.join(HERE, "runtime")).filter((f) => CODE.test(f))
+    .map((f) => ({ key: "@kit/" + path.basename(f).replace(CODE, ""), file: f }));
+  const bare = new Set(["react", "react-dom", "react-dom/client", "react/jsx-runtime"]);
+  for (const { file } of [...own, ...runtime]) {
+    for (const m of fs.readFileSync(file, "utf8").matchAll(/(?:from\s+|import\s+|import\(\s*)["']([^"']+)["']/g)) {
+      const spec = m[1];
+      if (SHARED.test(spec)) bare.add(spec);
+    }
+  }
+  return [...own, ...runtime, ...[...bare].sort().map((key) => ({ key, file: key }))];
+}
+
+async function buildPool(out) {
+  if (!out) die("usage: node build.mjs pool --out <dir>");
+  const mods = poolModules();
+  const code = mods.map((m, i) => `import * as m${i} from ${JSON.stringify(m.file)};`).join("\n") +
+    "\nconst R = (window.__bitacoraUI = window.__bitacoraUI || {});\n" +
+    mods.map((m, i) => `R[${JSON.stringify(m.key)}] = Object.assign({ __esModule: true }, m${i});`).join("\n") + "\n";
+  let b;
+  // a pool module may read process.env beyond NODE_ENV (next/navigation does): give the browser an empty one
+  const shim = 'var process = globalThis.process || (globalThis.process = { env: { NODE_ENV: "production" } });';
+  try { b = await bundle(code, UI_SRC, "bitacora-ui.entry.tsx", undefined, [], shim); } catch (e) { die(fmtErrors(e), 1); }
+  const { files, css } = inputsOf(b.meta);
+  const sheet = await cssFor([...new Set([...files, ...walk(UI_SRC).filter((f) => CODE.test(f)), ...walk(path.join(HERE, "runtime"))])], css);
+  fs.mkdirSync(out, { recursive: true });
+  fs.writeFileSync(path.join(out, "bitacora-ui.js"), b.js);
+  fs.writeFileSync(path.join(out, "bitacora-ui.css"), sheet);
+  const pkg = JSON.parse(fs.readFileSync(path.join(UI, "package.json"), "utf8"));
+  fs.writeFileSync(path.join(out, "bitacora-ui.json"), JSON.stringify({
+    name: pkg.name, version: VERSION || pkg.version, built: new Date().toISOString(), keys: mods.map((m) => m.key),
+    kb: { js: Math.round(b.js.length / 1024), css: Math.round(sheet.length / 1024) } }, null, 1));
+  console.log(`pool ${VERSION || pkg.version}: ${mods.length} modules, ${Math.round(b.js.length / 1024)} KB js, ${Math.round(sheet.length / 1024)} KB css → ${out}`);
+}
+
+/** esbuild plugin: an import the pool registry holds is read from `window.__bitacoraUI` instead of bundled. */
+function registryPlugin(keys) {
+  const keyOf = (spec) => {
+    if (spec.startsWith("@bitacora/ui/")) return spec.replace(CODE, "");
+    if (spec.startsWith("@/")) return "@bitacora/ui/" + spec.slice(2).replace(CODE, "");
+    return spec;
+  };
+  return { name: "bitacora-ui-registry", setup(build) {
+    build.onResolve({ filter: /^[^.\/]/ }, (args) => {
+      const key = keyOf(args.path);
+      return keys.has(key) ? { path: key, namespace: "bitacora-ui" } : undefined;
+    });
+    build.onLoad({ filter: /.*/, namespace: "bitacora-ui" }, (args) => ({ loader: "js", contents:
+      `var m = window.__bitacoraUI && window.__bitacoraUI[${JSON.stringify(args.path)}];\n` +
+      `if (!m) throw new Error("@bitacora/ui: the pool has no module " + ${JSON.stringify(JSON.stringify(args.path))});\nmodule.exports = m;\n` }));
+  } };
+}
+
+async function buildLive(abs, out) {
+  if (!REGISTRY || !fs.existsSync(path.join(REGISTRY, "bitacora-ui.json"))) die("--live needs --registry <built pool dir>");
+  const reg = JSON.parse(fs.readFileSync(path.join(REGISTRY, "bitacora-ui.json"), "utf8"));
+  const digest = path.basename(path.resolve(REGISTRY));
+  let b;
+  try { b = await bundle("", "", "", abs, [registryPlugin(new Set(reg.keys))]); } catch (e) { die(fmtErrors(e), 1); }
+  if (!/mountMockup/.test(fs.readFileSync(abs, "utf8"))) die(`${abs} never calls mountMockup(App, {...}) from "@kit/mockup"`, 1);
+  const { files, css } = inputsOf(b.meta);
+  const sheet = files.length || css.length ? await cssFor(files, css, CSS_STRUCTURE) : "";
+  const title = (TITLE || path.basename(out, ".html")).replace(/[<&"]/g, "");
+  const theme = PROJECT ? `<link rel="stylesheet" href="/ui/theme/${PROJECT}.css" data-ui-theme>` : "";
+  const html = `<!doctype html>\n<html lang="es" data-kit="real" data-ui-live="${reg.version}" data-theme="light"><head><meta charset="utf-8">` +
+    `<meta name="viewport" content="width=device-width, initial-scale=1"><title>${title}</title>` +
+    `<link rel="stylesheet" href="/ui/${digest}/bitacora-ui.css" data-ui-pool><style data-kit="mockup">${safeCss(sheet)}</style>${theme}` +
+    `</head><body><div id="root"></div><script src="/ui/${digest}/bitacora-ui.js" data-ui-pool></script>` +
+    `<script data-kit="mockup">${safeJs(b.js)}</script></body></html>\n`;
+  fs.mkdirSync(path.dirname(path.resolve(out)), { recursive: true });
+  fs.writeFileSync(out, html);
+  console.log(`built live ${out} (${Math.round(html.length / 1024)} KB, pool ${reg.version})`);
 }
 
 /** Every gallery demo: `demos/<source>/<id>.tsx` (default export) → `<out>/<id>.js`; one shared `gallery.css`. */
@@ -148,8 +255,7 @@ async function buildGallery(out) {
     } catch (e) { status[`ref-${id}`] = { ok: false, source: "reference", error: String(e).slice(0, 600) }; }
   }
   if (ONLY.length) {                     // a partial build still needs every demo's classes in the shared sheet
-    const walk = (d) => fs.readdirSync(d, { withFileTypes: true }).flatMap((x) => x.isDirectory() ? walk(path.join(d, x.name)) : /\.(tsx?|jsx?)$/.test(x.name) ? [path.join(d, x.name)] : []);
-    [...walk(path.join(HERE, "demos")), ...walk(path.join(WS, "src"))].forEach((f) => allFiles.add(f));
+    [...walk(path.join(HERE, "demos")), ...walk(UI_SRC)].filter((f) => CODE.test(f)).forEach((f) => allFiles.add(f));
   }
   if (allFiles.size) fs.writeFileSync(path.join(out, "gallery.css"), (await cssFor([...allFiles, ...fs.readdirSync(path.join(HERE, "runtime")).map((f) => path.join(HERE, "runtime", f))], [...allCss])) + "\n" + extra);
   const prev = ONLY.length && fs.existsSync(path.join(out, "status.json")) ? JSON.parse(fs.readFileSync(path.join(out, "status.json"), "utf8")).entries : {};
@@ -172,4 +278,5 @@ async function check(files) {
 if (mode === "mockup") await buildMockup(rest[0], OUT);
 else if (mode === "gallery") process.exit(await buildGallery(OUT));
 else if (mode === "check") process.exit(await check(rest));
+else if (mode === "pool") await buildPool(OUT);
 else die("usage: node build.mjs mockup|gallery|check …");

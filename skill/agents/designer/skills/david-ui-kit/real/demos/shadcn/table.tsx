@@ -1,5 +1,5 @@
-import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCaption, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@bitacora/ui/components/ui/badge";
+import { Table, TableBody, TableCaption, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@bitacora/ui/components/ui/table";
 import { Example } from "@kit/demo";
 
 const orders = [

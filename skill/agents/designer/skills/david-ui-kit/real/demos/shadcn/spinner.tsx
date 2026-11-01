@@ -1,5 +1,5 @@
-import { Spinner } from "@/components/ui/spinner";
-import { Button } from "@/components/ui/button";
+import { Spinner } from "@bitacora/ui/components/ui/spinner";
+import { Button } from "@bitacora/ui/components/ui/button";
 import { Example, Row } from "@kit/demo";
 
 export default function SpinnerDemo() {

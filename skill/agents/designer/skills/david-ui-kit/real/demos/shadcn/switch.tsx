@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Switch } from "@/components/ui/switch";
+import { Switch } from "@bitacora/ui/components/ui/switch";
 import { Example, Row } from "@kit/demo";
 
 export default function SwitchDemo() {

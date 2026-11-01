@@ -1,4 +1,4 @@
-import Silk from "@/components/react-bits/Silk";
+import Silk from "@bitacora/ui/components/react-bits/Silk";
 import { Effect } from "@kit/effect";
 import { Example } from "@kit/demo";
 

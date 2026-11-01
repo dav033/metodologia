@@ -1,6 +1,6 @@
 import * as React from "react";
-import { Slider } from "@/components/ui/slider";
-import { Label } from "@/components/ui/label";
+import { Slider } from "@bitacora/ui/components/ui/slider";
+import { Label } from "@bitacora/ui/components/ui/label";
 import { Example } from "@kit/demo";
 
 const cop = (n: number) => n.toLocaleString("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 });

@@ -1,0 +1,122 @@
+/* @bitacora/ui structure (D-280): what every consumer of the pool loads after `@import "tailwindcss";` —
+   the animation utilities shadcn needs (vendored tw-animate-css and shadcn/tailwind.css, MIT), the dark variant, the
+   role → Tailwind colour mapping, motion profiles, the AA corrections and Bencho's token mapping. No colour VALUE
+   lives here: those are the theme's (`theme.css` default, `themes/<project>.css` per project).
+   A project: `@import "tailwindcss"; @import "@bitacora/ui/styles.css"; @import "@bitacora/ui/themes/<project>.css";`
+   (or its own globals defining the same roles after this file). */
+@import "./vendor/tw-animate.css";
+@import "./vendor/shadcn-tailwind.css";
+@source "./";
+@custom-variant dark (&:is(.dark *, [data-theme="dark"] *));
+
+/* motion profiles: natural is the library default, mockups start expressive (D-135) */
+:root, [data-motion="natural"] {
+  --duration-fast: 140ms; --duration-normal: 220ms; --duration-slow: 320ms;
+  --ease-out-soft: cubic-bezier(.2, .8, .2, 1); --ease-emphasis: cubic-bezier(.2, .8, .2, 1);
+}
+[data-motion="subtle"] { --duration-fast: 90ms; --duration-normal: 140ms; --duration-slow: 200ms; }
+[data-motion="expressive"] {
+  --duration-fast: 200ms; --duration-normal: 340ms; --duration-slow: 520ms; --ease-emphasis: cubic-bezier(.34, 1.4, .64, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  :root, [data-motion] { --duration-fast: 1ms; --duration-normal: 1ms; --duration-slow: 1ms; }
+  *, ::before, ::after { animation-duration: 1ms !important; animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important; scroll-behavior: auto !important; }
+}
+[data-reduced-motion] { --duration-fast: 1ms; --duration-normal: 1ms; --duration-slow: 1ms; }
+[data-reduced-motion] *, [data-reduced-motion] ::before, [data-reduced-motion] ::after {
+  animation-duration: 1ms !important; animation-iteration-count: 1 !important; transition-duration: 1ms !important;
+}
+
+@theme inline {
+  --color-background: var(--background); --color-foreground: var(--foreground);
+  --color-card: var(--card); --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover); --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary); --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary); --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted); --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent); --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive); --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border); --color-input: var(--input); --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1); --color-chart-2: var(--chart-2); --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4); --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar); --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary); --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent); --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border); --color-sidebar-ring: var(--sidebar-ring);
+  --color-primary-hover: var(--primary-hover); --color-primary-soft: var(--primary-soft);
+  --color-destructive-hover: var(--destructive-hover); --color-destructive-soft: var(--destructive-soft);
+  --color-success: var(--success); --color-success-soft: var(--success-soft);
+  --color-warning: var(--warning); --color-warning-soft: var(--warning-soft);
+  --color-info: var(--info); --color-info-soft: var(--info-soft); --color-overlay: var(--overlay);
+  --font-sans: var(--ui-font-sans); --font-heading: var(--ui-font-heading, var(--ui-font-sans));
+  --font-mono: var(--ui-font-mono);
+  --radius-sm: calc(var(--radius) * 0.6); --radius-md: calc(var(--radius) * 0.8); --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4); --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2); --radius-4xl: calc(var(--radius) * 2.6);
+  --default-transition-duration: var(--duration-normal);
+  --default-transition-timing-function: var(--ease-out-soft);
+}
+
+@layer base {
+  * { @apply border-border outline-ring; }
+  html { @apply font-sans; }
+  body { @apply bg-background text-foreground; margin: 0; }
+}
+
+/* AA corrections on top of the installed shadcn/ui (base-nova) defaults, found by kit/audit_mockup.py on the reference
+   mockups. Keyed by shadcn's data-slot attributes, so a reinstall keeps them. Every mockup and the gallery load this
+   after theme.css. Remove a rule only when the audit passes without it. */
+
+/* focus: shadcn draws a 3 px ring at 50 % alpha (under 3:1 on light surfaces) and an invalid field keeps its red halo on
+   focus (no visible change); one solid ring colour outline on every keyboard stop fixes both */
+:where(a[href], button, input, textarea, select, summary, [tabindex]:not([tabindex="-1"]), [role="combobox"], [role="tab"],
+  [role="checkbox"], [role="switch"], [role="radio"], [role="menuitem"], [role="option"], [role="slider"]):focus-visible {
+  outline: 2px solid var(--ring) !important; outline-offset: 2px;
+}
+
+/* dark fields: shadcn fills controls with --input at 30 % (a light wash that lowers text contrast) and draws the invalid
+   edge at 50 %; use the surface colour and the full destructive edge */
+:is(.dark, [data-theme="dark"]) :is([data-slot="input"], [data-slot="textarea"], [data-slot="select-trigger"],
+  [data-slot="input-group"], [data-slot="combobox-input"]) {
+  background-color: var(--background);
+}
+:is([data-slot="input"], [data-slot="textarea"], [data-slot="select-trigger"], [data-slot="input-group"],
+  [data-slot="checkbox"], [data-slot="radio-group-item"])[aria-invalid="true"] {
+  border-color: var(--destructive) !important;
+}
+
+/* tables: shadcn cells pad 8 px, which puts the first column on the card's edge; 16 px at the table's outer edges */
+[data-slot="table"] :is(th, td):first-child { padding-inline-start: 1rem; }
+[data-slot="table"] :is(th, td):last-child { padding-inline-end: 1rem; }
+
+/* destructive soft fills (badge, button variant=destructive): shadcn mixes 10–20 % red into the surface, under 4.5:1 for
+   the red label in dark; use the checked soft role pair instead (the variant has no data attribute: its text class marks it) */
+:is([data-slot="badge"], [data-slot="button"], [data-slot="alert-dialog-action"], [data-slot="alert-dialog-cancel"]).text-destructive {
+  background-color: var(--destructive-soft); color: var(--destructive);
+}
+
+/* Bencho blocks read their own custom properties (blocks/tokens.css upstream). Bencho says «map these to your own theme
+   rather than keeping two»: this maps them onto the david-ui roles, scoped to `.bencho` because Bencho's `--card` means
+   a quiet surface, not shadcn's card. Wrap every Bencho block in <div className="bencho">. The *-rgb triplets are the
+   Catppuccin values of the matching roles. */
+.bencho {
+  --font-ui: var(--font-sans);
+  --bg: var(--background); --board: var(--card); --card: var(--muted); --surface: var(--muted);
+  --surface-2: var(--secondary); --surface-3: var(--accent);
+  --ink: var(--foreground); --ink-2: var(--foreground); --ink-3: var(--muted-foreground); --ink-4: var(--muted-foreground);
+  --ink-5: var(--input);
+  --slab: var(--foreground); --on-slab: var(--background); --slab-dark: var(--foreground);
+  --fill-slab: var(--card); --fill-on: var(--foreground);
+  --pane: var(--card); --pick: var(--primary); --signal: var(--primary); --focus: var(--ring);
+  --ok: var(--success); --ember: var(--destructive); --wash: 0.06;
+  --ink-rgb: 76, 79, 105; --on-ink: #ffffff; --on-ink-rgb: 255, 255, 255; --fill-on-rgb: 76, 79, 105;
+  --pane-edge: rgb(76 79 105 / .22); --pane-thumb: rgb(76 79 105 / .1); --inlay: rgb(255 255 255 / .55);
+  --inlay-hi: rgb(76 79 105 / .1); --elev-rgb: 255, 255, 255; --glass-rgb: 255, 255, 255; --shadow-rgb: 76, 79, 105;
+  color: var(--foreground);
+}
+.dark .bencho, [data-theme="dark"] .bencho {
+  --ink-rgb: 205, 214, 244; --on-ink: #11111b; --on-ink-rgb: 17, 17, 27; --fill-on-rgb: 205, 214, 244;
+  --pane-edge: rgb(205 214 244 / .2); --pane-thumb: rgb(205 214 244 / .1); --inlay: rgb(255 255 255 / .08);
+  --inlay-hi: rgb(205 214 244 / .1); --elev-rgb: 38, 38, 55; --glass-rgb: 49, 50, 68; --shadow-rgb: 0, 0, 0; --wash: 0.09;
+}

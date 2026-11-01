@@ -1,5 +1,5 @@
 import "@fontsource-variable/bricolage-grotesque/index.css";
-import TextPressure from "@/components/react-bits/TextPressure";
+import TextPressure from "@bitacora/ui/components/react-bits/TextPressure";
 import { Effect } from "@kit/effect";
 import { Example } from "@kit/demo";
 

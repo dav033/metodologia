@@ -1,6 +1,6 @@
 import { Info, Printer, Trash2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Button } from "@bitacora/ui/components/ui/button";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@bitacora/ui/components/ui/tooltip";
 import { Example, Row } from "@kit/demo";
 
 export default function TooltipDemo() {

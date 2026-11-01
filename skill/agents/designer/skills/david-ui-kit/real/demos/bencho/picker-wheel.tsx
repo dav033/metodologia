@@ -1,5 +1,5 @@
-import { Picker } from "@/components/bencho/picker/Picker";
-import "@/components/bencho/picker/Picker.css";
+import { Picker } from "@bitacora/ui/components/bencho/picker/Picker";
+import "@bitacora/ui/components/bencho/picker/Picker.css";
 import { Example } from "@kit/demo";
 
 export default function PickerWheelDemo() {

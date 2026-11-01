@@ -1,5 +1,5 @@
-import { Button } from "@/components/ui/button";
-import { Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle, DrawerTrigger } from "@/components/ui/drawer";
+import { Button } from "@bitacora/ui/components/ui/button";
+import { Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle, DrawerTrigger } from "@bitacora/ui/components/ui/drawer";
 import { Example, Row } from "@kit/demo";
 
 function Body({ title }: { title: string }) {

@@ -2,11 +2,11 @@
 // everything inside the card left-aligned. Built only from installed shadcn/ui components + Motion.
 import { motion } from "motion/react";
 import { AlertCircle, Loader2 } from "lucide-react";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
+import { Alert, AlertDescription, AlertTitle } from "@bitacora/ui/components/ui/alert";
+import { Button } from "@bitacora/ui/components/ui/button";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@bitacora/ui/components/ui/card";
+import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@bitacora/ui/components/ui/field";
+import { Input } from "@bitacora/ui/components/ui/input";
 import { mountMockup, useMockup } from "@kit/mockup";
 import { useReveal } from "@kit/motion";
 

@@ -1,5 +1,5 @@
-import { Seek } from "@/components/bencho/seek/Seek";
-import "@/components/bencho/seek/Seek.css";
+import { Seek } from "@bitacora/ui/components/bencho/seek/Seek";
+import "@bitacora/ui/components/bencho/seek/Seek.css";
 import { Example } from "@kit/demo";
 
 export default function ExpandingSearchDemo() {

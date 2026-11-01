@@ -1,5 +1,5 @@
 import { BadgeCheck, Clock, Truck } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@bitacora/ui/components/ui/badge";
 import { Example, Row } from "@kit/demo";
 
 export default function BadgeDemo() {

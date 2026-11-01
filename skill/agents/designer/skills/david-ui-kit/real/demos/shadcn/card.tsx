@@ -1,7 +1,7 @@
 import { CalendarDays, MapPin } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@bitacora/ui/components/ui/badge";
+import { Button } from "@bitacora/ui/components/ui/button";
+import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@bitacora/ui/components/ui/card";
 import { Example, Row, picture } from "@kit/demo";
 
 export default function CardDemo() {

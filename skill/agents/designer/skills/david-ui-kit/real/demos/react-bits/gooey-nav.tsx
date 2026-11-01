@@ -1,5 +1,5 @@
 import * as React from "react";
-import GooeyNav from "@/components/react-bits/GooeyNav";
+import GooeyNav from "@bitacora/ui/components/react-bits/GooeyNav";
 import { Example } from "@kit/demo";
 import { useMotionProfile } from "@kit/motion";
 
