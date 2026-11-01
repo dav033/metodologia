@@ -153,6 +153,34 @@ class RetryCatchUp(unittest.TestCase):
         small = self.commit_on(wide, "src/menu.tsx", "a1\n", "m3 snapshot proj-REQ-900-r1-T2.57-a2-0000bbbb")
         self.assertNotEqual(self.line.continuation_base(RUN, self.task, small), wide)   # a real edit is still continued
 
+    def test_a_gutted_snapshot_is_never_integrated_into_a_line(self):
+        """pictures REQ-021 r35 SP-3: a201's gutted snapshot descended from the line tip, `_merge` fast-forwarded the
+        subplan line onto it and a301..a601 (and D-287's guard, which compares with the line) kept the shell."""
+        for index in range(60):
+            (self.repo / f"f{index}.txt").write_text(str(index))
+        git(self.repo, "add", "-A")
+        git(self.repo, "commit", "-q", "-m", "wide")
+        wide = git(self.repo, "rev-parse", "HEAD")
+        git(self.repo, "update-ref", integration.GitLineIntegrator.line_ref(RUN, "app"), wide)
+        sp_ref = integration.GitLineIntegrator.subplan_ref(RUN, "app", "SP-3")
+        git(self.repo, "update-ref", sp_ref, wide)
+        git(self.repo, "rm", "-q", "--", *[f"f{index}.txt" for index in range(5, 60)])
+        git(self.repo, "commit", "-q", "-m", "m3 snapshot proj-REQ-900-r1-T2.57-a1-0000aaaa")
+        gutted = git(self.repo, "rev-parse", "HEAD")
+        tip, conflict, _, _ = self.line.integrate(RUN, self.task, SimpleNamespace(snapshot_sha=gutted),
+                                                   lines=("SP-3",), home="SP-3")
+        self.assertIsNone(tip)
+        self.assertIn("under half", conflict)
+        self.assertEqual(git(self.repo, "rev-parse", sp_ref), wide)            # no line moved
+        self.assertEqual(git(self.repo, "rev-parse", self.line.line_ref(RUN, "app")), wide)
+        report = self.line.sync(RUN, "app", {"SP-3": [("T2.57", gutted)]})
+        self.assertIn("T2.57", report["SP-3"]["conflicts"])
+        self.assertEqual(git(self.repo, "rev-parse", sp_ref), wide)
+        small = self.commit_on(wide, "src/menu.tsx", "a1\n", "m3 snapshot proj-REQ-900-r1-T2.57-a2-0000bbbb")
+        tip, conflict, _, _ = self.line.integrate(RUN, self.task, SimpleNamespace(snapshot_sha=small),
+                                                   lines=("SP-3",), home="SP-3")
+        self.assertEqual((tip, conflict), (small, ""))                          # a real edit still integrates
+
     def test_a_snapshot_already_holding_the_line_is_kept(self):
         snapshot = self.commit_on(self.base, "src/menu.tsx", "a1\n", "m3 snapshot proj-REQ-900-r1-T2.57-a1-0000aaaa")
         self.assertEqual(self.line.continuation_base(RUN, self.task, snapshot), snapshot)
