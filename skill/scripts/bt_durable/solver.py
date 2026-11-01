@@ -137,9 +137,10 @@ class Solver:
     def __init__(self, root: Path, client, *, terminal=None, route_for: Callable | None = None,
                  notify: Callable | None = None, record: Callable | None = None, now: Callable[[], float] = time.time,
                  work: Path | None = None, state_dir: Path | None = None,
-                 integrating: Callable[[str], list] | None = None):
+                 integrating: Callable[[str], list] | None = None, weekly_cap: Callable | None = None):
         import bt_agent_terminal
         self.root, self.client, self.now = Path(root), client, now
+        self.weekly_cap = weekly_cap or _weekly_cap
         self.integrating = integrating or integrations
         self.state_dir = Path(state_dir or Path(root) / ".state" / "durable")
         self.resolutions = self.state_dir / "composition" / "resolutions"
@@ -332,9 +333,11 @@ class Solver:
                     f"{session.get('model') or ''}): {session['reason'][:160]}")
         return [f"{run.run_id}: solver {sid} started in {name} for {', '.join(session['triggers'])}"]
 
-    def _start(self, run, session: dict, avoid: str) -> str:
+    def _start(self, run, session: dict, avoid: str, route: dict | None = None) -> str:
         """Start (or restart, `avoid` = the account to leave) the session in tmux. Returns an error text or ""."""
-        route = self.route_for(run.project, avoid)
+        route = route or self.route_for(run.project, avoid)
+        if route.get("reason") and not route.get("home"):   # the weekly cap (D-279) left no account: never a capped one
+            return str(route["reason"])
         folder, home = Path(session["dir"]), str(route.get("home") or "")
         prompt_file = shlex.quote(str(folder / "PROMPT.md"))
         env = {"BITACORA_SOLVER": session["id"]}
@@ -390,7 +393,8 @@ class Solver:
         elapsed = self.now() - float(session.get("started") or 0)
         # a session's own integration (bt_integrate, a child of its agent in tmux) is never cut by the watchdog or an
         # account move: killing the session mid-run could leave a merge half done; it gets a bounded grace instead
-        busy = elapsed > cfg["max_minutes"] * 60 or self._limited(session)
+        capped = self._capped(session)
+        busy = elapsed > cfg["max_minutes"] * 60 or self._limited(session) or capped is not None
         integrating = self.integrating(session["id"]) if busy and self.terminal.exists(session["name"]) else []
         if integrating and elapsed <= (cfg["max_minutes"] + cfg["integrate_grace_minutes"]) * 60:
             if not session.get("integrating"):
@@ -427,7 +431,50 @@ class Solver:
                                                                 "summary": f"no pudo cambiar de cuenta: {error}"})
             self.record(rdir, f"{session['task']}: el Solucionador cambió de cuenta (la anterior se quedó sin cuota)")
             return said + [f"{run.run_id}: solver {sid} moved off {left or 'its account'}"]
+        if capped is not None:
+            return said + self._leave_capped(run, rdir, state, session, capped)
         return said
+
+    def _capped(self, session: dict):
+        """The weekly-cap verdict of the session's account when it is over the owner's cap (D-279), else None."""
+        try:
+            cap, name = self.weekly_cap(session.get("provider") or "claude", session.get("home") or "")
+        except Exception:  # noqa: BLE001 - unknown usage never moves a session
+            return None
+        return (cap, name) if getattr(cap, "capped", False) else None
+
+    def _leave_capped(self, run, rdir, state, session: dict, capped) -> list[str]:
+        """Its account crossed the owner's weekly cap (D-279): at this safe boundary (the session is not integrating,
+        checked by the caller) it is moved the way a spent account moves it, conversation included, to the next eligible
+        account. When the cap leaves no other account it stays and says so once; `MAX_RESTARTS` cap moves at most."""
+        import bt_weekly_cap
+        cap, name = capped
+        left = session.get("home") or ""
+        if self.integrating(session["id"]):          # never mid-integration, whatever the grace said
+            return [f"{run.run_id}: solver {session['id']} on a weekly-capped account; integrating, moved afterwards"]
+        route = self.route_for(run.project, left)
+        target = str(route.get("home") or "")
+        stays = (route.get("exhausted") or (route.get("provider") or "claude") == (session.get("provider") or "claude")
+                 and target == left or int(session.get("cap_moves", 0)) >= MAX_RESTARTS)
+        if stays:
+            if not session.get("cap_noted"):
+                session["cap_noted"] = self.now()
+                text = bt_weekly_cap.line(name, cap, None)
+                bt_weekly_cap.record([bt_weekly_cap.entry(name, cap, name)], None, f"solver {session['id']}")
+                self.record(rdir, f"{session['task']}: {text}; el Solucionador sigue en su cuenta hasta que otra quede "
+                            "libre")
+            return [f"{run.run_id}: solver {session['id']} on a weekly-capped account; no other account to move to"]
+        self.terminal.kill(session["name"])
+        error = self._start(run, session, avoid=left, route=route)
+        session["cap_moves"] = int(session.get("cap_moves", 0)) + 1
+        session.pop("cap_noted", None)
+        if error:
+            return self._finish(run, rdir, state, session, {
+                "outcome": "gave_up", "summary": f"no pudo cambiar de cuenta (tope semanal): {error}"})
+        where = target or route.get("provider") or "otra cuenta"
+        text = bt_weekly_cap.record([bt_weekly_cap.entry(name, cap, name)], where, f"solver {session['id']}")[0]
+        self.record(rdir, f"{session['task']}: {text} (el Solucionador cambió de cuenta con su conversación)")
+        return [f"{run.run_id}: solver {session['id']} moved off {left or 'its account'} (weekly cap)"]
 
     def _exited(self, session: dict) -> bool:
         """The session's agent exited and its window is a shell (`bt_agent_terminal.agent_state` gone): nothing may be
@@ -657,6 +704,11 @@ class Solver:
                 pass
             said.append(f"{key}: queued to solver {sid}")
         return said
+
+
+def _weekly_cap(provider: str, home: str):
+    import bt_weekly_cap
+    return bt_weekly_cap.for_home(provider, home)
 
 
 def read_result(folder: Path) -> dict | None:

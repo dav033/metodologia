@@ -75,7 +75,11 @@ def _usage_facts(provider: str, account_key: str, model: str, usage: Mapping[str
     fresh = observed is not None and observed <= now and valid_until is not None and valid_until > now
     auth_status = "valid" if status == "ok" and fresh else \
         "invalid" if str(status).lower() in _INVALID_AUTH else "unknown"
-    if (exhausted_until is not None and exhausted_until > now) or (pressure is not None and pressure >= 100):
+    capped = False
+    if provider in ("claude", "codex"):
+        import bt_weekly_cap  # the owner's weekly cap (D-279): an account over it is as unusable as a spent one
+        capped = bt_weekly_cap.for_account(usage, account_key, now).capped
+    if capped or (exhausted_until is not None and exhausted_until > now) or (pressure is not None and pressure >= 100):
         quota_status = "exhausted"
     elif pressure is not None and status == "ok" and fresh:
         quota_status = "available"

@@ -29,7 +29,8 @@ def _route(order: dict, tier: int, avoid: set[str]) -> dict:
                                 allow_explore=False, effort=order.get("requested_effort"),
                                 role=order.get("role"), complexity=order.get("complexity"))
     except bt_agents.NoRoute as exc:
-        raise SystemExit(f"Every account is waiting for a usage-limit reset (earliest {exc.until}).") from exc
+        raise SystemExit(f"Every account is waiting for a usage-limit reset (earliest {exc.until})."
+                         + (f" {exc.reason}." if getattr(exc, "reason", "") else "")) from exc
 
 
 def _error(outcome: dict) -> str:

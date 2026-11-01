@@ -221,7 +221,7 @@ class MethodologyDecisionSourceTests(unittest.TestCase):
         }
         claude_windows = quota_sources.parse_claude({
             "five_hour": {"utilization": 0, "resets_at": None},
-            "seven_day": {"utilization": 96, "resets_at": reset},
+            "seven_day": {"utilization": 86, "resets_at": reset},     # under the weekly cap (D-279)
         })
         self.assertIsNone(claude_windows["five_hour"]["resets_at"])
         usage = {
@@ -248,7 +248,7 @@ class MethodologyDecisionSourceTests(unittest.TestCase):
 
         by_profile = {row.profile: row for row in rows}
         self.assertEqual(by_profile[claude_profile].quota_status, "available")
-        self.assertEqual(by_profile[claude_profile].quota_used_percent, 96)
+        self.assertEqual(by_profile[claude_profile].quota_used_percent, 86)
         self.assertEqual(by_profile[codex_profile].quota_status, "unknown")
         result = rank_candidates(m2_request(candidates=rows, requested_at=now))
         self.assertEqual({row.profile for row in result.eligible}, {claude_profile})

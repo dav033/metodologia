@@ -300,6 +300,7 @@ py-modules = [
   "bt_translate",
   "bt_usage",
   "bt_vcs",
+  "bt_weekly_cap",
   "bt_subplan_sessions",
   "bt_stage_confirmations",
   "bt_stage_queue",

@@ -460,12 +460,23 @@ def role_route(project: str, role: str, avoid: str = "", *, override: str = "") 
     (`claude_choice`). A fixed Opus high here ran the Solucionador on Opus although D-253 says Sonnet high (pictures
     REQ-021, 2026-10-31; D-267). `override` names an environment variable that pins the Claude account. When the
     ranking leaves no account but `avoid` (every other one is spent or cooling), the fallback says so: `exhausted` and
-    `until`, the epoch the first one frees up ("" when unknown); a caller leaving a spent account waits instead."""
+    `until`, the epoch the first one frees up ("" when unknown); a caller leaving a spent account waits instead.
+    The owner's weekly cap (D-279) outranks every pin: an account at or above `routing.weekly_cap_percent` of its weekly
+    quota is never returned, neither the `override` account nor the ~/.claude-work fallback; the ranking (which already
+    leaves capped accounts out) decides instead, and when the cap leaves no account the fallback is `exhausted` with
+    `reason` naming the cap."""
+    import bt_weekly_cap
     model, effort = claude_choice(role)
+    excluded: list[dict] = []
     if override and (pinned := os.environ.get(override)):
-        return {"provider": "claude", "home": pinned, "model": model, "effort": effort}
+        cap, name = _home_cap("claude", pinned)
+        if not cap.capped:
+            return {"provider": "claude", "home": pinned, "model": model, "effort": effort}
+        excluded.append(bt_weekly_cap.entry(name, cap, name))
+        avoid = avoid or pinned
     codex: dict[str, str] | None = None
     spent: dict[str, str] = {}
+    chosen: dict[str, str] | None = None
     try:
         import bt_agents
         import bt_profiles
@@ -473,6 +484,8 @@ def role_route(project: str, role: str, avoid: str = "", *, override: str = "") 
         pool = bt_agents.pool_for(project, bt_agents._config("routing.pool", []) or None)
         routes, frees = bt_agents.candidates(project, pool, bt_agents.start_tier(None, "plan"), "plan",
                                              allow_explore=False, role=role)
+        excluded += [item for item in getattr(routes, "weekly_capped", [])
+                     if all(item.get("account") != known.get("account") for known in excluded)]
         others = 0
         for route in routes:
             env = (profiles.get(route.get("profile")) or {}).get("env") or {}
@@ -480,23 +493,51 @@ def role_route(project: str, role: str, avoid: str = "", *, override: str = "") 
                 path = env.get("CLAUDE_CONFIG_DIR") or str(Path.home() / ".claude")
                 others += path != avoid
                 if path != avoid and unattended(path):
-                    return {"provider": "claude", "home": path, "model": str(route.get("model") or model),
-                            "effort": str(route.get("effort") or effort)}
+                    chosen = {"provider": "claude", "home": path, "model": str(route.get("model") or model),
+                              "effort": str(route.get("effort") or effort), "profile": str(route.get("profile") or "")}
+                    break
             elif route.get("agent") == "codex" and codex is None:
                 home = env.get("CODEX_HOME") or str(Path.home() / ".codex")
                 others += home != avoid
                 if home != avoid:
                     codex = {"provider": "codex", "home": home, "model": str(route.get("model") or ""),
-                             "effort": str(route.get("effort") or "high")}
-        if not others:
+                             "effort": str(route.get("effort") or "high"), "profile": str(route.get("profile") or "")}
+        if not others and chosen is None:
             spent = {"exhausted": "1", "until": str(frees or "")}
     except Exception:  # noqa: BLE001 - no ranking: the account it always used
         pass
-    if codex:
-        return codex
-    work = Path.home() / ".claude-work"
-    return {"provider": "claude", "home": str(work) if work.is_dir() and str(work) != avoid else "", "model": model,
-            "effort": effort, **spent}
+    chosen = chosen or codex
+    if chosen is None:
+        work = Path.home() / ".claude-work"
+        home = str(work) if work.is_dir() and str(work) != avoid else ""
+        if home:
+            cap, name = _home_cap("claude", home)
+            if cap.capped:
+                if all(item.get("profile") != name for item in excluded):
+                    excluded.append(bt_weekly_cap.entry(name, cap, name))
+                home = ""
+        if not home and excluded:
+            soonest = min((float(i["resets_at"]) for i in excluded if i.get("resets_at")), default=0.0)
+            spent = {"exhausted": "1", "until": spent.get("until") or (str(soonest) if soonest else ""),
+                     "reason": bt_weekly_cap.reason(excluded)}
+        chosen = {"provider": "claude", "home": home, "model": model, "effort": effort, **spent}
+    if excluded:
+        bt_weekly_cap.record(excluded, None if chosen.get("exhausted") else
+                             (chosen.get("profile") or chosen.get("home") or chosen["provider"]), f"role_route {project} {role}")
+        if not chosen.get("exhausted"):
+            chosen["weekly_cap"] = "; ".join(bt_weekly_cap.line(str(i.get("profile")), bt_weekly_cap.Cap(
+                "capped", i.get("used_percent")), chosen.get("profile") or chosen.get("home")) for i in excluded)
+    chosen.pop("profile", None)
+    return chosen
+
+
+def _home_cap(provider: str, home: str):
+    """(weekly-cap verdict, account name) of an account given by its directory; never raises (unknown on errors)."""
+    import bt_weekly_cap
+    try:
+        return bt_weekly_cap.for_home(provider, home)
+    except Exception:  # noqa: BLE001 - an unreadable profile list is unknown usage, never a reason to exclude
+        return bt_weekly_cap.Cap("unknown", why="unreadable"), home
 
 
 def claude_choice(role: str) -> tuple[str, str]:
@@ -531,6 +572,8 @@ def start_planner(root: Path, project: str, rdir: Path, *, fresh: bool = False, 
     if exists(name):
         return False, f"Ya hay un Planner en marcha para este plan ({name})."
     route = route or planner_route(project, avoid)
+    if route.get("reason") and not route.get("home"):    # the weekly cap (D-279) left no account: like a spent pool
+        return False, f"No abrí el Planner: {route['reason']}."
     account = route["home"]
     extra = f"\n\n{message}" if message else ""
     if route["provider"] == "codex":

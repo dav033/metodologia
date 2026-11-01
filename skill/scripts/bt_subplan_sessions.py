@@ -11,6 +11,7 @@ State per requirement: `<req>/.sessions/sessions.json`. The launcher is injectab
 from __future__ import annotations
 
 import datetime as dt
+import inspect
 import json
 import os
 import re
@@ -143,9 +144,20 @@ def _tasks_in_order(rdir: Path, sid: str) -> list[dict]:
 
 # ------------------------------------------------------------------ the agent
 
-def launch_agent(worktree: Path, name: str, prompt_file: Path, model: str, effort: str) -> str:
-    """Start Claude Code interactively in a tmux session of its own with the prompt as its first message."""
+def launch_agent(worktree: Path, name: str, prompt_file: Path, model: str, effort: str, *, project: str = "") -> str:
+    """Start Claude Code interactively in a tmux session of its own with the prompt as its first message. Its account
+    (`BITACORA_SESSION_CLAUDE_CONFIG_DIR`, else the default one) gives way to the router's next unattended Claude account
+    when it is over the owner's weekly cap (D-279); with none left the session is not started, the cap named."""
     account = os.environ.get("BITACORA_SESSION_CLAUDE_CONFIG_DIR")
+    cap, who = terminal._home_cap("claude", account or "")
+    if cap.capped:
+        import bt_weekly_cap
+        route = terminal.role_route(project, "implementer", account or "") if project else {}
+        if route.get("provider") != "claude" or not route.get("home") or route.get("exhausted"):
+            bt_weekly_cap.record([bt_weekly_cap.entry(who, cap, who)], None, f"session {name}")
+            raise RuntimeError(bt_weekly_cap.line(who, cap, None))
+        account = route["home"]
+        bt_weekly_cap.record([bt_weekly_cap.entry(who, cap, who)], account, f"session {name}")
     env = {"CLAUDE_CONFIG_DIR": account} if account else {}
     terminal.start(name, worktree, f'claude --model {shlex.quote(model)} --effort {shlex.quote(effort)} '
                    f'--dangerously-skip-permissions "$(cat {shlex.quote(str(prompt_file))})"', env)
@@ -216,7 +228,10 @@ def start(root: Path, project: str, rdir: Path, sid: str, model: str = DEFAULT_M
     prompt_file.write_text(text, encoding="utf-8")
     tmux_name = terminal.name_for(project, req, f"{mode}-{name}")
     try:
-        (launcher or launch_agent)(worktree, tmux_name, prompt_file, spec[0], spec[1])
+        launch = launcher or launch_agent
+        # the project lets a capped account give way to the router's next one (D-279); injected launchers may not take it
+        extra = {"project": project} if "project" in inspect.signature(launch).parameters else {}
+        launch(worktree, tmux_name, prompt_file, spec[0], spec[1], **extra)
     except Exception as exc:  # noqa: BLE001 - the worktree stays; the owner can open it by hand
         return False, f"Creé la copia en {worktree}, pero no pude arrancar el agente: {exc}"
     with _locked(rdir) as data:

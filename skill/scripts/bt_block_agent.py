@@ -152,12 +152,14 @@ def diagnose(project: str, rdir: Path, request: dict, evidence: str, *, runner=s
              config: dict | None = None) -> dict:
     """Ask the configured model; store and return its diagnosis (or the failure, also stored)."""
     import bt_profiles
+    import bt_weekly_cap
 
     config = config or settings()
     pid, model, effort = config["profile"], config["model"], config["effort"]
     started = time.time()
     _write(rdir, request["id"], {"state": "running", "started": started, "model": model, "profile": pid})
     try:
+        pid = bt_weekly_cap.reroute_profile(project, pid, f"diagnosis {project} {request['id']}")  # D-279
         spec = bt_profiles.get(pid)
         provider = spec["provider"]
         bt_profiles.authorize(pid, project)

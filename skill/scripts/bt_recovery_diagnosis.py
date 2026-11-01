@@ -106,12 +106,14 @@ def route(project: str) -> dict[str, Any] | None:
     authorization reference names the check that was made; None when there is nothing authorized to ask."""
     import bt_block_agent
     import bt_profiles
+    import bt_weekly_cap
 
     config = bt_block_agent.settings()
     profile, model = config.get("profile"), config.get("model")
     if not isinstance(profile, str) or not profile or not isinstance(model, str) or not model:
         return None
     try:
+        profile = bt_weekly_cap.reroute_profile(project, profile, f"recovery planner {project}")  # D-279
         provider = bt_profiles.get(profile)["provider"]
         bt_profiles.authorize(profile, project)
     except (bt_profiles.ProfileError, KeyError, ValueError):

@@ -169,6 +169,7 @@ def analyze(project: str, rdir: Path, task: str, *, runner: Callable[..., Any] =
     import bt_block_agent
     import bt_profiles
     import bt_scheduler_decisions as decisions
+    import bt_weekly_cap
 
     rdir = Path(rdir)
     doc = doc if doc is not None else decisions._state(rdir)
@@ -179,6 +180,7 @@ def analyze(project: str, rdir: Path, task: str, *, runner: Callable[..., Any] =
     started = time.time()
     _save(rdir, task, {"state": "running", "failures": count, "started": started})
     try:
+        pid = bt_weekly_cap.reroute_profile(project, pid, f"attempt analyst {project} {task}")  # D-279
         spec = bt_profiles.get(pid)
         provider = spec["provider"]
         bt_profiles.authorize(pid, project)

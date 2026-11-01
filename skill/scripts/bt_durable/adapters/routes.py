@@ -47,12 +47,15 @@ def _number(value: object) -> float | None:
 class Reading:
     """One capacity reading of a route's account. `state`: available | exhausted | unknown. `reset_at`: when an
     exhausted account frees up (None when unknown). `status`: the reading's own status code (`ok`, `http_429`,
-    `invalid_credentials`, `no_profile`, ...), which tells an expired sign-in apart from a reading that failed."""
+    `invalid_credentials`, `no_profile`, ...), which tells an expired sign-in apart from a reading that failed.
+    `cap`: "weekly_cap" when the account is `exhausted` only because the owner's weekly cap (D-279) excludes it; then
+    `used_percent` is the weekly use and `reset_at` the end of that week."""
     state: str
     used_percent: float | None = None
     observed_at: float | None = None
     reset_at: float | None = None
     status: str = "no_reading"
+    cap: str = ""
 
 
 class LiveQuota:
@@ -77,6 +80,13 @@ class LiveQuota:
         observed = _number(row.get("observed_at"))
         if row.get("status") != "ok":
             return Reading("unknown", observed_at=observed, status=str(row.get("status"))[:80])
+        if row.get("provider", "claude") in ("claude", "codex"):
+            import bt_weekly_cap  # the owner's weekly cap (D-279): an account over it is not used, like a spent one
+            cap = bt_weekly_cap.check(row, time.time() if now is None else now)
+            bt_weekly_cap.note_unknown(str(route.profile), cap)
+            if cap.capped:
+                return Reading("exhausted", cap.used_percent, observed, cap.until(time.time() if now is None else now),
+                               "ok", "weekly_cap")
         windows = [w for w in (row.get("windows") or {}).values()
                    if isinstance(w, dict) and _number(w.get("used_percent")) is not None]
         if not windows:
@@ -93,7 +103,10 @@ class LiveQuota:
 
     def __call__(self, route: Route) -> tuple[float | None, float | None]:
         """The `Capacity` callback of the static router."""
-        found = self.reading(route)
+        return self.translate(self.reading(route))
+
+    @staticmethod
+    def translate(found: Reading) -> tuple[float | None, float | None]:
         if found.state == "available":
             return 100.0 - (found.used_percent or 0.0), None
         if found.state == "exhausted":
@@ -119,6 +132,29 @@ def reading_of(capacity, route: Route, now: float) -> Reading:
     return Reading("exhausted", 100.0, now, reset if reset and reset > now else None, "ok")
 
 
+def _capped(allowed: Sequence[Route], readings: Sequence[Reading]) -> list[dict]:
+    """The allowed routes' accounts the owner's weekly cap excluded (D-279), one entry per profile."""
+    out, seen = [], set()
+    for route, reading in zip(allowed, readings):
+        if reading.cap == "weekly_cap" and route.profile not in seen:
+            seen.add(route.profile)
+            out.append({"account": route.profile, "profile": route.profile, "used_percent": reading.used_percent,
+                        "resets_at": reading.reset_at, "threshold": __import__("bt_weekly_cap").threshold()})
+    return out
+
+
+def _record_cap(allowed: Sequence[Route], readings: Sequence[Reading], decision: RouteDecision, context: str) -> None:
+    """The telemetry line of a decision the weekly cap changed: «<cuenta> excluida: …; se ruteó a <otra>»."""
+    try:
+        capped = _capped(allowed, readings)
+        if capped:
+            import bt_weekly_cap
+            target = (decision.route.profile or decision.route.provider) if decision.route is not None else None
+            bt_weekly_cap.record(capped, target, context)
+    except Exception as error:  # noqa: BLE001 - telemetry never changes a routing decision
+        LOG.warning("weekly cap telemetry failed: %s", error)
+
+
 class StaticRouter:
     def __init__(self, routes: Sequence[Route], capacity: Capacity | None = None):
         if not routes:
@@ -133,16 +169,30 @@ class StaticRouter:
         allowed = self._allowed(exclude)
         if not allowed:
             return RouteDecision(kind="unavailable", reason="every allowed route was excluded for this task")
-        resets = []
+        resets, seen, readings = [], [], []
         for route in allowed:
-            remaining, reset = self.capacity(route) if self.capacity else (None, None)
+            if isinstance(self.capacity, LiveQuota):     # its reading also says when the weekly cap is the reason
+                reading = self.capacity.reading(route)
+                remaining, reset = LiveQuota.translate(reading)
+            else:
+                reading = Reading("unknown")
+                remaining, reset = self.capacity(route) if self.capacity else (None, None)
+            seen.append(route)
+            readings.append(reading)
             if remaining is None or remaining > 0:
-                return RouteDecision(kind="run", route=route)
+                decision = RouteDecision(kind="run", route=route)
+                _record_cap(seen, readings, decision, f"durable {run.run_id} {task.id}")
+                return decision
             if reset:
                 resets.append(reset)
-        if resets:
-            return RouteDecision(kind="wait", not_before=min(resets), reason="no allowed route has capacity now")
-        return RouteDecision(kind="unavailable", reason="no allowed route has capacity and no reset time is known")
+        capped = _capped(seen, readings)
+        cap = f" ({__import__('bt_weekly_cap').reason(capped)})" if capped else ""
+        decision = (RouteDecision(kind="wait", not_before=min(resets), reason=f"no allowed route has capacity now{cap}")
+                    if resets else
+                    RouteDecision(kind="unavailable",
+                                  reason=f"no allowed route has capacity and no reset time is known{cap}"))
+        _record_cap(seen, readings, decision, f"durable {run.run_id} {task.id}")
+        return decision
 
     def alternatives(self, run: RunRef, task: TaskSpec, *, exclude: tuple[str, ...]) -> int:
         return len(self._allowed(exclude))
@@ -228,12 +278,17 @@ class M2Router:
                 elif cooling and cooling > now:
                     frees.append(cooling)
             reasons = ", ".join(sorted({r for item in ranking["rejected"] for r in item["reasons"]}))
+            capped = _capped(allowed, readings)
+            if capped:
+                import bt_weekly_cap
+                reasons = f"{reasons}; {bt_weekly_cap.reason(capped)}"
             if frees:
                 decision = RouteDecision(kind="wait", not_before=min(frees),
                                          reason=f"no allowed route has capacity now ({reasons})"[:500])
             else:
                 decision = RouteDecision(kind="unavailable",
                                          reason=f"no allowed route can run and no reset time is known ({reasons})"[:500])
+        _record_cap(allowed, readings, decision, f"durable {run.run_id} {task.id}")
         self._emit(run, task, exclude, decision, basis, allowed, readings, ranking)
         return decision
 

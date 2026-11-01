@@ -139,6 +139,17 @@ avoided provider, role, then the quota/quality part below, expected cost per ver
 - Headroom is the bottleneck of the 5 h and 7 d windows in 10-point buckets; unknown or stale pressure counts as 50 %
   (never empty, never full). An account burning its week faster than evenly (15+ points ahead of the share of the
   window elapsed) is penalised by 20 points; accounts with slack are not pushed to spend it.
+- **Weekly cap** (D-279, `routing.weekly_cap_percent`, default 90; >100 = off): an account (Claude profile or Codex home)
+  at or above that share of its seven-day window is never picked, whoever "owns" the work: the router, role sessions
+  (`role_route`, override pins and the ~/.claude-work fallback included), a run pinned to one account, delegations
+  (`--profile`/ambient, and before each attempt), relay `--to`, hands-on subplan sessions, `diagnosis.profile` (another
+  account of its provider) and the durable engine (`LiveQuota` reads it as exhausted until the week resets). The work
+  goes to the next eligible account and `<state>/events/weekly-cap-YYYY-MM.jsonl` records
+  «<cuenta> excluida: N % de la cuota semanal; se ruteó a <otra>»;
+  with every account capped the spent-pool path runs (NoRoute / wait / exhausted), its reason naming the cap. A running
+  Planner or Solucionador on a capped account moves at its next safe boundary (between turns; never while integrating)
+  with the account-move machinery, or stays and says so when no account is left. The weekly number is the stored sample
+  or the live cache, whichever is higher; a reading whose week reset, or no reading, never excludes (`bt_weekly_cap`).
 - **Quality vs quota** (`routing.quality_protection`: `critical` default, `always`, `off`). Quality is the lower 90 %
   confidence bound of the verified task success rate (`routing.min_samples`, default 5, judged outcomes of the kind), so a
   small lucky sample never looks proven. Critical work (`risk: high`, `complexity: L` or the top tier; never an audit):

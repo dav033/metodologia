@@ -18,6 +18,8 @@ import bt_agent_wall as wall
 
 WEB_NOTICE = "[Automatic notice from the web, not typed by the owner] "
 HOLD_MINUTES = 30                                     # when a wall does not say when it ends: try again this often
+# the agent is in the middle of a turn (Claude Code and Codex both show it): not a boundary to move it at
+WORKING = re.compile(r"esc to interrupt", re.IGNORECASE)
 
 
 def _rdir(project: str, req: str) -> Path | None:
@@ -44,6 +46,10 @@ def tell(project: str, req: str, notice: str, *, retry: bool = False) -> tuple[s
     hit, until = wall.limited(shown)
     if hit and not retry:
         return after_wall(project, req, notice, until)
+    if not WORKING.search(shown):                      # between turns: a safe boundary to leave a capped account
+        moved = leave_capped(project, req, notice)
+        if moved is not None:
+            return moved
     said = terminal.send(name, notice)
     state = getattr(said, "state", "sent" if said == "Enviado." else "error")
     if state == "sent":
@@ -89,6 +95,77 @@ def after_wall(project: str, req: str, notice: str, until: float | None) -> tupl
     wall.drop(rdir, [*pending, notice])
     _feed(rdir, "El Planner se quedó sin cuota: lo pasé a otra cuenta con los avisos que no había leído")
     return "moved", f"El Planner se quedó sin cuota: lo pasé a otra cuenta con el mensaje. {message}"
+
+
+def _account(record: dict) -> tuple[str, str]:
+    provider = record.get("provider") or "claude"
+    return provider, (record.get("codex_home", "") if provider == "codex" else record.get("config_dir", ""))
+
+
+def leave_capped(project: str, req: str, notice: str = "") -> tuple[str, str] | None:
+    """The Planner runs on an account over the owner's weekly cap (D-279) and sits between turns: it is moved the way a
+    spent account moves it (`start_planner`: conversation, held notices and `notice` included) to the next eligible
+    account. None when its account is not capped, or when the cap leaves no other account (it stays; said once in the
+    plan's feed): the caller then goes on as before."""
+    import bt_weekly_cap
+    rdir = _rdir(project, req)
+    if rdir is None:
+        return None
+    record = terminal._record(rdir)
+    provider, home = _account(record)
+    cap, account = terminal._home_cap(provider, home)
+    if not cap.capped:
+        return None
+    route = terminal.planner_route(project, home)
+    target = route.get("home", "")
+    if route.get("exhausted") or ((route.get("provider") or "claude") == provider and target == home):
+        if not record.get("cap_noted"):
+            terminal._save_record(rdir, {**record, "cap_noted": time.time()})
+            bt_weekly_cap.record([bt_weekly_cap.entry(account, cap, account)], None, f"planner {project} {req}")
+            _feed(rdir, f"{bt_weekly_cap.line(account, cap, None)}: el Planner sigue en su cuenta hasta que otra quede "
+                        "libre")
+        return None
+    pending = [n["text"] for n in wall.held(rdir) if n["text"] != notice]
+    terminal.kill(terminal.name_for(project, req, "planner"))
+    ok, message = terminal.start_planner(Path(rdir).parents[2], project, rdir, avoid=home, route=route,
+                                         message="\n\n".join(t for t in [*pending, notice] if t))
+    text = bt_weekly_cap.record([bt_weekly_cap.entry(account, cap, account)], target or route.get("provider"),
+                                f"planner {project} {req}")[0]
+    if not ok:
+        if notice:
+            return _held(project, req, notice, time.time() + 5 * 60, "start",
+                         f"{text}, pero no pude abrir el Planner allí ({message})")
+        return "failed", f"{text}, pero no pude abrir el Planner allí ({message})"
+    wall.drop(rdir, [t for t in [*pending, notice] if t])
+    _feed(rdir, f"{text}: el Planner cambió de cuenta con su conversación y los avisos que no había leído")
+    return "moved", f"{text}: el Planner cambió de cuenta con el mensaje. {message}"
+
+
+def move_capped(root: Path) -> list[str]:
+    """The maintenance pass's half of D-279: every running Planner whose account crossed the weekly cap is moved at its
+    next safe boundary (alive, between turns, no wall on its screen), without waiting for a notice to carry it."""
+    said: list[str] = []
+    for path in sorted(Path(root).glob("*/requirements/REQ-*/" + terminal.RECORD)):
+        rdir, project = path.parents[1], path.parents[3].name
+        req = re.match(r"REQ-\d+", rdir.name)
+        try:
+            if not req:
+                continue
+            provider, home = _account(terminal._record(rdir))
+            if not terminal._home_cap(provider, home)[0].capped:
+                continue
+            name = terminal.name_for(project, req.group(0), "planner")
+            if not terminal.alive(name):
+                continue
+            shown = terminal.screen(name, 20)
+            if WORKING.search(shown) or wall.limited(shown)[0] or wall.OWNER_PROMPT.search(shown):
+                continue                               # mid-turn, or the wall / owner paths own it
+            moved = leave_capped(project, req.group(0))
+            if moved is not None:
+                said.append(f"{project}/{req.group(0)}: planner {moved[0]} (weekly cap)")
+        except (OSError, ValueError, RuntimeError):
+            continue
+    return said
 
 
 def after_exit(project: str, req: str, notice: str) -> tuple[str, str]:
@@ -154,7 +231,7 @@ def deliver_held(root: Path, now: float | None = None) -> list[str]:
     `bt_agent_wall.HELD_FOR_DAYS`, is dropped and said so in its feed. Returns what it did."""
     from bt_core import _front
     now = time.time() if now is None else now
-    said: list[str] = []
+    said: list[str] = move_capped(root)
     for path in sorted(Path(root).glob("*/requirements/REQ-*/" + wall.HELD)):
         rdir, project = path.parents[1], path.parents[3].name
         req = re.match(r"REQ-\d+", rdir.name)

@@ -15,7 +15,9 @@ from pathlib import Path
 
 import bt_profiles
 import bt_routing_policy
+import bt_weekly_cap
 from bt_core import STATE
+from bt_weekly_cap import Routes  # noqa: F401 - candidates' return type (D-279), public here
 
 from bt_agent_models import (  # public compatibility surface
     PROVIDERS, KINDS, TOP, EFFORTS, MODELS, LADDER, KIND_TIER, AUDIT_LADDER, MAX_KIND_TIER,
@@ -256,6 +258,7 @@ def candidates(project: str, pool: list[str], tier: int, kind: str = "implement"
     from bt_subscriptions import capacity
     from bt_subscriptions import load as load_usage
     samples = load_usage(STATE)
+    capped = bt_weekly_cap.Exclusions(samples)  # the owner's weekly cap (D-279): never a candidate, whoever owns the work
     tier = bt_routing_policy.cap_tier(tier, kind)
     rates, load = _stats()
     profiles = bt_profiles.load()
@@ -269,6 +272,9 @@ def candidates(project: str, pool: list[str], tier: int, kind: str = "implement"
         agent = spec["provider"]
         if spec.get("work_only") and not bt_profiles.is_work_project(project):
             continue  # a pool saved while the project was work must not outlive that flag
+        if until := capped.skip(pid, agent, account_key(pid, agent)):
+            soonest = until if soonest is None else min(soonest, until)
+            continue
         model, ladder_effort = model_for(agent, tier, configured, kind)
         effort = apply_explicit_effort(agent, model, ladder_effort, asked_effort, kind)
         pressure, exhausted = capacity(samples.get(account_key(pid, agent)), model)
@@ -314,7 +320,7 @@ def candidates(project: str, pool: list[str], tier: int, kind: str = "implement"
     routes.sort(key=lambda r: r["_key"])
     for r in routes:
         r.pop("_key")
-    return routes, soonest
+    return capped.routes(routes), soonest
 
 AGY_BUSY_PERCENT = 85  # above this, Flash stops being the preferred auditor and is kept as a reserve
 
@@ -376,11 +382,13 @@ def _why(agent, avoid, rate, load, lower=None, seen: int = 0, evidence: dict | N
     return "; ".join(bits)
 
 class NoRoute(Exception):
-    """Every account of the pool is cooling down; `until` is the earliest reset epoch."""
+    """Every account of the pool is cooling down (or over the weekly cap, D-279: `reason` says so); `until` = first reset."""
 
-    def __init__(self, until: float | None):
-        super().__init__(f"every account is cooling down until {until}")
+    def __init__(self, until: float | None, reason: str = ""):
+        super().__init__(f"every account is cooling down until {until}" + (f" ({reason})" if reason else ""))
         self.until = until or (time.time() + 1800)
+        self.reason = reason
+
 
 def route(project: str, state: dict, tier: int, kind: str = "implement", avoid_providers: set | None = None,
           busy: set | None = None, risk: str | None = None, complexity: str | None = None,
@@ -398,6 +406,9 @@ def route(project: str, state: dict, tier: int, kind: str = "implement", avoid_p
     escalated = not explicit_role and bt_role_policy.escalated_audit(kind, tier)
     pool = state.get("pool") or []
     if not pool:
+        moved = bt_weekly_cap.reroute_pin(project, state, tier, kind, role, effort, complexity, escalated)
+        if moved is not None:  # a pinned account over the weekly cap: ownership never overrides it (D-279)
+            return moved
         asked_effort = effort
         agent = state.get("agent") or "claude"
         model, effort = (model_for(agent, tier, kind=kind) if kind == "audit" or kind in MAX_KIND_TIER
@@ -422,11 +433,12 @@ def route(project: str, state: dict, tier: int, kind: str = "implement", avoid_p
         configured = None
     args = (project, pool, tier, kind, configured, avoid_providers, busy, risk, complexity)
     routes, soonest = candidates(*args, allow_explore=allow_explore, effort=effort, role=role, escalated=escalated)
+    capped = list(getattr(routes, "weekly_capped", []))
     if not routes:
         if soonest is None:  # nothing is cooling: no account of the pool may run this project any more
             raise bt_profiles.ProfileError(f"No account of the pool ({', '.join(pool)}) may run '{project}'. "
                                            f"Check: bitacora.py --project {project} agents")
-        raise NoRoute(soonest)
+        raise NoRoute(soonest, bt_weekly_cap.no_route(capped, f"route {project} {kind}"))
     chosen, record = routes[0], None
     # An exploration is a real choice between routes: a lone candidate is forced, not explored.
     if chosen.get("exploring") and len(routes) > 1:
@@ -453,6 +465,7 @@ def route(project: str, state: dict, tier: int, kind: str = "implement", avoid_p
         decision = bt_explore.decision_for("exploit", chosen["why"])
     decision["evidence"] = chosen.get("evidence")  # what the choice rested on: direct, aggregate or none
     chosen = {k: v for k, v in chosen.items() if k != "exploring"}
+    bt_weekly_cap.annotate(chosen, decision, capped, f"route {project} {kind}")  # where the cap sent the work
     return {**chosen, "decision": decision}
 
 def _refresh_google_quota(pool: list[str]) -> None:

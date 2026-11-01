@@ -18,7 +18,9 @@ DEFAULTS: dict = {
     "learn": {"promote_after": 3, "inject_max": 12},
     "routing": {"mode": "auto", "pool": [], "min_samples": 5, "explore_budget_week": 5, "effort_weight": {},
                 "group_max": {}, "quality_protection": "critical", "quality_gap": 0.25,
-                "explore_global_budget_week": 0},  # 0 = no global exploration cap
+                "explore_global_budget_week": 0,  # 0 = no global exploration cap
+                # D-279: an account at or above this % of its WEEKLY quota is never used (pins included); >100 = off
+                "weekly_cap_percent": 90},
     "audit": {"mode": "milestone", "cross_provider": True, "provider": "antigravity"},
     "quota": {"default_cooldown_min": 30},
     "relay": {"enabled": False, "threshold_percent": 92, "exit_current": True, "max_chain": 3, "auto": True},
