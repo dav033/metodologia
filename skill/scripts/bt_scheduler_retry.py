@@ -179,6 +179,29 @@ class RetryContinuation:
         return bool(repo and isinstance(sha, str) and SHA.fullmatch(sha)
                     and self._git_ok(repo, "cat-file", "-e", f"{sha}^{{commit}}"))
 
+    GUTTED_MIN_FILES = 50      # smaller trees say nothing: a tiny repository may really lose most of its files
+
+    def _tree_size(self, repo, sha):
+        try:
+            done = subprocess.run(["git", "ls-tree", "-r", "--name-only", sha], cwd=repo, capture_output=True, timeout=30,
+                                  env={k: v for k, v in os.environ.items() if not k.startswith("GIT_")}, check=False)
+        except (OSError, subprocess.SubprocessError):
+            return None
+        return len(done.stdout.split(b"\n")) - 1 if done.returncode == 0 else None
+
+    def _lost_most(self, repo, base, snapshot) -> bool:
+        """Does `snapshot` hold less than half the files of `base`? An attempt that ran in a worktree whose checkout was
+        cut short (pictures REQ-021 r35 T3.15 a201: 1933 of 8564 files) captured that shell; a retry that continued from
+        it audited the same shell again and its result, a diff against it, would delete the rest from the line."""
+        if not repo or not (isinstance(base, str) and SHA.fullmatch(base) and isinstance(snapshot, str)
+                            and SHA.fullmatch(snapshot)):
+            return False
+        before, after = self._tree_size(repo, base), self._tree_size(repo, snapshot)
+        return bool(before and after is not None and before >= self.GUTTED_MIN_FILES and after * 2 < before)
+
+    def _gutted(self, task_id, snapshot) -> bool:
+        return self._lost_most(self._repo(task_id), self._previous_base(task_id), snapshot)
+
     def _same_base(self, task_id, previous_base) -> bool:
         """The previous result's base is still the base this task would start from today. A task with no prerequisites
         starts from the repository head, which only moves forward: the old base is then still part of it."""
@@ -255,6 +278,8 @@ class RetryContinuation:
         if snapshot is None:
             earlier = self._earlier_revision_result(task_id)
             return (earlier, "continue", earlier) if earlier else (None, "fresh", None)
+        if self._gutted(task_id, snapshot):     # never build on a checkout that was missing, whatever it reported
+            return None, "fresh", snapshot
         # Any retry, failed or sent back, builds on today's base: continuing a failed attempt's snapshot after its
         # prerequisites were redone hid their fixes (REQ-027 T18 audited its own stale tree and found the same F1/F2).
         previous = self._previous_base(task_id)
@@ -279,6 +304,10 @@ class RetryContinuation:
         if base is None:
             if snapshot is None:
                 return ""
+            if self._gutted(request.task_id, snapshot):
+                return (f"Your previous attempt's snapshot {snapshot} is kept read-only but not used: it holds only a small "
+                        "part of the files of its base (its worktree was incomplete), so you start from the current base. "
+                        "Do the whole task from there.")
             if not self._reworked(request.task_id):
                 return ("The prerequisites of this task were redone after your previous attempt, and its work could not be "
                         f"carried onto them, so you start from their new result. That attempt is kept read-only as "
