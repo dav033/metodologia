@@ -343,7 +343,8 @@ SOLVER_ES = {"pending": "pasó al Solucionador", "queued": "pasó al Solucionado
              "reproduciendo en esa versión", "fixed": "el Solucionador confirmó el fallo y pidió la reparación",
              "answered": "el Solucionador respondió", "asked_owner": "el Solucionador te pregunta algo",
              "gave_up": "el Solucionador no pudo resolverlo", "limit": "el Solucionador ya lo intentó varias veces; queda "
-             "para ti", "stale": "", "failed": "el Solucionador no pudo arrancar"}
+             "para ti", "stale": "", "failed": "el Solucionador no pudo arrancar",
+             "resolved": "se resolvió por otra vía; el Solucionador se cerró"}
 
 
 def rejection_key(sid: str, dec: dict) -> str:
