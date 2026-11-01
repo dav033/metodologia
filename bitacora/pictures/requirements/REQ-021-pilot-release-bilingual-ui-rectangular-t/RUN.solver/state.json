@@ -1,15 +1,15 @@
 {
  "watch": {
   "T10.5": {
-   "fp": "d1190ee19e4b9b92",
-   "since": 1793517115.381617,
+   "fp": "1e6819184bff790a",
+   "since": 1793517494.9908512,
    "epoch": "827f8b24a58a4595a29c5a296ec24c86",
-   "observed_at": 1793517304.889119
+   "observed_at": 1793538928.7667227
   }
  },
  "tasks": {
   "CG-9": 5,
-  "T10.5": 2,
+  "T10.5": 3,
   "T10.45": 3,
   "T2.55": 18,
   "T10.441": 1,
@@ -1727,6 +1727,18 @@
    "status": "fixed",
    "at": "2026-11-01T01:56:40",
    "session": "20261101-015640-eab9"
+  },
+  "pictures:REQ-021:r35:T10.5:T10.5:d1@k1": {
+   "kind": "decision",
+   "key": "pictures:REQ-021:r35:T10.5:T10.5:d1@k1",
+   "run_id": "pictures:REQ-021:r35",
+   "task_id": "T10.5",
+   "request_id": "T10.5:d1",
+   "round": 1,
+   "reason": "the diagnosis is not enough to answer alone (option stop, confidence alta): Falta la observación manual con el proveedor configurado (EN/ES); el harness ya pasa.",
+   "status": "asked_owner",
+   "at": "2026-11-01T02:18:46",
+   "session": "20261101-021846-6343"
   }
  },
  "sessions": [
@@ -2291,6 +2303,32 @@
    "summary": "T3.15 auditaba un árbol vacío porque la línea SP-3 avanzó con snapshots dañados: guarda en integrate/sync (D-288), línea restaurada y T3.15 relanzada; T94 (compuerta) ya no falla por líneas que su base dejó fuera (D-289) y su decisión se respondió con reverify.",
    "question": "",
    "report": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/RUN.solver/20261101-015640-eab9/REPORT.md"
+  },
+  {
+   "id": "20261101-021846-6343",
+   "name": "bit-pictures-REQ-021-solver",
+   "status": "asked_owner",
+   "started": 1793517526.561981,
+   "started_at": "2026-11-01T02:18:46",
+   "triggers": [
+    "pictures:REQ-021:r35:T10.5:T10.5:d1@k1"
+   ],
+   "queued": [],
+   "restarts": 0,
+   "dir": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/RUN.solver/20261101-021846-6343",
+   "cwd": "/home/david/.local/share/bitacora-solver/pictures/20261101-021846-6343",
+   "task": "T10.5",
+   "kind": "decision",
+   "reason": "the diagnosis is not enough to answer alone (option stop, confidence alta): Falta la observación manual con el proveedor configurado (EN/ES); el harness ya pasa.",
+   "session_id": "cb7874cf-664f-41aa-8294-7bdf85c1663f",
+   "provider": "claude",
+   "model": "sonnet",
+   "home": "/home/david/.claude-work",
+   "ended": 1793517589.7514534,
+   "ended_at": "2026-11-01T02:19:49",
+   "summary": "T10.5 solo espera la observación manual EN/ES con Gemini (el harness pasa); no es un defecto del sistema y requiere tu autorización de gasto.",
+   "question": "¿Autorizas hasta dos turnos de texto reales (uno en inglés, uno en español) con el Gemini configurado sobre el candidato a38776b4 de T10.5? Si sí, un Solucionador/operador los observa, registra proveedor y resultado sin secretos, atestigua con `bt-durable attest --by owner` y responde `reverify`; si falla (p. ej. la respuesta en inglés sale en español) responde `retry_with_note`. Alternativa: pruébalo tú con «Probar esto ↗» en la tarjeta y pulsa «Funciona» o «No funciona». Nota: la observación del 31-oct sobre 44acfe97 falló (respuesta en inglés mostraba la plantilla en español `fraseCercanasP",
+   "report": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/RUN.solver/20261101-021846-6343/REPORT.md"
   }
  ]
 }

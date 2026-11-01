@@ -1,0 +1,22 @@
+{
+ "request": "pictures:REQ-021:r35:T10.5:T10.5:d1@k1",
+ "state": "done",
+ "kind": "manual",
+ "label": "Comprobación manual",
+ "tone": "lav",
+ "headline": "Falta la observación manual con el proveedor configurado (EN/ES); el harness ya pasa.",
+ "origin": "La decisión T10.5:d1 falla con MANUAL_EVIDENCE_REQUIRED porque la observación manual de conversaciones en inglés y español con el proveedor de IA ya configurado sigue en NOT_RUN. El último intento (a1, sobre a38776b4633ef2d3a9644a652e5c34d413bd719a) terminó `npm run idioma:test-integracion-resto` con código 0, pero usó el fixture controlado `google.genai`, no ese proveedor, así que no cubre este criterio. Reintentar o cambiar de ruta no puede producir esa observación, y `reverify` solo es válido después de que la comprobación manual esté atestiguada.",
+ "steps": [
+  "Observar en el chat local con el proveedor configurado una conversación en inglés (respuesta en inglés) y otra en español (respuesta en español); anotar proveedor y resultado, sin secretos ni texto libre exacto.",
+  "Registrar esa observación manual en la evidencia de SP-10 (.evidence/REQ-021/SP-10.integration.json) y atestiguar la comprobación \"Owner or operator observes the configured local chat in English and Spanish\".",
+  "Con la comprobación atestiguada, reabrir la tarea T10.5 de REQ-021 y usar `bitacora.py --project pictures scheduler-op REQ-021 decisions` para elegir `reverify` sobre el mismo snapshot."
+ ],
+ "option": "stop",
+ "note": "",
+ "confidence": "alta",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-11-01T02:18:28",
+ "seconds": 13.2
+}
