@@ -1,10 +1,16 @@
 {
  "watch": {
   "T94": {
-   "fp": "0bf2d15bee551ca3",
-   "since": 1793514432.6821606,
-   "epoch": "71a6fd42caea4b49a273a0908f029cd7",
-   "observed_at": 1793514811.091287
+   "fp": "031c104c86a85d77",
+   "since": 1793515510.9236224,
+   "epoch": "65bd5c5cb9b84d1e90a4843be5bde3d9",
+   "observed_at": 1793515666.7251022
+  },
+  "T3.15": {
+   "fp": "4e111e3884a6df8d",
+   "since": 1793515635.3391519,
+   "epoch": "65bd5c5cb9b84d1e90a4843be5bde3d9",
+   "observed_at": 1793515666.7251022
   }
  },
  "tasks": {
@@ -1711,7 +1717,7 @@
    "round": null,
    "reason": "the run holds T3.15 blocked since 2026-11-01T01:26:07 while it goes on, with no decision to answer: 0 blocking finding(s) or problems remain after 2 remediation round(s) (limit 2): audit gate: no open blocking finding",
    "block": "366499d7c41fad72",
-   "status": "running",
+   "status": "asked_owner",
    "at": "2026-11-01T01:31:24",
    "session": "20261101-013124-d75b"
   }
@@ -2222,7 +2228,7 @@
   {
    "id": "20261101-013124-d75b",
    "name": "bit-pictures-REQ-021-solver",
-   "status": "running",
+   "status": "asked_owner",
    "started": 1793514684.398761,
    "started_at": "2026-11-01T01:31:24",
    "triggers": [
@@ -2238,14 +2244,16 @@
    "session_id": "21a72125-2d10-4cb2-afb9-f3775cabcea8",
    "provider": "claude",
    "model": "sonnet",
-   "home": "/home/david/.claude-work"
+   "home": "/home/david/.claude-work",
+   "resolved": {
+    "at": 1793514902.3222744,
+    "what": "T3.15 ya se resolvió (ya no está abierto)"
+   },
+   "ended": 1793514965.4688542,
+   "ended_at": "2026-11-01T01:36:05",
+   "summary": "Reintenté T3.15 (D-283 ya corregido), pero el reintento a301 hereda el snapshot dañado 3485dbb (1933 de 8564 archivos) y volverá a auditar un árbol incompleto; no integré nada.",
+   "question": "El reintento a301 de T3.15 parte del snapshot dañado 3485dbb (sin 6631 archivos) y su integración podría borrarlos de la línea. ¿Autorizas detener a301 y reintentar desde la base limpia 860f035, con un fix en bt_scheduler_retry (no continuar desde un snapshot que perdió la mayoría de los archivos de su base) o con un reinicio manual del snapshot registrado de T3.15? Rama lista sin integrar: solver/20261101-013124-d75b (675e8e13b, cubre worktrees de snapshot).",
+   "report": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/RUN.solver/20261101-013124-d75b/REPORT.md"
   }
- ],
- "held": {
-  "T3.15": {
-   "fp": "366499d7c41fad72",
-   "since": 1793514367.659977
-  }
- },
- "active": "20261101-013124-d75b"
+ ]
 }

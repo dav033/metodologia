@@ -602,3 +602,43 @@ regression: skipped (D-261: integrate.regression = none)
 rollback: git revert the merge of alloc-interrupted on main, restart bt-durable.service and bitacora-web.service and bitacora-remote-api.service
 remote API pin: b9e80f90a690 -> 00c3b93c8eae (backup /home/david/.config/systemd/user/bitacora-remote-api.service.d/exec.conf.bak-b9e80f90a690)
 result: merged 00c3b93c8eae, restarted bt-durable.service, bitacora-web.service, bitacora-remote-api.service, smoke ok
+
+# integration of Restore the executor module boundary: gc_scratch via the adapter, UI pool name from the brief (D-284), local restart of engine + web + remote API, 2026-11-01 01:43, session metodologia-97
+previous main: 663694ec8eaff6645b89a6d3a487b525efe82d21
+/home/david/bitacora/.state/durable/backups/bt_durable-20261101-014340.dump 61718280 56ccaa9fe945fa4ab2554e063b5a4da3ed23afbf12cb516637925074727a23fd
+regression: skipped (D-261: integrate.regression = none)
+rollback: git revert the merge of boundary-fix on main, restart bt-durable.service and bitacora-web.service and bitacora-remote-api.service
+remote API pin: 00c3b93c8eae -> 50b27d8cc2a7 (backup /home/david/.config/systemd/user/bitacora-remote-api.service.d/exec.conf.bak-00c3b93c8eae)
+result: merged 50b27d8cc2a7, restarted bt-durable.service, bitacora-web.service, bitacora-remote-api.service, smoke ok
+
+# integration of Integration and subplan worktrees killed mid-checkout are rebuilt like attempt worktrees (D-284), local restart of engine + web + remote API, 2026-11-01 01:44, session metodologia-97
+previous main: 50b27d8cc2a77cf7ebb04cd110681ca1df5d0de7
+/home/david/bitacora/.state/durable/backups/bt_durable-20261101-014433.dump 61718574 a095134b51f1c1f891c8548d41467167f8403302f15591e5d51e4eb6d7430900
+regression: skipped (D-261: integrate.regression = none)
+rollback: git revert the merge of solver/20261101-013124-d75b on main, restart bt-durable.service and bitacora-web.service and bitacora-remote-api.service
+remote API pin: 50b27d8cc2a7 -> e0d3bb15814c (backup /home/david/.config/systemd/user/bitacora-remote-api.service.d/exec.conf.bak-50b27d8cc2a7)
+result: merged e0d3bb15814c, restarted bt-durable.service, bitacora-web.service, bitacora-remote-api.service, smoke ok
+
+# integration of A retry never continues from a snapshot that lost most of its base's files (D-286), local restart of engine + web + remote API, 2026-11-01 01:45, session metodologia-97
+previous main: e0d3bb15814c691714bbfd17e342c8f72a71c8f7
+/home/david/bitacora/.state/durable/backups/bt_durable-20261101-014533.dump 61718830 07425df9f2413cbe50511b29de301598757dd0ee0800267231e0f5ea0a33cf83
+regression: skipped (D-261: integrate.regression = none)
+rollback: git revert the merge of gutted-snapshot on main, restart bt-durable.service and bitacora-web.service and bitacora-remote-api.service
+remote API pin: e0d3bb15814c -> 80d1e0d08b6d (backup /home/david/.config/systemd/user/bitacora-remote-api.service.d/exec.conf.bak-e0d3bb15814c)
+result: merged 80d1e0d08b6d, restarted bt-durable.service, bitacora-web.service, bitacora-remote-api.service, smoke ok
+
+# integration of The guard against a gutted snapshot also compares with today's base (D-286), local restart of engine + web + remote API, 2026-11-01 01:46, session metodologia-97
+previous main: 80d1e0d08b6da97045d91da38dd945d3910a4d3b
+/home/david/bitacora/.state/durable/backups/bt_durable-20261101-014627.dump 61719460 2f30e6bfb6f271e9a6db188cacacc0abb407416db436c6dd14d7e0fd9f88218e
+regression: skipped (D-261: integrate.regression = none)
+rollback: git revert the merge of gutted-chain on main, restart bt-durable.service and bitacora-web.service and bitacora-remote-api.service
+remote API pin: 80d1e0d08b6d -> 63e43520f47c (backup /home/david/.config/systemd/user/bitacora-remote-api.service.d/exec.conf.bak-80d1e0d08b6d)
+result: merged 63e43520f47c, restarted bt-durable.service, bitacora-web.service, bitacora-remote-api.service, smoke ok
+
+# integration of A durable retry never starts from a snapshot that holds under half of its line's files (D-287), local restart of engine + web + remote API, 2026-11-01 01:48, session metodologia-97
+previous main: 63e43520f47c0379ebd4ccf32daf74aacaa3ef93
+/home/david/bitacora/.state/durable/backups/bt_durable-20261101-014755.dump 61749383 b23bcf9d8d2fbdf404c7047b1a49a157d91a2204ca00133f20f3423fecdeef1a
+regression: skipped (D-261: integrate.regression = none)
+rollback: git revert the merge of gutted-engine on main, restart bt-durable.service and bitacora-web.service and bitacora-remote-api.service
+remote API pin: 63e43520f47c -> b45102a58294 (backup /home/david/.config/systemd/user/bitacora-remote-api.service.d/exec.conf.bak-63e43520f47c)
+result: merged b45102a58294, restarted bt-durable.service, bitacora-web.service, bitacora-remote-api.service, smoke ok

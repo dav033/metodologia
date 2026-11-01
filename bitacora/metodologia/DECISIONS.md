@@ -3673,3 +3673,43 @@ Solucionador 20261030-100736-d494 integrated merge fff622890f28b8093a9a0afda9c40
   engine restart (proposal: stop the engine only between allocations, or `KillMode=mixed` plus recovery for each).
 - **Evidence:** `test_executor_interrupted_allocation` (2; red without the fix); executor/scratch/gc suites OK;
   merge `00c3b93c8` (`--no-regression`, D-261). By metodologia-97. T3.15 itself must be retried (`retry-task`) once.
+
+## D-284 — Integration and subplan worktrees killed mid-checkout are rebuilt like attempt worktrees
+
+- **Context:** D-283 covered `GitWorkspaces.allocate`; `_allocate_snapshot` (composition/integration/subplan worktrees) has
+  the same reuse of a registered directory. Found by Solucionador `20261101-013124-d75b` while handling T3.15.
+- **Decision:** the same `_interrupted`/`_discard` rebuild before reuse.
+- **Evidence:** `test_executor_interrupted_allocation` (3 tests, the new one red without the fix); merge `e0d3bb158`
+  (`--no-regression`, D-261). Integrated by metodologia-97 from the solver's branch.
+
+## D-285 — The executor module has one door: `gc_scratch` goes through the adapter and the UI pool name comes from the brief
+
+- **Context:** with regressions off (D-261) two boundary tests of `test_scheduler_executor_integration` had been red:
+  `bt_durable/gc_scratch.py` (D-270) imported `bt_scheduler_executor.retention` directly, and `prompt.py` (D-280) named
+  `@bitacora/ui`, so the isolated module suite failed («prompt.py names bitacora»).
+- **Decision:** `retain_run`/`superseded_runs` are re-exported by `bt_scheduler_executor_adapter` and `gc_scratch` imports
+  them there; `bt_design_drafts` adds `Planning UI pool: @bitacora/ui` to the brief facts and `prompt.py` reads it
+  (default «the shared component pool»).
+- **Evidence:** `test_scheduler_executor_integration` 21 OK (was 2 failing), gc/adapter/briefs/drafts suites OK; merge
+  `50b27d8cc`. Both escaped defects registered in REGRESSION-OFF.md.
+
+## D-286 — A retry never continues from a snapshot that lost most of its base's files
+
+- **Context:** after D-283 the T3.15 retries a301 and a401 still started from the poisoned a201 snapshot (1933 of 8564
+  files) — `bt_scheduler_retry` continues every retry from the previous attempt's snapshot — so they audited the same
+  empty shell («clean checkout does not contain the SP-3 source», F1 high) and the chain made the damage its own base.
+- **Decision:** `RetryContinuation._plan` treats a snapshot with fewer than half the files of the previous attempt's base OR
+  of today's base (≥ 50 files) as unusable: `fresh` from today's base, the snapshot kept as reference, and the brief says
+  so. Comparing with today's base is what breaks a chain where the poison became the base.
+- **Evidence:** `test_scheduler_recovery_sources` (new test covers both bases and the chain); executor-adapter, recovery,
+  integrator, integration-line suites OK; merges `80d1e0d08`, `63e43520f` (`--no-regression`). T3.15 reopened by hand
+  after the deploy.
+
+## D-287 — A durable retry never starts from a snapshot that holds under half of its line's files
+
+- **Context:** D-286 guarded `bt_scheduler_retry`, the legacy continuation; the durable engine picks the retry base in
+  `bt.continue_base` → `GitLineIntegrator.continuation_base`, so T3.15's a501 still started from the poisoned a401 snapshot.
+- **Decision:** `continuation_base` compares the snapshot's file count with the home line's tip (≥ 50 files, under half =
+  gutted) and returns the line tip instead, logging it. A real edit is still continued.
+- **Evidence:** `test_durable_line_pin` (new test, 8 OK), line/integrator suites OK; merge `b45102a58`
+  (`--no-regression`). D-286's legacy guard stays (same rule, other path).

@@ -289,6 +289,26 @@
    "id": "D-283",
    "by": "metodologia-97: an interrupted worktree allocation is rebuilt, never reused half checked out",
    "at": "2026-11-01T01:33:33"
+  },
+  {
+   "id": "D-284",
+   "by": "solver 20261101-013124-d75b: worktree killed midway rebuilt",
+   "at": "2026-11-01T01:34:26"
+  },
+  {
+   "id": "D-285",
+   "by": "metodologia-97: executor module boundary restored (gc_scratch door, UI pool name from the brief)",
+   "at": "2026-11-01T01:43:38"
+  },
+  {
+   "id": "D-286",
+   "by": "metodologia-97: a retry never continues from a snapshot that lost most of its base's files",
+   "at": "2026-11-01T01:45:29"
+  },
+  {
+   "id": "D-287",
+   "by": "metodologia-97: durable retry base never a gutted snapshot (continuation_base)",
+   "at": "2026-11-01T01:47:51"
   }
  ]
 }
