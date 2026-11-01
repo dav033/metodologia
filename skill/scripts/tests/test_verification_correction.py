@@ -223,6 +223,67 @@ class Views(Base):
         self.assertIn("REQ-021 · SP-2 rechazada v2 · rediseñando", bt_page_now.bar_html([], verify=only))
 
 
+class OlderVersionRepublished(Base):
+    """Live pictures REQ-021, 2026-10-31 ~19:40: after the rejections a new run revision re-published older trees for
+    retest — SP-14 v2 (another commit), SP-2 v1, SP-3 v2 — while the decisions rejected v2, v2 and v3. `state` gave
+    `outdated` + `retest`, and the first D-268 filter (`state == "rejected"`) showed nothing."""
+
+    def ctx(self) -> dict:
+        return {"project": "pictures", "rid": "REQ-021", "rdir": self.rdir, "token": "tok", "root": None}
+
+    def live_rows(self) -> None:
+        self.reject("SP-2", 2, "b" * 40, "P-210")
+        self.reject("SP-1", 3, "e" * 40, "P-213")
+        self.draft("approved", chosen="c", approved=AFTER)
+        self.publish(SP_1=(2, "a" * 40), SP_2=(1, "d" * 40))
+
+    def test_the_live_rows_are_outdated_retests_and_still_in_correction(self):
+        self.live_rows()
+        rows = {r["id"]: r for r in v.state(self.rdir)["subplans"]}
+        self.assertEqual([(rows[s]["state"], rows[s]["retest"], rows[s]["version"]) for s in ("SP-1", "SP-2")],
+                         [("outdated", True, 2), ("outdated", True, 1)])
+        found = c.corrections(self.rdir)
+        self.assertEqual({sid: x["label"] for sid, x in found.items()},
+                         {"SP-1": "Rechazada v3 · reparando", "SP-2": "Rechazada v2 · construyendo v3"})
+        self.assertEqual((found["SP-2"]["retest"], found["SP-2"]["detail"]),
+                         (1, "v1 publicada de nuevo para volver a probarla"))
+        self.publish(SP_1=(2, "a" * 40), SP_2=(2, "f" * 40))          # same number, another tree: still not v3
+        self.assertEqual(c.correction(self.rdir, "SP-2")["phase"], "building")
+        self.publish(SP_1=(4, "a" * 40), SP_2=(3, "f" * 40))          # above N: the corrections are ready to try
+        self.assertEqual(c.corrections(self.rdir), {})
+
+    def test_probar_shows_the_retest_without_hiding_the_rejection(self):
+        import bt_page_verification as page
+        self.live_rows()
+        panel = page.panel(self.ctx(), {"id": "SP-2"})
+        self.assertIn('Rechazada v2 · construyendo v3</span><span class="pp-vstate warn">por probar</span> Versión 1', panel)
+        self.assertIn("La versión 1 se publicó de nuevo y no es la corrección: puedes volver a probarla mientras llega la "
+                      "versión 3.", panel)
+        self.assertIn('class="pp-rej"', panel)
+        self.assertIn("verify-approve", panel)                           # the retest can still be decided
+        chip = page.chip(self.rdir)
+        self.assertIn("2 rechazadas en corrección", chip)
+        self.assertNotIn("por probar", chip)                             # both «por probar» rows are corrections
+        self.assertIn("Rechazada v3 · reparando", page.run_card("pictures", "REQ-021", self.rdir))
+
+    def test_the_control_block_and_the_now_page_keep_the_rejection(self):
+        import bt_live_api
+        import bt_subplan_status as status_model
+        self.live_rows()
+        ctx = {**self.ctx(), "subplans": drafts.subplans(self.rdir), "flow": None,
+               "rows": {row["ref"]: row for row in drafts.rows(self.rdir)},
+               "run_status": None, "opts": {"lang": "en", "sp": "SP-2"}}
+        with patch.object(status_model, "_stages", return_value={}):
+            st = status_model.statuses(ctx)["SP-2"]
+        self.assertIn("Puedes volver a probar la versión 1; tu rechazo de la versión 2 sigue en corrección",
+                      [i["text"] for i in st["you"]])
+        self.assertTrue(any(b["text"].startswith("Rechazaste la versión 2: construyendo v3") for b in st["blockers"]))
+        with patch.object(bt_live_api, "runs", return_value=[("pictures", self.rdir)]):
+            items = bt_live_api.verify_items(Path(self.tmp.name))
+        self.assertEqual(items[0]["rejected"], {"SP-1": "Rechazada v3 · reparando",
+                                                "SP-2": "Rechazada v2 · construyendo v3"})
+
+
 class PlanTab(unittest.TestCase):
     """The subplan list, its header and the control block of the Plan tab (fixtures of test_subplan_control)."""
 
