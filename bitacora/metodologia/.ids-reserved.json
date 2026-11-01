@@ -349,6 +349,16 @@
    "id": "D-295",
    "by": "claude-97: ui pool dev loop",
    "at": "2026-11-01T13:07:55"
+  },
+  {
+   "id": "D-296",
+   "by": "fold warning names all missing predecessors (metodologia)",
+   "at": "2026-11-01T13:43:09"
+  },
+  {
+   "id": "D-297",
+   "by": "subplan lines keep up with what they build on (metodologia)",
+   "at": "2026-11-01T15:00:00"
   }
  ]
 }

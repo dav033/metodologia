@@ -3933,3 +3933,79 @@ Solucionador 20261030-100736-d494 integrated merge fff622890f28b8093a9a0afda9c40
   `~/.local/tmp/.../pool-devloop-evidence.md`. **Not verified:** webpack HMR (pictures cannot run on webpack); the
   owner's real checkout (its current branch has no `@bitacora/ui`: `components dev pictures` refuses there until a
   wired branch, e.g. `main`, is checked out).
+
+## D-296 — The fold warning names every predecessor the tried tree lacks, not only the one that clashed
+
+- **Context:** defect, pictures REQ-021 r39 SP-9 (tip a2ce0d60b): `bt_verification_tree._fold` stops at the first
+  predecessor that conflicts and folds nothing, but the panel named only that one («sin los cambios recientes de SP-2»).
+  The owner could reject SP-9 for a defect already fixed in another subplan the tree also lacks.
+- **Decision:** reporting only. `_unfolded` adds `conflict["missing"]` (ids in plan order, without `with`) on all three
+  paths that reach it (text conflict, merge failure, `commit-tree` failure); `_tree_text` and `_fold_warning` show it in
+  Spanish and keep the file list; with nothing missing the old wording stays. What gets folded, the offered commit,
+  versions, refs and decision state do not change, and the fold is not made partial (a separate decision for the owner).
+  A predecessor whose tip is outside the version's history but whose merge changes nothing is NOT listed: its work is
+  already in the tree, the same rule `_fold` applies when it continues past a no-op merge. On SP-9 that drops SP-5, SP-7
+  and SP-8 (raw merge exit 0, same tree; SP-7/SP-8 identical in all 41 changed files, SP-5 in 40 of 41), so the live list
+  is SP-14, SP-4, SP-6 rather than every non-ancestor. Those three, like SP-2, exit 1 from a raw `merge-tree` against
+  SP-9, which matters for any later partial-fold decision.
+- **Evidence:** merge `fce0ce1b9` (branch commit `6b4681e12`; D-261, no full regression). New tests red before the fix,
+  `test_durable_verification` 11 OK, `test_verif*` 117 OK, `test_owner_reject_solver` 8 OK, `test_rejection_images` 20 OK
+  (with the project venv; system python lacks `pydantic` for one existing test). Ruff: only two findings on lines this
+  change did not touch. Live: `bt_verification.state` for REQ-021 gives byte-identical commit, version, state and
+  decision per subplan before and after.
+
+## D-297 — Subplan lines keep up with what they build on; a passed gate stops counting when what it judged changed
+
+- **Date:** 2026-11-01 · **Status:** Accepted · **Refines:** D-172, D-173, D-213, D-245, D-246, D-289, D-296
+- **Context:** the owner, testing SP-9 of pictures REQ-021 r39, read «no pude combinar este subplan con la versión actual de
+  SP-2» and asked that it never happen again. The fold warning was true and nobody acted on it. Four origins, each checked on
+  live data: (1) a line holds its members and their frozen-plan ancestors, so a repair a stage adds to an earlier subplan
+  never reaches a later line, and where it does and conflicts it is left out «for the gates that compose both» (D-172,
+  D-289); (2) those gates were far off, and nothing checked the ones already passed: `subplans.superseded` counted later
+  gates not built yet, so `fresh_targets` on r39's real plan and states returns `[]`, and T91..T99 count as passed with every
+  member stale (T98/T99's snapshots are r26's, inherited through every join since, older than SP-2's r27 and r32 repairs); a passed
+  gate rejected on recomposition also kept counting (`held` read only its task's state); (3) the fold (D-246) reads with
+  `request_resolutions=False`, gave up on any history with several merge bases even with a recorded resolution, and memoized
+  a conflict for the life of the process; so no request existed and no one was told; (4) merges left out by design (`_caught_up`,
+  `continuation_base`, `sync`, another subplan's line) did open requests that nothing owns: the 14 requests of 01:25 came from
+  T94's base meeting SP-5's line (ours «T94 starts from SP-4's line»). One reached the T3.15 session's inbox, after 49 + 2
+  about the gutted snapshot in key order; the engine restart at 02:00:04 cut that pass before its state was saved; the session
+  listed 30 keys as `handled` and wrote no `.resolved`; when T94 was accepted at 02:08 `resolutions.target` had nothing to
+  name them. 52 requests sit open like that. Sessions were also spent per file, not per session (`T2.55: 18`).
+- **Decision:** `bt_durable/reconcile.py`, run by the Solucionador's pass before it looks for work. For every run not finished,
+  in plan order, each subplan line is folded with its predecessors' lines by the composer's rules.
+  - Folded with a changed tree: the line takes that commit by compare-and-swap. It is the commit «Probar» already offered, so
+    version and decision stand (`bt_verification.durable_versions` counts the tip it replaces, so a number never goes back).
+  - A conflict left: no line moves (all predecessors or none), the existing resolution requests are opened and bound to the
+    run with no task or decision behind them, and `resolutions.triggers` hands them over (slot `SP-x×SP-y`). The trigger closes
+    only when `.resolved` exists, whatever `handled` says; sessions run out into `limit`, which notifies the owner. A line whose
+    predecessor is pending waits instead of asking (SP-6 asked 16 files against an SP-5 about to change, and moved twice).
+  - A failure with no request (git, rules not applicable) is a `reconcile` trigger, so it is not silent either.
+  - A moved line, or a pending subplan cleared, sends the new run command `recheck_gates`.
+  - Gates: with `bt-run-live-gates` a later gate supersedes only if it judged, is judging or can compose now; a passed gate
+    rejected on recomposition holds what follows (`Gates.strict`) and its task shows `blocked`, which a stage join does not
+    inherit. `recheck_gates` composes rejected gates again and re-checks passed ones. A member not reconciled makes the composer
+    return `RECONCILE_PENDING` (no agent settles the same clash twice against other bases) and the run does not end on it.
+    The composer measures a member from the previous one when its line holds it, by the same rules.
+  - Fold: `request=True` only from the sweep; virtual base for criss-cross histories (moved to `GitSubprocessPort.virtual_base`);
+    the memo is keyed by the resolutions folder's mtime. Merges left out by design open no request (`ask=False`).
+  - Panel: while a tree lacks a predecessor the pill says «combinándose», «Aprobar» is hidden and refused (reject stays), and the
+    text says who holds it from the trigger's status: working, queued, escalated to the owner, off, or not started.
+- **Why lines and not only tried trees:** with tried trees alone the composer asks again with other merge bases, so an agent
+  would settle each clash twice and the owner would approve one of two independent resolutions; attempts would still start from
+  lines without the repair. Measured on r39 (below): after the lines moved, CG-9 composes with no new request and its candidate
+  equals SP-9's new tip in every file.
+- **SP-2's approval:** reconciliation only merges predecessors into a subplan. SP-2's one predecessor, SP-1, is already in its
+  history, so its line and `(version, commit)` do not change: v2 `1c51118c0` stays approved.
+- **Rule:** tests in `test_durable_reconcile` (24) and `test_durable_fresh_gates.LiveGates`/`FreshTargets`; red against the base
+  commit's code plus an empty reconcile module, except the join guard.
+- **Evidence:** see the branch `deploy-subplan-reconcile` and the day log. Dry run on real data (scratch repo with alternates; no
+  live ref moved, digest of `refs/bt`, `refs/compositions`, `refs/subplans` equal before and after; `git merge-file --union`
+  stood in for the agent, so it proves the mechanism and the counts, not the content): 4 rounds of requests, 17 files for the agent (SP-5 x
+  SP-2 11, x SP-14 3, x SP-4 2, SP-12 x SP-10 1); new versions SP-5 v4, SP-6 v3, SP-7 v4, SP-8 v4, SP-9 v4, SP-11 v2, SP-12 v2;
+  SP-3 and SP-4 move to the commit they already offer (v4, v3, no agent); SP-1, SP-2, SP-14 unchanged; SP-10 and SP-13 still
+  building. `fresh_targets`: today `[]`, now `[CG-9]`.
+- **Not verified:** the quality of a real agent's resolutions; no automatic check runs on a reconciled tree until its gate runs
+  (CG-9 at once; SP-11 and SP-12 only at CG-11/CG-12, behind SP-10). `RECONCILE_PENDING` through the real workflow loop is
+  covered at the composer only: an engine lab has the Solucionador off. The replay of r39's own history under the new patch was
+  not run on the live database; upgrade suites cover recorded histories.
