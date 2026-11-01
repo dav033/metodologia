@@ -44,6 +44,19 @@ class InterruptedAllocation(unittest.TestCase):
         self.assertEqual(git(tree, "status", "--short"), "")
         self.assertTrue((tree / "a.txt").is_file() and (tree / "b.txt").is_file())
 
+    def test_a_killed_integration_checkout_is_rebuilt_too(self):
+        first = self.spaces.allocate_integration("r", "main", "CG-1")
+        tree = Path(first.path)
+        lines = (self.spaces.root / "journal.jsonl").read_text().splitlines()
+        (self.spaces.root / "journal.jsonl").write_text("\n".join(l for l in lines if '"allocated"' not in l) + "\n")
+        git(tree, "read-tree", "--empty")
+        for name in ("a.txt", "b.txt"):
+            (tree / name).unlink()
+        again = self.spaces.allocate_integration("r", "main", "CG-1")
+        self.assertEqual(again.path, first.path)
+        self.assertEqual(git(tree, "status", "--short"), "")
+        self.assertTrue((tree / "a.txt").is_file() and (tree / "b.txt").is_file())
+
     def test_a_finished_allocation_is_reused_untouched(self):
         first = self.spaces.allocate(self.request)
         (Path(first.path) / "a.txt").write_text("the agent's work")
