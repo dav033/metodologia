@@ -4009,3 +4009,11 @@ Solucionador 20261030-100736-d494 integrated merge fff622890f28b8093a9a0afda9c40
   (CG-9 at once; SP-11 and SP-12 only at CG-11/CG-12, behind SP-10). `RECONCILE_PENDING` through the real workflow loop is
   covered at the composer only: an engine lab has the Solucionador off. The replay of r39's own history under the new patch was
   not run on the live database; upgrade suites cover recorded histories.
+
+## D-298 — A gate publishing a moved line is not one more version; the same commit is not announced twice
+
+- **Date:** 2026-11-01 · **Status:** Accepted · **Refines:** D-297
+- **Context:** on pictures REQ-021 r39, CG-9 published at 17:44 the commits the lines had taken. `durable_versions` sorted the tip offered before a move as `~NNNNNN`, after every stored publication, so the sequence read `…, 4763f8c6e (published), ddbd8c7b1 (offered), 4763f8c6e`. SP-3 went from v4 to v5 and SP-4 from v3 to v4 with no change of commit, SP-5, SP-7, SP-8 and SP-9 reached v5 instead of v4 and SP-6 v4 instead of v3, and the owner was told «versión 5 está lista para probar de nuevo». The dry-run of D-297 had no gate publishing after the move, so it did not show.
+- **Decision:** the offered tip takes the moment of its move, in UTC like `published_at`, so a later publication comes after it. `on_projection` compares commits: a new number on the same commit announces nothing.
+- **Consequences:** live numbers went back once, and now match the dry-run: SP-3 v4, SP-4 v3, SP-5 v4, SP-6 v3, SP-7 v4, SP-8 v4, SP-9 v4, SP-11 v2, SP-12 v2. No decision was made on an inflated number, and the correction sent no announcement. A «Probar» copy opened at an inflated number is not reused, because copies are named by version.
+- **Evidence:** merge `d286c5457`; two new tests in `test_durable_reconcile`, red before the fix; `test_durable_reconcile`, `test_durable_fresh_gates` and `test_durable_verification` 45 OK. The one error in `test_verification_correction` (`No module named 'test_subplan_control'`) also occurs on `e730f981e`.

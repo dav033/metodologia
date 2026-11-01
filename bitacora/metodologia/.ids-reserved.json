@@ -359,6 +359,11 @@
    "id": "D-297",
    "by": "subplan lines keep up with what they build on (metodologia)",
    "at": "2026-11-01T15:00:00"
+  },
+  {
+   "id": "D-298",
+   "by": "a moved line published by a gate is not one more version (metodologia)",
+   "at": "2026-11-01T18:06:00"
   }
  ]
 }
