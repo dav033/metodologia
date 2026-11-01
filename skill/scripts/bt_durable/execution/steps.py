@@ -126,6 +126,16 @@ def contract_gate(run: dict, task_id: str, base: str) -> dict:
     return _port(lambda: gate.check(ref, plan(ref), task_id, base))
 
 
+@DBOS.step(name="bt.env_probe", retries_allowed=True, max_attempts=3, interval_seconds=2)
+def env_probe(run: dict, task_id: str) -> dict:
+    """The attempt's test resources before an agent starts ({} with no probe wired or nothing to report), D-265."""
+    ref = RunRef.model_validate(run)
+    probe = engine.ports().env_probe
+    if probe is None:
+        return {}
+    return _port(lambda: probe.check(ref, plan(ref), task_id))
+
+
 @DBOS.step(name="bt.unready_ancestors")
 def unready_ancestors(run: dict, task_id: str, states: dict) -> list[str]:
     """The task's ancestors not done in `states` (the run's summary), in plan order: pure over the frozen plan."""

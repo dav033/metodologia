@@ -18,6 +18,7 @@ from pathlib import Path
 from bt_contracts.execution import AttemptRef, Route
 from dbos import DBOS
 
+from .adapters.agent_env import AgentEnvProbe
 from .adapters.audit import AuditGate
 from .adapters.briefs import DurableBriefs, DurableDesignGate
 from .adapters.composition import CompositionComposer
@@ -56,7 +57,8 @@ def wire(cfg: EngineConfig, *, repositories_for: Callable[[str], object], driver
                  preparer=attempts, runtime=runtime or SupervisorRuntime(cfg.state_dir / "supervisor"), reader=attempts,
                  capturer=attempts, verifier=verifier or operator_verifier(cfg.state_dir / "m6-quality.sqlite3"),
                  integrator=integrator, telemetry=telemetry, composer=integrator,
-                 auditor=AuditGate(repositories_for), design_gate=DurableDesignGate(repositories_for=repositories_for))
+                 auditor=AuditGate(repositories_for), design_gate=DurableDesignGate(repositories_for=repositories_for),
+                 env_probe=AgentEnvProbe(check_policy_for=check_policy, telemetry=telemetry))
 
 
 def requirement_dir(run) -> Path:

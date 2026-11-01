@@ -30,7 +30,9 @@ class Driver:
         return SimpleNamespace(env_remove=(), env_set=(("DRIVER_SET", "1"),), argv=("true",), stdin=None)
 
 
-class AgentTestEnvironment(unittest.TestCase):
+class AttemptLab(unittest.TestCase):
+    """A lab attempt prepared with an agent env file (no tests of its own)."""
+
     def setUp(self):
         self.lab = Lab(backend="pgroup")
         self.addCleanup(self.lab.cleanup)
@@ -51,6 +53,9 @@ class AgentTestEnvironment(unittest.TestCase):
             return self.attempts.prepare(attempt, frontier.task(self.plan, "T1"), Route(provider="codex", model="gpt-6-luna"),
                                          base_ref=git(self.lab.repo, "rev-parse", "HEAD"), note="", limits={})
 
+
+
+class AgentTestEnvironment(AttemptLab):
     def test_the_agent_receives_the_owners_test_variables_and_its_brief_names_them(self):
         (self.tmp / "agent-proj.env").write_text(f"# test values for agents\nPICTURES_REQ021_DATABASE_URL={URL}\n")
         prepared = self.prepare(str(self.tmp / "agent-{project}.env"))
@@ -107,6 +112,92 @@ class AgentTestEnvironment(unittest.TestCase):
         prepared = self.prepare(str(self.tmp / "missing-{project}.env"))
         self.assertNotIn("PICTURES_REQ021_DATABASE_URL", json.loads(prepared.env_file.read_text()))
         self.assertNotIn("Test environment", prepared.prompt_path.read_text())
+
+
+LIVE = "postgresql://agent:s3cret@127.0.0.1:55433/req021"
+
+
+class Remover(Driver):
+    def prepare(self, route, prompt, ws, timeout):
+        return SimpleNamespace(env_remove=("ANTHROPIC_API_KEY",), env_set=(), argv=("true",), stdin=None)
+
+
+class OneSourcePerKey(AttemptLab):
+    """D-265 (pictures REQ-021 r32 T3.91): the agent env file's copy of PICTURES_REQ021_DATABASE_URL named a port nothing
+    listened on while the verifier's reached the live tunnel; three attempts could not run their DB-backed check. The
+    checks' environment is the one source: the agent env file only adds keys it lacks."""
+
+    def policy(self, explicit=(), ambient=()):
+        from bt_scheduler_quality.policy import QualityPolicy
+        return QualityPolicy(environment=tuple(explicit), ambient_environment=tuple(ambient))
+
+    def test_a_stale_agent_value_never_reaches_the_attempt(self):
+        self.attempts.check_policy_for = lambda run: self.policy(explicit=[("PICTURES_REQ021_DATABASE_URL", LIVE)])
+        (self.tmp / "agent-proj.env").write_text(f"PICTURES_REQ021_DATABASE_URL={URL}\n")
+        prepared = self.prepare(str(self.tmp / "agent-{project}.env"))
+        env = json.loads(prepared.env_file.read_text())
+        self.assertEqual(env["PICTURES_REQ021_DATABASE_URL"], LIVE)
+        prompt = prepared.prompt_path.read_text()
+        self.assertIn("Environment source: PICTURES_REQ021_DATABASE_URL (agent env file: postgresql "
+                      "127.0.0.1:55965/req021_visual; verifier: postgresql 127.0.0.1:55433/req021)", prompt)
+        self.assertIn("you received the VERIFIER's value", prompt)
+        self.assertNotIn("s3cret", prompt)
+
+    def test_an_inherited_check_value_wins_over_the_agent_file_too(self):
+        """Under `verifier.inherit_env` the key came from the owner's environment (the T3.91 case)."""
+        self.attempts.check_policy_for = lambda run: self.policy(ambient=[("PICTURES_REQ021_DATABASE_URL", LIVE)])
+        (self.tmp / "agent-proj.env").write_text(f"PICTURES_REQ021_DATABASE_URL={URL}\n")
+        with patch.dict(os.environ, {"PICTURES_REQ021_DATABASE_URL": LIVE}):
+            prepared = self.prepare(str(self.tmp / "agent-{project}.env"))
+        self.assertEqual(json.loads(prepared.env_file.read_text())["PICTURES_REQ021_DATABASE_URL"], LIVE)
+        self.assertIn("Environment source:", prepared.prompt_path.read_text())
+
+    def test_agent_only_keys_still_pass_and_the_checks_explicit_keys_reach_the_agent(self):
+        self.attempts.check_policy_for = lambda run: self.policy(explicit=[("CHECK_ONLY", "from-verifier")],
+                                                                 ambient=[("INHERITED_ONLY", "not-for-agents")])
+        (self.tmp / "agent-proj.env").write_text("AGENT_ONLY=from-agent-file\n")
+        prepared = self.prepare(str(self.tmp / "agent-{project}.env"))
+        env = json.loads(prepared.env_file.read_text())
+        self.assertEqual((env["AGENT_ONLY"], env["CHECK_ONLY"]), ("from-agent-file", "from-verifier"))
+        self.assertNotIn("INHERITED_ONLY", env)              # an inherited check name the agent does not hold is not added
+        self.assertNotIn("Environment source:", prepared.prompt_path.read_text())
+
+    def test_a_name_the_driver_removes_does_not_come_back_from_the_checks(self):
+        self.attempts.driver_for = lambda project: Remover()
+        self.attempts._drivers.clear()
+        self.attempts.check_policy_for = lambda run: self.policy(ambient=[("ANTHROPIC_API_KEY", "sk-check")])
+        with patch.dict(os.environ, {"ANTHROPIC_API_KEY": "sk-check"}):
+            prepared = self.prepare(str(self.tmp / "missing-{project}.env"))
+        self.assertNotIn("ANTHROPIC_API_KEY", json.loads(prepared.env_file.read_text()))
+
+    def test_a_non_live_root_never_reaches_the_owners_files(self):
+        """D-256: under the test runner the root is a throwaway one; the owner's default agent env and secret files
+        (here under a fake HOME holding the key) reach neither the attempt nor the checks' policy it is aligned with."""
+        import bt_core
+        from bt_durable.service import check_policy
+        home = self.tmp / "home"
+        (home / ".config" / "metodologia").mkdir(parents=True)
+        (home / ".config" / "flow").mkdir(parents=True)
+        (home / ".config" / "metodologia" / "agent-proj.env").write_text(f"PICTURES_REQ021_DATABASE_URL={URL}\n")
+        (home / ".config" / "flow" / "secrets.env").write_text(f"PICTURES_REQ021_DATABASE_URL={LIVE}\n")
+        self.assertFalse(bt_core.is_live_root())
+        needs = task("T1", paths=["**"])
+        needs["verification"][0]["requires"] = ["PICTURES_REQ021_DATABASE_URL"]     # declared: secret files would fill it
+        run = self.lab.freeze([needs], revision=2)
+        self.plan = load_plan(Path(run["plan_path"]).read_text(encoding="utf-8"), approved_sha256=run["plan_sha256"],
+                              plan_id=run["plan_id"], revision=run["revision"])
+        self.run_ref = RunRef.model_validate(run)
+        self.attempts.check_policy_for = check_policy
+        with patch.dict(os.environ, {"HOME": str(home)}):
+            os.environ.pop("PICTURES_REQ021_DATABASE_URL", None)
+            built = check_policy(self.run_ref)
+            self.assertNotIn("PICTURES_REQ021_DATABASE_URL", dict((*built.environment, *built.ambient_environment)))
+            attempt = AttemptRef(run=self.run_ref, task_id="T1", number=1, workflow_id="wf-1")
+            prepared = self.attempts.prepare(attempt, frontier.task(self.plan, "T1"),
+                                             Route(provider="codex", model="gpt-6-luna"),
+                                             base_ref=git(self.lab.repo, "rev-parse", "HEAD"), note="", limits={})
+        self.assertNotIn("PICTURES_REQ021_DATABASE_URL", json.loads(prepared.env_file.read_text()))
+        self.assertNotIn("PICTURES_REQ021_DATABASE_URL", prepared.prompt_path.read_text())
 
 
 class BudgetTokens(unittest.TestCase):

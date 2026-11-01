@@ -115,6 +115,43 @@ class DurableHealing(unittest.TestCase):
         self.assertEqual([(e["kind"], e["request_id"]) for e in self.escalated], [("repeat", "T7.4:d2")])
         self.assertIn("changed nothing", self.escalated[0]["reason"])
 
+    def test_an_agent_that_could_not_run_its_checks_is_left_to_the_owner(self):
+        """pictures REQ-021 r32 T3.91 a5..a7 (D-265): the agent said its DB check could not run (refused connection) and
+        healing answered with locator and hit-testing guesses until max_attempts."""
+        said = ("Cambios hechos. La URL de prueba apunta al puerto 55965, que rechazó la conexión, así que el smoke real "
+                "de navegador queda pendiente.")
+        outputs = {"att-5": {"agent": {"status": "completed", "text": said},
+                             "snapshot": {"snapshot_sha": "b" * 40, "base_sha": "a" * 40, "changed_paths": ["a.ts"]}}}
+        client = Client(dict(decision(), verify_attempt="att-5"))
+        client.attempt_output = outputs.get
+        calls = []
+        self.assertEqual(self.heal(client, lambda *args: calls.append(args)),
+                         ["proj:REQ-900:r1:T7.4:T7.4:d1@k2: environment, left to the owner"])
+        self.assertEqual((calls, client.answers), ([], []))                 # no diagnosis, no answer
+        self.assertEqual([e["kind"] for e in self.escalated], ["decision"])
+        self.assertIn("could not run its checks", self.escalated[0]["reason"])
+        facts = healing.attempt_facts(client, {"verify_attempt": "att-5"})
+        self.assertTrue(facts["checks_not_run"])
+        run = next(healing.runs(self.root))[1]
+        text = healing.evidence(run, self.rdir, "T7.4", decision(), 2, facts)
+        self.assertTrue(text.startswith("THE AGENT SAYS IT COULD NOT RUN ITS CHECKS"))
+
+    def test_an_unreachable_test_resource_is_left_to_the_owner(self):
+        env = dict(decision(), failure={"failure_class": "environment", "code": "AGENT_ENV_UNREACHABLE",
+                                        "signature": "sig-env", "summary": "AGENT_ENV_UNREACHABLE: DB_URL -> ..."})
+        client = Client(env)
+        calls = []
+        self.assertEqual(self.heal(client, lambda *args: calls.append(args)),
+                         ["proj:REQ-900:r1:T7.4:T7.4:d1@k2: environment, left to the owner"])
+        self.assertEqual((calls, client.answers), ([], []))
+
+    def test_checks_not_run_reads_the_final_message_simply(self):
+        for said in ("I could not run the browser check: ECONNREFUSED 127.0.0.1:55965", "no ejecuté el smoke",
+                     "The e2e check was not run because the database is down", "el smoke real queda pendiente"):
+            self.assertTrue(healing.checks_not_run(said), said)
+        for said in ("Implemented the change; all checks pass.", "No quedan tareas pendientes.", "", "Not run: none"):
+            self.assertFalse(healing.checks_not_run(said), said)
+
     def test_attempt_facts_read_the_decided_attempt(self):
         changed = {"agent": {"status": "completed", "text": "done"},
                    "snapshot": {"snapshot_sha": "b" * 40, "base_sha": "a" * 40, "changed_paths": ["src/a.ts"]}}

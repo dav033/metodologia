@@ -35,6 +35,17 @@ OPTIONS = {"retry": "a new attempt of the task from its last snapshot",
            "retry_other_route": "a new attempt on another model or account",
            "reverify": "verify the same snapshot again (only after its manual checks were attested)",
            "stop": "stop the task"}
+# decisions about the environment itself: a new agent run does not fix them, the owner does (D-265)
+OWNER_ENV_CODES = frozenset({"AGENT_ENV_UNREACHABLE"})
+# the agent's final message says a check could not be run, or why (pictures REQ-021 r32 T3.91 a5..a7: «la URL de prueba
+# apunta al puerto 55965, que rechazó la conexión … el smoke real de navegador queda pendiente»), D-265
+_NOT_RUN = re.compile(
+    r"connection refused|ECONNREFUSED|refused (?:the |a )?connection|could ?n[o']t (?:run|connect|reach|start)|"
+    r"cannot (?:run|connect|reach)|can't (?:run|connect|reach)|unable to (?:run|connect|reach)|"
+    r"did ?n[o']t (?:run|execute)|(?:was|were|has|have) ?n[o']t (?:been )?(?:run|executed)\b|(?:remains?|left|still) pending|"
+    r"rechaz[óoa]\w* (?:la )?conexi[óo]n|conexi[óo]n rechazada|no (?:se )?(?:pud[oe]|puedo|pudimos) (?:ejecutar|correr|"
+    r"conectar|lanzar|arrancar)|no (?:ejecut[ée]|corr[ií]|lanc[ée])\b|no se (?:ejecut[óo]|corri[óo])|"
+    r"(?<!no )(?:queda|quedan|qued[óo]|quedaron|sigue|siguen)\s+(?:\w+\s+){0,2}pendientes?\b", re.IGNORECASE)
 _running: set[str] = set()
 _lock = threading.Lock()
 
@@ -99,8 +110,15 @@ def attempt_facts(client, decision: dict) -> dict:
     changed = list(snapshot.get("changed_paths") or ())
     unchanged = bool(snapshot.get("snapshot_sha")) and (snapshot.get("snapshot_sha") == snapshot.get("base_sha")
                                                         or not changed)
+    message = str(agent.get("text") or "")
     return {"attempt": key, "unchanged": unchanged, "changed": len(changed), "agent_status": agent.get("status"),
-            "agent_message": str(agent.get("text") or "")[-1500:]}
+            "agent_message": message[-1500:], "checks_not_run": checks_not_run(message)}
+
+
+def checks_not_run(message: str) -> bool:
+    """The agent's final message says it could not run a check (a refused connection, «no ejecuté», «queda pendiente»):
+    the failing checks were never reproduced by the agent, so a code guess does not answer them (D-265)."""
+    return bool(_NOT_RUN.search(message or ""))
 
 
 def evidence(run: RunRef, rdir: Path, task_id: str, decision: dict, round_no: int | None,
@@ -124,6 +142,11 @@ def evidence(run: RunRef, rdir: Path, task_id: str, decision: dict, round_no: in
              f"Failure: {failure.get('failure_class')} {failure.get('code')}: {failure.get('summary')}",
              "Offered options in this runtime:", *[f"- {o}: {OPTIONS[o]}" for o in offered],
              "Failure evidence:", *[str(e.get("excerpt") or "")[:2500] for e in failure.get("evidence") or [] if isinstance(e, dict)]]
+    if facts and facts.get("checks_not_run"):
+        lines.insert(0, "THE AGENT SAYS IT COULD NOT RUN ITS CHECKS (its final message is below): the failing checks "
+                        "were not reproduced by the agent, most likely because of its environment (a refused "
+                        "connection, a missing service). This is an environment question for the operator, not a "
+                        "code defect to guess at.")
     if facts:
         lines += [f"Decided attempt {facts.get('attempt')}: " + (
                       "it changed NOTHING (its snapshot is the tree it started from): the failing checks ran on the "
@@ -201,6 +224,18 @@ def _one(run, rdir, state, task_id, item, decision, client, diagnose, notify, st
         return [f"{key}: the same failure again, left to the owner"]
     facts = attempt_facts(client, decision)
     code = str((decision.get("failure") or {}).get("code") or "")
+    if code in OWNER_ENV_CODES or facts.get("checks_not_run"):
+        # an unreachable test resource, or an agent that could not run its checks: another run of an agent answers
+        # nothing (pictures REQ-021 r32 T3.91: healing guessed a locator and floor hit-testing), D-265
+        state["seen"].append(key)
+        why = (f"the environment stopped the start ({code})" if code in OWNER_ENV_CODES else
+               "the agent says it could not run its checks: " + str(facts.get("agent_message") or "")[-200:])
+        activity.record(rdir, "Autocuración", f"{task_id}: {decision['request_id']} queda para ti: "
+                        + ("un recurso de prueba no responde" if code in OWNER_ENV_CODES else
+                           "el agente no pudo ejecutar sus checks (entorno)"), kind="flow")
+        escalate(_left(run, task_id, decision, round_no, key, "decision",
+                       f"{why}; {decision.get('reason') or ''}"))
+        return [f"{key}: environment, left to the owner"]
     again = [record for record in entry["signatures"].values() if record.get("option") and record.get("unchanged")
              and record.get("code") == code and record.get("round") == round_no]
     if facts.get("unchanged") and again:
