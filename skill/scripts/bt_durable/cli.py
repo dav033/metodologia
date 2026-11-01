@@ -14,6 +14,9 @@
   pause|resume PROJECT REQ                stop/allow starting new tasks (running agents continue)
   retry-task PROJECT REQ TASK             start a blocked task again (new round)
   cancel PROJECT REQ                      cancel every workflow of the run; the engine's reaper stops their units
+  gc-worktrees [--apply] [--no-size] [--json]  attempt worktrees nothing needs any more (bt_durable.scratch, D-266):
+                                          a DRY RUN by default (counts and bytes); --apply removes them (refs, branches
+                                          and attempt folders stay). The engine runs the same pass every 10 minutes
 """
 from __future__ import annotations
 
@@ -57,7 +60,9 @@ def database_url() -> str:
 
 
 def engine_config() -> EngineConfig:
-    return EngineConfig(system_database_url=database_url(), state_dir=Path(bt_core.STATE) / "durable",
+    from .scratch import scratch_root
+    state = Path(bt_core.STATE) / "durable"
+    return EngineConfig(system_database_url=database_url(), state_dir=state, scratch_dir=scratch_root(state),
                         agent_concurrency=int(bt_config.get("execution.agent_concurrency", 2)),
                         verify_concurrency=int(bt_config.get("execution.verify_concurrency", 1)))
 
@@ -357,6 +362,29 @@ def cmd_cancel(args) -> int:
     return 0
 
 
+def cmd_gc_worktrees(args) -> int:
+    """One collection pass from the operator's shell: dry run unless --apply. Units still held by the supervisor are
+    kept; without the supervisor's answer nothing is removed."""
+    from . import scratch
+    from .adapters.runtime import SupervisorRuntime
+    cfg = engine_config()
+    try:
+        held = SupervisorRuntime(cfg.state_dir / "supervisor").owned("")
+    except Exception as error:  # noqa: BLE001 - which units are alive is unknown: removing nothing is the safe answer
+        if args.apply:
+            raise SystemExit(f"the supervisor did not answer ({type(error).__name__}: {error}); nothing removed") from None
+        held = []
+    client = _client()
+    try:
+        report = scratch.collect(cfg.scratch_root, client.client.list_workflows, apply=args.apply, held=held,
+                                 sizes=not args.no_size)
+    finally:
+        client.close()
+    print(scratch.render(report), file=sys.stderr)
+    print(json.dumps(report.as_dict() if args.json else report.summary(), indent=1, ensure_ascii=False))
+    return 1 if report.counts().get("failed") else 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="bt-durable", description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -396,8 +424,12 @@ def main(argv: list[str] | None = None) -> int:
         r.add_argument(name)
     r.add_argument("--note", default="")
     r.add_argument("--by", default=None, choices=BY, help="who retries; default as for `answer`")
+    g = sub.add_parser("gc-worktrees", help="remove attempt worktrees nothing needs (dry run unless --apply)")
+    g.add_argument("--apply", action="store_true", help="remove the eligible worktrees (default: only report them)")
+    g.add_argument("--no-size", action="store_true", help="skip measuring the eligible worktrees (faster)")
+    g.add_argument("--json", action="store_true", help="print every attempt's verdict, not only the summary")
     args = parser.parse_args(argv)
-    handlers = {"engine": cmd_engine, "start": cmd_start, "migrate": cmd_migrate, "join": cmd_join, "status": cmd_status,
+    handlers = {"gc-worktrees": cmd_gc_worktrees, "engine": cmd_engine, "start": cmd_start, "migrate": cmd_migrate, "join": cmd_join, "status": cmd_status,
                 "answer": cmd_answer, "attest": cmd_attest, "pause": cmd_command, "resume": cmd_command,
                 "retry-task": cmd_command, "cancel": cmd_cancel, "project": cmd_project, "remote": cmd_remote}
     return handlers[args.cmd](args)

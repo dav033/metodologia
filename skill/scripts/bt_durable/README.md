@@ -268,6 +268,71 @@ Details: `references/modules.md` §Solver.
 - Rollback of the whole runtime: `migrate --rollback` per run, `execution.backend=legacy`, stop `bt-durable.service`.
   Legacy state was never modified, so the legacy owner resumes from where it stopped.
 
+## Disk space: attempt worktrees, the free-space floor, the scratch subvolume (D-266)
+
+Each attempt works in its own git worktree under `<scratch>/ws/<project>/worktrees/` (`<scratch>` =
+`execution.scratch_root`, default `<state>/durable/attempts-root`); what it leaves that matters lives elsewhere: its
+snapshot commit (`refs/m3/handoff/…`), its branch and `<scratch>/attempts/<key>/` (prompt, log, handoff manifest).
+Until D-266 nothing removed a worktree: on 2026-10-31 ~480 of them (each with `node_modules` and a Next build) filled
+`/` and `/home` and T3.91 a9 died with «No space left on device».
+
+- **Collection** (`scratch.py`). Every 10 minutes (`service.GC_SECONDS`, the first pass 10 minutes after a start;
+  `execution.worktree_gc`, on by default) a background pass removes, at most 100 per pass, the worktrees of attempts
+  whose capture is complete (the manifest's snapshot ref still names its snapshot) and that nothing needs: the task
+  round ended (task workflow terminal) or a later attempt of the same round exists. A retry continues from the snapshot
+  ref, never from an earlier checkout; the only reader of a checkout after its capture is M6 (it mounts the attempt's own
+  `node_modules`), always for the latest attempt of an open round, which is kept. Also kept, with the reason: agent
+  workflow not terminal (`running`), unit still held (`unit-held`), a process working inside it (`in-use`), capture
+  missing or ref moved (`no-snapshot`), unknown to DBOS (`no-workflow`). `git worktree remove --force` + `prune` under
+  the repository's workspace lock; branch, refs and the attempt folder stay. Folders no attempt names are listed as
+  orphans and never removed. Telemetry: `worktree_removed`, `worktree_remove_failed`, `worktrees_collected`.
+- **By hand**: `uv run bt-durable gc-worktrees` is a dry run (counts, allocated GB, why each one is kept);
+  `--apply` removes; `--json` lists every attempt; `--no-size` skips measuring. Exit 1 when a removal failed.
+- **Floor** (`execution.min_free_gb`, default 10; 0 = off). Before an agent starts (step `bt.disk_guard`, behind
+  `DBOS.patch("bt-task-disk-guard")`, right after `bt.env_probe`) and before M6 runs a check, the free space of the
+  scratch and state filesystems is read. Below the floor no agent starts and no attempt is used: the task opens the
+  environment decision `DISK_LOW` (free bytes, path, the engine's biggest scratch consumers by count); a verification
+  returns `NEEDS_REVIEW DISK_LOW` (environment decision with `reverify`). Free space, then answer `retry`/`reverify`;
+  healing leaves `DISK_LOW` to the owner.
+
+**Snapshots.** Snapper takes hourly/daily snapshots of `@home`, so everything the engine writes and deletes under
+`/home` stays pinned until those snapshots expire: deleting 190 worktrees freed 481 MB. A btrfs subvolume nested inside
+`@home` is not part of `@home`'s snapshots. Make the scratch one, IN PLACE (same path: no recorded path changes, no
+replay impact). Operator procedure (not run by the engine):
+
+```sh
+cd ~/dev/metodologia
+uv run bt-durable gc-worktrees && uv run bt-durable gc-worktrees --apply   # smaller copy first
+uv run bt-durable pause <PROJECT> <REQ>             # every durable run with live attempts; agents keep running
+systemctl --user list-units --state=active 'bt-att-*'   # wait until it lists none (agents live in their own units)
+systemctl --user stop bt-durable.service
+S=~/bitacora/.state/durable/attempts-root           # or execution.scratch_root if set
+stat -f -c %T "$S"                                  # btrfs
+btrfs subvolume show "$S" >/dev/null 2>&1 && echo "already a subvolume: stop here"
+btrfs subvolume create "$S.new"
+chmod --reference="$S" "$S.new"
+cp -a --reflink=always "$S/." "$S.new/"
+mv "$S" "$S.old" && mv "$S.new" "$S"
+btrfs subvolume show "$S" | head -3                 # it is a subvolume now
+git -C <repository> worktree list | grep -c attempts-root    # the remaining worktrees still resolve
+systemctl --user start bt-durable.service
+uv run bt-durable resume <PROJECT> <REQ>
+rm -rf "$S.old"                                     # after a check; its blocks return when the old snapshots expire
+```
+
+The same in-place swap fits the other high-churn folders (stop their writers first): the legacy executor's
+`<state>/executor` (its worktrees: `python -m bt_scheduler_executor.retention_cli --root <state>/executor`, hourly as `bt-workspace-retention.timer`), Probar's copies in
+`~/.local/share/bitacora-verify`, M6's dependency cache `~/.cache/m6-deps`, the integration deploy/regression roots in
+`~/.local/share/bitacora-integrate`.
+
+**Another path** (`execution.scratch_root`, e.g. a separate subvolume mounted elsewhere) works for new attempts, but
+recorded values name the old one: `bt.prepare`'s output and the verify children's inputs hold absolute paths
+(`Prepared.worktree`, `attempt_dir`, `prompt_path`, `env_file`, `stdin_path`; `Snapshot.manifest_path`), and git's
+worktree metadata holds each worktree's path. Move it only with every run paused and no attempt unit alive, and leave a
+symlink at the old path (`ln -s <new> "$S"`) so those paths still resolve. New attempts' branches then carry a new
+scope suffix (it hashes the resolved root), so the brief's continuation note cannot name an attempt from before the
+move that committed its own work (the base itself is unaffected: it is a commit).
+
 ## Upgrading workflows
 
 The engine sets `enable_patching=True` (DBOS pins the application version, so code changes do not orphan PENDING
@@ -284,7 +349,7 @@ Patches in use: `bt-run-subplans`, `bt-run-audit-remediation`, `bt-run-survives-
 `bt-task-reconcile-asks-owner`, `bt-task-continues-latest-tree` (task workflow); D-262: `bt-run-transitive-readiness`,
 `bt-run-requeues-unready-task` (run workflow), `bt-task-rechecks-ancestors`, `bt-task-retry-catches-up`,
 `bt-task-contract-gate`, `bt-task-no-change-is-not-check-failed`, `bt-task-heap-limit-is-not-sandbox-oom` (task
-workflow); D-265: `bt-task-probes-agent-env` (task workflow). A workflow body reads the plan only through `steps.workflow_plan()`:
+workflow); D-265: `bt-task-probes-agent-env` (task workflow); D-266: `bt-task-disk-guard` (task workflow). A workflow body reads the plan only through `steps.workflow_plan()`:
 the `bt.plan_text` step must run (or replay) every time, or a run recovered after another workflow warmed the process
 cache skips its first step. The control plane (`control/`: frontier, policy, classifier, subplan scopes) decides what a
 workflow does next from recorded step results, so a change to its decisions is a sequence change too.
@@ -309,6 +374,7 @@ such guard: `_enqueue` turns a child's failure into an `internal_error` fact.
 | an integration conflict has a recorded resolution | `reverify` observes integration again for that verification profile (`bt-task-reverify-reintegrates`, D-221); replay keeps the same child ID, and older histories retain their recorded ID |
 | a check is `BLOCKED_ENV CHECK_UNSUPPORTED` | M6 refuses inline code (`python3 -c …`): put the check in a script of the repository |
 | `SANDBOX_UNAVAILABLE` | `bwrap` missing or an invalid sandbox environment (duplicate variables are now resolved policy-first) |
+| `DISK_LOW` / «No space left on device» | `uv run bt-durable gc-worktrees` (dry run), then `--apply`; old snapper snapshots of `/home` pin deleted blocks; see «Disk space» |
 | an agent seems stuck | `python -m bt_supervisor show <attempt key>`; `systemctl --user status bt-att-*` |
 | the engine does not start | `journalctl --user -u bt-durable`; the state directory must be private (0700) |
 | metrics | `python -m bt_durable.bench durable <state>/durable/telemetry.jsonl` |

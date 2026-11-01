@@ -34,9 +34,14 @@ DEFAULTS: dict = {
     # names them, so it runs the checks that need them before it finishes (the verifier takes its own from verifier.*).
     # One source per key (D-265): a key the checks' environment also has reaches the agent with the verifier's value;
     # this file only adds keys the checks lack, and a differing copy is reported as stale.
+    # `scratch_root` (D-266): where the durable engine keeps the attempts' worktrees and folders; empty =
+    # <state>/durable/attempts-root. `worktree_gc`: the engine removes an attempt's worktree once its snapshot is captured
+    # and nothing needs the checkout (its round ended or a later attempt exists); `min_free_gb`: below this much free
+    # space on the scratch or state filesystem no agent starts and no check runs (decision DISK_LOW); 0 = no floor.
     "execution": {"backend": "legacy", "database_url": "", "agent_concurrency": 2, "verify_concurrency": 1,
                   "routes": ["claude::sonnet"], "router": "m2", "durable_cli": [],
-                  "agent_env_file": "~/.config/metodologia/agent-{project}.env"},
+                  "agent_env_file": "~/.config/metodologia/agent-{project}.env",
+                  "scratch_root": "", "worktree_gc": True, "min_free_gb": 10},
     # a run without a human retries; up to 3 tasks at once when dependencies, files and resources allow it, but a task
     # whose plan scope is large runs alone in its repository; an agent process may work up to 2 h (the final gate takes
     # longer than 30 min)

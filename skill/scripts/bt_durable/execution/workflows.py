@@ -70,6 +70,8 @@ PATCH_TASK_NO_CHANGE = "bt-task-no-change-is-not-check-failed"
 PATCH_TASK_HEAP_LIMIT = "bt-task-heap-limit-is-not-sandbox-oom"
 # D-265 (pictures REQ-021 r32 T3.91): the attempt's test resources probed before an agent starts
 PATCH_TASK_ENV_PROBE = "bt-task-probes-agent-env"
+# D-266 (2026-10-31, / and /home at 100 %, T3.91 a9 «No space left on device»): free disk checked before an agent starts
+PATCH_TASK_DISK_GUARD = "bt-task-disk-guard"
 # what a step the run workflow calls itself raises once its retries are spent; before PATCH_RUN_STEP_FAILURES the run
 # ended in ERROR there (never recovered), so no recorded history goes on past such a failure
 RUN_STEP_ERRORS = (steps.StepFailure, DBOSMaxStepRetriesExceeded)
@@ -563,7 +565,7 @@ def _run_task(run: RunRef, task_id: str, round_no: int, settings: Settings, note
     # when, before another attempt, its ancestors are not all done; ordered rounds (repairs, re-audits, recomposed
     # gates, the owner's retry with a note) never are
     requeue_ok = bool(parent_id) and not note and legacy is None
-    ancestors_on = catch_on = gate_on = nochange_on = heap_on = probe_on = False
+    ancestors_on = catch_on = gate_on = nochange_on = heap_on = probe_on = disk_on = False
     base_override = ""
     # the newest candidate tree of this task (the last snapshot an attempt left, or the reconciled legacy one): what the
     # next attempt continues from, whichever path decided the retry (automatic, owner/healing answer, wait, memory
@@ -661,6 +663,17 @@ def _run_task(run: RunRef, task_id: str, round_no: int, settings: Settings, note
             if probe.get("state") == "unreachable":
                 number -= 1                     # no agent ran: the number is used by the next real attempt
                 refused = _env_refused(run, task_id, probe, decisions, settings, outcomes)
+                if isinstance(refused, TaskOutcome):
+                    return refused
+                decisions, answer = refused
+                note = answer.note or note
+                continue
+        if disk_on or DBOS.patch(PATCH_TASK_DISK_GUARD):
+            disk_on = True                      # right before a plain step (bt.disk_guard); older histories start here
+            room = steps.disk_guard(run.model_dump(mode="json"), task_id)
+            if room.get("state") == "low":
+                number -= 1                     # no agent ran: the number is used by the next real attempt
+                refused = _disk_refused(run, task_id, room, decisions, settings, outcomes)
                 if isinstance(refused, TaskOutcome):
                     return refused
                 decisions, answer = refused
@@ -777,12 +790,27 @@ def _env_refused(run: RunRef, task_id: str, probe: dict, decisions: int, setting
     """A network resource the task's checks need did not answer before the start (D-265): no agent runs and no attempt
     is used; the owner fixes the agent env file or starts the tunnel/service and answers retry (the probe runs again),
     or stops the task (blocked, the decision names the key and host:port)."""
-    failure = classify.agent_env_unreachable(probe)
+    return _refused_start(run, task_id, classify.agent_env_unreachable(probe), "agent_env_unreachable",
+                          {"keys": [item.get("key") for item in probe.get("unreachable") or ()],
+                           "resources": [item.get("resource") for item in probe.get("unreachable") or ()]},
+                          decisions, settings, outcomes)
+
+
+def _disk_refused(run: RunRef, task_id: str, room: dict, decisions: int, settings: Settings,
+                  outcomes: list[AttemptOutcome]) -> TaskOutcome | tuple[int, OwnerAnswer]:
+    """The engine's scratch is below `execution.min_free_gb` (D-266): no agent runs and no attempt is used; the owner
+    frees space (`bt-durable gc-worktrees --apply`, snapshots) and answers retry (the guard runs again), or stops."""
+    return _refused_start(run, task_id, classify.disk_low(room), "disk_low",
+                          {"free_bytes": room.get("free_bytes"), "threshold_bytes": room.get("threshold_bytes"),
+                           "path": room.get("path")}, decisions, settings, outcomes)
+
+
+def _refused_start(run: RunRef, task_id: str, failure: FailureReport, event: str, fields: dict, decisions: int,
+                   settings: Settings, outcomes: list[AttemptOutcome]) -> TaskOutcome | tuple[int, OwnerAnswer]:
+    """An environment fact found before a start: one event, then the owner decides (retry checks again; stop blocks)."""
     decision = RecoveryDecision(action=RecoveryAction.ESCALATE, reason=failure.summary, failure=failure,
                                 note_for_agent="")
-    steps.emit("agent_env_unreachable", {"run_id": run.run_id, "task_id": task_id,
-                                         "keys": [item.get("key") for item in probe.get("unreachable") or ()],
-                                         "resources": [item.get("resource") for item in probe.get("unreachable") or ()]})
+    steps.emit(event, {"run_id": run.run_id, "task_id": task_id, **fields})
     decisions, answer = _owner(run, task_id, decisions, decision, settings, outcomes, None)
     if isinstance(answer, TaskOutcome):
         return answer
