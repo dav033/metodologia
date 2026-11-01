@@ -1,0 +1,23 @@
+# The component pool watcher (D-293): a change to the live checkout's skill/ui is synced into every project whose
+# project.json says ui.sync, like the integrate trigger (same digest: nothing). Low priority; not in the integrate smoke.
+# install.py writes it to ~/.config/systemd/user/ (paths adapted) and does not enable it:
+#   systemctl --user enable --now bitacora-ui-watch
+# It re-executes itself when its own code changes, so a merge needs no restart of this unit.
+[Unit]
+Description=Bitacora component pool watcher (@bitacora/ui, D-293)
+After=default.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/dev/metodologia
+Environment=BITACORA_ROOT=%h/bitacora
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/usr/bin/python3 %h/dev/metodologia/skill/scripts/bitacora.py components watch
+Restart=on-failure
+RestartSec=30
+Nice=19
+CPUWeight=10
+IOWeight=10
+
+[Install]
+WantedBy=default.target
