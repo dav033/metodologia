@@ -269,6 +269,13 @@ class GitLineIntegrator:
             tip = self._tip(repo, ref)
             if tip:                                     # a line that does not exist yet is seeded by `sync`
                 targets.append((ref, tip, subplan_id))
+        for ref, tip, scope in [t for t in targets if t[2]] or targets:
+            if self._lost_most(repo, tip, snapshot.snapshot_sha):
+                # a gutted snapshot descends from the line tip, so `_merge` would fast-forward the line onto it: pictures
+                # REQ-021 r35 SP-3 took T3.15 a201..a601 (1933 of 8564 files) and every later attempt, guard included
+                # (D-287 compares with the line), started from that shell. Refused: the retry starts from the line.
+                return None, (f"the snapshot holds under half of {scope or 'the run'} line's files (its worktree was "
+                              "incomplete); it was not integrated"), "", {}
         moves, note, left = [], "", {}
         member = len(targets) > 1                       # at least one of its subplan lines exists
         # the member's own line exists: only that line (and nothing else) must take it
@@ -314,6 +321,9 @@ class GitLineIntegrator:
                     raise RuntimeError(f"SUBPLAN_LINE_UNWRITABLE: {ref}: {created.stderr.strip()[:300]}")
             applied, conflicts = [], {}
             for task_id, snapshot in entries:
+                if self._lost_most(repo, tip, snapshot):         # an incomplete worktree's shell is never accepted work
+                    conflicts[task_id] = "the snapshot holds under half of the line's files (its worktree was incomplete)"
+                    continue
                 new, conflict = self._merge(repo, tip, snapshot, f"bt: integrate {task_id} into {run.run_id} ({subplan_id})")
                 if conflict:
                     conflicts[task_id] = conflict
