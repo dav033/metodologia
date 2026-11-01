@@ -83,6 +83,15 @@ class Fake(integ.Services):
         self.calls.append(("smoke", tuple(units)))
         return self.smokes.pop(0) if self.smokes else []
 
+    def refresh_venv(self, live):
+        self.calls.append(("refresh_venv",))
+        return getattr(self, "venv_error", "")
+
+    def install_problems(self, live):
+        self.calls.append(("install_problems",))
+        problems = getattr(self, "venv_problems", [])
+        return problems.pop(0) if problems and isinstance(problems[0], list) else problems
+
 
 class Integrate(unittest.TestCase):
     def setUp(self):

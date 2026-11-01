@@ -53,6 +53,7 @@ from contextlib import contextmanager
 from dataclasses import dataclass, field
 from pathlib import Path
 
+import bt_package_modules as package_modules
 import bt_remote_pin as remote_pin
 
 LIVE = Path.home() / "dev" / "metodologia"
@@ -152,9 +153,13 @@ def git(cwd: Path, *args: str, check: bool = True) -> str:
 # how many times one turn merges main again when it moved during the regression, before giving the turn up
 CATCH_UP_RUNS = 2
 
+# what the live venv's install is made from: a merge that changes one refreshes it before the restart (D-277)
+VENV_PATHS = ("pyproject.toml", "uv.lock")
+VENV_SYNC_SECONDS = 600
+
 def runtime_path(path: str) -> bool:
     """Code a running unit imports: the engine and the web load ~30 skill/scripts modules lazily, so any of them counts."""
-    if path in ("pyproject.toml", "uv.lock"):
+    if path in VENV_PATHS:
         return True
     return path.startswith("skill/scripts/") and "/tests/" not in path and \
         (path.endswith(".py") or path.startswith("skill/scripts/bt_durable/deploy/"))
@@ -363,6 +368,32 @@ class Services:
                 return problems
             time.sleep(3)
 
+    def refresh_venv(self, live: Path) -> str:
+        """Reinstall the live checkout's project into its venv from the lock (`uv sync --frozen`: the lock is never
+        rewritten; `--inexact` removes nothing, like the engine's own `uv run`; the project reinstalled so its editable
+        finder maps the current py-modules). "" when it worked, else why not."""
+        import shutil
+        live = Path(live)
+        name = tomllib_name(live / "pyproject.toml")
+        uv = shutil.which("uv") or str(Path.home() / ".local" / "bin" / "uv")
+        env = {k: v for k, v in os.environ.items() if k not in ("VIRTUAL_ENV", "UV_PROJECT_ENVIRONMENT")}
+        try:
+            done = subprocess.run([uv, "sync", "--frozen", "--inexact", "--quiet", "--reinstall-package", name],
+                                  cwd=str(live), env=env, capture_output=True, text=True, timeout=VENV_SYNC_SECONDS,
+                                  check=False)
+        except (OSError, subprocess.SubprocessError) as error:
+            return f"uv sync could not run: {error}"
+        return "" if done.returncode == 0 else f"uv sync failed: {(done.stderr or done.stdout).strip()[-300:]}"
+
+    def install_problems(self, live: Path) -> list[str]:
+        """What the live venv cannot import of the distribution pyproject.toml lists (`bt_package_modules`)."""
+        return package_modules.install_problems(Path(live) / ".venv" / "bin" / "python", Path(live))
+
+
+def tomllib_name(pyproject: Path) -> str:
+    import tomllib
+    return tomllib.loads(Path(pyproject).read_text(encoding="utf-8")).get("project", {}).get("name", "bitacora")
+
 
 def _which(command: str) -> bool:
     import shutil
@@ -441,7 +472,30 @@ def preflight(req: Request, note: Callable[[str], None] = lambda text: None) -> 
         raise Refused(f"{req.branch} changes the live bitácora ({', '.join(touched[:3])}): bitácora files are written "
                       "in ~/bitacora directly, never merged")
     catch_up(req, note)
+    drifted = module_drift(req)
+    if drifted:
+        raise Refused(f"{req.branch} would integrate a distribution the live venv cannot install whole: {drifted} "
+                      "(D-277)")
     return git(req.live, "diff", "--name-only", f"main...{req.branch}").splitlines()
+
+
+def module_drift(req: Request) -> str:
+    """Why the branch's tree (with main merged in) does not package every skill/scripts module, or "" when it does.
+    Checked on every integration, whatever the regression setting: with it off (D-261) nothing else ran
+    `test_package_modules`, and five unlisted modules stopped the engine (D-277). A tree without pyproject.toml is not
+    this repository's shape and is not checked."""
+    import tomllib
+    text = git(req.live, "show", f"{req.branch}:pyproject.toml", check=False)
+    if not text:
+        return ""
+    try:
+        if "py-modules" not in package_modules.setuptools_table(text):
+            return ""                                # modules not listed by hand: nothing can drift
+    except tomllib.TOMLDecodeError as error:
+        return f"pyproject.toml does not parse ({error})"
+    prefix = package_modules.SCRIPTS + "/"
+    files = [p[len(prefix):] for p in git(req.live, "ls-tree", "--name-only", req.branch, prefix).splitlines()]
+    return package_modules.drift_message(*package_modules.drift(files, text))
 
 
 def _deploy_worktree(req: Request) -> Path:
@@ -626,7 +680,7 @@ def _integrate(req: Request, services: Services, note: Callable[[str], None], li
     pushed = services.push(req.live)
     note("pushed origin main" if not pushed else f"WARNING push failed (main is integrated locally): {pushed}")
     units, swap = _repin(req, merge, services, units, note, log)
-    problems = _restart(services, units, note)
+    problems = _refresh_venv(req, services, paths, note) or _restart(services, units, note)
     if not problems:
         _append(log, f"result: merged {merge[:12]}, restarted {', '.join(units) or 'nothing'}, smoke ok\n")
         if swap is not None:
@@ -731,6 +785,21 @@ def _prune(req: Request, swap: remote_pin.Swap, note: Callable[[str], None]) -> 
              + (f"; kept {'; '.join(kept)}" if kept else ""))
 
 
+def _refresh_venv(req: Request, services: Services, paths: list[str], note: Callable[[str], None]) -> list[str]:
+    """Before the restart, when `paths` change what the live venv is installed from: reinstall it and check that its
+    interpreter finds every module the distribution lists, under the live checkout. A problem is a failed smoke (the
+    units are not restarted; the caller reverts). Until 2026-10-31 nothing refreshed it: the engine's `uv run` resyncs
+    only when it notices, and the CLI on `.venv/bin/python` never does (D-277)."""
+    if not any(p in VENV_PATHS for p in paths):
+        return []
+    error = services.refresh_venv(Path(req.live))
+    problems = [f"the live venv was not refreshed ({error})"] if error else \
+        [f"the live venv: {p}" for p in services.install_problems(Path(req.live))]
+    note("live venv refreshed; every packaged module imports from the live checkout" if not problems else
+         "live venv: " + "; ".join(problems))
+    return problems
+
+
 def _restart(services: Services, units: list[str], note: Callable[[str], None]) -> list[str]:
     if not units:
         return []
@@ -769,7 +838,8 @@ def _revert(req: Request, merge: str, services: Services, units: list[str], note
     swap = None
     if repin:
         units, swap = _repin(req, reverted, services, units, note)
-    if _restart(services, units, note):
+    changed = git(req.live, "diff", "--name-only", f"{merge}^1", merge, check=False).splitlines()
+    if _refresh_venv(req, services, changed, note) or _restart(services, units, note):
         if swap is not None:
             try:
                 remote_pin.rollback(req.remote, swap, services.daemon_reload)
