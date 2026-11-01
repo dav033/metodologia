@@ -152,6 +152,51 @@ class DurableHealing(unittest.TestCase):
         for said in ("Implemented the change; all checks pass.", "No quedan tareas pendientes.", "", "Not run: none"):
             self.assertFalse(healing.checks_not_run(said), said)
 
+    # the final messages of pictures REQ-021 r32 T3.91 (2026-10-31), shortened: a7/a8 could not run the browser suite,
+    # a10 ran and passed every check of its own and only said the independent verification was still to come (D-269)
+    T391_A7 = ("Pasaron la regresión de conjuntos (11 tipos), la regresión piloto existente (11 tipos), el build de "
+               "paquetes con heap limitado, TypeScript estricto y ESLint focalizado.\n\nNo ejecuté `--suite "
+               "rectangular-mouse`: la URL de prueba apunta al puerto `55965`, que rechazó la conexión. El smoke real de "
+               "navegador y la matriz completa quedan pendientes hasta que el endpoint REQ-021 configurado esté disponible.")
+    T391_A8 = ("Pasaron la regresión de conjuntos, la prueba existente de mesas, ESLint, el build de workspaces, TypeScript "
+               "estricto y `git diff --check`.\n\nLa suite `rectangular-mouse` no llegó a abrir el navegador: la conexión "
+               "a la base de pruebas configurada falló con `ECONNREFUSED 127.0.0.1:55965`. Por eso no pude comprobar que el "
+               "canvas renderice el piso; la tarea queda sin verificar independientemente. No hice commit.")
+    T391_A10 = ("La prueba `rectangular-mouse` pasó en `/3d` con un Master Designer autenticado y una base aislada: creó una "
+                "mesa rectangular de `240×90×75 cm` con 8 sillas, abrió el editor, y undo/redo y la comprobación de una "
+                "sola creación pasaron.\n\nTambién pasaron el test de conjunto (11 tipos), el piloto (11 tipos), el build "
+                "de workspaces, TypeScript estricto, ESLint focalizado y `git diff --check`. Solo queda modificado ese "
+                "harness; no hice commit. **La verificación independiente sigue pendiente; no declaro la tarea "
+                "verificada.**")
+
+    def test_checks_not_run_needs_an_explicit_cannot_run_statement(self):
+        """T3.91 a10 (D-269): «La verificación independiente sigue pendiente» matched the D-265 «sigue … pendiente»
+        pattern and healing left d7 to the owner as if the agent could not run its checks, which had all passed."""
+        self.assertTrue(healing.checks_not_run(self.T391_A7))
+        self.assertTrue(healing.checks_not_run(self.T391_A8))
+        self.assertFalse(healing.checks_not_run(self.T391_A10))
+        for said in ("La verificación independiente sigue pendiente.", "Independent verification is still pending.",
+                     "Queda pendiente la auditoría independiente.", "The independent review was not run by me.",
+                     "All checks passed; the e2e smoke remains pending for the reviewer.",
+                     "Pasaron el build y el lint; el smoke queda pendiente para el auditor."):
+            self.assertFalse(healing.checks_not_run(said), said)
+        for said in ("No se pudo ejecutar el smoke: la base no responde.", "I couldn't run the e2e suite.",
+                     "La suite no llegó a abrir el navegador.", "Pasaron los unit tests; no pude ejecutar el smoke.",
+                     "Lint passed, but the browser check could not run: connection refused."):
+            self.assertTrue(healing.checks_not_run(said), said)
+
+    def test_a_retry_after_passing_checks_is_diagnosed_not_left_to_the_owner(self):
+        """With a10's message the decision goes on to the diagnosis instead of «el agente no pudo ejecutar sus checks»."""
+        outputs = {"att-10": {"agent": {"status": "completed", "text": self.T391_A10},
+                              "snapshot": {"snapshot_sha": "b" * 40, "base_sha": "a" * 40, "changed_paths": ["a.ts"]}}}
+        client = Client(dict(decision(), verify_attempt="att-10"))
+        client.attempt_output = outputs.get
+        calls = []
+        result = self.heal(client, lambda *args: calls.append(args))
+        self.assertNotIn("proj:REQ-900:r1:T7.4:T7.4:d1@k2: environment, left to the owner", result)
+        self.assertFalse(healing.attempt_facts(client, {"verify_attempt": "att-10"})["checks_not_run"])
+        self.assertEqual(len(calls), 1)                                       # the diagnosis was asked
+
     def test_attempt_facts_read_the_decided_attempt(self):
         changed = {"agent": {"status": "completed", "text": "done"},
                    "snapshot": {"snapshot_sha": "b" * 40, "base_sha": "a" * 40, "changed_paths": ["src/a.ts"]}}

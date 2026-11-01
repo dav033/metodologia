@@ -155,7 +155,8 @@ def _stage_of(rdir: Path) -> dict[str, Any] | None:
 
 
 def verify_items(root: Path | None = None) -> list[dict[str, Any]]:
-    """Runs with subplans waiting for the owner to try them: `[{project, req, subplans: [ids], states}]`."""
+    """Runs with subplans waiting for the owner to try them: `[{project, req, subplans: [ids], approved, total,
+    rejected: {id: «Rechazada vN · <phase>»}}]`; a rejected one waits for its correction (D-268)."""
     import bt_verification
     out = []
     for project, rdir in runs(root):
@@ -167,8 +168,12 @@ def verify_items(root: Path | None = None) -> list[dict[str, Any]]:
             continue
         left = [r for r in st["subplans"] if r["state"] in ("to_test", "outdated", "rejected")]
         if left:
+            rejected = {}
+            if any((r.get("decision") or {}).get("decision") == "rejected" for r in left):   # D-268: each correction
+                import bt_verification_correction
+                rejected = {sid: c["label"] for sid, c in bt_verification_correction.corrections(rdir).items()}
             out.append({"project": project, "req": bt_verification._req(rdir), "subplans": [r["id"] for r in left],
-                        "approved": st["approved"], "total": st["total"]})
+                        "approved": st["approved"], "total": st["total"], "rejected": rejected})
     return out
 
 

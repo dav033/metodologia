@@ -3316,3 +3316,53 @@ Solucionador 20261030-100736-d494 integrated merge fff622890f28b8093a9a0afda9c40
 - **Evidence:** `test_planner_account.RoleRouteModel` 9 new (6 red on main; one drives the real role router for
   `solver`); planner_account, agent_terminal, role_routing, role_policy, durable_solver and recovery suites: 160 tests
   OK. Opus subagent (`75217a042`, branch `role-route-model`); integrated with `--no-regression` (D-261).
+
+## D-266 — Attempt worktrees are removed once captured; a disk floor before a start or a check
+
+- **Date:** 2026-10-31 · **Status:** Accepted · **Refines:** D-262/D-265 (pre-dispatch gates), D-254 (retries continue
+  from the snapshot)
+- **Context:** 2026-10-31 ~18:45 `/` and `/home` (one btrfs filesystem, 476 GB) reached 100 % (7 MB free); pictures
+  REQ-021 r32 T3.91 a9 failed with «No space left on device». `~/bitacora/.state/durable/attempts-root/ws/pictures/
+  worktrees/` held ~480 attempt worktrees of r15..r32 (node_modules + Next build each): nothing ever deleted them.
+  Snapper's hourly/daily snapshots of `@home` pinned everything the engine wrote and deleted: removing 190 worktrees
+  freed 481 MB until the owner deleted 10 snapshots. Owner approved fixing the origin (GC + scratch outside snapshots).
+- **Decision:** `bt_durable/scratch.py` removes an attempt's worktree (`git worktree remove --force` + `prune` under the
+  workspace lock) once its capture is complete (the manifest's `refs/m3/handoff/…` still names its snapshot) and nothing
+  needs the checkout (round ended, or a later attempt of the round exists); retries continue from refs, never from a
+  checkout; M6's latest attempt of an open round is kept. Kept with a reason: running, unit-held, in-use, no-snapshot
+  (reported), no-workflow, latest-of-open-round; branch, refs and `attempts/<key>/` stay; orphans only reported. The
+  engine runs it every 10 min (≤100 per pass, `execution.worktree_gc`); `bt-durable gc-worktrees` is a dry run unless
+  `--apply`. Floor `execution.min_free_gb` (10): step `bt.disk_guard` after `bt.env_probe` starts no agent and uses no
+  attempt below it — decision `DISK_LOW`; M6 returns `NEEDS_REVIEW DISK_LOW` without running a check; healing leaves it
+  to the owner. `execution.scratch_root` relocates the scratch; README «Disk space» documents an in-place nested btrfs
+  subvolume (outside `@home` snapshots, same paths, no replay impact). DBOS patch: `bt-task-disk-guard`.
+- **Rule:** engine scratch is reclaimed as soon as its result lives in refs; a start or a check the disk cannot hold is
+  an environment decision, never an attempt that dies with ENOSPC.
+- **Evidence:** `test_durable_scratch` 15 (new: collection 8, CLI 2, guard 3, lab e2e 1, upgrade from `89b1a87f1` 1);
+  affected durable suites OK. Live dry run: 47 of 51 worktrees eligible. Opus subagent (`f9563a06f`, branch
+  `scratch-gc`); integrated with `--no-regression` (D-261).
+
+## D-268 — A rejected subplan version shows where its correction is
+
+- **Date:** 2026-10-31 · **Status:** Accepted · **Refines:** D-255 (approval over a rejection), D-258 (rejection notes
+  and images)
+- **Context:** pictures REQ-021 SP-14 v2 was rejected in «Probar» at 15:30 (P-211) and its UI was redone afterwards
+  (`planes@v2`: directions iterated, C chosen at 19:16, contract drafted). The Plan tab showed only the design state
+  («diseñando…»), so nothing told the owner the subplan was a rejected version waiting for its correction. Owner: «en
+  el panel debe aparecer como rechazada en espera de iteración o algo así».
+- **Decision:** `bt_verification_correction.correction()` is the one read model: for a subplan whose latest owner
+  decision rejects the published version N it returns the correction's phase from existing data only
+  (`decisions.json`, `design/drafts.json`, `design-approvals.json`, `.planning/flow.json` confirmation, run progress,
+  Solucionador state) and writes nothing. Redesign (UI contract not approved, or approved after the rejection):
+  rediseñando → elige una dirección → aprueba el contrato → reconfirma el subplan → construyendo vN+1; otherwise repair:
+  reparando; both end at vN+1 lista para probar, where the label goes away. «Rechazada vN · <fase>» is the primary
+  label in the Plan list and header (phase strip, note, P-item link), «Probar», run card, control block and «Ahora»;
+  the bar counts rejected versions as «en corrección», not «por probar». A version republished at or below N
+  (`outdated` + `retest`, e.g. a new run revision republishing older trees) does not end the correction: «Probar»
+  shows it as «por probar» next to the rejection badge and says it is not the correction.
+- **Rule:** a rejected version is never shown as just its design state or as «por probar».
+- **Evidence:** `test_verification_correction` 12 new; affected page and verification suites 289 OK. Live REQ-021
+  (read-only copy): SP-14 «Rechazada v2 · aprueba el contrato», SP-2 «Rechazada v2 · construyendo v3», SP-3
+  «Rechazada v3 · reparando». First integration (`bec779163`) showed nothing on live (rows were `outdated` + `retest`;
+  escaped defect recorded); fixed in `083c91257` (`OlderVersionRepublished` 3 tests from the live rows; 292 tests OK;
+  live read-only: SP-14/SP-2/SP-3 labelled). Opus subagent; integrated with `--no-regression`.

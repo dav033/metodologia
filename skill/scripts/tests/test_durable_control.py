@@ -293,6 +293,63 @@ class Policy(unittest.TestCase):
         self.assertEqual(policy.decide(f, Spent(attempts=3, signatures={"same0000": 3}), self.B, now=0,
                                        other_route=False, remediated=True).action, RecoveryAction.ESCALATE)
 
+    @staticmethod
+    def failed(sig, failing=("npm test",), passing=()):
+        """A failed attempt as `spent` reads it (process, failure, verify)."""
+        from types import SimpleNamespace
+        return SimpleNamespace(process=proc(exit_code=1), agent=None, failure=report(FailureClass.IMPLEMENTATION,
+                               "CHECK_FAILED", sig), verify=VerifyOutcome(status="FAIL", failing_checks=failing,
+                                                                          passing_checks=passing))
+
+    def test_an_answered_decision_opens_a_fresh_attempt_window(self):
+        """pictures REQ-021 r32 T3.91 (D-269): a1..a9 spent the budget; after the operator's answer a10 failed once on a
+        NEW assertion (the drag worked now) and escalated at once, «the task used its attempts». Counted from the
+        answer, a10 is the window's first attempt and is retried; the window's own budget still escalates."""
+        history = [self.failed(f"old{n:05d}") for n in range(9)] + [self.failed("new00000")]
+        whole = policy.spent(history)
+        self.assertEqual((whole.attempts, whole.total_attempts), (10, None))
+        f = report(FailureClass.IMPLEMENTATION, "CHECK_FAILED", "new00000")
+        self.assertEqual(policy.decide(f, whole, self.B, now=0, other_route=False).limit_hit, "max_attempts")
+        window = policy.spent(history, since=9)
+        self.assertEqual((window.attempts, window.total_attempts, window.signatures), (1, 10, {"new00000": 1}))
+        self.assertEqual(policy.decide(f, window, self.B, now=0, other_route=False).action, RecoveryAction.RETRY)
+        spent_window = policy.spent(history + [self.failed(f"w{n:07d}") for n in range(3)], since=9)
+        late = policy.decide(f, spent_window, self.B, now=0, other_route=False)
+        self.assertEqual((late.action, late.limit_hit), (RecoveryAction.ESCALATE, "max_attempts"))
+        self.assertIn("since the last answered decision", late.reason)
+
+    def test_the_whole_task_has_a_ceiling_across_answers(self):
+        budget = Budget(max_attempts=4, max_attempts_total=12)
+        history = [self.failed(f"s{n:07d}") for n in range(12)]
+        f = report(FailureClass.IMPLEMENTATION, "CHECK_FAILED", "s0000011")
+        used = policy.spent(history, since=11)                       # the window's first attempt, the task's 12th
+        decision = policy.decide(f, used, budget, now=0, other_route=False)
+        self.assertEqual((decision.action, decision.limit_hit), (RecoveryAction.ESCALATE, "max_attempts_total"))
+        self.assertEqual(policy.decide(f, policy.spent(history[:11], since=10), budget, now=0,
+                                       other_route=False).action, RecoveryAction.RETRY)
+
+    def test_the_default_ceiling_stays_out_of_the_settings_an_older_engine_reads(self):
+        """The client sends the settings to the engine; an engine on the code before D-269 forbids unknown fields."""
+        self.assertNotIn("max_attempts_total", Budget().model_dump(mode="json"))
+        self.assertEqual(Budget.model_validate(Budget().model_dump(mode="json")).max_attempts_total, 20)
+        self.assertEqual(Budget(max_attempts_total=9).model_dump(mode="json")["max_attempts_total"], 9)
+
+    def test_the_window_counts_repeats_and_regressions_from_the_answer(self):
+        same = [self.failed("same0000"), self.failed("same0000")]
+        f = report(FailureClass.IMPLEMENTATION, "CHECK_FAILED", "same0000")
+        self.assertEqual(policy.decide(f, policy.spent(same), self.B, now=0, other_route=False).action,
+                         RecoveryAction.REMEDIATE)
+        after = policy.spent([*same, self.failed("same0000")], since=2)
+        self.assertEqual(after.signatures, {"same0000": 1})
+        self.assertEqual(policy.decide(f, after, self.B, now=0, other_route=False, remediated=False).action,
+                         RecoveryAction.RETRY)
+        # a check that passed before the answer and fails after it is still a regression
+        broke = [self.failed("a0000000", failing=("unit",), passing=("lint",)),
+                 self.failed("b0000000", failing=("lint",)), self.failed("c0000000", failing=("lint",))]
+        self.assertEqual(policy.spent(broke).consecutive_regressions, 2)
+        self.assertEqual(policy.spent(broke, since=2).consecutive_regressions, 1)
+        self.assertEqual(policy.spent(broke, since=3).consecutive_regressions, 0)
+
     @settings(max_examples=500, deadline=None)
     @given(st.lists(st.tuples(st.sampled_from(list(FailureClass)), st.sampled_from(["s1aaaaaa", "s2bbbbbb", "s3cccccc"])),
                     min_size=1, max_size=60))

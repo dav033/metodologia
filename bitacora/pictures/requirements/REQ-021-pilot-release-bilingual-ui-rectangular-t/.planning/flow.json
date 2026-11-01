@@ -1,5 +1,5 @@
 {
- "focus": "SP-14",
+ "focus": "",
  "outline": {
   "at": "2026-10-26T14:13:28-05:00",
   "by": "owner",
@@ -54,10 +54,9 @@
    "via": "web"
   },
   "SP-14": {
-   "at": "2026-10-27T18:48:24-05:00",
+   "at": "2026-10-31T19:55:55-05:00",
    "by": "owner",
-   "digest": "d0646a82f247c96b",
-   "repinned": "2026-10-28T07:36:04-05:00 auto remediation of T1.8",
+   "digest": "bcb8a6076a690fa3",
    "via": "web"
   },
   "SP-2": {

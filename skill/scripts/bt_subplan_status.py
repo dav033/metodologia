@@ -204,11 +204,19 @@ def status(ctx: dict, s: dict, shared: dict) -> dict:
 
     verified = shared["verified"].get(sid) or {}
     vstate = verified.get("state")
-    if vstate in ("to_test", "outdated"):
+    fix = (shared.get("corrections") or {}).get(sid)
+    if vstate in ("to_test", "outdated") and fix:      # D-268: an older version re-published while the rejection stands
+        you.append({"kind": "verify", "text": f"Puedes volver a probar la versión {verified.get('version')}; tu rechazo "
+                                              f"de la versión {fix['version']} sigue en corrección",
+                    "action": "Probar", "view": "verify"})
+    elif vstate in ("to_test", "outdated"):
         you.append({"kind": "verify", "text": f"Probar la versión {verified.get('version')} y aprobarla o rechazarla",
                     "action": "Probar", "view": "verify"})
-    elif vstate == "rejected":
-        blockers.append({"who": "Ejecución", "text": f"Rechazaste la versión {verified.get('version')}: espera una corrección"})
+    if fix or vstate == "rejected":           # D-268: where the correction is, and who has it now
+        phase = fix["phase_es"] + (f" ({fix['detail']})" if fix.get("detail") else "") if fix else "espera una corrección"
+        who = {"redesigning": "Designer", "choosing": "Tú", "approve_contract": "Tú", "reconfirm": "Tú"}.get(
+            (fix or {}).get("phase"), "Ejecución")
+        blockers.append({"who": who, "text": f"Rechazaste la versión {(fix or verified)['version']}: {phase}"})
     if verified.get("decision", {}).get("decision") in ("approved", "rejected"):
         dec = verified["decision"]
         decisions.append({"when": dec.get("at") or "", "text": ("Aprobaste" if dec["decision"] == "approved" else "Rechazaste")
@@ -237,6 +245,14 @@ def _stages(ctx: dict) -> dict:
         return {}
 
 
+def _corrections(ctx: dict) -> dict:
+    try:
+        import bt_verification_correction as correction
+        return correction.corrections(ctx["rdir"], ctx)
+    except Exception:  # noqa: BLE001 - the blocker falls back to «espera una corrección»
+        return {}
+
+
 def statuses(ctx: dict) -> dict[str, dict]:
     """Every subplan's status, computed once per fragment (cached in ctx)."""
     if "subplan_status" in ctx:
@@ -257,6 +273,8 @@ def statuses(ctx: dict) -> dict[str, dict]:
     shared = {"rounds": _rounds(rdir), "inputs": inputs, "run": run, "tasks": _tasks_by_id(run), "gates": _gates(rdir),
               "decisions": decisions, "decided": {d.get("task") for d in decisions}, "held": set(stages.get("held") or ()),
               "queued": stages.get("queued") or {},
-              "verified": {r["id"]: r for r in ver["subplans"]}, "events": activity.events(rdir, 300)}
+              "verified": {r["id"]: r for r in ver["subplans"]}, "events": activity.events(rdir, 300),
+              "corrections": _corrections(ctx) if any((r.get("decision") or {}).get("decision") == "rejected"
+                                                      for r in ver["subplans"]) else {}}
     ctx["subplan_status"] = {s["id"]: status(ctx, s, shared) for s in ctx["subplans"]}
     return ctx["subplan_status"]

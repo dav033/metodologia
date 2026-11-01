@@ -77,6 +77,17 @@
    "when": "2026-10-27T23:48:34+00:00",
    "who": "owner"
   },
+  "planes@v2": {
+   "comments": "approved with the plan",
+   "contract": "planes@v2",
+   "draft": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/design/history/planes@v2/approved.md",
+   "path": "design/contracts/planes@v2.md",
+   "sha256": "612e6e93763b9f2b04927713d70a20a55845c78477c77d6c8d6924a8d422a151",
+   "status": "approved",
+   "via": "plan",
+   "when": "2026-11-01T00:55:57+00:00",
+   "who": "owner"
+  },
   "proyectos@v1": {
    "comments": "approved with the plan",
    "contract": "proyectos@v1",
