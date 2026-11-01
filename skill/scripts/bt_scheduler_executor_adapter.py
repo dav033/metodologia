@@ -46,6 +46,7 @@ import bt_scheduler_executor as m3
 from bt_scheduler_executor import PLAN_SCHEMA_CAPABILITIES, gitutil  # noqa: F401 - re-exported: the only door to the executor module
 from bt_scheduler_executor.workspace import dirname_of  # noqa: F401 - re-exported, same reason
 from bt_scheduler_executor import gates as design_gates  # noqa: F401 - re-exported, same reason (D-262)
+from bt_scheduler_executor.retention import retain_run, superseded_runs  # noqa: F401 - re-exported, same reason (D-270)
 import bt_scheduler_integrator as integrator
 from bt_scheduler_executor.core_port import CoreExecutionPort as _CoreExecutionPort
 import bt_workspace
