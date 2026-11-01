@@ -408,5 +408,6 @@ def summary(directory: Path) -> dict:
             rows.append({"revision": entry["revision"], "frozen_at": entry.get("frozen_at"),
                          "subplans": list(pins.get("subplans") or []),
                          "pending_subplans": list(pins.get("pending_subplans") or []),
+                         "kept": list(pins.get("kept") or []),           # held as the revision before (D-259)
                          "complete": bool(pins.get("complete"))})
     return {"stages": rows, "complete": bool(rows) and rows[-1]["complete"]}

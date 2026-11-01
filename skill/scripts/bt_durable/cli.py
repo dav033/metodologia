@@ -3,7 +3,8 @@
   engine                                  run the engine service (systemd: deploy/bt-durable.service)
   start PROJECT REQ                       start the latest frozen revision of a NEW run under the durable runtime
   migrate PROJECT REQ [--apply|--rollback]  move a legacy run (dry run by default; see bt_durable.migrate)
-  join PROJECT REQ [--dry-run] [--confirm]  the latest frozen stage continues the durable run (bt_durable.stage_join);
+  join PROJECT REQ [--dry-run] [--confirm | --confirm-tasks T1,T2] [--by WHO]  the latest frozen stage continues the
+                                          durable run (bt_durable.stage_join);
                                           JSON out: joined | waiting (paused until live attempts end) | refused
   status PROJECT REQ                      run summary, task states, open decisions
   project PROJECT REQ                     rebuild the panels' projection of the run from DBOS (bt_durable.projection)
@@ -230,20 +231,27 @@ def cmd_join(args) -> int:
     from . import stage_join
     from .adapters.telemetry import JsonlTelemetry
     rdir = requirement_dir(args.project, args.req)
+    new = None
     try:
         new = latest_frozen(rdir, args.project, args.req)
         if not args.dry_run:
             preflight(new, rdir)
     except SystemExit as refused:                       # the stage's plan is refused before anything moves
+        if new is not None and not args.dry_run:        # the panel says why the frozen stage waits (D-272)
+            stage_join.note_refusal(rdir, new.revision, "PLAN_PREFLIGHT", str(refused), by="bt-durable join")
         print(json.dumps({"status": "refused", "code": "PLAN_PREFLIGHT", "message": str(refused)}, ensure_ascii=False))
         return 3
     client = _client()
     try:
+        listed = [t for t in (args.confirm_tasks or "").split(",") if t.strip()]
+        confirm = True if args.confirm else [t.strip() for t in listed]
         outcome = stage_join.join(client, rdir, state_dir=Path(bt_core.STATE) / "durable", new=new,
-                                  repositories=repositories(args.project), confirm=args.confirm, dry_run=args.dry_run,
+                                  repositories=repositories(args.project), confirm=confirm, dry_run=args.dry_run,
+                                  by=args.by or "bt-durable join",
                                   emit=JsonlTelemetry(Path(bt_core.STATE) / "durable" / "telemetry.jsonl").emit)
     except stage_join.JoinRefused as refused:
-        print(json.dumps({"status": "refused", "code": refused.code, "message": refused.message}, ensure_ascii=False))
+        print(json.dumps({"status": "refused", "code": refused.code, "message": refused.message,
+                          **({"tasks": refused.tasks} if refused.tasks else {})}, ensure_ascii=False))
         return 3
     finally:
         client.close()
@@ -424,6 +432,10 @@ def main(argv: list[str] | None = None) -> int:
     j.add_argument("req")
     j.add_argument("--dry-run", action="store_true")
     j.add_argument("--confirm", action="store_true", help="also when the stage changes accepted tasks (they run again)")
+    j.add_argument("--confirm-tasks", default="", help="comma-separated: only these redone tasks are confirmed (the "
+                   "panel's «Confirmar y unir», D-275); anything else redone is refused again")
+    j.add_argument("--by", default="", help="who asks for the join (recorded with its confirmation; default: "
+                   "bt-durable join)")
     a = sub.add_parser("answer")
     for name in ("project", "req", "task", "request_id"):
         a.add_argument(name)

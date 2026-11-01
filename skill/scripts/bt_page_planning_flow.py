@@ -109,6 +109,39 @@ def stage_info(ctx: dict) -> dict:
     return ctx["stages"]
 
 
+def join_confirmation(ctx: dict, sid: str | None = None) -> dict | None:
+    """The latest stage waits for the owner to confirm redoing accepted tasks (D-275), computed once per fragment. With
+    `sid`, only where it concerns that subplan: one of its tasks waits, or its rejected version waits for this join."""
+    if "join_confirm" not in ctx:
+        import bt_stage_confirmations as confirmations
+        ctx["join_confirm"] = confirmations.join_confirmation(ctx["rdir"])
+    waiting = ctx["join_confirm"]
+    if not waiting or sid is None or any(t["subplan"] == sid for t in waiting["tasks"]):
+        return waiting
+    try:
+        import bt_verification_correction as correction
+        fix = correction.corrections(ctx["rdir"], ctx if "subplans" in ctx else None).get(sid) or {}
+    except Exception:  # noqa: BLE001 - no correction readable: the confirmation shows on the tasks' subplans only
+        fix = {}
+    return waiting if fix.get("phase") == "joining" else None
+
+
+def _confirm_join_form(ctx: dict, s: dict, waiting: dict) -> str:
+    """«Confirmar y unir»: the accepted tasks the stage would redo that no reconfirmation covered, and the owner's
+    button that confirms exactly those (`bt-durable join --confirm-tasks`, D-275)."""
+    items = "".join(f'<li><code>{e(t["id"])}</code>{" · " + e(t["subplan"]) if t["subplan"] else ""}'
+                    f'{" — " + e(t["title"]) if t["title"] else ""}</li>' for t in waiting["tasks"])
+    ids = ",".join(t["id"] for t in waiting["tasks"])
+    return (f'<form method="post" action="{purl(ctx["project"], "req", ctx["rid"], "stage-join-confirm")}" '
+            f'class="pp-joinconfirm" role="group" aria-label="Confirmar la unión de la etapa r{waiting["revision"]}">'
+            f'<input type="hidden" name="token" value="{e(ctx["token"])}"><input type="hidden" name="anchor" value="{e(s["id"])}">'
+            f'<input type="hidden" name="lang" value="{e(ctx["opts"]["lang"])}"><input type="hidden" name="tasks" value="{e(ids)}">'
+            f'<p>La etapa r{waiting["revision"]} está aprobada, pero la ejecución sigue en r{waiting["running"]}: unirla '
+            f'rehace estas tareas ya aceptadas, que cambiaron y no confirmaste al reconfirmar su subplan:</p><ul>{items}</ul>'
+            '<button type="submit" class="outline" title="Confirma rehacer exactamente estas tareas; la ejecución se une '
+            'a la etapa (D-275)">Confirmar y unir</button></form>')
+
+
 def _run_button(ctx: dict, s: dict) -> str:
     """«Ejecutar subplan» next to the confirmation (D-134): the Scheduler runs this confirmed subplan as part of the
     approved stage while the rest of the plan is still being defined; once it is in a stage, a link to the run; while it
@@ -127,6 +160,8 @@ def _run_button(ctx: dict, s: dict) -> str:
                 f'<input type="hidden" name="lang" value="{e(ctx["opts"]["lang"])}"><button type="submit" class="outline" '
                 f'title="Confirmaste cambios de este subplan después de la etapa r{info["revision"]}: aprueba una etapa nueva '
                 'con ellos y el run los ejecuta (D-259)">Ejecutar cambios</button></form>')
+    if s["id"] in info["held"] and (waiting := join_confirmation(ctx, s["id"])):
+        return _confirm_join_form(ctx, s, waiting)
     if s["id"] in info["held"]:
         return (f'<a class="pp-chip ok" href="{e(purl(ctx["project"], "req", ctx["rid"]))}?tab=run" '
                 f'title="El Scheduler la ejecuta en la etapa r{info["revision"]}">En ejecución · etapa r{info["revision"]} → ver</a>')

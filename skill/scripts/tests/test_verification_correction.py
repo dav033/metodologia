@@ -89,9 +89,9 @@ class Phases(Base):
         got = self.phase()
         self.assertEqual((got["path"], got["phase"], got["label"]), ("redesign", "redesigning", "Rechazada v2 · rediseñando"))
         self.assertEqual([s["label"] for s in got["steps"]], ["rediseñando", "elige una dirección", "aprueba el contrato",
-                                                              "reconfirma el subplan", "construyendo v3",
-                                                              "v3 lista para probar"])
-        self.assertEqual([s["state"] for s in got["steps"]], ["now", "todo", "todo", "todo", "todo", "todo"])
+                                                              "reconfirma el subplan", "por unir a la ejecución",
+                                                              "construyendo v3", "v3 lista para probar"])
+        self.assertEqual([s["state"] for s in got["steps"]], ["now", "todo", "todo", "todo", "todo", "todo", "todo"])
         self.assertEqual((got["note"], got["pending"], got["next"]), (NOTE, "P-211", 3))
 
         self.draft("choosing", directions=[{"id": "a", "status": "ready"}])
@@ -282,6 +282,101 @@ class OlderVersionRepublished(Base):
             items = bt_live_api.verify_items(Path(self.tmp.name))
         self.assertEqual(items[0]["rejected"], {"SP-1": "Rechazada v3 · reparando",
                                                 "SP-2": "Rechazada v2 · construyendo v3"})
+
+
+class JoinPending(Base):
+    """pictures REQ-021, 2026-10-31: SP-14 reconfirmed at 19:55:55, stage r34 frozen at 19:56:01 with it, the join refused
+    (JOIN_MATERIAL_MISSING) and the durable run still in r32 — the panel said «construyendo v3» while nothing built
+    (D-272). «construyendo» needs the running revision to hold the stage with the reconfirmed subplan."""
+
+    CONFIRMED = "2026-10-31T19:55:55-05:00"
+
+    def setUp(self):
+        super().setUp()
+        import bt_run_owner
+        self.reject()
+        self.draft("approved", chosen="c", approved=AFTER)
+        self.confirm(self.CONFIRMED)
+        bt_run_owner.write(self.rdir, {"run_id": "pictures:REQ-021:r32", "backend": "dbos", "since": 1.0, "by": "test",
+                                       "workflow_id": "bt:pictures:REQ-021:r32"}, expect=None)
+        self.running(32)
+        self.stages = [{"revision": 31, "frozen_at": "2026-10-31T16:02:56", "subplans": ["SP-1", "SP-2"], "kept": []},
+                       {"revision": 32, "frozen_at": "2026-10-31T17:05:00", "subplans": ["SP-1", "SP-2"], "kept": ["SP-2"]},
+                       {"revision": 33, "frozen_at": "2026-10-31T18:12:04", "subplans": ["SP-1", "SP-2"], "kept": []}]
+
+    def running(self, revision: int) -> None:
+        (self.rdir / "RUN.durable-run.json").write_text(json.dumps({"project": "pictures", "req": "REQ-021",
+                                                                    "revision": revision}))
+
+    def phase(self, sid: str = "SP-2", **kw) -> dict | None:
+        import bt_plan_adapter
+        with patch.object(bt_plan_adapter, "stage_summary", return_value={"stages": self.stages, "complete": False}):
+            return c.correction(self.rdir, sid, **kw)
+
+    def test_a_reconfirmed_change_not_frozen_yet_waits_for_ejecutar_cambios(self):
+        got = self.phase()
+        self.assertEqual((got["phase"], got["label"]), ("joining", "Rechazada v2 · por unir a la ejecución"))
+        self.assertEqual(got["detail"], "aprueba la etapa con «Ejecutar cambios»; la ejecución sigue en r32")
+        self.assertEqual([s["state"] for s in got["steps"]], ["done", "done", "done", "done", "now", "todo", "todo"])
+        self.assertEqual(got["join"], {"stage": None, "running": 32, "waiting": False, "refused": None})
+
+    def test_a_frozen_stage_the_run_has_not_joined_is_por_unir_with_the_refusal(self):
+        self.stages.append({"revision": 34, "frozen_at": "2026-10-31T19:56:01", "subplans": ["SP-1", "SP-2"], "kept": []})
+        got = self.phase(progress=(0, 3))
+        self.assertEqual((got["phase"], got["detail"]), ("joining", "etapa r34 aprobada; la ejecución sigue en r32"))
+        (self.rdir / "RUN.join.refused.json").write_text(json.dumps({
+            "at": "2026-10-31T19:56:05-05:00", "revision": 34, "code": "JOIN_MATERIAL_MISSING",
+            "message": "T2.3 was accepted in pictures:REQ-021:r32 but its snapshot (2d45cd5030b7) has no captured handoff"}))
+        got = self.phase()
+        self.assertEqual(got["detail"], "etapa r34 aprobada; la ejecución sigue en r32 · la unión se rechazó: "
+                                        "JOIN_MATERIAL_MISSING: T2.3 was accepted in pictures:REQ-021:r32 but its snapshot "
+                                        "(2d45cd5030b7) has no captured handoff")
+        self.assertEqual(got["join"]["refused"]["code"], "JOIN_MATERIAL_MISSING")
+        (self.rdir / "RUN.join.refused.json").write_text(json.dumps({"revision": 34, "code": "JOIN_NEEDS_CONFIRM",
+                                                                     "message": "x", "tasks": ["T3.91"]}))
+        self.assertEqual(self.phase()["detail"], "etapa r34 aprobada; la ejecución sigue en r32 · espera que confirmes "
+                                                 "rehacer T3.91 («Confirmar y unir»)")                       # D-275
+        (self.rdir / "RUN.join.json").write_text(json.dumps({"run": {"revision": 34}}))     # the engine's pending join
+        self.assertEqual(self.phase()["detail"], "etapa r34 aprobada; la ejecución sigue en r32 · se une en cuanto "
+                                                 "terminen los intentos en curso")
+        (self.rdir / "RUN.join.json").write_text(json.dumps({"run": {"revision": 34}, "error": "JOIN_LINES_EXIST: x"}))
+        self.assertIn("la unión se rechazó: JOIN_LINES_EXIST: x", self.phase()["detail"])
+
+    def test_once_the_run_holds_the_stage_it_is_building(self):
+        self.stages.append({"revision": 34, "frozen_at": "2026-10-31T19:56:01", "subplans": ["SP-1", "SP-2"], "kept": []})
+        (self.rdir / "RUN.join.refused.json").write_text(json.dumps({"revision": 34, "code": "OLD", "message": "x"}))
+        self.running(34)
+        got = self.phase(progress=(1, 3))
+        self.assertEqual((got["label"], got["detail"], got["join"]), ("Rechazada v2 · construyendo v3", "1/3 tareas", None))
+
+    def test_a_stage_that_kept_the_subplan_as_before_does_not_hold_the_change(self):
+        self.stages.append({"revision": 34, "frozen_at": "2026-10-31T19:56:01", "subplans": ["SP-1", "SP-2"],
+                            "kept": ["SP-2"]})
+        self.running(34)
+        self.assertEqual(self.phase()["join"]["stage"], None)
+
+    def test_a_run_outside_the_durable_runtime_keeps_building(self):
+        (self.rdir / "RUN.owner.json").unlink()
+        self.assertEqual(self.phase()["phase"], "building")
+
+    def test_the_control_block_asks_the_owner_only_when_the_change_is_not_frozen(self):
+        import bt_plan_adapter
+        import bt_subplan_status as status_model
+
+        def blockers() -> list[dict]:
+            ctx = {"project": "pictures", "rid": "REQ-021", "rdir": self.rdir, "token": "tok", "root": None,
+                   "subplans": drafts.subplans(self.rdir), "flow": None,
+                   "rows": {row["ref"]: row for row in drafts.rows(self.rdir)},
+                   "run_status": None, "opts": {"lang": "en", "sp": "SP-2"}}
+            with patch.object(status_model, "_stages", return_value={}), \
+                    patch.object(bt_plan_adapter, "stage_summary", return_value={"stages": self.stages}):
+                return status_model.statuses(ctx)["SP-2"]["blockers"]
+        found = blockers()
+        self.assertTrue(any(b["who"] == "Tú" and b["text"].startswith("Rechazaste la versión 2: por unir a la ejecución")
+                            for b in found), found)
+        self.stages.append({"revision": 34, "frozen_at": "2026-10-31T19:56:01", "subplans": ["SP-1", "SP-2"], "kept": []})
+        found = blockers()
+        self.assertTrue(any(b["who"] == "Ejecución" and "etapa r34 aprobada" in b["text"] for b in found), found)
 
 
 class PlanTab(unittest.TestCase):

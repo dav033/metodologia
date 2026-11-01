@@ -479,6 +479,9 @@ def follow_project(root: Path, project: str) -> list[str]:
             continue
         try:
             bt_planning_activity.observe(rdir)
+            if bt_planning_flow.active(rdir):
+                import bt_confirmed_content
+                bt_confirmed_content.restore(rdir)      # D-276
             touched += sync(project, rdir)
             bt_translate.ensure(project, rdir)
         except (SystemExit, Exception):  # noqa: BLE001, S112 - a hook never fails the session on background work

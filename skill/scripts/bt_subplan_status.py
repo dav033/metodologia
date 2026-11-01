@@ -148,7 +148,11 @@ def status(ctx: dict, s: dict, shared: dict) -> dict:
 
     state = (flow or {}).get("state")
     policy = (flow or {}).get("policy") if state == "confirmed" else None
-    if isinstance(policy, dict):            # D-241: re-confirmed by the owner's standing rule for a bounded repair
+    if isinstance(policy, dict) and policy.get("reason"):    # D-276: back to content already confirmed in that form
+        decisions.append({"when": (flow or {}).get("confirmed_at") or "", "text": (
+            f"Sigue confirmado por la regla {policy.get('rule') or ''}: {policy['reason']}; lo que cambió después se "
+            "deshizo")})
+    elif isinstance(policy, dict):            # D-241: re-confirmed by the owner's standing rule for a bounded repair
         decisions.append({"when": (flow or {}).get("confirmed_at") or "", "text": (
             f"Sigue confirmado por tu regla {policy.get('rule') or ''}: solo se añadió la reparación acotada "
             f"{', '.join(policy.get('repair') or [])} de un defecto confirmado (lo pidió {policy.get('requested_by') or '?'}; "
@@ -175,6 +179,9 @@ def status(ctx: dict, s: dict, shared: dict) -> dict:
                                                                               if queued.get("error") else "")})
     elif flow is not None and state == "confirmed" and not staged and s["tasks"]:
         you.append({"kind": "run", "text": "Mandarlo a ejecutar: aprobarlo como etapa", "action": "run", "view": ""})
+    if staged and (waiting := (shared.get("join_confirm") or {}).get(sid)):     # D-275: the join waits for you
+        you.append({"kind": "run", "text": f"Confirmar que se rehagan {len(waiting['tasks'])} tareas aceptadas para unir "
+                                           f"la etapa r{waiting['revision']} a la ejecución", "action": "run", "view": ""})
     waits: dict[str, list[str]] = {}
     for t in own:
         attempt = t.get("attempt") or {}
@@ -216,6 +223,8 @@ def status(ctx: dict, s: dict, shared: dict) -> dict:
         phase = fix["phase_es"] + (f" ({fix['detail']})" if fix.get("detail") else "") if fix else "espera una corrección"
         who = {"redesigning": "Designer", "choosing": "Tú", "approve_contract": "Tú", "reconfirm": "Tú"}.get(
             (fix or {}).get("phase"), "Ejecución")
+        if fix and fix.get("phase") == "joining" and (fix.get("join") or {}).get("stage") is None:
+            who = "Tú"                        # the change is not frozen: «Ejecutar cambios» is the owner's (D-272)
         blockers.append({"who": who, "text": f"Rechazaste la versión {(fix or verified)['version']}: {phase}"})
     if verified.get("decision", {}).get("decision") in ("approved", "rejected"):
         dec = verified["decision"]
@@ -242,6 +251,15 @@ def _stages(ctx: dict) -> dict:
         import bt_page_planning_flow as flow_view
         return flow_view.stage_info(ctx)
     except Exception:  # noqa: BLE001 - a stage that cannot be read only hides the «send to run» hint
+        return {}
+
+
+def _join_confirm(ctx: dict, held) -> dict[str, dict]:
+    """Held subplan -> the stage join waiting for the owner's confirmation where it concerns that subplan (D-275)."""
+    try:
+        import bt_page_planning_flow as flow_view
+        return {sid: w for sid in held if (w := flow_view.join_confirmation(ctx, sid))}
+    except Exception:  # noqa: BLE001 - nothing to confirm when it cannot be read
         return {}
 
 
@@ -272,7 +290,7 @@ def statuses(ctx: dict) -> dict[str, dict]:
     stages = _stages(ctx)
     shared = {"rounds": _rounds(rdir), "inputs": inputs, "run": run, "tasks": _tasks_by_id(run), "gates": _gates(rdir),
               "decisions": decisions, "decided": {d.get("task") for d in decisions}, "held": set(stages.get("held") or ()),
-              "queued": stages.get("queued") or {},
+              "queued": stages.get("queued") or {}, "join_confirm": _join_confirm(ctx, stages.get("held") or ()),
               "verified": {r["id"]: r for r in ver["subplans"]}, "events": activity.events(rdir, 300),
               "corrections": _corrections(ctx) if any((r.get("decision") or {}).get("decision") == "rejected"
                                                       for r in ver["subplans"]) else {}}

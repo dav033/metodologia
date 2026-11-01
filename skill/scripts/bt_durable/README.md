@@ -223,10 +223,20 @@ uv run bt-durable join pictures REQ-021              # joined | waiting | refuse
   (`r<old>` → `r<new>`, create-only), so accepted work and anything an operator committed on a line are kept.
 - Accepted tasks whose specification did not change are inherited without a step (`LegacyTask.integrated`); a task with
   a captured snapshot that was not accepted is reconciled (verified again, then continued from its snapshot); the rest
-  runs. Composition gates compose again from the copied subplan lines, under the new revision's namespace.
-- A stage that changes accepted tasks is refused (`JOIN_NEEDS_CONFIRM`) unless `--confirm`.
+  runs. Composition gates compose again from the copied subplan lines, under the new revision's namespace. An accepted
+  attempt that changed nothing (snapshot == base: its work was already in its base) is inherited as it is; only an
+  accepted snapshot whose commit no longer exists is refused (`JOIN_MATERIAL_MISSING`, D-272).
+- A stage that changes accepted tasks is refused (`JOIN_NEEDS_CONFIRM`) unless `--confirm` (everything) or
+  `--confirm-tasks T1,T2` (exactly those; the panel's «Confirmar y unir», owner only, loopback). The tasks of a subplan
+  the OWNER reconfirmed after the running stage are confirmed by that reconfirmation when the stage holding it is in the
+  join and holds the task as joined (D-275, «Reconfirmar = confirmar»; `bt_stage_confirmations`). The result, the
+  `stage_joined` telemetry and the requirement's activity say who confirmed each redone task.
+- The engine joins on its own a frozen stage a durable run is behind (`stage_join.behind`, in the drain pass): once per
+  revision, after the CLI's frozen-plan checks; a refusal is recorded and that revision waits for the owner or a newer stage.
 - With live attempts the current run is paused and `RUN.join.json` records the request; the engine's reaper pass
-  completes it once they end (a refusal is written into the file).
+  completes it once they end (a refusal is written into the file). Any refused join leaves `RUN.join.refused.json`
+  (revision, code, message) until a later join is not refused; the panel shows it while the confirmed subplan is
+  «por unir a la ejecución» (D-272).
 - Then the current run's workflows are cancelled (its open owner decisions end with it), `RUN.owner.json` moves by
   compare-and-swap and the new run starts with the current run's settings; `RUN.durable-run.json` moves last.
   `RUN.join.json` is written before the cancel and removed after the pointer moved, so a join cut anywhere in between

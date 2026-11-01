@@ -11,7 +11,8 @@
 State lives in `.planning/flow.json`; a requirement follows this flow once `start()` created it. Inputs come from the
 `## Inputs` table of SPEC.md (columns Item, Subplan, Where, Who, Status; an empty Subplan or `all` is plan-wide). A
 confirmation records a digest of the subplan, its tasks, its inputs, its `## Pruebas` rows (where to try it once it is
-built, see `bt_verification`) and its draft: any later change reopens it.
+built, see `bt_verification`) and its draft: any later change reopens it, and returning to content already confirmed
+in that exact form re-confirms it by policy (D-276, `bt_confirmed_content`, which also keeps each subplan's history).
 """
 from __future__ import annotations
 
@@ -24,6 +25,7 @@ import tempfile
 from contextlib import contextmanager
 from pathlib import Path
 
+import bt_confirmed_content as history
 import bt_design_drafts as drafts
 import bt_planning_activity as activity
 
@@ -257,7 +259,7 @@ def state(rdir: Path, subplans: list[dict] | None = None, design_rows: dict | No
     per = {}
     for sp in subplans:
         record = data["subplans"].get(sp["id"]) or {}
-        if record.get("digest"):
+        if record.get("digest") or record.get("rejected"):    # a rejected confirmation waits for the owner again
             st = "confirmed" if sp["id"] in done else "changed"
         else:
             st = "defining" if focus == sp["id"] else "pending"
@@ -287,8 +289,9 @@ def keep_confirmed(rdir: Path, sids: list[str], note: str) -> list[str]:
     with _locked(rdir) as data:
         for sid in sids:
             record = data["subplans"].get(sid)
-            if record and sid in by_id:
-                record.update(digest=_digest(rdir, plan, by_id[sid], rows), repinned=f"{_now()} {note}")
+            if record and record.get("digest") and sid in by_id:     # the content before the edit stays in history
+                data["subplans"][sid] = history.pushed(record, {**record, "digest": _digest(rdir, plan, by_id[sid], rows),
+                                                                "repinned": f"{_now()} {note}"})
                 kept.append(sid)
     return kept
 
@@ -322,11 +325,11 @@ def policy_confirm(rdir: Path, sids: list[str], plan: dict, *, rule: str, by: st
             record = data["subplans"].get(sid)
             if not record:
                 continue
-            previous = {k: record.get(k) for k in ("at", "by", "via") if record.get(k)}
-            data["subplans"][sid] = {"at": _now(), "by": "policy", "via": "policy",
-                                     "digest": _digest(rdir, plan, _row(plan, sid), rows),
-                                     "policy": {"rule": rule, "requested_by": by, "repair": list(repair),
-                                                "evidence": list(evidence), "previous": previous}}
+            previous = {k: record.get(k) for k in ("at", "by", "via", "digest") if record.get(k)}
+            data["subplans"][sid] = history.pushed(record, {
+                "at": _now(), "by": "policy", "via": "policy", "digest": _digest(rdir, plan, _row(plan, sid), rows),
+                "policy": {"rule": rule, "requested_by": by, "repair": list(repair), "evidence": list(evidence),
+                           "previous": previous}})
             kept.append(sid)
     return kept
 
@@ -450,7 +453,8 @@ def confirm(project: str, rdir: Path, sid: str, by: str = "owner", via: str = "w
     with _locked(rdir) as data:
         if not data.get("outline"):
             return "Primero hay que confirmar el esqueleto."
-        data["subplans"][sid] = {"at": _now(), "by": by, "via": via, "digest": _digest(rdir, plan, sp, rows)}
+        data["subplans"][sid] = history.pushed(data["subplans"].get(sid), {"at": _now(), "by": by, "via": via,
+                                                                          "digest": _digest(rdir, plan, sp, rows)})
         nxt = _next(subplans, _done(data, rdir, plan, subplans, rows), after=sid)
         data["focus"] = nxt
     where = "en la web" if via == "web" else "en la conversación"

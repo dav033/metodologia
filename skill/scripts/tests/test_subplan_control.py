@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import unittest
 import unittest.mock
+from typing import ClassVar
 from unittest.mock import patch
 from urllib.parse import unquote
 
@@ -13,6 +14,7 @@ import bt_page_planning
 import bt_planning_activity as activity
 import bt_planning_flow as flow
 import bt_rounds
+import bt_stage_confirmations as confirmations
 import bt_subplan_status as status_model
 import bt_verification as verification
 import test_design_drafts as base
@@ -167,6 +169,7 @@ class ControlTests(unittest.TestCase):
 
     def handler(self, address: str = "127.0.0.1"):
         from types import SimpleNamespace
+
         import bt_server
         handler = SimpleNamespace(client_address=(address, 50000), tell_planner=unittest.mock.Mock())
         handler.run_confirmed = lambda *args, **kw: bt_server.Handler.run_confirmed(handler, *args, **kw)
@@ -223,6 +226,55 @@ class ControlTests(unittest.TestCase):
                 patch.object(bt_stages, "run", side_effect=waits):
             said = bt_server.Handler.run_confirmed(handler, "demo", "REQ-001", self.rdir, "SP-2", reconfirmed=True)
         self.assertIn("cuando confirmes también lo que falta: SP-3", said)
+
+    WAITING: ClassVar[dict] = {"revision": 34, "running": 32, "message": "T1", "at": "",
+               "tasks": [{"id": "T1", "title": "Orders", "subplan": "SP-1"}]}
+
+    def test_a_join_waiting_for_the_owner_shows_the_tasks_and_confirm_and_join(self):
+        """D-275: the stage is frozen, the durable run is behind and its join needs the owner's confirmation."""
+        import bt_stages
+        self.spec("location given")
+        self.started()
+        self.finish("D-1")
+        held = {"held": ["SP-1", "SP-2"], "queued": {}, "revision": 34, "stages": []}
+        with patch.object(bt_stages, "info", return_value=held), \
+                patch.object(confirmations, "join_confirmation", return_value=self.WAITING), \
+                patch.object(bt_stages, "amended", return_value=False):
+            html = self.page(sp="SP-1")
+            st = self.status("SP-1")
+            other = self.page(sp="SP-2")
+        self.assertIn("stage-join-confirm", html)
+        self.assertIn('name="tasks" value="T1"', html)
+        self.assertIn("<code>T1</code> · SP-1 — Orders", html)
+        self.assertIn("Confirmar y unir", html)
+        self.assertIn("la ejecución sigue en r32", html)
+        self.assertIn("Confirmar que se rehagan 1 tareas aceptadas para unir la etapa r34 a la ejecución",
+                      [i["text"] for i in st["you"]])
+        self.assertNotIn("stage-join-confirm", other)                     # SP-2 has no task waiting and is not rejected
+        self.assertIn("En ejecución · etapa r34", other)
+
+    def test_confirm_and_join_is_the_owners_and_confirms_exactly_what_was_shown(self):
+        import bt_server
+        import bt_stages
+        form = {"anchor": "SP-1", "lang": "es", "tasks": "T1"}
+        with patch.object(bt_server, "commit"), patch.object(confirmations, "join_confirmation", return_value=self.WAITING), \
+                patch.object(bt_stages, "confirm_join", return_value="El runtime durable sigue en la etapa.") as join:
+            far = bt_server.Handler.stage_join_confirm_post(self.handler("10.0.0.7"), "demo", "REQ-001", self.rdir, form,
+                                                            "/p/demo/req/REQ-001")
+            stale = bt_server.Handler.stage_join_confirm_post(self.handler(), "demo", "REQ-001", self.rdir,
+                                                              {**form, "tasks": "T1,T2"}, "/p/demo/req/REQ-001")
+            join.assert_not_called()
+            url = bt_server.Handler.stage_join_confirm_post(self.handler(), "demo", "REQ-001", self.rdir, form,
+                                                            "/p/demo/req/REQ-001")
+        self.assertIn("solo se confirma desde esta máquina", unquote(far))
+        self.assertIn("cambiaron desde que las viste", unquote(stale))
+        join.assert_called_once_with("demo", self.rdir, ["T1"], by="owner")
+        self.assertIn("El runtime durable sigue en la etapa.", unquote(url))
+        self.assertIn("Confirmaste rehacer T1 al unir la etapa r34", [e["text"] for e in activity.events(self.rdir, 5)])
+        with patch.object(confirmations, "join_confirmation", return_value=None):
+            gone = bt_server.Handler.stage_join_confirm_post(self.handler(), "demo", "REQ-001", self.rdir, form,
+                                                             "/p/demo/req/REQ-001")
+        self.assertIn("Ninguna unión espera tu confirmación", unquote(gone))
 
     def test_a_queued_subplan_says_what_it_waits_for_instead_of_asking_to_run_it(self):
         import bt_server

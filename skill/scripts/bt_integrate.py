@@ -22,7 +22,10 @@ Under one machine-wide lock (flock on `<state>/integrate.lock`), in this order:
   5. `git merge --ff-only deploy-<branch>` in the live checkout (one rebuild when a bitácora commit moved main between
      4 and 5); `git push origin main`;
   6. restart the units the changed paths need, smoke them (unit active, web answers 200, the engine journal says it
-     started); a failed smoke reverts the merge the same way (deploy worktree, ff-only, restart) and says so;
+     started); a failed smoke reverts the merge the same way (deploy worktree, ff-only, restart) and says so. When the
+     remote API's pinned release copy lacks what the merge changed in the paths it runs, the copy of the merge is made,
+     the drop-in repinned and `bitacora-remote-api.service` restarted and smoked with the others; a failed smoke puts
+     the previous pin back; a passing one prunes old copies (`bt_remote_pin`, D-274);
   7. after a passing smoke, clean up: when the branch's worktree is clean (no tracked change, no untracked file),
      `git worktree remove` it and `git branch -d` the branch (never -D). `--keep-worktree` skips this; a caller whose
      cwd is inside that worktree keeps it and gets the command instead; the live checkout and the deploy worktree are
@@ -49,6 +52,8 @@ from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from pathlib import Path
+
+import bt_remote_pin as remote_pin
 
 LIVE = Path.home() / "dev" / "metodologia"
 DEPLOY = Path.home() / ".local" / "share" / "bitacora-integrate" / "deploy"
@@ -162,6 +167,16 @@ def units_for(paths: list[str]) -> list[str]:
         units = [ENGINE_UNIT, WEB_UNIT]
     elif any(p.startswith("skill/assets/") for p in paths):
         units = [WEB_UNIT]
+    return units
+
+
+def _units(req: "Request", paths: list[str]) -> list[str]:
+    """`units_for` plus the remote API when this integration owns its pin and the pinned copy will lack what `paths`
+    change (or already lacks main's) in the paths the listener runs (D-274)."""
+    units = units_for(paths)
+    if req.remote is not None and remote_pin.UNIT not in units and (
+            any(remote_pin.relevant(p) for p in paths) or remote_pin.stale(req.remote, req.live, "main")):
+        units.append(remote_pin.UNIT)
     return units
 
 
@@ -308,6 +323,11 @@ class Services:
             running = self.verifying()
         return time.monotonic() - started, running
 
+    def daemon_reload(self) -> None:
+        done = subprocess.run(["systemctl", "--user", "daemon-reload"], capture_output=True, text=True, check=False)
+        if done.returncode:
+            raise remote_pin.PinError(f"systemctl daemon-reload failed: {done.stderr.strip()[:200]}")
+
     def restart(self, unit: str) -> None:
         done = subprocess.run(["systemctl", "--user", "restart", unit], capture_output=True, text=True, check=False)
         if done.returncode:
@@ -315,7 +335,7 @@ class Services:
 
     def smoke(self, units: list[str], since: float) -> list[str]:
         """What is still wrong after SMOKE_SECONDS: an inactive unit, a web that does not answer 200, an engine whose
-        journal never said it started."""
+        journal never said it started, a remote API that does not answer HTTP."""
         import urllib.request
         deadline = time.monotonic() + SMOKE_SECONDS
         while True:
@@ -337,6 +357,8 @@ class Services:
                                           "--no-pager", "-o", "cat"], capture_output=True, text=True, check=False).stdout
                 if STARTED not in journal:
                     problems.append(f"the engine journal has no «{STARTED}» since the restart")
+            if remote_pin.UNIT in units:
+                problems += [p for p in [remote_pin.answers()] if p]
             if not problems or time.monotonic() >= deadline:
                 return problems
             time.sleep(3)
@@ -366,6 +388,8 @@ class Request:
     cwd: Path | None = None                      # the caller's working directory (default: this process's)
     regression: str = ""                         # staged | selective | full | none; "" = integrate.regression
     ledger: Path | None = None                   # D-261's ledger (tests); default <bitácora>/metodologia/REGRESSION-OFF.md
+    remote: remote_pin.Pin | None = None         # the remote API's pin this integration refreshes (the CLI on the live
+                                                 # checkout sets it; None leaves the listener alone, D-274)
 
 
 @dataclass
@@ -459,7 +483,8 @@ def _fast_forward(req: Request, ref: str) -> bool:
 
 
 def _entry(req: Request, previous: str, backup: str, regression: str, units: list[str]) -> str:
-    restarted = " + ".join("engine" if u == ENGINE_UNIT else "web" for u in units) or "no unit"
+    names = {ENGINE_UNIT: "engine", WEB_UNIT: "web", remote_pin.UNIT: "remote API"}
+    restarted = " + ".join(names.get(u, u) for u in units) or "no unit"
     session = f", session {req.session}" if req.session else ""
     return (f"\n# integration of {req.title}, local restart of {restarted}, "
             f"{dt.datetime.now():%Y-%m-%d %H:%M}{session}\n"
@@ -523,8 +548,12 @@ def _selection(req: Request, services: Services, mode: str, note: Callable[[str]
 
 def _integrate(req: Request, services: Services, note: Callable[[str], None], lines: list[str]) -> Outcome:
     paths = preflight(req, note)
-    units = units_for(paths)
+    units = _units(req, paths)
     note(f"preflight ok: {len(paths)} path(s) changed; restart: {', '.join(units) or 'none'}")
+    if remote_pin.UNIT in units and req.remote is not None:
+        pinned = remote_pin.current(req.remote)
+        note(f"remote API: pinned to {pinned[:12]}, repinned to the merge after it lands" if pinned else
+             "remote API: runs no release copy, restarted after the merge")
     mode = regression_mode(req)
     selection = None if mode == "none" else _selection(req, services, mode, note)
     if mode == "none":
@@ -551,7 +580,7 @@ def _integrate(req: Request, services: Services, note: Callable[[str], None], li
         start_main = git(req.live, "rev-parse", "main")
         catch_up(req, note)
         paths = git(req.live, "diff", "--name-only", f"main...{req.branch}").splitlines()
-        units = units_for(paths)
+        units = _units(req, paths)
         if not set(moved) & set(paths):
             # owner 2026-10-31 («perdemos mucho tiempo»): main's new code touches none of the branch's files, so the
             # merged tree is integrated on this regression and the full regression of the merge runs in the background
@@ -571,7 +600,7 @@ def _integrate(req: Request, services: Services, note: Callable[[str], None], li
         if moved:                                    # nothing ran meanwhile, but the merge must hold main's code
             catch_up(req, note)
             paths = git(req.live, "diff", "--name-only", f"main...{req.branch}").splitlines()
-            units = units_for(paths)
+            units = _units(req, paths)
     previous = git(req.live, "rev-parse", "main")
     backup = ""
     if ENGINE_UNIT in units:
@@ -596,9 +625,12 @@ def _integrate(req: Request, services: Services, note: Callable[[str], None], li
     _drop_branch(req, f"deploy-{req.branch}")
     pushed = services.push(req.live)
     note("pushed origin main" if not pushed else f"WARNING push failed (main is integrated locally): {pushed}")
+    units, swap = _repin(req, merge, services, units, note, log)
     problems = _restart(services, units, note)
     if not problems:
         _append(log, f"result: merged {merge[:12]}, restarted {', '.join(units) or 'nothing'}, smoke ok\n")
+        if swap is not None:
+            _prune(req, swap, note)
         if mode == "none":
             _ledger_add("Integrated without regression", f"- {dt.datetime.now():%Y-%m-%d %H:%M} · `{merge[:12]}` · "
                         f"{req.title} · {len(paths)} path(s): {', '.join(paths[:6])}" + (" …" if len(paths) > 6 else ""),
@@ -612,6 +644,14 @@ def _integrate(req: Request, services: Services, note: Callable[[str], None], li
     if mode == "none":
         record_escape(f"{req.title}: the smoke failed after an integration without regression ({'; '.join(problems)[:300]})",
                       merge, req.ledger)
+    if swap is not None:
+        try:
+            remote_pin.rollback(req.remote, swap, services.daemon_reload)
+            note(f"remote API: drop-in back on {swap.previous[:12]} (restarted with the revert)")
+            _append(log, f"remote API pin: back on {swap.previous[:12]}\n")
+        except Exception as error:  # noqa: BLE001 - the revert must still run
+            note(f"WARNING remote API rollback failed ({error}): {req.remote.dropin} still pins {swap.current[:12]}; "
+                 f"restore {swap.backup} by hand")
     try:
         reverted = _revert(req, merge, services, units, note)
     except Refused as error:
@@ -657,6 +697,40 @@ def _clean_up(req: Request, note: Callable[[str], None]) -> None:
     note(f"removed {worktree} and branch {req.branch}")
 
 
+def _repin(req: Request, sha: str, services: Services, units: list[str], note: Callable[[str], None],
+           log: Path | None = None) -> tuple[list[str], remote_pin.Swap | None]:
+    """Before the restart: pin the remote API to `sha` (copy, drop-in, daemon-reload). When the copy cannot be made the
+    listener keeps its pin and is not restarted; the integration goes on and says so (D-274)."""
+    if remote_pin.UNIT not in units or req.remote is None:
+        return units, None
+    try:
+        swap = remote_pin.refresh(req.remote, Path(req.live), sha, services.daemon_reload)
+    except Exception as error:  # noqa: BLE001 - the listener still runs its previous copy
+        note(f"WARNING remote API not repinned ({error}): it keeps {remote_pin.current(req.remote)[:12] or 'its code'} "
+             "and is not restarted")
+        if log is not None:
+            _append(log, f"remote API pin: NOT refreshed to {sha[:12]} ({str(error)[:200]})\n")
+        return [u for u in units if u != remote_pin.UNIT], None
+    if swap is not None:
+        note(f"remote API: repinned {swap.previous[:12]} -> {swap.current[:12]} "
+             f"({Path(req.remote.releases) / swap.current}; previous drop-in kept as {swap.backup.name})")
+        if log is not None:
+            _append(log, f"remote API pin: {swap.previous[:12]} -> {swap.current[:12]} (backup {swap.backup})\n")
+    return units, swap
+
+
+def _prune(req: Request, swap: remote_pin.Swap, note: Callable[[str], None]) -> None:
+    """After a passing smoke: old release copies go, the current and the previous pin stay. Never fails the run."""
+    try:
+        removed, kept = remote_pin.prune(req.remote, Path(req.live), {swap.current, swap.previous})
+    except Exception as error:  # noqa: BLE001 - main is integrated and smoked
+        note(f"WARNING remote API copies not pruned: {error}")
+        return
+    if removed or kept:
+        note(f"remote API copies: removed {', '.join(s[:12] for s in removed) or 'none'}"
+             + (f"; kept {'; '.join(kept)}" if kept else ""))
+
+
 def _restart(services: Services, units: list[str], note: Callable[[str], None]) -> list[str]:
     if not units:
         return []
@@ -676,7 +750,11 @@ def _restart(services: Services, units: list[str], note: Callable[[str], None]) 
     return problems
 
 
-def _revert(req: Request, merge: str, services: Services, units: list[str], note: Callable[[str], None]) -> str:
+def _revert(req: Request, merge: str, services: Services, units: list[str], note: Callable[[str], None],
+            repin: bool = False) -> str:
+    """Revert `merge` on main and restart `units`. `repin` (a revert asked for after the merge was smoked and kept,
+    `bt_integrate_post.revert`) pins the remote API to the revert; a failed smoke's revert has put the previous pin
+    back already."""
     deploy = Path(req.deploy)
     git(deploy, "checkout", "-q", "-B", f"revert-{req.branch}", "main")
     git(deploy, "revert", "--no-edit", "-m", "1", merge)
@@ -688,8 +766,18 @@ def _revert(req: Request, merge: str, services: Services, units: list[str], note
     pushed = services.push(req.live)
     if pushed:
         note(f"WARNING push of the revert failed: {pushed}")
+    swap = None
+    if repin:
+        units, swap = _repin(req, reverted, services, units, note)
     if _restart(services, units, note):
+        if swap is not None:
+            try:
+                remote_pin.rollback(req.remote, swap, services.daemon_reload)
+            except Exception as error:  # noqa: BLE001 - the owner looks at it anyway
+                note(f"WARNING remote API rollback failed: {error}")
         raise Refused("the previous release does not pass the smoke either")
+    if swap is not None:
+        _prune(req, swap, note)
     return reverted
 
 
@@ -740,7 +828,8 @@ def main(argv: list[str] | None = None) -> int:
     req = Request(branch=args.branch, worktree=args.worktree or Path("."), title=args.title, session=args.session,
                   live=args.live, deploy=args.deploy, scratch=args.scratch, log=args.release_log,
                   wait_seconds=args.wait_seconds, trailers=args.trailer, dry_run=args.dry_run,
-                  keep_worktree=args.keep_worktree, regression=args.regression or "")
+                  keep_worktree=args.keep_worktree, regression=args.regression or "",
+                  remote=remote_pin.Pin.installed() if Path(args.live).resolve() == LIVE.resolve() else None)
     if not (args.dry_run or args.attached or args.post_merge or os.environ.get(DETACHED)) and _which("systemd-run"):
         return detached(list(sys.argv[1:] if argv is None else argv), args.branch)
     if args.post_merge or args.revert:

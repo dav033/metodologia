@@ -117,14 +117,14 @@ def revert(req: integ.Request, merge: str, services: integ.Services | None = Non
                               capture_output=True, check=False).returncode:
                 raise integ.Refused(f"{merge} is not on main")
             paths = integ.git(req.live, "diff", "--name-only", f"{full}^1", full).splitlines()
-            units = integ.units_for(integ.code_paths(paths))
+            units = integ._units(req, integ.code_paths(paths))
             log = req.log or integ.release_log()
             integ._deploy_worktree(req)
             session = f", session {req.session}" if req.session else ""
             integ._append(log, f"\n# revert of the merge {full[:12]} of {req.branch} ({req.title}), "
                                f"{dt.datetime.now():%Y-%m-%d %H:%M}{session}\n")
             try:
-                reverted = integ._revert(req, full, services, units, note)
+                reverted = integ._revert(req, full, services, units, note, repin=True)
             except integ.Refused as error:
                 integ._append(log, f"result: revert FAILED: {error}\n")
                 raise integ.Refused(f"the revert failed: {error}. The owner must look", 4) from error
