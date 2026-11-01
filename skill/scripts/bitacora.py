@@ -159,11 +159,13 @@ def main() -> None:
     p_web.add_argument("--no-open", action="store_true")
     p_comp = sub.add_parser("components", help="the component pool @bitacora/ui (skill/ui, D-280): open the gallery "
                             "(/components), install the toolchain, build the gallery, build a mockup, status, sync the "
-                            "pool into a project, opt a project in (adopt), import a project theme, build the pool, watch it (D-293)")
+                            "pool into a project, opt a project in (adopt), import a project theme, build the pool, watch it (D-293), "
+                            "the dev loop: `components dev PROJECT` hot-reloads the project's `next dev` on every pool "
+                            "edit, no commit (D-295)")
     p_comp.add_argument("action", nargs="?", default="open",
-                        choices=["open", "install", "build", "status", "mockup", "sync", "adopt", "theme", "pool", "watch"])
+                        choices=["open", "install", "build", "status", "mockup", "sync", "adopt", "theme", "pool", "watch", "dev"])
     p_comp.add_argument("rest", nargs="*", help="mockup: build ENTRY.tsx · sync: PROJECT · adopt: PROJECT · theme: import PROJECT · "
-                        "pool: version|build|import-sources")
+                        "pool: version|build|import-sources · dev: [PROJECT]")
     p_comp.add_argument("--repo", help="sync: the project's repository (default: project.json ui.repo)")
     p_comp.add_argument("--branch", default="", help="sync: branch to commit on (default: the repo's default branch)")
     p_comp.add_argument("--push", action="store_true", help="sync: push the branch after committing")
@@ -171,11 +173,15 @@ def main() -> None:
     p_comp.add_argument("--role", default="", help="adopt: the workspace role of the UI repository (project.json ui.repo)")
     p_comp.add_argument("--all", action="store_true", help="sync: every project whose project.json says ui.sync")
     p_comp.add_argument("--from", dest="source", help="theme import / adopt: the project's token source (e.g. "
-                        "src/app/globals.css) · watch: the pool to watch (a worktree's skill/ui; default the live one)")
-    p_comp.add_argument("--into", help="watch: a project working tree to write the pool into, uncommitted (dev mode)")
+                        "src/app/globals.css) · watch/dev: the pool to watch (a worktree's skill/ui; default the live one, "
+                        "uncommitted edits included)")
+    p_comp.add_argument("--into", help="watch: a project working tree to write the pool into, uncommitted (dev mode) · "
+                        "dev: that tree instead of the main checkout of the project's UI repository")
     p_comp.add_argument("--interval", type=float, default=2.0, help="watch: seconds between polls")
     p_comp.add_argument("--once", action="store_true", help="watch: act once on the current pool, then exit")
-    p_comp.add_argument("--restore", action="store_true", help="watch --into PATH: put the committed copy back")
+    p_comp.add_argument("--restore", action="store_true", help="watch --into PATH / dev: put the committed copy back")
+    p_comp.add_argument("--keep", action="store_true", help="dev: on Ctrl-C leave the dev copy (default: restore the "
+                        "committed package)")
     p_comp.add_argument("--mockup-fonts", default="", help="theme import: fontsource packages for mockups, comma-separated")
     p_comp.add_argument("--sans", default="", help="theme import: value of --ui-font-sans")
     p_comp.add_argument("--mono", default="", help="theme import: value of --ui-font-mono")
@@ -248,6 +254,12 @@ def main() -> None:
         if a.cmd == "serve-remote":
             return serve_remote(a.port or REMOTE_PORT)
         return serve(a.port or DEFAULT_PORT)
+    if a.cmd == "components" and a.action == "dev":
+        import bt_ui_watch
+        if len(a.rest) > 1:
+            ap.error("usage: components dev [PROJECT] [--from DIR] [--into PATH] [--keep] [--restore]")
+        name = a.rest[0] if a.rest else a.project
+        sys.exit(bt_ui_watch.dev(name and slugify(name, 60), a.source, a.into, a.interval, a.once, a.restore, a.keep))
     if a.cmd == "components" and a.action == "watch":
         import bt_ui_watch
         sys.exit(bt_ui_watch.main(a.source, a.into, a.project and slugify(a.project, 60), a.interval, a.once,
