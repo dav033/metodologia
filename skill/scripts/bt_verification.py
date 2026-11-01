@@ -207,9 +207,10 @@ def durable_versions(rdir: Path) -> list[dict] | None:
     for sid, moves in reconcile.history(rdir).items():            # D-297: a tip offered before its line took the fold
         for index, move in enumerate(moves):                      # was never stored, but it was this subplan's version
             repo = built.get(sid, (None, None))[1]
-            last = max(seen.get(sid, []), default=("", ""))[1]
+            when = _moved_at(move, index)                         # in its place: a gate may publish the new tip afterwards
+            last = max((item for item in seen.get(sid, []) if item[0] < when), default=("", ""))[1]
             if move.get("offered") and repo and move["from"] != last and not (last and _tree(repo, last) == _tree(repo, move["from"])):
-                seen.setdefault(sid, []).append((f"~{index:06d}", move["from"]))
+                seen.setdefault(sid, []).append((when, move["from"]))
     for sid, (tip, repo) in built.items():
         last = max(seen.get(sid, []), default=("", ""))[1]
         if tip != last and not (last and _tree(repo, last) == _tree(repo, tip)):
@@ -226,6 +227,15 @@ def durable_versions(rdir: Path) -> list[dict] | None:
 
 
 _SAFE_REF = re.compile(r"[^A-Za-z0-9._-]+")
+
+
+def _moved_at(move: dict, index: int) -> str:
+    """When a line moved, comparable with the composer's `published_at` (UTC, ISO); a move recorded without a readable time
+    sorts after every publication."""
+    try:
+        return dt.datetime.fromisoformat(str(move.get("at"))).astimezone(dt.timezone.utc).isoformat()
+    except ValueError:
+        return f"~{index:06d}"
 
 
 def _tree(repo: Path, commit: str) -> str:
@@ -676,7 +686,8 @@ def on_projection(rdir: Path) -> list[str]:
         if not _enrolled(rdir) or not _reports_subplans(rdir):
             return []
         facts, ledger = published(rdir), _load(rdir)
-        fresh = sorted(sid for sid, fact in facts.items() if ledger["seen"].get(sid) != f"{fact['version']}:{fact['commit']}")
+        fresh = sorted(sid for sid, fact in facts.items()          # by commit: a new number on the same tree is nothing to try
+                       if str(ledger["seen"].get(sid) or "").rpartition(":")[2] != fact["commit"])
         if ledger.get("gated") and not fresh:
             return []                                    # nothing changed: no write, no churn in the bitácora
         announced = []

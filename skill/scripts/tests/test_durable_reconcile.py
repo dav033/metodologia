@@ -5,8 +5,10 @@ Real git. SP-1 and SP-2 build on nothing / SP-1; SP-3 builds on both. Each test 
 the later one was built, as a stage's repair does: nothing in the frozen plan makes the later line take it."""
 from __future__ import annotations
 
+import datetime as dt
 import json
 import os
+import sqlite3
 import subprocess
 import sys
 import tempfile
@@ -135,6 +137,35 @@ class ACleanRepair(Lab):
         self.line("SP-1", self.write("one.txt", "repair 2\n", "repair again", parent=fixed))
         self.sweep()
         self.assertEqual(self.rows()["SP-3"]["version"], 3)
+
+    def publish(self, subplan: str, commit: str, at: str) -> None:
+        with sqlite3.connect(self.state_dir / "composition" / "proj-REQ-021-r3-app.db") as conn:
+            conn.execute("CREATE TABLE IF NOT EXISTS versions(plan_id TEXT, subplan_id TEXT, version INTEGER, body TEXT, "
+                         "request_sha256 TEXT)")
+            conn.execute("INSERT INTO versions VALUES(?,?,?,?,?)",
+                         ("REQ-021.bt-r3", subplan, 1, json.dumps({"commit": commit, "published_at": at}), "x"))
+
+    def test_a_gate_publishing_the_moved_line_is_not_one_more_version(self):
+        """pictures REQ-021 r39: CG-9 published the commits the lines had taken, the offered tips sorted after that
+        publication, and SP-3 went from v4 to v5 with the same commit: «versión 5 lista para probar de nuevo»."""
+        self.line("SP-1", self.write("one.txt", "repair\n", "repair of SP-1", parent=self.one))
+        before = self.rows()["SP-3"]
+        self.sweep()
+        moved = self.tip("SP-3")
+        self.assertEqual(moved, before["commit"])
+        later = (dt.datetime.now(dt.timezone.utc) + dt.timedelta(minutes=20)).isoformat()
+        self.publish("SP-3", moved, later)
+        row = self.rows()["SP-3"]
+        self.assertEqual((row["version"], row["commit"]), (before["version"], before["commit"]))
+
+    def test_the_same_commit_under_another_number_is_not_announced_again(self):
+        """The owner was told about that tree already: a corrected number gives them nothing new to try."""
+        self.assertIn("SP-3", verification.on_projection(self.rdir))
+        with verification._locked(self.rdir) as data:
+            data["seen"]["SP-3"] = f"9:{data['seen']['SP-3'].split(':')[1]}"
+        with patch("bt_runutil.notify") as notify:
+            self.assertEqual(verification.on_projection(self.rdir), [])
+        notify.assert_not_called()
 
     def test_an_earlier_subplan_never_moves_for_a_later_one_so_its_approval_stands(self):
         """pictures REQ-021: the owner approved SP-2 v2 (1c51118c0); SP-9's conflict with it must not touch it."""
