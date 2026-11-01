@@ -279,6 +279,11 @@
    "id": "D-281",
    "by": "metodologia-97: the repo pre-commit hook scans the bitácora with its gitleaks config",
    "at": "2026-11-01T00:31:41"
+  },
+  {
+   "id": "D-282",
+   "by": "metodologia-97: Claude sessions started in a new working folder accept its trust questions on unattended accounts",
+   "at": "2026-11-01T01:27:25"
   }
  ]
 }

@@ -1,16 +1,10 @@
 {
  "watch": {
-  "T14.5": {
-   "fp": "5735679f56e4c293",
-   "since": 1793511149.204501,
+  "T94": {
+   "fp": "0bf2d15bee551ca3",
+   "since": 1793514367.6598933,
    "epoch": "66b598ed39f34a3cb50347b9afcf7a6c",
-   "observed_at": 1793511743.3249018
-  },
-  "T3.15": {
-   "fp": "dc2150259b9e7311",
-   "since": 1793511681.6048713,
-   "epoch": "66b598ed39f34a3cb50347b9afcf7a6c",
-   "observed_at": 1793511743.3249018
+   "observed_at": 1793514430.7100482
   }
  },
  "tasks": {
@@ -25,7 +19,8 @@
   "T2.57": 1,
   "T3.91": 1,
   "CG-4": 4,
-  "SP-4": 0
+  "SP-4": 0,
+  "run": 1
  },
  "triggers": {
   "pictures:REQ-021:r25:resolution:4378ebb94f72d6922c89d601ee5db484": {
@@ -1541,6 +1536,170 @@
    "at": "2026-10-31T23:42:29",
    "session": "20261031-234610-5a46",
    "brief": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/RUN.solver/20261031-214605-7850/BRIEF.SP-4-v2.md"
+  },
+  "pictures:REQ-021:r35:resolution:2a49ab6d27d4b6eddfe3fead986233c9": {
+   "kind": "resolution",
+   "key": "pictures:REQ-021:r35:resolution:2a49ab6d27d4b6eddfe3fead986233c9",
+   "run_id": "pictures:REQ-021:r35",
+   "task_id": "CG-4",
+   "request_id": "",
+   "round": null,
+   "reason": "the conflict in src/components/cuentas/MenuCuenta.tsx waits for a recorded resolution since 2026-10-31T21:45:34; no retry can settle it",
+   "resolution": {
+    "key": "2a49ab6d27d4b6eddfe3fead986233c9",
+    "path": "src/components/cuentas/MenuCuenta.tsx",
+    "blobs": {
+     "base": "a48ce923956fb2574b6c3a76c6c7dd877f11a130",
+     "ours": "4377350d966f26f51f6ae7acadcad7f08d7b78ab",
+     "theirs": "bd6d7cce1050c3c04ce6b591e140910d371ac874"
+    },
+    "commits": {
+     "base": "2d45cd5030b75c3d706dc6f2bea815f76eed7cce",
+     "ours": "1ce13a8f800f91060050a46d07d37f78a669889d",
+     "theirs": "59649e4cbd8f16853f9842a186faaef31effe1f6"
+    },
+    "json": "/home/david/bitacora/.state/durable/composition/resolutions/2a49ab6d27d4b6eddfe3fead986233c9.json",
+    "diff3": "/home/david/bitacora/.state/durable/composition/resolutions/2a49ab6d27d4b6eddfe3fead986233c9.diff3",
+    "resolved": "/home/david/bitacora/.state/durable/composition/resolutions/2a49ab6d27d4b6eddfe3fead986233c9.resolved",
+    "since": 1793501134.4595377
+   },
+   "status": "limit",
+   "at": "2026-11-01T00:46:04"
+  },
+  "pictures:REQ-021:r35:resolution:90898cae7193d81bf7697d1093de908e": {
+   "kind": "resolution",
+   "key": "pictures:REQ-021:r35:resolution:90898cae7193d81bf7697d1093de908e",
+   "run_id": "pictures:REQ-021:r35",
+   "task_id": "CG-4",
+   "request_id": "",
+   "round": null,
+   "reason": "the conflict in src/components/cuentas/MenuCuenta.tsx waits for a recorded resolution since 2026-10-31T18:17:29; no retry can settle it",
+   "resolution": {
+    "key": "90898cae7193d81bf7697d1093de908e",
+    "path": "src/components/cuentas/MenuCuenta.tsx",
+    "blobs": {
+     "base": "a48ce923956fb2574b6c3a76c6c7dd877f11a130",
+     "ours": "bd6d7cce1050c3c04ce6b591e140910d371ac874",
+     "theirs": "be6df01e3a31ca64b6d2f21c4a723e41de8440e1"
+    },
+    "commits": {
+     "base": "2d45cd5030b75c3d706dc6f2bea815f76eed7cce",
+     "ours": "59649e4cbd8f16853f9842a186faaef31effe1f6",
+     "theirs": "3faaf0953a48e7dda73a865b7d5e665e7830dd02"
+    },
+    "json": "/home/david/bitacora/.state/durable/composition/resolutions/90898cae7193d81bf7697d1093de908e.json",
+    "diff3": "/home/david/bitacora/.state/durable/composition/resolutions/90898cae7193d81bf7697d1093de908e.diff3",
+    "resolved": "/home/david/bitacora/.state/durable/composition/resolutions/90898cae7193d81bf7697d1093de908e.resolved",
+    "since": 1793488649.423815
+   },
+   "status": "limit",
+   "at": "2026-11-01T00:46:04"
+  },
+  "pictures:REQ-021:r35:resolution:9c0b9c087c45e0f248214a095fa6d046": {
+   "kind": "resolution",
+   "key": "pictures:REQ-021:r35:resolution:9c0b9c087c45e0f248214a095fa6d046",
+   "run_id": "pictures:REQ-021:r35",
+   "task_id": "CG-4",
+   "request_id": "",
+   "round": null,
+   "reason": "the conflict in src/components/cuentas/MenuCuenta.tsx waits for a recorded resolution since 2026-10-31T19:53:24; no retry can settle it",
+   "resolution": {
+    "key": "9c0b9c087c45e0f248214a095fa6d046",
+    "path": "src/components/cuentas/MenuCuenta.tsx",
+    "blobs": {
+     "base": "a48ce923956fb2574b6c3a76c6c7dd877f11a130",
+     "ours": "bf8c36e445779b5180ffb4c68fed6aedbe1ff9ea",
+     "theirs": "4377350d966f26f51f6ae7acadcad7f08d7b78ab"
+    },
+    "commits": {
+     "base": "cd0ec7732462d300aba395dffaf472edf2853857",
+     "ours": "be3dcd80052b1f771c56014892738b7f986073d8",
+     "theirs": "7729d30cc88ad519869c8e2f9979f1793d876b2b"
+    },
+    "json": "/home/david/bitacora/.state/durable/composition/resolutions/9c0b9c087c45e0f248214a095fa6d046.json",
+    "diff3": "/home/david/bitacora/.state/durable/composition/resolutions/9c0b9c087c45e0f248214a095fa6d046.diff3",
+    "resolved": "/home/david/bitacora/.state/durable/composition/resolutions/9c0b9c087c45e0f248214a095fa6d046.resolved",
+    "since": 1793494404.4946318
+   },
+   "status": "limit",
+   "at": "2026-11-01T00:46:04"
+  },
+  "pictures:REQ-021:r35:resolution:a3ffeff101bfacf8b2888bfd3d06bf5a": {
+   "kind": "resolution",
+   "key": "pictures:REQ-021:r35:resolution:a3ffeff101bfacf8b2888bfd3d06bf5a",
+   "run_id": "pictures:REQ-021:r35",
+   "task_id": "CG-4",
+   "request_id": "",
+   "round": null,
+   "reason": "the conflict in src/components/cuentas/MenuCuenta.tsx waits for a recorded resolution since 2026-10-31T19:53:24; no retry can settle it",
+   "resolution": {
+    "key": "a3ffeff101bfacf8b2888bfd3d06bf5a",
+    "path": "src/components/cuentas/MenuCuenta.tsx",
+    "blobs": {
+     "base": "a48ce923956fb2574b6c3a76c6c7dd877f11a130",
+     "ours": "bd6d7cce1050c3c04ce6b591e140910d371ac874",
+     "theirs": "4377350d966f26f51f6ae7acadcad7f08d7b78ab"
+    },
+    "commits": {
+     "base": "2d45cd5030b75c3d706dc6f2bea815f76eed7cce",
+     "ours": "59649e4cbd8f16853f9842a186faaef31effe1f6",
+     "theirs": "7729d30cc88ad519869c8e2f9979f1793d876b2b"
+    },
+    "json": "/home/david/bitacora/.state/durable/composition/resolutions/a3ffeff101bfacf8b2888bfd3d06bf5a.json",
+    "diff3": "/home/david/bitacora/.state/durable/composition/resolutions/a3ffeff101bfacf8b2888bfd3d06bf5a.diff3",
+    "resolved": "/home/david/bitacora/.state/durable/composition/resolutions/a3ffeff101bfacf8b2888bfd3d06bf5a.resolved",
+    "since": 1793494404.623271
+   },
+   "status": "limit",
+   "at": "2026-11-01T00:46:04"
+  },
+  "pictures:REQ-021:r35:resolution:a9cba58a77795a21db0078a39fb0c06e": {
+   "kind": "resolution",
+   "key": "pictures:REQ-021:r35:resolution:a9cba58a77795a21db0078a39fb0c06e",
+   "run_id": "pictures:REQ-021:r35",
+   "task_id": "CG-4",
+   "request_id": "",
+   "round": null,
+   "reason": "the conflict in src/components/cuentas/MenuCuenta.tsx waits for a recorded resolution since 2026-10-31T18:17:29; no retry can settle it",
+   "resolution": {
+    "key": "a9cba58a77795a21db0078a39fb0c06e",
+    "path": "src/components/cuentas/MenuCuenta.tsx",
+    "blobs": {
+     "base": "a48ce923956fb2574b6c3a76c6c7dd877f11a130",
+     "ours": "bf8c36e445779b5180ffb4c68fed6aedbe1ff9ea",
+     "theirs": "be6df01e3a31ca64b6d2f21c4a723e41de8440e1"
+    },
+    "commits": {
+     "base": "cd0ec7732462d300aba395dffaf472edf2853857",
+     "ours": "be3dcd80052b1f771c56014892738b7f986073d8",
+     "theirs": "3faaf0953a48e7dda73a865b7d5e665e7830dd02"
+    },
+    "json": "/home/david/bitacora/.state/durable/composition/resolutions/a9cba58a77795a21db0078a39fb0c06e.json",
+    "diff3": "/home/david/bitacora/.state/durable/composition/resolutions/a9cba58a77795a21db0078a39fb0c06e.diff3",
+    "resolved": "/home/david/bitacora/.state/durable/composition/resolutions/a9cba58a77795a21db0078a39fb0c06e.resolved",
+    "since": 1793488649.3759992
+   },
+   "status": "limit",
+   "at": "2026-11-01T00:46:04"
+  },
+  "pictures:REQ-021:r35:ended:eaad731aa25e9029": {
+   "kind": "ended",
+   "key": "pictures:REQ-021:r35:ended:eaad731aa25e9029",
+   "run_id": "pictures:REQ-021:r35",
+   "task_id": "",
+   "request_id": "",
+   "round": null,
+   "reason": "the run workflow bt:pictures:REQ-021:r35 ended blocked: gate CG-4 rejected: git_text_conflict; blocked, not stopped by the owner: T3.15",
+   "workflow": "bt:pictures:REQ-021:r35",
+   "gates": [
+    "CG-4"
+   ],
+   "blocked": [
+    "T3.15"
+   ],
+   "status": "answered",
+   "at": "2026-11-01T00:46:04",
+   "session": "20261101-004604-27e4"
   }
  },
  "sessions": [
@@ -2015,6 +2174,42 @@
    "summary": "SP-4 ya se resolvió (ya no está abierto)",
    "question": "",
    "report": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/RUN.solver/20261031-234610-5a46/REPORT.md"
+  },
+  {
+   "id": "20261101-004604-27e4",
+   "name": "bit-pictures-REQ-021-solver",
+   "status": "answered",
+   "started": 1793511964.3630564,
+   "started_at": "2026-11-01T00:46:04",
+   "triggers": [
+    "pictures:REQ-021:r35:ended:eaad731aa25e9029"
+   ],
+   "queued": [],
+   "restarts": 0,
+   "dir": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/RUN.solver/20261101-004604-27e4",
+   "cwd": "/home/david/.local/share/bitacora-solver/pictures/20261101-004604-27e4",
+   "task": "run",
+   "kind": "ended",
+   "reason": "the run workflow bt:pictures:REQ-021:r35 ended blocked: gate CG-4 rejected: git_text_conflict; blocked, not stopped by the owner: T3.15",
+   "session_id": "a6c35658-32d4-4d6a-b7ad-0f0cb8268941",
+   "provider": "claude",
+   "model": "sonnet",
+   "home": "/home/david/.claude-work",
+   "resolved": {
+    "at": 1793514367.7484164,
+    "what": "run ya se resolvió (ya no está abierto)"
+   },
+   "ended": 1793514399.304315,
+   "ended_at": "2026-11-01T01:26:39",
+   "summary": "CG-4 desbloqueado: resolví el conflicto de MenuCuenta.tsx (SP-2 ya incluía el enlace de SP-14) y reabrí el run; sin cambios en metodologia. T3.15 sigue bloqueada por auditoría que cambió .verification-snapshot (origen sin encontrar).",
+   "question": "",
+   "report": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/RUN.solver/20261101-004604-27e4/REPORT.md"
   }
- ]
+ ],
+ "held": {
+  "T3.15": {
+   "fp": "366499d7c41fad72",
+   "since": 1793514367.659977
+  }
+ }
 }

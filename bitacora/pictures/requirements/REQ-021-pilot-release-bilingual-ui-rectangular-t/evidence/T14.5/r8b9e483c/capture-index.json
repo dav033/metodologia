@@ -3674,5 +3674,302 @@
     },
     "probeCorrection": "Initial probe had two observer defects: CSS-module class names were not matched literally, and default lineClamp values were treated as clipping. Repeated F1 and overflow checks use semantic ul[aria-label] lists, CSS-module-safe animation-name matching, and actual scroll/client clipping measurements.",
     "command": "node --input-type=module with Playwright Chromium /usr/bin/chromium; 56 F1–F5/check matrix entries over 360/390/768/1280 × ES/EN"
+  },
+  "v4LinkChecks": {
+    "command": "Playwright Chromium via node --input-type=module; /login at 360/390/768/1280 × ES/EN; assert exactly one accessible link to /planes, then activate and assert /planes renders four cards.",
+    "checks": [
+      {
+        "id": "V4_unique_plans_link",
+        "viewport": "360x780",
+        "locale": "es",
+        "passed": true,
+        "observed": {
+          "httpStatus": 200,
+          "count": 1,
+          "href": "/planes"
+        }
+      },
+      {
+        "id": "V4_link_activation",
+        "viewport": "360x780",
+        "locale": "es",
+        "passed": true,
+        "observed": {
+          "pathname": "/planes",
+          "cardCount": 4
+        }
+      },
+      {
+        "id": "V4_unique_plans_link",
+        "viewport": "360x780",
+        "locale": "en",
+        "passed": true,
+        "observed": {
+          "httpStatus": 200,
+          "count": 1,
+          "href": "/planes"
+        }
+      },
+      {
+        "id": "V4_link_activation",
+        "viewport": "360x780",
+        "locale": "en",
+        "passed": true,
+        "observed": {
+          "pathname": "/planes",
+          "cardCount": 4
+        }
+      },
+      {
+        "id": "V4_unique_plans_link",
+        "viewport": "390x844",
+        "locale": "es",
+        "passed": true,
+        "observed": {
+          "httpStatus": 200,
+          "count": 1,
+          "href": "/planes"
+        }
+      },
+      {
+        "id": "V4_link_activation",
+        "viewport": "390x844",
+        "locale": "es",
+        "passed": true,
+        "observed": {
+          "pathname": "/planes",
+          "cardCount": 4
+        }
+      },
+      {
+        "id": "V4_unique_plans_link",
+        "viewport": "390x844",
+        "locale": "en",
+        "passed": true,
+        "observed": {
+          "httpStatus": 200,
+          "count": 1,
+          "href": "/planes"
+        }
+      },
+      {
+        "id": "V4_link_activation",
+        "viewport": "390x844",
+        "locale": "en",
+        "passed": true,
+        "observed": {
+          "pathname": "/planes",
+          "cardCount": 4
+        }
+      },
+      {
+        "id": "V4_unique_plans_link",
+        "viewport": "768x1024",
+        "locale": "es",
+        "passed": true,
+        "observed": {
+          "httpStatus": 200,
+          "count": 1,
+          "href": "/planes"
+        }
+      },
+      {
+        "id": "V4_link_activation",
+        "viewport": "768x1024",
+        "locale": "es",
+        "passed": true,
+        "observed": {
+          "pathname": "/planes",
+          "cardCount": 4
+        }
+      },
+      {
+        "id": "V4_unique_plans_link",
+        "viewport": "768x1024",
+        "locale": "en",
+        "passed": true,
+        "observed": {
+          "httpStatus": 200,
+          "count": 1,
+          "href": "/planes"
+        }
+      },
+      {
+        "id": "V4_link_activation",
+        "viewport": "768x1024",
+        "locale": "en",
+        "passed": true,
+        "observed": {
+          "pathname": "/planes",
+          "cardCount": 4
+        }
+      },
+      {
+        "id": "V4_unique_plans_link",
+        "viewport": "1280x900",
+        "locale": "es",
+        "passed": true,
+        "observed": {
+          "httpStatus": 200,
+          "count": 1,
+          "href": "/planes"
+        }
+      },
+      {
+        "id": "V4_link_activation",
+        "viewport": "1280x900",
+        "locale": "es",
+        "passed": true,
+        "observed": {
+          "pathname": "/planes",
+          "cardCount": 4
+        }
+      },
+      {
+        "id": "V4_unique_plans_link",
+        "viewport": "1280x900",
+        "locale": "en",
+        "passed": true,
+        "observed": {
+          "httpStatus": 200,
+          "count": 1,
+          "href": "/planes"
+        }
+      },
+      {
+        "id": "V4_link_activation",
+        "viewport": "1280x900",
+        "locale": "en",
+        "passed": true,
+        "observed": {
+          "pathname": "/planes",
+          "cardCount": 4
+        }
+      }
+    ],
+    "summary": {
+      "total": 16,
+      "passed": 16,
+      "failed": 0
+    }
+  },
+  "axeCurrentCandidate": {
+    "command": "Playwright Chromium; axe.run(document) on /planes and /login at 390x844 × ES/EN; runOnly tags wcag2a,wcag2aa,wcag21a,wcag21aa,wcag22a,wcag22aa.",
+    "version": "4.13.0",
+    "tags": [
+      "wcag2a",
+      "wcag2aa",
+      "wcag21a",
+      "wcag21aa",
+      "wcag22a",
+      "wcag22aa"
+    ],
+    "results": [
+      {
+        "route": "/planes",
+        "viewport": "390x844",
+        "locale": "es",
+        "httpStatus": 200,
+        "version": "4.13.0",
+        "tags": [
+          "wcag2a",
+          "wcag2aa",
+          "wcag21a",
+          "wcag21aa",
+          "wcag22a",
+          "wcag22aa"
+        ],
+        "violations": [],
+        "incomplete": [],
+        "passes": 27,
+        "passesTagCount": 208
+      },
+      {
+        "route": "/planes",
+        "viewport": "390x844",
+        "locale": "en",
+        "httpStatus": 200,
+        "version": "4.13.0",
+        "tags": [
+          "wcag2a",
+          "wcag2aa",
+          "wcag21a",
+          "wcag21aa",
+          "wcag22a",
+          "wcag22aa"
+        ],
+        "violations": [],
+        "incomplete": [],
+        "passes": 27,
+        "passesTagCount": 208
+      },
+      {
+        "route": "/login",
+        "viewport": "390x844",
+        "locale": "es",
+        "httpStatus": 200,
+        "version": "4.13.0",
+        "tags": [
+          "wcag2a",
+          "wcag2aa",
+          "wcag21a",
+          "wcag21aa",
+          "wcag22a",
+          "wcag22aa"
+        ],
+        "violations": [],
+        "incomplete": [
+          {
+            "id": "aria-prohibited-attr",
+            "nodes": [
+              {
+                "target": [
+                  ".min-w-0"
+                ],
+                "summary": "Fix all of the following:"
+              }
+            ]
+          }
+        ],
+        "passes": 25,
+        "passesTagCount": 71
+      },
+      {
+        "route": "/login",
+        "viewport": "390x844",
+        "locale": "en",
+        "httpStatus": 200,
+        "version": "4.13.0",
+        "tags": [
+          "wcag2a",
+          "wcag2aa",
+          "wcag21a",
+          "wcag21aa",
+          "wcag22a",
+          "wcag22aa"
+        ],
+        "violations": [],
+        "incomplete": [
+          {
+            "id": "aria-prohibited-attr",
+            "nodes": [
+              {
+                "target": [
+                  ".min-w-0"
+                ],
+                "summary": "Fix all of the following:"
+              }
+            ]
+          }
+        ],
+        "passes": 25,
+        "passesTagCount": 71
+      }
+    ],
+    "summary": {
+      "scenarios": 4,
+      "violations": 0,
+      "incomplete": 2
+    }
   }
 }

@@ -586,3 +586,11 @@ regression: skipped (D-261: integrate.regression = none)
 rollback: git revert the merge of weekly-cap on main, restart bt-durable.service and bitacora-web.service and bitacora-remote-api.service
 remote API pin: 621bf4d4d3ad -> 5a9713f68b7a (backup /home/david/.config/systemd/user/bitacora-remote-api.service.d/exec.conf.bak-621bf4d4d3ad)
 result: merged 5a9713f68b7a, restarted bt-durable.service, bitacora-web.service, bitacora-remote-api.service, smoke ok
+
+# integration of A Claude session in a new working folder no longer waits on the trust questions (D-282), local restart of engine + web + remote API, 2026-11-01 01:27, session metodologia-97
+previous main: 0b2f41b1758263f1a3337d2102a1f21d8172df3c
+/home/david/bitacora/.state/durable/backups/bt_durable-20261101-012727.dump 60906866 5bc4b22c02fa41ce6a506f4093040bd0b2fa2e8be45bb39bd8ba1f7450287afb
+regression: skipped (D-261: integrate.regression = none)
+rollback: git revert the merge of solver-trust on main, restart bt-durable.service and bitacora-web.service and bitacora-remote-api.service
+remote API pin: 5a9713f68b7a -> b9e80f90a690 (backup /home/david/.config/systemd/user/bitacora-remote-api.service.d/exec.conf.bak-5a9713f68b7a)
+result: merged b9e80f90a690, restarted bt-durable.service, bitacora-web.service, bitacora-remote-api.service, smoke ok

@@ -3643,3 +3643,16 @@ Solucionador 20261030-100736-d494 integrated merge fff622890f28b8093a9a0afda9c40
 - **Rule:** the same keys outside `RUN.solver/` are still refused. No secret was involved (values are md5 hex).
 - **Evidence:** `test_githook_gitleaks_config` (2 tests, real hook in a temp repo); installed into `.git/hooks`;
   bitácora commit `13ae648a4`, code merge `683b58488` (`--no-regression`, D-261). Made by metodologia-97 by hand.
+
+## D-282 — A Claude session started in a new working folder has its trust questions accepted when the account already runs unattended
+
+- **Context:** with D-279 excluding Codex accounts at ≥90 % weekly quota, the Solucionador was routed to Claude. Its
+  working folder is new every session, so Claude Code asked «trust this folder?» and then «allow external CLAUDE.md
+  imports?» and waited on the first: r35 ended blocked (CG-4 / T3.15) and the solver sat idle for 38 minutes until I
+  pressed the keys by hand in its pane.
+- **Decision:** `bt_agent_terminal.start` calls `trust_folder(<CLAUDE_CONFIG_DIR>, cwd)` for every `claude …` command.
+  It writes the three per-project flags into the account's `.claude.json` (atomic replace; other projects untouched),
+  and only when the account's settings already carry the owner's `skipDangerousModePermissionPrompt`.
+- **Rule:** an account that still asks the owner keeps asking; nothing is written if the record is unreadable.
+- **Evidence:** `test_agent_trust_folder` (4); `test_agent_terminal` 20, `test_durable_solver` 32, `test_agents`,
+  `test_agent_health` OK; merge `b9e80f90a` (`--no-regression`, D-261). Made by metodologia-97 by hand.

@@ -1,0 +1,20 @@
+[
+ {
+  "kind": "ended",
+  "key": "pictures:REQ-021:r35:ended:eaad731aa25e9029",
+  "run_id": "pictures:REQ-021:r35",
+  "task_id": "",
+  "request_id": "",
+  "round": null,
+  "reason": "the run workflow bt:pictures:REQ-021:r35 ended blocked: gate CG-4 rejected: git_text_conflict; blocked, not stopped by the owner: T3.15",
+  "workflow": "bt:pictures:REQ-021:r35",
+  "gates": [
+   "CG-4"
+  ],
+  "blocked": [
+   "T3.15"
+  ],
+  "status": "pending",
+  "at": "2026-11-01T00:46:04"
+ }
+]

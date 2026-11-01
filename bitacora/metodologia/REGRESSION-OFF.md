@@ -27,6 +27,7 @@ Owner, 2026-10-31 17:05: until further notice metodologia integrations run no re
 - 2026-11-01 00:32 · `683b584887fa` · The repo pre-commit hook scans with the bitácora's gitleaks config (D-281) · 2 path(s): skill/githooks/pre-commit, skill/scripts/tests/test_githook_gitleaks_config.py
 - 2026-11-01 00:39 · `621bf4d4d3ad` · One UI component pool @bitacora/ui: themes per project, direct sync, live mockups, implementers start from the approved TSX (D-280) · 241 path(s): pyproject.toml, skill/agents/designer.md, skill/agents/designer/skills/david-ui-kit/SKILL.md, skill/agents/designer/skills/david-ui-kit/real/bencho-theme.css, skill/agents/designer/skills/david-ui-kit/real/build.mjs, skill/agents/designer/skills/david-ui-kit/real/demos/animate-ui/animated-icons.tsx …
 - 2026-11-01 00:41 · `5a9713f68b7a` · Weekly quota cap: an account at >=90% of its 7-day quota is excluded from routing (D-279) · 23 path(s): pyproject.toml, skill/references/agents.md, skill/scripts/bt_agent_terminal.py, skill/scripts/bt_agents.py, skill/scripts/bt_attempt_analyst.py, skill/scripts/bt_block_agent.py …
+- 2026-11-01 01:27 · `b9e80f90a690` · A Claude session in a new working folder no longer waits on the trust questions (D-282) · 2 path(s): skill/scripts/bt_agent_terminal.py, skill/scripts/tests/test_agent_trust_folder.py
 
 ## Escaped defects
 
