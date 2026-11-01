@@ -50,6 +50,12 @@ class EngineConfig(BaseModel):
     agent_concurrency: int = Field(default=2, ge=1, le=16)          # agents running at once on this machine
     verify_concurrency: int = Field(default=1, ge=1, le=8)          # sandboxed verifications at once
     max_executor_threads: int = Field(default=64, ge=8, le=512)
+    # the attempts' worktrees and folders (`execution.scratch_root`, D-266); None = `<state_dir>/attempts-root`
+    scratch_dir: Path | None = None
+
+    @property
+    def scratch_root(self) -> Path:
+        return self.scratch_dir or self.state_dir / "attempts-root"
 
 
 def default_database_url(state_dir: Path) -> str:

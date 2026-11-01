@@ -112,6 +112,9 @@ class M6Verifier:
         self.attestations_for = attestations_for or (lambda run: attestations)
         # `on_verdict(attempt, outcome, profile)`: the shared notes trail (RUN.notes history and last verification failure)
         self.on_verdict = on_verdict
+        # `disk_guard.check()` (bt_durable.scratch.DiskGuard, D-266): below the free-space floor no check runs and the
+        # verdict is NEEDS_REVIEW DISK_LOW, an environment decision with `reverify`; None = no guard (the wiring sets it)
+        self.disk_guard = None
         self._engines: dict[tuple[str, str], QualityEngine] = {}
 
     def recover_interrupted(self, *, clean: bool = False) -> tuple[str, ...]:
@@ -158,6 +161,10 @@ class M6Verifier:
         if not snapshot.snapshot_sha or snapshot.manifest_path is None:
             return VerifyOutcome(status=VerifyStatus.NEEDS_REVIEW, reason_code="SNAPSHOT_INVALID",
                                  digest="the attempt left no snapshot to verify")
+        room = self._room(attempt)
+        if room:
+            from ..scratch import verify_refusal
+            return VerifyOutcome(status=VerifyStatus.NEEDS_REVIEW, **verify_refusal(room))
         # profiles: standard | relaxed (bounded environment repair) | owner<N> (the owner asked for a new verdict of the
         # same snapshot, e.g. after attesting a manual check: same policy, its own request key so M6 runs it again)
         key = attempt.verify_key if profile == "standard" else f"{attempt.verify_key}:{profile}"
@@ -177,6 +184,18 @@ class M6Verifier:
             except Exception as error:  # noqa: BLE001 - the notes trail informs; it never changes a verdict
                 LOG.warning("notes for %s not written: %s", attempt.attempt_key, error)
         return outcome
+
+
+    def _room(self, attempt: AttemptRef) -> dict:
+        """The guard's finding when the scratch is below its floor, else {} (no guard, enough room, or unreadable)."""
+        if self.disk_guard is None:
+            return {}
+        try:
+            found = self.disk_guard.check(attempt.run, None, attempt.task_id)
+        except Exception as error:  # noqa: BLE001 - the guard informs; an unreadable filesystem lets M6 decide
+            LOG.warning("disk guard for %s failed: %s", attempt.attempt_key, error)
+            return {}
+        return found if found.get("state") == "low" else {}
 
 
 def outcome_of(result: dict, store, policy: QualityPolicy | None = None) -> VerifyOutcome:
