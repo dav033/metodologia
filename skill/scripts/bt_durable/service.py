@@ -31,10 +31,13 @@ from .adapters.runtime import SupervisorRuntime
 from .adapters.telemetry import JsonlTelemetry
 from .execution import engine, steps
 from .ports import Ports
+from .scratch import DiskGuard
 from .settings import EngineConfig
 
 LOG = logging.getLogger("bt_durable.service")
 TERMINAL = frozenset({"SUCCESS", "ERROR", "CANCELLED", "MAX_RECOVERY_ATTEMPTS_EXCEEDED"})
+GC_SECONDS = 600.0          # attempt worktree collection cadence (D-266)
+GC_LIMIT = 100              # removals per pass
 
 
 def wire(cfg: EngineConfig, *, repositories_for: Callable[[str], object], driver_for: Callable[[str], object],
@@ -45,7 +48,7 @@ def wire(cfg: EngineConfig, *, repositories_for: Callable[[str], object], driver
     cfg.state_dir.mkdir(parents=True, exist_ok=True, mode=0o700)
     cfg.state_dir.chmod(0o700)                             # M6 and the supervisor refuse a shared directory
     plans = FilePlans()
-    attempts = M3Attempts(root=cfg.state_dir / "attempts-root", repositories_for=repositories_for,
+    attempts = M3Attempts(root=cfg.scratch_root, repositories_for=repositories_for,
                           plan_for=lambda attempt: steps.plan(attempt.run), driver_for=driver_for,
                           briefs_for=briefs_for or DurableBriefs(repositories_for=repositories_for),
                           check_policy_for=check_policy)
@@ -53,12 +56,17 @@ def wire(cfg: EngineConfig, *, repositories_for: Callable[[str], object], driver
     integrator = _ProjectIntegrator(repositories_for, cfg.state_dir)
     telemetry = JsonlTelemetry(cfg.state_dir / "telemetry.jsonl")
     attempts.telemetry = telemetry                           # capture-time file guard events (adapters/size_guard.py)
+    disk = DiskGuard(cfg.scratch_root, state_dir=cfg.state_dir,
+                     extra={"legacy executor worktrees": cfg.state_dir.parent / "executor"})
+    verifier = verifier or operator_verifier(cfg.state_dir / "m6-quality.sqlite3")
+    if isinstance(verifier, M6Verifier):
+        verifier.disk_guard = disk                           # no check runs below the free-space floor (D-266)
     return Ports(plans=plans, router=build_router(router, routes, capacity, telemetry=telemetry.emit),
                  preparer=attempts, runtime=runtime or SupervisorRuntime(cfg.state_dir / "supervisor"), reader=attempts,
-                 capturer=attempts, verifier=verifier or operator_verifier(cfg.state_dir / "m6-quality.sqlite3"),
+                 capturer=attempts, verifier=verifier,
                  integrator=integrator, telemetry=telemetry, composer=integrator,
                  auditor=AuditGate(repositories_for), design_gate=DurableDesignGate(repositories_for=repositories_for),
-                 env_probe=AgentEnvProbe(check_policy_for=check_policy, telemetry=telemetry))
+                 env_probe=AgentEnvProbe(check_policy_for=check_policy, telemetry=telemetry), disk_guard=disk)
 
 
 def requirement_dir(run) -> Path:
@@ -178,7 +186,8 @@ class _KeyRef:
 
 
 def serve(cfg: EngineConfig, ports: Ports, *, reap_seconds: float = 30.0, project_seconds: float = 5.0,
-          stop: threading.Event | None = None, marker: Path | None = None, exit_process: bool | None = None) -> None:
+          stop: threading.Event | None = None, marker: Path | None = None, exit_process: bool | None = None,
+          gc_seconds: float = GC_SECONDS) -> None:
     """Run the engine until SIGTERM/SIGINT: reap orphan units and refresh the panels' projections of every run
     (`bt_durable.projection`; a read model the workflows never read back). `marker` (default
     `<state>/engine.json`) tells operator tools which message features this engine's workflows understand.
@@ -189,7 +198,10 @@ def serve(cfg: EngineConfig, ports: Ports, *, reap_seconds: float = 30.0, projec
     exiting: every engine restart of 2026-10-28/29 ended in systemd's «State 'stop-sigterm' timed out. Killing» after
     TimeoutStopSec, the left-over threads failing with «System database accessed before DBOS was launched» meanwhile
     and still doing their external effects for that minute. Exiting at once loses nothing a SIGKILL would not: every
-    unrecorded step runs again after recovery, and its port is idempotent for its identifiers."""
+    unrecorded step runs again after recovery, and its port is idempotent for its identifiers.
+
+    Every `gc_seconds` (the first time `gc_seconds` after the start) a background pass removes the worktrees of
+    attempts nothing needs any more (`bt_durable.scratch`, D-266; `execution.worktree_gc`)."""
     if exit_process is None:
         exit_process = stop is None
     stop = stop or threading.Event()
@@ -197,7 +209,8 @@ def serve(cfg: EngineConfig, ports: Ports, *, reap_seconds: float = 30.0, projec
         signal.signal(sig, lambda *_: stop.set())
     clean = False
     try:
-        _loop(cfg, ports, stop, reap_seconds=reap_seconds, project_seconds=project_seconds, marker=marker)
+        _loop(cfg, ports, stop, reap_seconds=reap_seconds, project_seconds=project_seconds, marker=marker,
+              gc_seconds=gc_seconds)
         clean = True
     except BaseException:
         LOG.exception("engine loop failed")
@@ -219,7 +232,7 @@ def exit_now(code: int) -> None:
 
 
 def _loop(cfg: EngineConfig, ports: Ports, stop: threading.Event, *, reap_seconds: float, project_seconds: float,
-          marker: Path | None) -> None:
+          marker: Path | None, gc_seconds: float = GC_SECONDS) -> None:
     from . import restarts
     from .projection import EngineProjector
     from .remote import write_marker
@@ -235,7 +248,7 @@ def _loop(cfg: EngineConfig, ports: Ports, stop: threading.Event, *, reap_second
     write_marker(marker or cfg.state_dir / "engine.json")
     projector = EngineProjector(DBOS)
     tick = max(0.2, min(reap_seconds, project_seconds))
-    last_reap = time.monotonic()
+    last_reap = last_gc = time.monotonic()
     try:
         while True:
             try:
@@ -245,7 +258,7 @@ def _loop(cfg: EngineConfig, ports: Ports, stop: threading.Event, *, reap_second
             if stop.wait(tick):
                 break
             if time.monotonic() - last_reap >= reap_seconds:
-                last_reap = time.monotonic()
+                last_reap = last_gc = time.monotonic()
                 try:
                     reap_once()
                 except Exception as error:  # noqa: BLE001
@@ -262,6 +275,12 @@ def _loop(cfg: EngineConfig, ports: Ports, stop: threading.Event, *, reap_second
                     _deliver_held_notices()
                 except Exception as error:  # noqa: BLE001 - a held notice is tried again on the next pass
                     LOG.warning("held notices pass failed: %s", error)
+            if time.monotonic() - last_gc >= gc_seconds:
+                last_gc = time.monotonic()
+                try:
+                    collect_worktrees(cfg, ports)
+                except Exception as error:  # noqa: BLE001 - the worktrees wait for the next pass
+                    LOG.warning("worktree collection pass failed: %s", error)
     finally:
         if stop.is_set():                           # a signal, not a failure: recorded before DBOS goes (D-181)
             try:
@@ -269,6 +288,38 @@ def _loop(cfg: EngineConfig, ports: Ports, stop: threading.Event, *, reap_second
             except OSError as error:
                 LOG.warning("clean stop not recorded: %s", error)
         engine.stop()
+
+
+def collect_worktrees(cfg: EngineConfig, ports: Ports, *, wait: bool = False) -> threading.Thread | None:
+    """Start one background pass of the attempt worktree collection (bt_durable.scratch, D-266) unless one still runs
+    or `execution.worktree_gc` is off. At most `GC_LIMIT` removals per pass (a Next worktree takes seconds to delete):
+    the loop thread never waits for it, and a pass cut short by a restart is finished by the next one."""
+    global _gc_thread
+    from . import scratch
+    if not scratch.enabled() or (_gc_thread is not None and _gc_thread.is_alive()):
+        return None
+
+    def run() -> None:
+        try:
+            report = scratch.collect(cfg.scratch_root, DBOS.list_workflows, apply=True, held=ports.runtime.owned(""),
+                                     limit=GC_LIMIT, emit=ports.telemetry.emit)
+        except Exception as error:  # noqa: BLE001 - the next pass tries again
+            LOG.warning("worktree collection failed: %s", error)
+            return
+        summary = report.summary()
+        if report.verdicts:
+            ports.telemetry.emit("worktrees_collected", **{k: summary[k] for k in ("counts", "kept", "orphans")})
+        if summary["counts"].get("removed") or summary["counts"].get("failed"):
+            LOG.info("worktree collection: %s", scratch.render(report).replace("\n", "; "))
+
+    _gc_thread = threading.Thread(target=run, name="bt-worktree-gc", daemon=True)
+    _gc_thread.start()
+    if wait:
+        _gc_thread.join()
+    return _gc_thread
+
+
+_gc_thread: threading.Thread | None = None
 
 
 def _drain_joins(cfg: EngineConfig, ports: Ports) -> None:
@@ -337,4 +388,4 @@ class _PassStatus:
 _healing_client = None
 
 
-__all__ = ["Path", "reap_once", "serve", "wire"]
+__all__ = ["Path", "collect_worktrees", "reap_once", "serve", "wire"]

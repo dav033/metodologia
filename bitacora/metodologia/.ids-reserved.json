@@ -209,6 +209,21 @@
    "id": "D-267",
    "by": "metodologia-96: role_route uses the role policy's model and effort for Claude routes (Solucionador ran Opus despite D-253)",
    "at": "2026-10-31T19:06:56"
+  },
+  {
+   "id": "D-268",
+   "by": "metodologia-96: a subplan the owner rejected shows «rechazada vN · <fase de la corrección>» everywhere until a later version is ready to try",
+   "at": "2026-10-31T19:21:13"
+  },
+  {
+   "id": "D-269",
+   "by": "metodologia-96: an answered decision opens a fresh bounded attempt window; checks_not_run only on explicit cannot-run statements",
+   "at": "2026-10-31T19:27:46"
+  },
+  {
+   "id": "D-270",
+   "by": "metodologia-96: every engine scratch area is reclaimed (legacy executor worktrees, Probar copies, m6-deps cache, test labs off /home)",
+   "at": "2026-10-31T19:32:00"
   }
  ]
 }

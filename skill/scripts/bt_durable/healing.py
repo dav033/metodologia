@@ -35,8 +35,9 @@ OPTIONS = {"retry": "a new attempt of the task from its last snapshot",
            "retry_other_route": "a new attempt on another model or account",
            "reverify": "verify the same snapshot again (only after its manual checks were attested)",
            "stop": "stop the task"}
-# decisions about the environment itself: a new agent run does not fix them, the owner does (D-265)
-OWNER_ENV_CODES = frozenset({"AGENT_ENV_UNREACHABLE"})
+# decisions about the environment itself: a new agent run does not fix them, the owner does (D-265); a full disk neither
+# (D-266: a `retry` only meets the guard again until space is freed)
+OWNER_ENV_CODES = frozenset({"AGENT_ENV_UNREACHABLE", "DISK_LOW"})
 # the agent's final message says, explicitly, that it could not run a check, or why (pictures REQ-021 r32 T3.91 a7: «No
 # ejecuté `--suite rectangular-mouse`: la URL de prueba apunta al puerto `55965`, que rechazó la conexión»; a8: «no llegó
 # a abrir el navegador: … `ECONNREFUSED`»), D-265
@@ -250,7 +251,8 @@ def _one(run, rdir, state, task_id, item, decision, client, diagnose, notify, st
         why = (f"the environment stopped the start ({code})" if code in OWNER_ENV_CODES else
                "the agent says it could not run its checks: " + str(facts.get("agent_message") or "")[-200:])
         activity.record(rdir, "Autocuración", f"{task_id}: {decision['request_id']} queda para ti: "
-                        + ("un recurso de prueba no responde" if code in OWNER_ENV_CODES else
+                        + ("el disco del motor está casi lleno" if code == "DISK_LOW" else
+                           "un recurso de prueba no responde" if code in OWNER_ENV_CODES else
                            "el agente no pudo ejecutar sus checks (entorno)"), kind="flow")
         escalate(_left(run, task_id, decision, round_no, key, "decision",
                        f"{why}; {decision.get('reason') or ''}"))

@@ -139,6 +139,11 @@ def _classify_verdict(verify: VerifyOutcome, out: str, facts: AttemptFacts) -> F
             return _report(FailureClass.PRODUCT_DECISION, MANUAL_EVIDENCE,
                            f"manual evidence is missing for: {checks}"[:500],
                            [*ev, *(Evidence(kind="manual_check", excerpt=check[:2000]) for check in verify.manual_checks[:5])])
+        if reason == DISK_LOW:
+            # the verifier ran no check: the scratch filesystem is below its free-space floor (D-266). No recorded
+            # history holds this code (it is new), so classifying it changes no replayed decision
+            return _report(FailureClass.ENVIRONMENT, DISK_LOW, verify.digest or "too little free disk to verify",
+                           ev, basis=DISK_LOW)
         if reason in _TRANSIENT_VERIFY:
             return _report(FailureClass.TRANSIENT, reason, "the verifier could not run the checks", ev)
         if reason in _MANUAL_VERIFY:
@@ -222,6 +227,21 @@ def agent_env_unreachable(probe: dict) -> FailureReport:
                    [Evidence(kind="agent_env", ref=str(item.get("key"))[:200], excerpt=str(item.get("resource"))[:200])
                     for item in found[:10]],
                    basis=f"{AGENT_ENV_UNREACHABLE} " + " ".join(sorted(str(item.get("key")) for item in found)))
+
+
+DISK_LOW = "DISK_LOW"
+
+
+def disk_low(found: dict) -> FailureReport:
+    """The scratch filesystem is below `execution.min_free_gb` before a start (D-266): an environment fact for the owner,
+    never an agent attempt that would die with ENOSPC (pictures REQ-021 r32 T3.91 a9, 2026-10-31). Names the free
+    bytes, the path and the engine's biggest scratch consumers (counts only)."""
+    from ..scratch import describe
+    summary = describe(found) + " (probes again)"
+    return _report(FailureClass.ENVIRONMENT, DISK_LOW, summary[:500],
+                   [Evidence(kind="disk", ref=str(found.get("path") or "")[:200],
+                             excerpt=f"free={found.get('free_bytes')} threshold={found.get('threshold_bytes')}")],
+                   basis=f"{DISK_LOW} {found.get('path')}")
 
 
 NO_CHANGE = "AGENT_NO_CHANGE"

@@ -466,3 +466,24 @@ previous main: 89b1a87f120ff1e853f10564c8c4f87fd06e9d9e
 regression: skipped (D-261: integrate.regression = none)
 rollback: git revert the merge of role-route-model on main, restart bt-durable.service and bitacora-web.service
 result: merged 81138e36582c, restarted bt-durable.service, bitacora-web.service, smoke ok
+
+# integration of Attempt worktrees removed once captured; disk floor before a start or a check (D-266), local restart of engine + web, 2026-10-31 19:31, session metodologia-96
+previous main: 2ac6c4031c0802a6646c5191d7013b3df208d126
+/home/david/bitacora/.state/durable/backups/bt_durable-20261031-193059.dump 53010805 ed36b8aaea47cba22808aae6859596a5a5b7760ee1087c3a163614e2982c0687
+regression: skipped (D-261: integrate.regression = none)
+rollback: git revert the merge of scratch-gc on main, restart bt-durable.service and bitacora-web.service
+result: merged 8386b0a6fe48, restarted bt-durable.service, bitacora-web.service, smoke ok
+
+# integration of A rejected subplan version shows where its correction is (D-268), local restart of engine + web, 2026-10-31 19:33, session metodologia-96
+previous main: 8386b0a6fe488cb94b6571eac31e001d0b39498d
+/home/david/bitacora/.state/durable/backups/bt_durable-20261031-193341.dump 53012392 d71f45b1b64bc7ce3f30b8e2f38975669896e5774ffc75a777cf8039e1be22a0
+regression: skipped (D-261: integrate.regression = none)
+rollback: git revert the merge of rejected-phase on main, restart bt-durable.service and bitacora-web.service
+result: merged bec779163d30, restarted bt-durable.service, bitacora-web.service, smoke ok
+
+# integration of A republished older version does not end a rejected subplan's correction (D-268), local restart of engine + web, 2026-10-31 19:40, session metodologia-96
+previous main: bec779163d3021896183a3aa95dc88d8f70d42f0
+/home/david/bitacora/.state/durable/backups/bt_durable-20261031-193959.dump 53252499 2532b38fa6f74276f55a08597d89037e0895962e5f0982a4d449472c33d6ce9b
+regression: skipped (D-261: integrate.regression = none)
+rollback: git revert the merge of rejected-phase-2 on main, restart bt-durable.service and bitacora-web.service
+result: merged 2e6ae4e7cfde, restarted bt-durable.service, bitacora-web.service, smoke ok

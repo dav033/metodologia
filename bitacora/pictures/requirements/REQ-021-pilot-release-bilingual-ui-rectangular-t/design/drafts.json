@@ -13784,6 +13784,7 @@
    "ui_digest": "1ff9fb21a6e90061"
   },
   "planes@v2": {
+   "approved": "2026-10-31T19:55:57-05:00",
    "attempt": 4,
    "auto_runs": 1,
    "before": null,
@@ -15596,7 +15597,7 @@
      "when": "2026-10-31T18:27:13-05:00"
     },
     {
-     "consumed": "D-20261031-191328-11d9",
+     "consumed": "D-20261031-191648-3597",
      "direction": "c",
      "id": "72adb8defcd26671",
      "text": "el boton tieneq eu estar abajo del todo",
@@ -15607,15 +15608,28 @@
    "feedback_batch": [
     "72adb8defcd26671"
    ],
-   "finished": "2026-10-31T19:15:37-05:00",
+   "finished": "2026-10-31T19:20:57-05:00",
    "fresh": false,
+   "history": [
+    {
+     "at": "2026-10-31T19:20:57-05:00",
+     "rev": 1,
+     "summary": "Finalised owner-chosen direction C «Cartas al pie» for planes@v2: wrote the twelve-section draft contract and rebuilt planes@v2.html from the unedited r4.dir-c.tsx with the current offline builder. No behavioural defect was found, so composition, motion and the owner's inert bottom «Escoger/Choose» button are preserved. Contract stays draft; not approved."
+    }
+   ],
+   "mockup": true,
    "phase": "finalise",
    "plan_delta": "",
+   "questions": [],
    "reason": "iterate",
+   "report": "claimed",
+   "revision": 1,
    "selected_sha256": "7863880fa664f572704dad6daacba354e9255ac1f67b46ea32f232be3ed0be99",
+   "sha256": "612e6e93763b9f2b04927713d70a20a55845c78477c77d6c8d6924a8d422a151",
    "started": "2026-10-31T19:16:48-05:00",
-   "status": "drafting",
+   "status": "approved",
    "subplan_id": "SP-14",
+   "summary": "Finalised owner-chosen direction C «Cartas al pie» for planes@v2: wrote the twelve-section draft contract and rebuilt planes@v2.html from the unedited r4.dir-c.tsx with the current offline builder. No behavioural defect was found, so composition, motion and the owner's inert bottom «Escoger/Choose» button are preserved. Contract stays draft; not approved.",
    "ui_digest": "d855281cffbf411a"
   },
   "proyectos@v1": {

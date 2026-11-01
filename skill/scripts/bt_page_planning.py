@@ -268,6 +268,9 @@ def _list(ctx: dict) -> str:
     items, last = [], None
     verified = {r["id"]: r["state"] for r in verification.state(ctx["rdir"])["subplans"]} \
         if verification.applies(ctx["rdir"]) else {}
+    import bt_page_correction as correction_view
+    import bt_verification_correction as correction
+    fixes = correction.corrections(ctx["rdir"], ctx)
     ui = sum(1 for s in ctx["subplans"] if s["ref"])
     moved = {ev.get("sp") for ev in activity.events(ctx["rdir"], 60)
              if ev.get("who") == "Planner" and _recent(ev.get("at"))}
@@ -290,13 +293,17 @@ def _list(ctx: dict) -> str:
         import bt_page_planning_run as run_chip
         if (ran := run_chip.chip(ctx, s["id"])):
             meta += " · " + ran
-        if verified.get(s["id"]) and verified[s["id"]] != "waiting":
+        rejected = fixes.get(s["id"])
+        if rejected:                                    # D-268: the rejection is the primary label, design state stays meta
+            cls, label = "rejected", rejected["label"]
+        elif verified.get(s["id"]) and verified[s["id"]] != "waiting":
             meta += " · " + verification.STATES_ES[verified[s["id"]]]
         destination = "run" if ran else "design"
+        tag = correction_view.badge(rejected, "pp-rejtag") if rejected else ""
         items.append(f'<a class="pp-item{" on" if on else ""}" href="{e(link(p, r, opts, sp=s["id"], mode="subplans", view=destination))}"'
                      f' data-nav{" aria-current=true" if on else ""}><span class="pp-id">{e(s["id"])}</span>'
                      f'<span class="pp-item-main"><span class="pp-item-title" title="{e(s["title"])}">{text(ctx, s["title"])}</span>'
-                     f'<span class="pp-meta">{e(meta)}</span></span>{control.badge(ctx, s["id"])}'
+                     f'{tag}<span class="pp-meta">{e(meta)}</span></span>{control.badge(ctx, s["id"])}'
                      f'<span class="pp-dot {e(cls)}" title="{e(label)}"></span></a>')
     return (f'<nav class="pp-list" aria-label="Subplanes" data-k="list"><div class="pp-list-head"><strong>Subplanes'
             f'</strong><span class="pp-meta">{len(ctx["subplans"])} · {ui} con UI</span></div><nav class="pp-filters" '
@@ -317,6 +324,12 @@ def _detail(ctx: dict) -> str:
     s = next(item for item in ctx["subplans"] if item["id"] == opts["sp"])
     row = ctx["rows"].get(s["ref"]) if s["ref"] else None
     cls, label = state_of(row)
+    import bt_page_correction as correction_view
+    import bt_verification_correction as correction
+    rejected = correction.corrections(ctx["rdir"], ctx).get(s["id"])
+    state = f'<span class="pp-state {e(cls)}">{e(label)}</span>'
+    if rejected:                                        # D-268: «Rechazada v2 · rediseñando» first, the design state after
+        state = correction_view.badge(rejected) + (state if row is not None else "")
     tabs = [("design", "Diseño"), ("tasks", f"Tareas ({len(s['tasks'])})"),
             ("criteria", f"Criterios ({len(s['criteria'])})")]
     if (asked := _asking(ctx["rdir"])):
@@ -361,8 +374,8 @@ def _detail(ctx: dict) -> str:
         body = views.design_panel(ctx, s, row)
     return (f'<section class="pp-detail" data-k="detail-{e(s["id"])}-{e(opts["view"])}">'
             f'<header class="pp-dhead"><span class="pp-id lg">{e(s["id"])}</span><h2>{text(ctx, s["title"], block=True)}'
-            f'</h2><span class="pp-state {e(cls)}">{e(label)}</span>{_design_buttons(ctx, row)}</header>'
-            f'<p class="pp-outcome">{text(ctx, s["outcome"], block=True)}</p>{control.block(ctx, s)}'
+            f'</h2>{state}{_design_buttons(ctx, row)}</header>'
+            f'{correction_view.strip(p, rejected) if rejected else ""}<p class="pp-outcome">{text(ctx, s["outcome"], block=True)}</p>{control.block(ctx, s)}'
             f'<nav class="pp-tabs" aria-label="Detalle del subplan">{nav}</nav>{body}</section>')
 
 

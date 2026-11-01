@@ -111,6 +111,13 @@ class EnvProbe(Protocol):
 
 
 @runtime_checkable
+class DiskGuard(Protocol):
+    """Free space on the engine's scratch before an agent starts (D-266): {} = enough, else a dict with `state` ("low"
+    stops the start), `free_bytes`, `threshold_bytes`, `path` and `consumers` (counts only)."""
+    def check(self, run: RunRef, plan: Plan | None, task_id: str) -> dict: ...
+
+
+@runtime_checkable
 class Telemetry(Protocol):
     def emit(self, event: str, **fields: object) -> None: ...      # structured, secret-free
 
@@ -130,3 +137,4 @@ class Ports:
     auditor: Auditor | None = None              # milestone audits: findings ledger -> coordinated remediation
     design_gate: DesignGate | None = None       # `ui: true` tasks: the contract approval on the chosen base (D-262)
     env_probe: EnvProbe | None = None           # the agent test environment's network resources, before a start (D-265)
+    disk_guard: DiskGuard | None = None         # free space on the engine's scratch, before a start (D-266)
