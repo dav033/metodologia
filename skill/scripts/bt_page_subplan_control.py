@@ -79,7 +79,7 @@ def _top(ctx: dict, s: dict) -> tuple[str, str]:
     focus = (flow_view._form(ctx, "planning-focus", "Definir ahora", sp=s["id"], cls="outline")
              if item["state"] != "confirmed" and s["id"] != flow["focus"] else "")
     run = flow_view._run_button(ctx, s)
-    if "stage-run" in run:
+    if "stage-run" in run or "stage-join-confirm" in run:          # the owner's own step: in «Te toca a ti»
         return pill + focus, run
     return pill + focus + run, ""
 

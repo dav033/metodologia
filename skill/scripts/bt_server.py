@@ -354,6 +354,8 @@ class Handler(PlanningActions, PlanListActions, BaseHTTPRequestHandler):
                 return self.redirect(self.session_post(project, rid, rdir, action, form, base))
             if action == "stage-run":
                 return self.redirect(self.stage_post(project, rid, rdir, form, base))
+            if action == "stage-join-confirm":
+                return self.redirect(self.stage_join_confirm_post(project, rid, rdir, form, base))
             if action == "design":
                 import bt_design_web
                 msg = bt_design_web.decide(ROOT, project, rid, rdir, form,

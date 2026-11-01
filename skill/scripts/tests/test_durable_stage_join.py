@@ -276,6 +276,147 @@ class RefusalRecord(unittest.TestCase):
             self.assertIsNone(stage_join.last_refusal(rdir))
 
 
+class ReconfirmConfirms(unittest.TestCase):
+    """D-275, the owner's choice «Reconfirmar = confirmar»: pictures REQ-021 r34 changed SP-14's accepted T14.2–T14.5,
+    which the owner reconfirmed on the web at 19:55; T3.91 (SP-3, re-confirmed only by policy, D-241) still needs him.
+    Revisions on disk (real planner store and planning flow), no engine."""
+
+    def setUp(self):
+        import bt_planning_flow as flow
+        from bt_planner import revisions as rev
+        self.rev, self.flow = rev, flow
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.rdir = Path(self.tmp.name) / "proj" / "requirements" / "REQ-900-x"
+        (self.rdir / "plan-revisions").mkdir(parents=True)
+        self.entries: list[dict] = []
+        self.tasks = {"T1": "SP-1", "T2": "SP-2", "T3": "SP-3", "T4": "SP-1"}
+        self.r1 = self.revision(1, "2026-10-31T10:00:00", {}, stage=None)
+        self.r2 = self.revision(2, "2026-10-31T12:00:00", {"T1": "v2", "T2": "v2", "T3": "v2", "T4": "v2"})
+        self.confirm("SP-1", "2026-10-31T11:59:30-05:00")                 # the owner, after r1, held by r2
+        self.confirm("SP-2", "2026-10-31T11:00:00-05:00", by="policy")    # D-241's standing rule is not the owner
+        self.confirm("SP-3", "2026-10-31T09:00:00-05:00")                 # before the running stage: not a reconfirmation
+
+    def revision(self, number: int, frozen_at: str, objectives: dict, *, stage: dict | None = None) -> RunRef:
+        doc = {"plan_id": "REQ-900", "tasks": [{"id": t, "subplan_id": sp, "objective": objectives.get(t, "v1")}
+                                              for t, sp in self.tasks.items()]}
+        text = json.dumps(doc)
+        path = self.rdir / "plan-revisions" / f"PLAN.r{number}.json"
+        path.write_text(text, encoding="utf-8")
+        entry = {"revision": number, "sha256": self.rev.sha256(text), "frozen_at": frozen_at, "source": "approval"}
+        if stage is not False:
+            entry["stage"] = stage or {"subplans": sorted(set(self.tasks.values())), "pending_subplans": [], "complete": True}
+        self.entries.append(entry)
+        (self.rdir / "plan-revisions" / "MANIFEST.json").write_text(json.dumps({"schema": 1, "revisions": self.entries}))
+        return RunRef(project="proj", req="REQ-900", plan_id="REQ-900", revision=number, plan_sha256="0" * 64,
+                      plan_path=path)
+
+    def confirm(self, sid: str, at: str, *, by: str = "owner") -> None:
+        folder = self.rdir / self.flow.DIR
+        folder.mkdir(exist_ok=True)
+        path = folder / self.flow.FILE
+        data = json.loads(path.read_text()) if path.is_file() else {"schema_version": 1, "outline": None, "focus": "",
+                                                                   "subplans": {}}
+        data["subplans"][sid] = {"at": at, "by": by, "via": "web" if by == "owner" else by, "digest": "0" * 16}
+        path.write_text(json.dumps(data))
+
+    def test_the_owners_reconfirmation_covers_its_subplans_changed_tasks_only(self):
+        said, unconfirmed = stage_join._confirmations(self.rdir, self.r1, self.r2, ["T1", "T2", "T3", "T4"], False, "x")
+        self.assertEqual(said, {"T1": "confirmado al reconfirmar SP-1 a las 11:59",
+                                "T4": "confirmado al reconfirmar SP-1 a las 11:59"})
+        self.assertEqual(unconfirmed, ["T2", "T3"])
+        said, unconfirmed = stage_join._confirmations(self.rdir, self.r1, self.r2, ["T1", "T2", "T3"], ["T2"], "owner")
+        self.assertEqual((said["T2"], unconfirmed), ("confirmado por ti", ["T3"]))
+        said, unconfirmed = stage_join._confirmations(self.rdir, self.r1, self.r2, ["T1", "T3"], True, "operator")
+        self.assertEqual((said, unconfirmed), ({"T1": "confirmado al reconfirmar SP-1 a las 11:59",
+                                                "T3": "confirmado por operator"}, []))
+
+    def test_a_change_after_the_reconfirmed_stage_is_not_covered(self):
+        r3 = self.revision(3, "2026-10-31T13:00:00", {"T1": "v3", "T2": "v2", "T3": "v2", "T4": "v2"})
+        covered = stage_join.reconfirmed(self.rdir, self.r1, r3, ["T1", "T4"])
+        self.assertEqual(sorted(covered), ["T4"])                          # T1 changed again in r3, never reconfirmed
+        self.assertEqual((covered["T4"]["stage"], covered["T4"]["subplan"]), (2, "SP-1"))
+
+    def test_a_stage_that_kept_the_subplan_does_not_carry_its_confirmation(self):
+        self.entries[-1]["stage"]["kept"] = ["SP-1"]
+        (self.rdir / "plan-revisions" / "MANIFEST.json").write_text(json.dumps({"schema": 1, "revisions": self.entries}))
+        self.assertEqual(stage_join.reconfirmed(self.rdir, self.r1, self.r2, ["T1"]), {})
+
+    def own(self, running: RunRef) -> None:
+        bt_run_owner.write(self.rdir, {"run_id": running.run_id, "backend": "dbos", "workflow_id": f"bt:{running.run_id}",
+                                       "since": 1.0, "by": "test"}, expect=bt_run_owner.read(self.rdir))
+        (self.rdir / "RUN.durable-run.json").write_text(running.model_dump_json())
+
+    def join(self, **kwargs) -> dict:
+        report = {"tasks": [{"task_id": "T1", "verdict": "redo", "previous": "completed", "item": None},
+                            {"task_id": "T2", "verdict": "redo", "previous": "completed", "item": None}],
+                  "live": [], "redone": ["T1", "T2"]}
+        client = mock.Mock()
+        client.status.return_value = {"summary": {}}
+        client.client.list_workflows.return_value = []
+        with mock.patch.object(stage_join, "plan", return_value=report):
+            return stage_join.join(client, self.rdir, state_dir=Path(self.tmp.name), new=self.r2, repositories={},
+                                   settings=mock.Mock(), by="owner", **kwargs)
+
+    def test_the_join_refuses_only_what_nobody_confirmed_and_records_it_for_the_panel(self):
+        self.own(self.r1)
+        dry = self.join(dry_run=True)
+        self.assertEqual((dry["confirmed"], dry["needs_confirm"]),
+                         ({"T1": "confirmado al reconfirmar SP-1 a las 11:59"}, ["T2"]))
+        with self.assertRaises(stage_join.JoinRefused) as refused:
+            self.join()
+        self.assertEqual((refused.exception.code, refused.exception.tasks), ("JOIN_NEEDS_CONFIRM", ["T2"]))
+        self.assertIn("already confirmed: T1", refused.exception.message)
+        record = stage_join.last_refusal(self.rdir)
+        self.assertEqual((record["code"], record["revision"], record["tasks"]), ("JOIN_NEEDS_CONFIRM", 2, ["T2"]))
+        with self.assertRaises(stage_join.JoinRefused):              # a confirmation of other tasks covers nothing
+            self.join(confirm=["T9"])
+
+    def test_the_engine_joins_a_stage_the_run_is_behind_once(self):
+        self.own(self.r1)
+        root = Path(self.tmp.name)
+        self.assertEqual(stage_join.behind(root), [(self.rdir, 2)])
+        calls = []
+
+        def fake_join(client, rdir, **kwargs):
+            calls.append((rdir, kwargs["new"].revision, kwargs["by"], kwargs.get("confirm", False)))
+            stage_join.note_refusal(rdir, 2, "JOIN_NEEDS_CONFIRM", "T2", by=kwargs["by"], tasks=["T2"])
+            raise stage_join.JoinRefused("JOIN_NEEDS_CONFIRM", "T2", tasks=["T2"])
+        with mock.patch.object(stage_join, "join", side_effect=fake_join):
+            out = stage_join.drain(root, mock.Mock(), state_dir=root, repositories_for=lambda p: {},
+                                   prepare=lambda rdir, project, req: self.r2)
+            self.assertEqual(calls, [(self.rdir, 2, "engine stage join", False)])
+            self.assertEqual([(o["status"], o["code"], o["automatic"]) for o in out],
+                             [("refused", "JOIN_NEEDS_CONFIRM", True)])
+            self.assertEqual(stage_join.behind(root), [])            # refused for r2: not tried again on every pass
+            stage_join.drain(root, mock.Mock(), state_dir=root, repositories_for=lambda p: {},
+                             prepare=lambda rdir, project, req: self.r2)
+            self.assertEqual(len(calls), 1)
+            self.assertEqual(stage_join.drain(root, mock.Mock(), state_dir=root, repositories_for=lambda p: {}), [])
+
+    def test_the_engine_does_not_join_a_revision_that_is_not_a_stage_or_a_run_already_joining(self):
+        self.own(self.r1)
+        root = Path(self.tmp.name)
+        (self.rdir / stage_join.PENDING).write_text("{}")
+        self.assertEqual(stage_join.behind(root), [])                # the pending join is the drain's own business
+        (self.rdir / stage_join.PENDING).unlink()
+        self.revision(3, "2026-10-31T13:00:00", {}, stage=False)     # a freeze without stage pins
+        self.assertEqual(stage_join.behind(root), [])
+        self.own(self.r2.model_copy(update={"revision": 3}))
+        self.assertEqual(stage_join.behind(root), [])                # nothing to catch up
+
+    def test_a_frozen_plan_the_cli_refuses_is_recorded_once(self):
+        self.own(self.r1)
+        root = Path(self.tmp.name)
+
+        def refuse(rdir, project, req):
+            raise SystemExit("PLAN_CONTRACT: broken")
+        out = stage_join.drain(root, mock.Mock(), state_dir=root, repositories_for=lambda p: {}, prepare=refuse)
+        self.assertEqual([(o["status"], o["code"]) for o in out], [("refused", "PLAN_PREFLIGHT")])
+        self.assertEqual(stage_join.last_refusal(self.rdir)["message"], "PLAN_CONTRACT: broken")
+        self.assertEqual(stage_join.behind(root), [])
+
+
 class ProgressInput(unittest.TestCase):
     def test_new_progress_fields_travel_only_when_set(self):
         """An engine older than D-149/D-150 refuses unknown input fields: the regression of D-150 caught every upgrade

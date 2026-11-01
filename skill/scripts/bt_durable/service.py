@@ -355,13 +355,21 @@ def _drain_joins(cfg: EngineConfig, ports: Ports) -> None:
     import bt_core
 
     from . import stage_join
-    if not any(Path(bt_core.ROOT).glob(f"*/requirements/*/{stage_join.PENDING}")):
+    if not any(Path(bt_core.ROOT).glob(f"*/requirements/*/{stage_join.PENDING}")) and \
+            not stage_join.behind(Path(bt_core.ROOT)):
         return
+    from .cli import latest_frozen, preflight
     from .client import Client
+
+    def prepare(rdir, project, req):                    # the CLI's own checks before a join (`bt-durable join`)
+        run = latest_frozen(rdir, project, req)
+        preflight(run, rdir)
+        return run
     client = Client(cfg.system_database_url)
     try:
         for outcome in stage_join.drain(Path(bt_core.ROOT), client, state_dir=cfg.state_dir,
-                                        repositories_for=ports.integrator.repositories_for, emit=ports.telemetry.emit):
+                                        repositories_for=ports.integrator.repositories_for, emit=ports.telemetry.emit,
+                                        prepare=prepare):
             LOG.info("stage join: %s", outcome)
     finally:
         client.close()

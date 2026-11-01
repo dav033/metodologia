@@ -203,7 +203,7 @@ def repair_reconfirm(rdir: Path, evidence: list[str], by: str) -> list[str]:
     try:
         found = planner.stages.latest(rdir)
         pinned = planner.stages._pins(rdir)
-    except Exception as exc:  # noqa: BLE001 - an unreadable store never confirms anything
+    except Exception as exc:
         raise StageError(getattr(exc, "code", "PLAN_REVISIONS_UNREADABLE"), str(exc)) from exc
     if not found:
         raise StageError("STAGE_REPAIR_UNBOUNDED", "no hay etapa aprobada: una reparación acotada corrige una etapa aprobada")
@@ -313,15 +313,21 @@ def _durable_join(project: str, rdir: Path, join: Callable[[], dict] | None) -> 
     except RuntimeError as error:
         raise StageError("DURABLE_JOIN_FAILED", str(error)) from error
     counts = outcome.get("counts") or {}
+    confirmed = outcome.get("confirmed") or {}
+    redo = (" Se rehacen " + "; ".join(f"{t} ({why})" for t, why in confirmed.items()) + ".") if confirmed else ""
     if outcome.get("status") == "joined":
         return (f"El runtime durable sigue en la etapa ({outcome.get('to')}): {counts.get('inherit', 0)} tareas aceptadas "
                 f"se conservan sin repetirse, {counts.get('reconcile', 0)} se reanudan desde su último trabajo y "
-                f"{counts.get('redo', 0)} empiezan." + (" Sigue en pausa, como la dejaste: reanúdala para que arranque."
-                                                         if outcome.get("paused") else ""))
+                f"{counts.get('redo', 0)} empiezan.{redo}" + (" Sigue en pausa, como la dejaste: reanúdala para que "
+                                                              "arranque." if outcome.get("paused") else ""))
     if outcome.get("status") == "waiting":
         live = ", ".join(outcome.get("live") or [])
         return (f"El run quedó en pausa hasta que terminen los intentos en curso ({live}); en cuanto acaben, el motor "
-                "lo une a la etapa solo.")
+                f"lo une a la etapa solo.{redo}")
+    if outcome.get("code") == "JOIN_NEEDS_CONFIRM":
+        tasks = ", ".join(outcome.get("tasks") or []) or str(outcome.get("message") or "")
+        raise StageError("JOIN_NEEDS_CONFIRM", f"unir la etapa rehace tareas ya aceptadas que no confirmaste: {tasks}. "
+                         "Revísalas y pulsa «Confirmar y unir» en el plan")
     if outcome.get("status") == "current":
         return "La ejecución ya corre la etapa aprobada."
     raise StageError(str(outcome.get("code") or "DURABLE_JOIN_REFUSED"), str(outcome.get("message") or outcome))
@@ -419,3 +425,18 @@ def info(rdir: Path) -> dict:
     queued = {sid: item for item in bt_stage_queue.pending(rdir) for sid in item["add"] if sid not in held}
     return {**summary, "held": held, "outside": [s for s in draft or [] if s not in held], "queued": queued,
             "revision": summary["stages"][-1]["revision"] if summary["stages"] else None}
+
+
+# ---- the owner confirms redoing accepted tasks at the durable join (D-275; facts in bt_stage_confirmations)
+def confirm_join(project: str, rdir: Path, tasks: list[str], *, by: str = "owner",
+                 join: Callable[[list[str]], dict] | None = None) -> str:
+    """The owner confirms redoing exactly `tasks` at the durable join of the latest stage (`bt-durable join
+    --confirm-tasks`, D-275). A join that would redo anything else is refused again, so a confirmation never covers
+    more than the owner saw. Raises StageError."""
+    import bt_durable_panel
+    from bt_core import ROOT
+    if not tasks:
+        raise StageError("JOIN_CONFIRM_EMPTY", "no task to confirm")
+    run = (lambda: join(tasks)) if join else (lambda: bt_durable_panel.run_cli(
+        ["join", project, _req(rdir), "--confirm-tasks", ",".join(tasks), "--by", by], root=Path(ROOT)))
+    return _durable_join(project, rdir, run)

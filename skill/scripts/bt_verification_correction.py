@@ -138,7 +138,8 @@ def _join_reason(rdir: Path, holder: int | None) -> tuple[bool, dict | None]:
     except (OSError, ValueError):
         refused = None
     if isinstance(refused, dict) and concerns(refused.get("revision")):
-        return False, {k: str(refused.get(k) or "") for k in ("code", "message", "at")}
+        return False, {**{k: str(refused.get(k) or "") for k in ("code", "message", "at")},
+                       "tasks": [t for t in refused.get("tasks") or () if isinstance(t, str)]}
     return False, None
 
 
@@ -151,11 +152,11 @@ def join_state(rdir: Path, sid: str, confirmed: float | None) -> dict | None:
     if running is None or confirmed is None:
         return None
     import bt_plan_adapter
+    import bt_stage_confirmations as confirmations
     stages = bt_plan_adapter.stage_summary(rdir).get("stages") or []
     if not stages:
         return None
-    holder = next((s["revision"] for s in stages if sid in s.get("subplans", ()) and sid not in s.get("kept", ())
-                   and _after(s.get("frozen_at"), confirmed)), None)
+    holder = confirmations.holding_stage(stages, sid, confirmed)       # the same fact the join reads (D-275)
     if holder is not None and running >= holder:
         return None
     waiting, refused = _join_reason(rdir, holder) if holder is not None else (False, None)
@@ -168,7 +169,9 @@ def _join_detail(state: dict) -> str:
     text = f"etapa r{state['stage']} aprobada; la ejecución sigue en r{state['running']}"
     if state["waiting"]:
         text += " · se une en cuanto terminen los intentos en curso"
-    if state["refused"]:
+    if state["refused"] and state["refused"]["code"] == "JOIN_NEEDS_CONFIRM" and state["refused"].get("tasks"):
+        text += (f" · espera que confirmes rehacer {', '.join(state['refused']['tasks'])} («Confirmar y unir»)")
+    elif state["refused"]:
         said = " ".join(f"{state['refused']['code']}: {state['refused']['message']}".split())
         text += f" · la unión se rechazó: {said[:300]}"
     return text

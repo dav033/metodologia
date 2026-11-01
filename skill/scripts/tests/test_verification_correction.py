@@ -332,6 +332,10 @@ class JoinPending(Base):
                                         "JOIN_MATERIAL_MISSING: T2.3 was accepted in pictures:REQ-021:r32 but its snapshot "
                                         "(2d45cd5030b7) has no captured handoff")
         self.assertEqual(got["join"]["refused"]["code"], "JOIN_MATERIAL_MISSING")
+        (self.rdir / "RUN.join.refused.json").write_text(json.dumps({"revision": 34, "code": "JOIN_NEEDS_CONFIRM",
+                                                                     "message": "x", "tasks": ["T3.91"]}))
+        self.assertEqual(self.phase()["detail"], "etapa r34 aprobada; la ejecución sigue en r32 · espera que confirmes "
+                                                 "rehacer T3.91 («Confirmar y unir»)")                       # D-275
         (self.rdir / "RUN.join.json").write_text(json.dumps({"run": {"revision": 34}}))     # the engine's pending join
         self.assertEqual(self.phase()["detail"], "etapa r34 aprobada; la ejecución sigue en r32 · se une en cuanto "
                                                  "terminen los intentos en curso")

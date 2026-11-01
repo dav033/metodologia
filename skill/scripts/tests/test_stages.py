@@ -20,6 +20,7 @@ import bt_planning_flow as flow
 import bt_requirements_gate as gate
 import bt_review
 import bt_scheduler_run
+import bt_stage_confirmations as confirmations
 import bt_stages
 import bt_subplan_sessions as sessions
 import owner_e2e_support as support
@@ -123,6 +124,56 @@ class StartOrJoin(unittest.TestCase):
             bt_stages.start_or_join("proj", self.rdir, start=never, join=join(
                 {"status": "refused", "code": "JOIN_NEEDS_CONFIRM", "message": "T1 changed"}))
         self.assertEqual((ctx.exception.code, len(asked), self.started), ("JOIN_NEEDS_CONFIRM", 3, []))
+
+    def test_the_join_says_who_confirmed_redone_work_and_what_still_waits_for_the_owner(self):
+        """D-275: a reconfirmation confirms its subplan's redone tasks; the rest waits for «Confirmar y unir»."""
+        (self.rdir / "RUN.owner.json").write_text(json.dumps({"run_id": "proj:REQ-900:r1", "backend": "dbos"}),
+                                                  encoding="utf-8")
+        never = lambda *a: self.fail("the legacy Scheduler may not start a durable run")
+        joined = bt_stages.start_or_join("proj", self.rdir, start=never, join=lambda: {
+            "status": "joined", "to": "proj:REQ-900:r2", "counts": {"inherit": 3, "reconcile": 0, "redo": 2},
+            "confirmed": {"T14.2": "confirmado al reconfirmar SP-14 a las 19:55"}})
+        self.assertIn("Se rehacen T14.2 (confirmado al reconfirmar SP-14 a las 19:55).", joined)
+        with self.assertRaises(bt_stages.StageError) as ctx:
+            bt_stages.start_or_join("proj", self.rdir, start=never, join=lambda: {
+                "status": "refused", "code": "JOIN_NEEDS_CONFIRM", "message": "x", "tasks": ["T3.91"]})
+        self.assertIn("no confirmaste: T3.91", ctx.exception.message)
+        self.assertIn("«Confirmar y unir»", ctx.exception.message)
+
+    def test_confirm_join_passes_exactly_the_tasks_the_owner_saw(self):
+        (self.rdir / "RUN.owner.json").write_text(json.dumps({"run_id": "proj:REQ-900:r1", "backend": "dbos"}),
+                                                  encoding="utf-8")
+        asked = []
+        said = bt_stages.confirm_join("proj", self.rdir, ["T3.91"], join=lambda tasks: asked.append(tasks) or {
+            "status": "waiting", "live": ["T2.7"], "confirmed": {"T3.91": "confirmado por ti"}})
+        self.assertEqual(asked, [["T3.91"]])
+        self.assertIn("(T2.7)", said)
+        self.assertIn("T3.91 (confirmado por ti)", said)
+        with patch("bt_durable_panel.run_cli", return_value={"status": "current"}) as cli:
+            bt_stages.confirm_join("proj", self.rdir, ["T3.91", "T9"], by="owner")
+        self.assertEqual(cli.call_args.args[0], ["join", "proj", "REQ-900", "--confirm-tasks", "T3.91,T9", "--by", "owner"])
+        with self.assertRaises(bt_stages.StageError):
+            bt_stages.confirm_join("proj", self.rdir, [])
+
+    def test_join_confirmation_is_the_latest_stages_refusal_while_the_run_is_behind(self):
+        (self.rdir / "RUN.owner.json").write_text(json.dumps({"run_id": "proj:REQ-900:r32", "backend": "dbos"}),
+                                                  encoding="utf-8")
+        (self.rdir / "RUN.durable-run.json").write_text(json.dumps({"revision": 32}), encoding="utf-8")
+        refusal = {"revision": 34, "code": "JOIN_NEEDS_CONFIRM", "message": "T3.91", "tasks": ["T3.91"],
+                   "at": "2026-10-31T21:00:00-05:00"}
+        (self.rdir / "RUN.join.refused.json").write_text(json.dumps(refusal), encoding="utf-8")
+        latest = ({"revision": 34}, {"tasks": [{"id": "T3.91", "subplan_id": "SP-3", "title": "Restore drag"}]})
+        with patch.object(bt_plan_adapter.planner.stages, "latest", return_value=latest):
+            got = confirmations.join_confirmation(self.rdir)
+            self.assertEqual((got["revision"], got["running"], got["tasks"]),
+                             (34, 32, [{"id": "T3.91", "title": "Restore drag", "subplan": "SP-3"}]))
+            (self.rdir / "RUN.join.refused.json").write_text(json.dumps({**refusal, "code": "JOIN_LINES_EXIST"}))
+            self.assertIsNone(confirmations.join_confirmation(self.rdir))
+            (self.rdir / "RUN.join.refused.json").write_text(json.dumps({**refusal, "revision": 33}))
+            self.assertIsNone(confirmations.join_confirmation(self.rdir))   # an older stage's refusal: not this one
+            (self.rdir / "RUN.join.refused.json").write_text(json.dumps(refusal))
+            (self.rdir / "RUN.durable-run.json").write_text(json.dumps({"revision": 34}))
+            self.assertIsNone(confirmations.join_confirmation(self.rdir))   # already joined
 
     def test_a_requirement_without_a_run_starts_one(self):
         with patch("bt_scheduler_adapter.authority", return_value="none"):

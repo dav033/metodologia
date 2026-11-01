@@ -190,13 +190,41 @@ class PlanningActions:
             msg = self.run_confirmed(project, rid, rdir, sid)
         return f"{base}?tab=plan&lang={quote(form.get('lang', ''))}&sp={quote(sid)}&msg={quote(msg)}"
 
+    def stage_join_confirm_post(self, project: str, rid: str, rdir: Path, form: dict, base: str) -> str:
+        """«Confirmar y unir» (D-275): the owner confirms redoing exactly the accepted tasks the page listed, and the
+        latest stage joins the durable run (`bt-durable join --confirm-tasks`). Loopback only; a list that no longer
+        matches what waits for confirmation is refused, so a click never confirms more than the owner saw."""
+        import bt_planning_activity as activity
+        import bt_stage_confirmations as confirmations
+        import bt_stages
+        from bt_server import ROOT, commit
+        sid = form.get("anchor", "")
+        sid = sid if re.fullmatch(r"SP-[1-9][0-9]{0,3}", sid) else ""
+        tasks = [t for t in form.get("tasks", "").split(",") if re.fullmatch(r"[A-Za-z0-9_.-]{1,40}", t)]
+        pending = confirmations.join_confirmation(rdir)
+        if self.client_address[0] not in ("127.0.0.1", "::1"):
+            msg = "La ejecución solo se confirma desde esta máquina."
+        elif not pending:
+            msg = "Ninguna unión espera tu confirmación."
+        elif not tasks or sorted(tasks) != sorted(t["id"] for t in pending["tasks"]):
+            msg = "Las tareas por rehacer cambiaron desde que las viste: revísalas de nuevo."
+        else:
+            activity.record(rdir, "Tú", f"Confirmaste rehacer {', '.join(tasks)} al unir la etapa r{pending['revision']}",
+                            kind="flow", sp=sid)
+            try:
+                msg = bt_stages.confirm_join(project, rdir, tasks, by="owner")
+            except bt_stages.StageError as exc:
+                msg = f"No se pudo unir la etapa r{pending['revision']}: {exc.message} [{exc.code}]"
+            commit(ROOT, f"{project}: {rid} stage join confirmed {','.join(tasks)} (web)", push=False)
+        return f"{base}?tab=plan&lang={quote(form.get('lang', ''))}&sp={quote(sid)}&msg={quote(msg)}"
+
     def run_confirmed(self, project: str, rid: str, rdir: Path, sid: str, *, reconfirmed: bool = False) -> str:
         """Send a confirmed subplan to the Scheduler: it runs now, or waits in the queue for the earlier subplans it needs
         (`bt_stage_queue`). A subplan in the queue is left as it is; one already in the approved stage too, unless the
         owner has just confirmed it again after it changed: then the stage is approved again with the change and the run
         joins it (pictures REQ-021 SP-7, 2026-10-29: T7.4 typed its dependency on CG-6 after SP-7 was running)."""
-        from bt_server import ROOT, commit
         import bt_stages
+        from bt_server import ROOT, commit
         if self.client_address[0] not in ("127.0.0.1", "::1"):
             return "La ejecución solo se lanza desde esta máquina."
         info = bt_stages.info(rdir)

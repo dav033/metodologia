@@ -226,7 +226,13 @@ uv run bt-durable join pictures REQ-021              # joined | waiting | refuse
   runs. Composition gates compose again from the copied subplan lines, under the new revision's namespace. An accepted
   attempt that changed nothing (snapshot == base: its work was already in its base) is inherited as it is; only an
   accepted snapshot whose commit no longer exists is refused (`JOIN_MATERIAL_MISSING`, D-272).
-- A stage that changes accepted tasks is refused (`JOIN_NEEDS_CONFIRM`) unless `--confirm`.
+- A stage that changes accepted tasks is refused (`JOIN_NEEDS_CONFIRM`) unless `--confirm` (everything) or
+  `--confirm-tasks T1,T2` (exactly those; the panel's «Confirmar y unir», owner only, loopback). The tasks of a subplan
+  the OWNER reconfirmed after the running stage are confirmed by that reconfirmation when the stage holding it is in the
+  join and holds the task as joined (D-275, «Reconfirmar = confirmar»; `bt_stage_confirmations`). The result, the
+  `stage_joined` telemetry and the requirement's activity say who confirmed each redone task.
+- The engine joins on its own a frozen stage a durable run is behind (`stage_join.behind`, in the drain pass): once per
+  revision, after the CLI's frozen-plan checks; a refusal is recorded and that revision waits for the owner or a newer stage.
 - With live attempts the current run is paused and `RUN.join.json` records the request; the engine's reaper pass
   completes it once they end (a refusal is written into the file). Any refused join leaves `RUN.join.refused.json`
   (revision, code, message) until a later join is not refused; the panel shows it while the confirmed subplan is
