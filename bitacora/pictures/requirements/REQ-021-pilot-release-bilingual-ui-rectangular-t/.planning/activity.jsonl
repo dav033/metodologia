@@ -747,3 +747,5 @@
 {"at": "2026-10-31T19:16:48-05:00", "who": "Tú → Designer", "kind": "design", "sp": "SP-14", "text": "planes@v2: elegida dirección C · Cartas al pie — direct manipulation of the existing /planes page", "diff": ""}
 {"at": "2026-10-31T19:18:57-05:00", "who": "Autocuración", "kind": "flow", "sp": "", "text": "T3.91: T3.91:d7 queda para ti: el agente no pudo ejecutar sus checks (entorno)", "diff": ""}
 {"at": "2026-10-31T19:18:57-05:00", "who": "Solucionador", "kind": "flow", "sp": "", "text": "T3.91: la autocuración dejó la decisión para ti; pasa al Solucionador (the agent says it could not run its checks: aces, TypeScript estricto, ESLint focalizado y `git diff --check`. Solo queda modificado ese harness; no hice commit)", "diff": ""}
+{"at": "2026-10-31T19:20:57-05:00", "who": "Designer", "kind": "design", "sp": "SP-14", "text": "planes@v2 · borrador 1 listo", "diff": ""}
+{"at": "2026-10-31T19:55:55-05:00", "who": "Tú", "kind": "flow", "sp": "SP-14", "text": "Confirmaste SP-14 en la web; todos listos", "diff": ""}
