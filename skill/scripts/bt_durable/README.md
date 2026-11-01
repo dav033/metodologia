@@ -349,7 +349,8 @@ Patches in use: `bt-run-subplans`, `bt-run-audit-remediation`, `bt-run-survives-
 `bt-task-reconcile-asks-owner`, `bt-task-continues-latest-tree` (task workflow); D-262: `bt-run-transitive-readiness`,
 `bt-run-requeues-unready-task` (run workflow), `bt-task-rechecks-ancestors`, `bt-task-retry-catches-up`,
 `bt-task-contract-gate`, `bt-task-no-change-is-not-check-failed`, `bt-task-heap-limit-is-not-sandbox-oom` (task
-workflow); D-265: `bt-task-probes-agent-env` (task workflow); D-266: `bt-task-disk-guard` (task workflow). A workflow body reads the plan only through `steps.workflow_plan()`:
+workflow); D-265: `bt-task-probes-agent-env` (task workflow); D-266: `bt-task-disk-guard` (task workflow); `bt-task-interrupted-reverify` and D-269
+`bt-task-answer-opens-attempt-window` (task workflow, in `execution/recovery_policy.py`, right before `bt.emit_decision`). A workflow body reads the plan only through `steps.workflow_plan()`:
 the `bt.plan_text` step must run (or replay) every time, or a run recovered after another workflow warmed the process
 cache skips its first step. The control plane (`control/`: frontier, policy, classifier, subplan scopes) decides what a
 workflow does next from recorded step results, so a change to its decisions is a sequence change too.

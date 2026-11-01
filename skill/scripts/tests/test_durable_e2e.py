@@ -139,7 +139,8 @@ class DurableRuns(EngineCase):
     def test_every_retry_continues_from_the_latest_attempt_after_owner_answers_too(self):
         """pictures REQ-021 r30 T10.45 (D-254): after the first escalation every retry started from the snapshot the
         last AUTOMATIC retry chose (a3's), so a7's fixes were gone in a8. Each attempt must build on the one before:
-        an automatic retry (a2), then two owner answers in a row (a3, a4); a2 and a4 commit their work themselves."""
+        an automatic retry (a2), an owner answer (a3) and the automatic retry inside the window that answer opened
+        (a4, D-269: before it each answer bought exactly one attempt); a2 and a4 commit their work themselves."""
         run = RunRef.model_validate(self.lab.freeze([task("T1", scenario="accumulate",
                                                           paths=["T1/**", "T1.task", "out.txt", "progress.txt"])]))
         settings = FAST.model_copy(update={"budget": FAST.budget.model_copy(update={"max_attempts": 2})})
@@ -149,12 +150,12 @@ class DurableRuns(EngineCase):
         def decision(request_id):
             return wait_until(lambda: ((self.client.status(run)["tasks"].get("T1") or {}).get("decision") or {})
                               .get("request_id") == request_id, 240, interval=1, what=f"decision {request_id}")
-        for number in (1, 2):
-            decision(f"T1:d{number}")
-            self.client.answer(run, "T1", OwnerAnswer(request_id=f"T1:d{number}", action="retry_with_note",
-                                                      note=f"owner note {number}: keep the progress lines"))
-        decision("T1:d3")
-        self.client.answer(run, "T1", OwnerAnswer(request_id="T1:d3", action="stop"))
+        decision("T1:d1")
+        self.client.answer(run, "T1", OwnerAnswer(request_id="T1:d1", action="retry_with_note",
+                                                  note="owner note 1: keep the progress lines"))
+        decision("T1:d2")                                    # a3 and a4: the answer's window of max_attempts (2)
+        self.assertIn("since the last answered decision", self.client.status(run)["tasks"]["T1"]["decision"]["reason"])
+        self.client.answer(run, "T1", OwnerAnswer(request_id="T1:d2", action="stop"))
         self.assertEqual(self.settled(run)["summary"]["status"], "blocked")
         manifests = [json.loads(next(self.lab.state.glob(f"attempts-root/attempts/*T1-a{n}-*/handoff/manifest.json"))
                                 .read_text()) for n in (1, 2, 3, 4)]

@@ -7,7 +7,8 @@ replays the same decision. Principles it encodes:
   one (re-verify the same snapshot, wait for capacity);
 - the same failure twice is not progress: the second repetition becomes a coordinated remediation, then the owner;
 - permissions, missing secrets and product decisions always go to the owner; nothing is bypassed;
-- every path is bounded (attempts, same signature, elapsed time, tokens, waits, route changes, repairs).
+- every path is bounded (attempts, same signature, elapsed time, tokens, waits, route changes, repairs);
+- an answered decision opens a fresh attempt window, under a ceiling for the whole task (D-269).
 """
 from __future__ import annotations
 
@@ -31,26 +32,35 @@ REVERIFY = frozenset({"VERIFIER_OOM", "VERIFIER_PROCESS_LIMIT", "CHECK_TIMEOUT",
 
 
 def spent(outcomes: Iterable[AttemptOutcome], *, waits: int = 0, repairs: int = 0, route_changes: int = 0,
-          started_at: float | None = None, now: float | None = None) -> Spent:
-    """What a task consumed, derived from its attempt outcomes (the only source; nothing is counted by hand)."""
-    attempts = tokens = regressions = 0
+          started_at: float | None = None, now: float | None = None, since: int | None = None) -> Spent:
+    """What a task consumed, derived from its attempt outcomes (the only source; nothing is counted by hand).
+
+    `since`: the index of the first outcome after the task's last answered decision. From there `attempts`,
+    `signatures` and `consecutive_regressions` count again (a fresh window), `total_attempts` holds the whole task's and
+    tokens, elapsed time and the checks that ever passed stay whole. Before it (pictures REQ-021 r32 T3.91, D-269)
+    every outcome of the round counted, so once the budget was spent each answer bought exactly one attempt and a new,
+    different failure went straight back to the owner."""
+    start = since or 0
+    attempts = total = tokens = regressions = 0
     signatures: dict[str, int] = {}
     passed: set[str] = set()
-    for outcome in outcomes:
+    for index, outcome in enumerate(outcomes):
+        fresh = index >= start
         if outcome.process is not None:
-            attempts += 1
+            total += 1
+            attempts += fresh
         if outcome.agent and outcome.agent.total_tokens:
             tokens += outcome.agent.total_tokens
-        if outcome.failure is not None:
+        if outcome.failure is not None and fresh:
             signatures[outcome.failure.signature] = signatures.get(outcome.failure.signature, 0) + 1
         if outcome.verify is not None:
             failing = set(outcome.verify.failing_checks)
-            regressions = regressions + 1 if failing & passed else 0
+            regressions = regressions + 1 if fresh and failing & passed else 0
             passed |= set(outcome.verify.passing_checks)
     elapsed = max(0.0, (now - started_at)) if started_at is not None and now is not None else 0.0
-    return Spent(attempts=attempts, elapsed_seconds=elapsed, tokens=tokens, route_changes=route_changes,
-                 environment_repairs=repairs, waits=waits, signatures=signatures,
-                 consecutive_regressions=regressions)
+    return Spent(attempts=attempts, total_attempts=total if since is not None else None, elapsed_seconds=elapsed,
+                 tokens=tokens, route_changes=route_changes, environment_repairs=repairs, waits=waits,
+                 signatures=signatures, consecutive_regressions=regressions)
 
 
 def decide(failure: FailureReport, used: Spent, budget: Budget, *, now: float, other_route: bool,
@@ -100,8 +110,12 @@ def decide(failure: FailureReport, used: Spent, budget: Budget, *, now: float, o
             return make(RecoveryAction.RECONCILE_INTEGRATION, "rebuild on the current integration line")
         return make(RecoveryAction.ESCALATE, "the integration conflict keeps coming back", limit="max_same_signature")
     # implementation
+    if used.total_attempts is not None and used.total_attempts >= budget.max_attempts_total:
+        return make(RecoveryAction.ESCALATE, "the task used its attempts in total, across the answered decisions",
+                    limit="max_attempts_total")
     if used.attempts >= budget.max_attempts:
-        return make(RecoveryAction.ESCALATE, "the task used its attempts", limit="max_attempts")
+        why = "since the last answered decision" if used.total_attempts is not None else ""
+        return make(RecoveryAction.ESCALATE, f"the task used its attempts {why}".strip(), limit="max_attempts")
     if used.consecutive_regressions >= budget.max_consecutive_regressions:
         return make(RecoveryAction.ESCALATE, "attempts keep breaking checks that passed before",
                     limit="max_consecutive_regressions")
