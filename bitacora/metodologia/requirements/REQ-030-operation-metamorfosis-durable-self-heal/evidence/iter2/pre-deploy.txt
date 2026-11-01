@@ -452,3 +452,17 @@ previous main: c87dd0e9a54f16ff32a264d24a945523ff415092
 regression: skipped (D-261: integrate.regression = none)
 rollback: git revert the merge of escaped-args on main, restart bt-durable.service and bitacora-web.service
 result: merged 7e8d4e638d7f, restarted bt-durable.service, bitacora-web.service, smoke ok
+
+# integration of One source per test variable; dead test resources stop the start, not an attempt (D-265), local restart of engine + web, 2026-10-31 19:03, session metodologia-96
+previous main: fe24c1fe1d73ddfc91f9aa5df6f3b1779b4a711e
+/home/david/bitacora/.state/durable/backups/bt_durable-20261031-190340.dump 52692035 0808f59eb90ed1e0bb811a226c8df5038b07e0464c66e5130be2faf6f374a63d
+regression: skipped (D-261: integrate.regression = none)
+rollback: git revert the merge of agent-env-probe on main, restart bt-durable.service and bitacora-web.service
+result: merged 89b1a87f120f, restarted bt-durable.service, bitacora-web.service, smoke ok
+
+# integration of Every role session runs the model its role policy names; no route hard-codes Opus (D-267), local restart of engine + web, 2026-10-31 19:10, session metodologia-96
+previous main: 89b1a87f120ff1e853f10564c8c4f87fd06e9d9e
+/home/david/bitacora/.state/durable/backups/bt_durable-20261031-191051.dump 52724503 536f9bdcdc848485c8b9b4c9728f1aa7b491f835ff0619c4df03cdae28f92ba9
+regression: skipped (D-261: integrate.regression = none)
+rollback: git revert the merge of role-route-model on main, restart bt-durable.service and bitacora-web.service
+result: merged 81138e36582c, restarted bt-durable.service, bitacora-web.service, smoke ok

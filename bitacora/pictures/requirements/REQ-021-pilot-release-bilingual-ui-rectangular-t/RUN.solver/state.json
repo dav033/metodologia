@@ -1,16 +1,16 @@
 {
  "watch": {
   "T3.91": {
-   "fp": "0bcbcb5ec30074d7",
-   "since": 1793489063.4536214,
-   "epoch": "840b9e99729d449bb48c851458140f64",
-   "observed_at": 1793489346.1219862
+   "fp": "40bd9eac9ea9b382",
+   "since": 1793492337.2099364,
+   "epoch": "1e789423362f4c08acf409cfd0feb2f1",
+   "observed_at": 1793492431.4359004
   },
   "T2.57": {
    "fp": "f82f832f52270c20",
-   "since": 1793488752.037575,
-   "epoch": "840b9e99729d449bb48c851458140f64",
-   "observed_at": 1793489346.1219862
+   "since": 1793488854.6743035,
+   "epoch": "1e789423362f4c08acf409cfd0feb2f1",
+   "observed_at": 1793492431.4359004
   }
  },
  "tasks": {
@@ -22,7 +22,8 @@
   "SP-2": 1,
   "SP-14": 1,
   "SP-3": 1,
-  "T2.57": 1
+  "T2.57": 1,
+  "T3.91": 1
  },
  "triggers": {
   "pictures:REQ-021:r25:resolution:4378ebb94f72d6922c89d601ee5db484": {
@@ -1308,6 +1309,42 @@
    "status": "asked_owner",
    "at": "2026-10-31T18:01:21",
    "session": "20261031-173125-a2cb"
+  },
+  "pictures:REQ-021:r32:T3.91:T3.91:d5@k1": {
+   "kind": "decision",
+   "key": "pictures:REQ-021:r32:T3.91:T3.91:d5@k1",
+   "run_id": "pictures:REQ-021:r32",
+   "task_id": "T3.91",
+   "request_id": "T3.91:d5",
+   "round": 1,
+   "reason": "healing's repair limit is reached",
+   "status": "running",
+   "at": "2026-10-31T18:40:40",
+   "session": "20261031-184040-40be"
+  },
+  "pictures:REQ-021:r32:T3.91:T3.91:d6@k1": {
+   "kind": "decision",
+   "key": "pictures:REQ-021:r32:T3.91:T3.91:d6@k1",
+   "run_id": "pictures:REQ-021:r32",
+   "task_id": "T3.91",
+   "request_id": "T3.91:d6",
+   "round": 1,
+   "reason": "healing's repair limit is reached",
+   "status": "queued",
+   "at": "2026-10-31T18:44:56",
+   "session": "20261031-184040-40be"
+  },
+  "pictures:REQ-021:r32:T3.91:T3.91:d7@k1": {
+   "kind": "decision",
+   "key": "pictures:REQ-021:r32:T3.91:T3.91:d7@k1",
+   "run_id": "pictures:REQ-021:r32",
+   "task_id": "T3.91",
+   "request_id": "T3.91:d7",
+   "round": 1,
+   "reason": "the agent says it could not run its checks: aces, TypeScript estricto, ESLint focalizado y `git diff --check`. Solo queda modificado ese harness; no hice commit. **La verificación independiente sigue pendiente; no declaro la tarea verificada.**; the task used its attempts",
+   "status": "queued",
+   "at": "2026-10-31T19:18:57",
+   "session": "20261031-184040-40be"
   }
  },
  "sessions": [
@@ -1690,6 +1727,31 @@
    "summary": "T2.57 reencolada; la reparación de T3.91 no pudo incorporarse por cambios pendientes de confirmar en SP-14.",
    "question": "¿Quieres reconfirmar los cambios pendientes de SP-14 para incorporarlos con la reparación de SP-3, o prefieres que el Planner aísle la reparación de SP-3 de esos cambios? La incorporación actual fue rechazada porque incluye cambios de SP-14 fuera de la reparación acotada; procederé según tu elección.",
    "report": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/RUN.solver/20261031-173125-a2cb/REPORT.md"
+  },
+  {
+   "id": "20261031-184040-40be",
+   "name": "bit-pictures-REQ-021-solver",
+   "status": "running",
+   "started": 1793490040.9290624,
+   "started_at": "2026-10-31T18:40:40",
+   "triggers": [
+    "pictures:REQ-021:r32:T3.91:T3.91:d5@k1"
+   ],
+   "queued": [
+    "pictures:REQ-021:r32:T3.91:T3.91:d6@k1",
+    "pictures:REQ-021:r32:T3.91:T3.91:d7@k1"
+   ],
+   "restarts": 0,
+   "dir": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/RUN.solver/20261031-184040-40be",
+   "cwd": "/home/david/.local/share/bitacora-solver/pictures/20261031-184040-40be",
+   "task": "T3.91",
+   "kind": "decision",
+   "reason": "healing's repair limit is reached",
+   "session_id": "d791ae8f-cc36-455f-85ae-d9cef9894090",
+   "provider": "claude",
+   "model": "opus",
+   "home": "/home/david/.claude-work"
   }
- ]
+ ],
+ "active": "20261031-184040-40be"
 }

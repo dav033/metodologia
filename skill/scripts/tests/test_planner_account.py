@@ -217,5 +217,97 @@ class Walls(unittest.TestCase):
         self.assertEqual(wall.modal("› Ask Codex to do anything\n  ⏎ send"), ("", ""))
 
 
+class RoleRouteModel(unittest.TestCase):
+    """Every role session runs the model and effort its role policy names (D-267): `role_route` returned Claude Opus high
+    for every role, so the Solucionador ran Opus although D-253 says Sonnet high (pictures REQ-021, 2026-10-31)."""
+
+    def setUp(self):
+        for target, name, value in ((bt_profiles, "load", PROFILES), (bt_agents, "pool_for", [])):
+            patcher = patch.object(target, name, return_value=value)
+            patcher.start()
+            self.addCleanup(patcher.stop)
+        patcher = patch.dict(os.environ, {"BITACORA_PLANNER_CLAUDE_CONFIG_DIR": "", "BITACORA_SOLVER_CLAUDE_CONFIG_DIR": ""})
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    @staticmethod
+    def ranked(role):
+        """The router's ranking for `role`: the policy's choices, one route per profile and provider."""
+        import bt_role_policy
+        homes = {"claude": ("claude-luis", "claude-work"), "codex": ("codex-luis",)}
+        return [{"agent": provider, "profile": pid, "model": model, "effort": effort}
+                for provider, model, effort in bt_role_policy.options(role) for pid in homes[provider]]
+
+    def route(self, role, *, unattended=True, override="", ranking=None):
+        ranking = self.ranked(role) if ranking is None else ranking
+        with patch.object(bt_agents, "candidates", return_value=(ranking, None)) as candidates, \
+                patch.object(terminal, "unattended", return_value=unattended):
+            route = terminal.role_route("pictures", role, override=override)
+        if ranking is not None and candidates.call_count:
+            self.assertEqual(candidates.call_args.kwargs.get("role"), role)
+        return route
+
+    def test_the_solver_runs_claude_sonnet_high(self):
+        route = self.route("solver")
+        self.assertEqual((route["provider"], route["home"], route["model"], route["effort"]),
+                         ("claude", "/acc/luis", "sonnet", "high"))
+
+    def test_the_solver_falls_back_to_codex_terra_medium(self):
+        route = self.route("solver", unattended=False)
+        self.assertEqual((route["provider"], route["home"], route["model"], route["effort"]),
+                         ("codex", "/acc/codex-luis", "gpt-6.1-terra", "medium"))
+
+    def test_the_planner_and_the_designer_keep_opus_high(self):
+        for role in ("planner", "designer"):
+            route = self.route(role)
+            self.assertEqual((route["provider"], route["model"], route["effort"]), ("claude", "opus", "high"), role)
+
+    def test_a_ranked_claude_route_without_a_model_takes_the_policy_rung(self):
+        route = self.route("solver", ranking=[{"agent": "claude", "profile": "claude-luis"}])
+        self.assertEqual((route["model"], route["effort"]), ("sonnet", "high"))
+
+    def test_a_pinned_account_runs_the_policy_model(self):
+        with patch.dict(os.environ, {"BITACORA_SOLVER_CLAUDE_CONFIG_DIR": "/acc/pinned",
+                                     "BITACORA_PLANNER_CLAUDE_CONFIG_DIR": "/acc/pinned"}):
+            solver = self.route("solver", override="BITACORA_SOLVER_CLAUDE_CONFIG_DIR")
+            planner = terminal.planner_route("pictures")
+        self.assertEqual((solver["home"], solver["model"], solver["effort"]), ("/acc/pinned", "sonnet", "high"))
+        self.assertEqual((planner["home"], planner["model"], planner["effort"]), ("/acc/pinned", "opus", "high"))
+
+    def test_the_last_resort_account_runs_the_policy_model(self):
+        solver = self.route("solver", unattended=False, ranking=[{"agent": "claude", "profile": "claude-luis"}])
+        self.assertEqual((solver["provider"], solver["model"], solver["effort"]), ("claude", "sonnet", "high"))
+        with patch.object(bt_agents, "candidates", side_effect=RuntimeError("no ranking")):
+            planner = terminal.planner_route("pictures")
+        self.assertEqual((planner["model"], planner["effort"]), ("opus", "high"))
+
+    def test_a_role_without_a_claude_rung_keeps_opus_high(self):
+        self.assertEqual(terminal.claude_choice("nobody"), ("opus", "high"))
+
+    def test_the_router_ranking_itself_carries_the_solver_model(self):
+        """No mocked ranking: the role router's own routes for the Solucionador name Sonnet high and Terra medium."""
+        import bt_role_routing
+        import bt_subscriptions
+        with patch.object(bt_subscriptions, "load", return_value={}), \
+                patch.object(bt_role_routing, "recent_sessions", return_value={}), \
+                patch.object(bt_agents, "cooling_until", return_value=None):
+            routes, _ = bt_agents.candidates("pictures", ["claude-luis", "codex-luis"], 1, "plan", allow_explore=False,
+                                             role="solver")
+        self.assertEqual({(r["agent"], r["model"], r["effort"]) for r in routes},
+                         {("claude", "sonnet", "high"), ("codex", "gpt-6.1-terra", "medium")})
+
+    def test_a_claude_planner_starts_with_the_routed_model(self):
+        with tempfile.TemporaryDirectory() as tmp, patch.dict(os.environ, {"HOME": tmp}):
+            root, rdir = Path(tmp) / "root", Path(tmp) / "root" / "pictures" / "requirements" / "REQ-021-x"
+            (rdir / ".planning").mkdir(parents=True)
+            for route, flags in (({"provider": "claude", "home": "/acc/luis", "model": "sonnet", "effort": "medium"},
+                                  "--model sonnet --effort medium"),
+                                 ({"provider": "claude", "home": "/acc/luis"}, "--model opus --effort high")):
+                with patch.object(terminal, "exists", return_value=False), patch.object(terminal, "start") as start:
+                    ok, message = terminal.start_planner(root, "pictures", rdir, fresh=True, route=route)
+                self.assertTrue(ok, message)
+                self.assertIn(flags, start.call_args.args[2])
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -1,0 +1,23 @@
+{
+ "request": "pictures:REQ-021:r32:T3.91:T3.91:d4@k1",
+ "state": "done",
+ "kind": "code",
+ "label": "Código",
+ "tone": "bad",
+ "headline": "El smoke de arrastre con ratón rectangular no encontró ningún punto válido del piso.",
+ "origin": "El verificador ejecutó `npx --no-install tsx scripts/test/test-ui-arrastre-mesas-parametricas.ts --suite rectangular-mouse` (exit code 1). La salida termina con \"ningún punto visible del canvas fue aceptado por el hit-testing real del piso\", así que la prueba llegó al canvas, pero el punto de suelta no cayó sobre el piso. Los fallos anteriores del mismo suite (selector de \"Añadir\" ambiguo, timeout de la pestaña \"Añadir\", error de type check) ya no son la causa. El último intento no ejecutó este suite: su URL apuntaba al puerto 55965, que rechazó la conexión, y el 55433 dio 28P01.",
+ "steps": [
+  "Compruebe que el endpoint de PICTURES_REQ021_DATABASE_URL del verificador responde, y ejecute el mismo suite con esa URL.",
+  "Abra /3d en el navegador de prueba y confirme que el piso del canvas es visible y que el hit-testing acepta algún punto.",
+  "Si el piso no recibe la suelta, corrija la coordenada de suelta en src/components/tres-d/FondosYMuebles.tsx o src/components/tres-d/useLienzoDecoraciones.ts, usando las coordenadas válidas del viewer y no un punto fijo ni las coordenadas de clic.",
+  "Relance `npx --no-install tsx scripts/test/test-ui-arrastre-mesas-parametricas.ts --suite rectangular-mouse` antes de dar la tarea por aprobada."
+ ],
+ "option": "retry_with_note",
+ "note": "The rectangular-mouse suite has NOT been run yet (the last attempt's DB URL on port 55965 was refused; 55433 returned 28P01). Run it against the configured PICTURES_REQ021_DATABASE_URL. The verifier failed with 'ningún punto visible del canvas fue aceptado por el hit-testing real del piso', so the drop point is not hitting the floor. Check that the /3d canvas renders the floor, then make the drop use the valid viewer floor coordinates from the real hit-test. Do not hard-code a floor point or use click default coordinates. Keep the existing selector fixes (button[title=\"Añadir\"] and the Utilería tab) and the rest of the drag pipeline unchanged. Do not report success from the other checks as proof of this one.",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-31T18:31:59",
+ "seconds": 16.8
+}

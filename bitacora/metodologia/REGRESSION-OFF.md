@@ -9,6 +9,8 @@ Owner, 2026-10-31 17:05: until further notice metodologia integrations run no re
 - 2026-10-31 17:52 · `e2146bbcd7e8` · Iterating a direction after a plan change carries the delta; refusals keep the owner's text (D-263) · 5 path(s): skill/scripts/bt_design_amend.py, skill/scripts/bt_design_follow.py, skill/scripts/bt_design_iterate.py, skill/scripts/tests/test_design_amend.py, skill/scripts/tests/test_design_directions.py
 - 2026-10-31 18:07 · `c87dd0e9a54f` · Durable: transitive readiness, retries catch up, UI contract gate, no-change and heap-limit classification (D-262) · 31 path(s): skill/scripts/bt_design_approval.py, skill/scripts/bt_design_web.py, skill/scripts/bt_durable/README.md, skill/scripts/bt_durable/adapters/briefs.py, skill/scripts/bt_durable/adapters/integration.py, skill/scripts/bt_durable/adapters/m3.py …
 - 2026-10-31 18:10 · `7e8d4e638d7f` · bt_integrate --escaped needs no --branch/--title (D-264) · 2 path(s): skill/scripts/bt_integrate.py, skill/scripts/tests/test_integrate.py
+- 2026-10-31 19:04 · `89b1a87f120f` · One source per test variable; dead test resources stop the start, not an attempt (D-265) · 14 path(s): skill/scripts/bt_config.py, skill/scripts/bt_durable/README.md, skill/scripts/bt_durable/adapters/agent_env.py, skill/scripts/bt_durable/adapters/m3.py, skill/scripts/bt_durable/control/classify.py, skill/scripts/bt_durable/execution/steps.py …
+- 2026-10-31 19:11 · `81138e36582c` · Every role session runs the model its role policy names; no route hard-codes Opus (D-267) · 3 path(s): skill/scripts/bt_agent_terminal.py, skill/scripts/bt_durable/solver.py, skill/scripts/tests/test_planner_account.py
 
 ## Escaped defects
 
