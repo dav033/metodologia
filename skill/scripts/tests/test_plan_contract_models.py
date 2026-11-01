@@ -30,8 +30,10 @@ from unittest.mock import patch
 SCRIPTS = Path(__file__).resolve().parents[1]
 REPO = SCRIPTS.parents[1]
 sys.path.insert(0, str(SCRIPTS))
+sys.path.insert(0, str(SCRIPTS / "tests"))
 
 import bt_core
+from durable_support import lab_dir
 import bt_plan_adapter
 import bt_scheduler_decision_adapter
 import bt_scheduler_executor_adapter
@@ -231,7 +233,7 @@ class DurableStartRefusesBeforeEnqueue(unittest.TestCase):
     or an agent exists (no quota is spent)."""
 
     def setUp(self):
-        lab = os.environ.get("BT_LAB_DIR") or None
+        lab = lab_dir()
         self.tmp = tempfile.TemporaryDirectory(prefix="plan-contract-", dir=lab)
         self.addCleanup(self.tmp.cleanup)
         self.root = Path(self.tmp.name) / "bitacora"

@@ -25,8 +25,10 @@ from unittest.mock import patch
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent))
 sys.path.insert(0, str(HERE))
+from durable_support import lab_dir  # noqa: E402
+
 # the stdlib modules read the machine config of BITACORA_ROOT: never the real bitácora in a test
-os.environ.setdefault("BITACORA_ROOT", tempfile.mkdtemp(prefix="bt-remote-root-", dir=os.environ.get("BT_LAB_DIR")))
+os.environ.setdefault("BITACORA_ROOT", tempfile.mkdtemp(prefix="bt-remote-root-", dir=lab_dir()))
 
 import bt_core
 import bt_durable_panel as panel
@@ -116,7 +118,7 @@ class EngineMarker(unittest.TestCase):
 
     def test_features_come_only_from_a_live_engine_marker(self):
         from bt_durable import remote as bridge
-        folder = Path(tempfile.mkdtemp(dir=os.environ.get("BT_LAB_DIR")))
+        folder = Path(tempfile.mkdtemp(dir=lab_dir()))
         marker = folder / "engine.json"
         self.assertEqual(bridge.engine_features(marker), frozenset())                    # no marker: older engine
         bridge.write_marker(marker)

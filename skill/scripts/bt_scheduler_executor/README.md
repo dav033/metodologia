@@ -176,6 +176,15 @@ The CLI defaults to preview and is idempotent after removal. On David's machine 
 disable it with `systemctl --user disable --now bt-workspace-retention.timer` to stop future cleanup. Retired directories
 can be reconstructed with `git worktree add --detach /new/path <snapshot_sha>`; the snapshot ref remains preserved.
 
+`--preserve` (D-270; the durable engine's disk pass always uses it) retires what the default keeps once it is preserved:
+unknown ignored data up to `--archive-max-mb` (32) is archived to `attempts/<dirname>/retained-ignored.tar.gz`; staged
+content, post-capture edits/commits or an uncaptured checkout become one commit `refs/m3/retained/<run>/<dirname>`
+(tree = the checkout, parents HEAD and the staged tree); a still-`running` attempt of a run a later revision superseded,
+whose supervisor is gone and that nobody touched for three days, is treated as uncaptured. Locked/unregistered
+worktrees, submodules, a moved snapshot ref, a live process and ignored data over the cap still keep the checkout. In
+both modes an absent checkout of a finished attempt is reported once as `settled` and recorded by `--apply` in
+`<root>/retention-index.json`; it is never inspected or reported again.
+
 ## Configuration (`Config`, all explicit)
 
 `handoff_mode="snapshot"` (or opt-in `"patch"`), `prompt_rtk=True` (optional RTK inspection guidance; verification stays RAW), `max_running=2` (a safety ceiling; M1 owns global capacity), `max_queued=64`, `timeout_seconds=1800`, `max_timeout_seconds=86400`,

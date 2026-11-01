@@ -17,6 +17,9 @@
   gc-worktrees [--apply] [--no-size] [--json]  attempt worktrees nothing needs any more (bt_durable.scratch, D-266):
                                           a DRY RUN by default (counts and bytes); --apply removes them (refs, branches
                                           and attempt folders stay). The engine runs the same pass every 10 minutes
+  gc-scratch [--apply] [--area A] [--no-size] [--json]  legacy executor worktrees, «Probar» copies, the M6 dependency
+                                          cache (bt_durable.gc_scratch, D-270): a DRY RUN by default, per area counts
+                                          and bytes; the engine runs it every disk_gc.interval_min
 """
 from __future__ import annotations
 
@@ -385,6 +388,22 @@ def cmd_gc_worktrees(args) -> int:
     return 1 if report.counts().get("failed") else 0
 
 
+def cmd_gc_scratch(args) -> int:
+    """The engine's disk pass from the shell (bt_durable.gc_scratch): dry run unless --apply; --apply records the
+    removals in the engine's telemetry."""
+    from . import gc_scratch
+    from .adapters.telemetry import JsonlTelemetry
+    cfg = engine_config()
+    emit = JsonlTelemetry(cfg.state_dir / "telemetry.jsonl").emit if args.apply else None
+    areas = tuple(args.area) if args.area else gc_scratch.AREAS
+    reports = gc_scratch.run_pass(cfg.state_dir, Path(bt_core.ROOT), apply=args.apply, sizes=not args.no_size,
+                                  areas=areas, emit=emit)
+    print(gc_scratch.render(reports), file=sys.stderr)
+    out = [{**r.summary(), **({"items": r.rows} if args.json else {})} for r in reports]
+    print(json.dumps(out, indent=1, ensure_ascii=False))
+    return 1 if any(r.counts().get("failed") or r.skipped.startswith("failed") for r in reports) else 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="bt-durable", description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -428,8 +447,15 @@ def main(argv: list[str] | None = None) -> int:
     g.add_argument("--apply", action="store_true", help="remove the eligible worktrees (default: only report them)")
     g.add_argument("--no-size", action="store_true", help="skip measuring the eligible worktrees (faster)")
     g.add_argument("--json", action="store_true", help="print every attempt's verdict, not only the summary")
+    gs = sub.add_parser("gc-scratch", help="reclaim legacy worktrees, «Probar» copies, the M6 deps cache (dry run "
+                                          "unless --apply)")
+    gs.add_argument("--apply", action="store_true", help="remove what the rules allow (default: only report it)")
+    gs.add_argument("--area", action="append", choices=("legacy_executor", "verify_copies", "deps_cache"),
+                    help="only this area (repeatable)")
+    gs.add_argument("--no-size", action="store_true", help="skip measuring (faster)")
+    gs.add_argument("--json", action="store_true", help="every item's verdict, not only the per-area summary")
     args = parser.parse_args(argv)
-    handlers = {"gc-worktrees": cmd_gc_worktrees, "engine": cmd_engine, "start": cmd_start, "migrate": cmd_migrate, "join": cmd_join, "status": cmd_status,
+    handlers = {"gc-scratch": cmd_gc_scratch, "gc-worktrees": cmd_gc_worktrees, "engine": cmd_engine, "start": cmd_start, "migrate": cmd_migrate, "join": cmd_join, "status": cmd_status,
                 "answer": cmd_answer, "attest": cmd_attest, "pause": cmd_command, "resume": cmd_command,
                 "retry-task": cmd_command, "cancel": cmd_cancel, "project": cmd_project, "remote": cmd_remote}
     return handlers[args.cmd](args)

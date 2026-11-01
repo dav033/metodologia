@@ -14,6 +14,9 @@ import unittest
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE))
+from durable_support import lab_dir  # noqa: E402
+
 PROBE = Path(os.environ.get("BT_VERSION_PROBE") or HERE / "durable_version_probe.py")
 
 
@@ -28,7 +31,7 @@ def wait(predicate, timeout=60):
 
 class Versioning(unittest.TestCase):
     def setUp(self):
-        self.dir = Path(tempfile.mkdtemp(prefix="bt-version-", dir=os.environ.get("BT_LAB_DIR") or None))
+        self.dir = Path(tempfile.mkdtemp(prefix="bt-version-", dir=lab_dir()))
         self.url = f"sqlite:///{self.dir / 'dbos.sqlite3'}"
         self.procs = []
         self.addCleanup(self._kill_all)

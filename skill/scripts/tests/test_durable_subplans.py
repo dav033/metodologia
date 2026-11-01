@@ -18,7 +18,7 @@ sys.path.insert(0, str(HERE))
 
 import durable_support as lab_support
 from bt_contracts.execution import RunRef
-from durable_support import gate, subplan, task
+from durable_support import gate, lab_dir, subplan, task
 from test_durable_e2e import FAST, EngineCase
 
 SERIAL = FAST.model_copy(update={"max_parallel": 1})
@@ -245,7 +245,7 @@ class AtomicLines(unittest.TestCase):
         from types import SimpleNamespace
 
         from bt_durable.adapters.integration import GitLineIntegrator
-        self.repo = Path(tempfile.mkdtemp(prefix="bt-lines-", dir=os.environ.get("BT_LAB_DIR") or None))
+        self.repo = Path(tempfile.mkdtemp(prefix="bt-lines-", dir=lab_dir()))
         self.addCleanup(__import__("shutil").rmtree, self.repo, True)
         lab_support.git(self.repo, "init", "-q", "-b", "main")
         self.commit("base.txt", "base")

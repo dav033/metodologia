@@ -245,6 +245,9 @@ ignored data and busy/in-use copies. Branches, snapshot refs, handoffs, ledgers 
 replace this process with `rm -rf`, force-release helpers or branch pruning. Preview/manual invocation and recovery
 are documented in `scripts/bt_scheduler_executor/README.md` §Three-day worktree retention. A copy retained for a
 specific safety reason needs reconciliation, not a weaker guard. Btrfs backup retention is a separate policy.
+Since D-270 the durable engine's disk pass (`bt-durable gc-scratch`, `disk_gc.*`) retires those copies too, after
+preserving what the snapshot lacks (a `refs/m3/retained/...` commit, an archive of small ignored data); what it
+cannot preserve is still kept and reported. The same pass bounds «Probar» copies and the M6 dependency cache.
 
 - If the repo is on `main`/`master`, create a short-lived branch per feature (`feat/<req-slug>`); in a repo
   with other active work, a worktree.

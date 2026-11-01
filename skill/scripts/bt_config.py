@@ -42,6 +42,16 @@ DEFAULTS: dict = {
                   "routes": ["claude::sonnet"], "router": "m2", "durable_cli": [],
                   "agent_env_file": "~/.config/metodologia/agent-{project}.env",
                   "scratch_root": "", "worktree_gc": True, "min_free_gb": 10},
+    # disk_gc (D-270): the engine's periodic disk pass (`bt_durable.gc_scratch`, also `bt-durable gc-scratch [--apply]`)
+    # every `interval_min`. `legacy_executor`: legacy executor worktrees whose result is preserved (snapshot, a retained
+    # commit, ignored data up to `legacy_archive_mb` archived with the attempt), at most `legacy_limit` per pass (0 = no
+    # limit). `verify_copies`: «Probar» copies of superseded subplan versions, and of decided ones after
+    # `verify_grace_days`; never while a server runs. `deps_cache`: the M6 dependency cache, LRU, entries of live runs'
+    # tips and those used in the last `deps_min_idle_hours` kept; unused for `deps_cache_max_age_days` or over
+    # `deps_cache_max_gb` removed.
+    "disk_gc": {"enabled": True, "interval_min": 60, "legacy_executor": True, "legacy_archive_mb": 32,
+                "legacy_limit": 20, "verify_copies": True, "verify_grace_days": 3, "deps_cache": True,
+                "deps_cache_max_gb": 4, "deps_cache_max_age_days": 14, "deps_min_idle_hours": 12},
     # a run without a human retries; up to 3 tasks at once when dependencies, files and resources allow it, but a task
     # whose plan scope is large runs alone in its repository; an agent process may work up to 2 h (the final gate takes
     # longer than 30 min)
