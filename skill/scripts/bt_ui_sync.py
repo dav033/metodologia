@@ -137,10 +137,18 @@ def _message(project: str, data: dict[str, bytes]) -> str:
             + (f"Source: metodologia {stamp['source_commit'][:12]}\n" if stamp.get("source_commit") else ""))
 
 
+def _installed(rel: str) -> bool:
+    """A path the package manager writes inside the package (npm nests a dependency whose version the root cannot
+    hoist under `packages/bitacora-ui/node_modules`): never the sync's, never deleted or counted as an edit."""
+    return rel.split("/", 1)[0] == "node_modules"
+
+
 def _write_tree(dest: Path, data: dict[str, bytes]) -> None:
     dest.mkdir(parents=True, exist_ok=True)
     for old in sorted(dest.rglob("*"), reverse=True):
         rel = old.relative_to(dest).as_posix()
+        if _installed(rel):
+            continue
         if old.is_file() and rel not in data:
             old.unlink()
         elif old.is_dir() and not any(old.iterdir()):
@@ -153,10 +161,11 @@ def _write_tree(dest: Path, data: dict[str, bytes]) -> None:
 
 
 def _commit_in_worktree(worktree: Path, data: dict[str, bytes], message: str) -> str | None:
-    if _git(worktree, "status", "--porcelain", "--", TARGET):
+    status = _git(worktree, "status", "--porcelain", "--", TARGET).splitlines()
+    if [line for line in status if not _installed(line[3:].strip('"').removeprefix(TARGET + "/"))]:
         raise SyncError(f"{worktree / TARGET} has uncommitted changes: not overwritten (commit or discard them first)")
     _write_tree(worktree / TARGET, data)
-    _git(worktree, "add", "-A", "--", TARGET)
+    _git(worktree, "add", "-A", "--", TARGET, f":(exclude){TARGET}/node_modules")
     if not _git(worktree, "diff", "--cached", "--name-only", "--", TARGET):
         return None
     _git(worktree, "commit", "-q", "-m", message, "--", TARGET, env=_identity(worktree))

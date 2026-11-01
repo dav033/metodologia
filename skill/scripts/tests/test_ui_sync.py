@@ -103,6 +103,23 @@ class Sync(Fixture):
                          "export const Button = () => null;\n")
         self.assertEqual(sync.recorded(self.repo, "main")["pool"], second["pool"])
 
+    def test_dependencies_npm_installs_inside_the_package_survive_a_sync_and_are_never_committed(self):
+        sync.sync("pictures", self.repo)
+        nested = self.repo / "packages/bitacora-ui/node_modules/framer-motion/package.json"
+        nested.parent.mkdir(parents=True)
+        nested.write_text('{"version": "12.43.0"}\n')                      # npm could not hoist it (pictures, D-291)
+        with tempfile.TemporaryDirectory() as tmp:
+            import shutil
+            ui = Path(tmp) / "ui"
+            shutil.copytree(bt_ui.UI, ui)
+            (ui / "src/components/ui/button.tsx").write_text("export const Button = () => null;\n")
+            with mock.patch.object(bt_ui, "UI", ui), mock.patch.object(bt_ui, "SRC", ui / "src"), \
+                    mock.patch.object(bt_ui, "THEMES", ui / "themes"):
+                r = sync.sync("pictures", self.repo)
+        self.assertEqual(r["status"], "committed")
+        self.assertTrue(nested.is_file())
+        self.assertFalse(any("node_modules" in p for p in self.files_on("main")))
+
     def test_uncommitted_edits_in_the_package_path_are_never_overwritten(self):
         sync.sync("pictures", self.repo)
         edited = self.repo / "packages/bitacora-ui/src/components/ui/button.tsx"

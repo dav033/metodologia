@@ -1,5 +1,5 @@
 /* @bitacora/ui theme for pictures: the project's tokens mapped onto the shadcn roles (D-280).
-   Imported 2026-11-01 from globals.css (sha256 5c46a3ce3485) by
+   Imported 2026-11-01 from globals.css (sha256 1dd02e3b2ed8) by
    `bitacora.py components theme import pictures --from <path>`. The project owns these values:
    re-import when its tokens change. Structure and behaviour come from the pool, never from here. */
 /* @mockup-fonts: @fontsource-variable/geist, @fontsource-variable/jetbrains-mono */
@@ -24,6 +24,7 @@
   --exito-suave: #dcf5e9;
   --error: #b23a45;
   --error-suave: #ffeaec;
+  --error-hover: #962f3a;
   --aviso: #8f5f12;
   --aviso-suave: #fff3d8;
   --sombra: rgb(28 20 37 / 0.08);
@@ -78,6 +79,29 @@
   --input: var(--borde);
   --ring: var(--acento);
   --radius: 0.8rem;
+  --primary-hover: var(--acento-hover);
+  --primary-soft: var(--acento-suave);
+  --destructive-hover: var(--error-hover);
+  --destructive-soft: var(--error-suave);
+  --success: var(--exito);
+  --success-soft: var(--exito-suave);
+  --warning: var(--aviso);
+  --warning-soft: var(--aviso-suave);
+  --info: var(--acento);
+  --info-soft: var(--acento-suave);
+  --chart-1: var(--acento);
+  --chart-2: var(--acento-2);
+  --chart-3: var(--salvia);
+  --chart-4: var(--aviso);
+  --chart-5: var(--exito);
+  --sidebar: var(--superficie);
+  --sidebar-foreground: var(--texto);
+  --sidebar-primary: var(--acento);
+  --sidebar-primary-foreground: var(--sobre-acento);
+  --sidebar-accent: var(--acento-suave);
+  --sidebar-accent-foreground: var(--acento);
+  --sidebar-border: var(--borde);
+  --sidebar-ring: var(--acento);
   --ui-font-sans: var(--font-geist-sans, "Geist Variable"), ui-sans-serif, system-ui, sans-serif;
   --ui-font-mono: var(--font-geist-mono, "JetBrains Mono Variable"), ui-monospace, SFMono-Regular, Menlo, monospace;
   --foreground-rgb: 28, 20, 37;
@@ -107,6 +131,7 @@
   --exito-suave: #173b31;
   --error: #ff979f;
   --error-suave: #43252a;
+  --error-hover: #ffb3b9;
   --aviso: #f7c46b;
   --aviso-suave: #3f311c;
   --sombra: rgb(0 0 0 / 0.4);
