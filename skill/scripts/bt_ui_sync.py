@@ -214,7 +214,10 @@ def _commit_in_worktree(worktree: Path, data: dict[str, bytes], message: str) ->
     if _dirty(worktree):
         raise SyncError(f"{worktree / TARGET} has uncommitted changes: not overwritten (commit or discard them first)")
     _write_tree(worktree / TARGET, data)
-    _git(worktree, "add", "-A", "--", TARGET, f":(exclude){TARGET}/node_modules")
+    # an ignored `node_modules` named in an exclude pathspec makes `git add` fail (pictures ignores
+    # `/packages/*/node_modules`): ignored, it is never staged anyway; else it is excluded (D-294)
+    ignored = bool(_git(worktree, "check-ignore", f"{TARGET}/node_modules", check=False))
+    _git(worktree, "add", "-A", "--", TARGET, *([] if ignored else [f":(exclude){TARGET}/node_modules"]))
     if not _git(worktree, "diff", "--cached", "--name-only", "--", TARGET):
         return None
     _git(worktree, "commit", "-q", "-m", message, "--", TARGET, env=_identity(worktree))
@@ -236,7 +239,9 @@ def _commit_plumbing(repo: Path, branch: str, data: dict[str, bytes], message: s
     with tempfile.TemporaryDirectory() as tmp:
         env = {"GIT_INDEX_FILE": str(Path(tmp) / "index")}
         _git(repo, "read-tree", old, env=env)
-        _git(repo, "rm", "-r", "--cached", "-q", "--ignore-unmatch", "--", TARGET, env=env)
+        # `-f`: the temporary index is the default branch's; without it git compares it with the checked-out branch's
+        # HEAD and files and refuses whenever their package differs from the default branch's (D-294)
+        _git(repo, "rm", "-r", "--cached", "-f", "-q", "--ignore-unmatch", "--", TARGET, env=env)
         staged = Path(tmp) / "files"
         lines = []
         for rel, blob in sorted(data.items()):

@@ -120,6 +120,47 @@ class Sync(Fixture):
         self.assertTrue(nested.is_file())
         self.assertFalse(any("node_modules" in p for p in self.files_on("main")))
 
+    def pool_copy(self, button: str) -> Path:
+        """A copy of the pool whose button is `button` (what a merged pool change looks like to `sync`)."""
+        import shutil
+        ui = self.tmp / f"ui-{len(list(self.tmp.glob('ui-*')))}"
+        shutil.copytree(bt_ui.UI, ui, ignore=shutil.ignore_patterns("node_modules"))
+        (ui / "src/components/ui/button.tsx").write_text(button)
+        return ui
+
+    def test_a_feature_branch_holding_an_older_package_never_blocks_the_plumbing_sync(self):
+        """D-294: the temporary index is main's; `git rm --cached` compared it with the checked-out branch's HEAD and
+        files and refused once main's package differed from theirs, so every sync after the first one failed."""
+        sync.sync("pictures", self.repo)                                         # main carries the package
+        git(self.repo, "checkout", "-q", "-b", "feature")                        # a branch with that package on disk
+        first = sync.sync("pictures", self.repo, ui=self.pool_copy("export const Button = () => 1;\n"))
+        second = sync.sync("pictures", self.repo, ui=self.pool_copy("export const Button = () => 2;\n"))
+        self.assertEqual((first["status"], second["status"]), ("committed", "committed"))
+        self.assertEqual(git(self.repo, "show", "main:packages/bitacora-ui/src/components/ui/button.tsx"),
+                         "export const Button = () => 2;")
+        self.assertEqual(git(self.repo, "branch", "--show-current"), "feature")
+        self.assertEqual(git(self.repo, "status", "--porcelain"), "")            # the checkout is untouched
+        self.assertNotEqual(git(self.repo, "rev-parse", "feature"), git(self.repo, "rev-parse", "main"))
+
+    def test_an_ignored_node_modules_inside_the_package_never_fails_the_worktree_commit(self):
+        """D-294: pictures ignores `/packages/*/node_modules`; naming that ignored path in an exclude pathspec made
+        `git add` exit 1 after staging, so the sync left the package staged and every later sync refused it."""
+        (self.repo / ".gitignore").write_text("/node_modules\n/packages/*/node_modules\n")
+        git(self.repo, "add", ".gitignore")
+        git(self.repo, "commit", "-q", "-m", "ignore")
+        sync.sync("pictures", self.repo)
+        nested = self.repo / "packages/bitacora-ui/node_modules/framer-motion/package.json"
+        nested.parent.mkdir(parents=True)
+        nested.write_text('{"version": "12.43.0"}\n')
+        (self.repo / "app.ts").write_text("export const app = 3;\n")             # unrelated work in progress
+        r = sync.sync("pictures", self.repo, ui=self.pool_copy("export const Button = () => 1;\n"))
+        self.assertEqual((r["status"], r["branch"]), ("committed", "main"))
+        self.assertEqual(git(self.repo, "status", "--porcelain"), "M app.ts")
+        self.assertTrue(nested.is_file())
+        self.assertFalse(any("node_modules" in p for p in self.files_on("main")))
+        changed = git(self.repo, "show", "--name-only", "--format=", "HEAD").splitlines()
+        self.assertEqual(changed, ["packages/bitacora-ui/SYNC.json", "packages/bitacora-ui/src/components/ui/button.tsx"])
+
     def test_uncommitted_edits_in_the_package_path_are_never_overwritten(self):
         sync.sync("pictures", self.repo)
         edited = self.repo / "packages/bitacora-ui/src/components/ui/button.tsx"
