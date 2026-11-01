@@ -11,6 +11,7 @@ import hashlib
 import json
 import os
 import re
+import shutil
 import threading
 import time
 from collections.abc import Callable, Mapping
@@ -120,8 +121,11 @@ class GitWorkspaces:
                                            "base_sha": base_sha, "base_ref": request.base_ref,
                                            "worktree": str(worktree)}, sort_keys=True), encoding="utf-8")
                 os.replace(tmp, manifest)
+            interrupted = self._interrupted(request.attempt_id)
             journal = self._journal(request.attempt_id, "allocating", branch=branch, worktree=str(worktree),
                                     base_sha=base_sha)
+            if interrupted and worktree.exists():
+                self._discard(repo, worktree)        # a killed `git worktree add` left a half checkout: start it again
             branch_exists = gitutil.ok(repo, ["show-ref", "--verify", "--quiet", f"refs/heads/{branch}"])
             if worktree.exists():
                 if not self._registered(repo, worktree):
@@ -133,6 +137,35 @@ class GitWorkspaces:
                 gitutil.run(repo, args)
             self._journal(request.attempt_id, "allocated", branch=branch, worktree=str(worktree))
         return Workspace(path=str(worktree), branch=branch, base_sha=base_sha, repo=str(repo), journal=journal)
+
+    def _interrupted(self, attempt_id: str) -> bool:
+        """Did the last allocation of this attempt start and never finish? Its `git worktree add` was killed (the
+        engine restarted mid-checkout, pictures REQ-021 r35 T3.15 a201), so the directory exists and is registered but
+        its checkout is partial: staged deletions of every tracked file the agent was then told to audit. No agent has
+        run in it yet — the agent starts only after `allocated` — so it is safe to rebuild."""
+        last = ""
+        try:
+            with (self.root / "journal.jsonl").open(encoding="utf-8", errors="replace") as stream:
+                for line in stream:
+                    if attempt_id not in line:
+                        continue
+                    try:
+                        row = json.loads(line)
+                    except ValueError:
+                        continue
+                    if row.get("attempt_id") == attempt_id and row.get("stage") in ("allocating", "allocated"):
+                        last = row["stage"]
+        except OSError:
+            return False
+        return last == "allocating"
+
+    @staticmethod
+    def _discard(repo: Path, worktree: Path) -> None:
+        """Remove a worktree directory of ours (under this executor's root) so it can be created again."""
+        gitutil.run(repo, ["worktree", "remove", "--force", str(worktree)], check=False)
+        if worktree.exists():
+            shutil.rmtree(worktree, ignore_errors=True)
+        gitutil.run(repo, ["worktree", "prune"], check=False)
 
     @staticmethod
     def _registered(repo: Path, worktree: Path) -> bool:
