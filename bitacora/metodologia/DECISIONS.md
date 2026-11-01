@@ -3750,3 +3750,28 @@ Solucionador 20261030-100736-d494 integrated merge fff622890f28b8093a9a0afda9c40
 - **Rule:** `test_durable_line_pin.test_a_gate_task_leaves_out_the_lines_its_base_left_out` (red before the fix).
 - **Source:** solver 20261101-015640-eab9, pictures REQ-021 r35 T94.
 - **Evidence:** the test, red without the fix; `bt_integrate` regression.
+
+## D-290 — A project built from scratch with a UI uses `@bitacora/ui` by default: the interview asks, `components adopt` opts it in and does the first sync
+
+- **Context:** D-280 made the pool the single source of components but left the opt-in explicit per project
+  (`"ui": {"sync": true}` written by hand), so a new project only got it if someone remembered. Owner, 2026-11-01:
+  «prepare that in the future every child built from scratch with metodologia uses it».
+- **Decision:** `bitacora.py components adopt <project> [--role R] [--from tokens.css] [--mockup-fonts …]` writes
+  `"ui": {"sync": true, "repo": R, "push": false}` (other keys kept), imports the theme when tokens are given (else
+  the pool's Catppuccin `theme.css` applies) and runs the first sync; with no repository yet it records the opt-in
+  (`pending`) and `workspace add <role>` does the first sync (`bt_ui_sync.first_sync`, only for the opted-in role and
+  only when the branch has no `SYNC.json`). `--off` records a «no» (`"sync": false`). The requirements interview asks
+  it (recommended «sí») for any project with a UI and no `ui` key; the NEW PROJECT start context says so; the Planner
+  starts a plan that creates or first wires a UI repo with the task «wire @bitacora/ui» (plan-contract, steps and
+  verify in `stacks/nextjs.md` §Component pool); Designer (greenfield: the pool's blocks are the shell), Implementer
+  (import from `@bitacora/ui/…`, a missing component is a pool change) and Reviewer (standards axis: a re-declared
+  pool component or an edit in `packages/bitacora-ui` is a finding) briefs say it without project facts.
+- **Rule:** projects without the `ui` key are never synced (explicit opt-in unchanged for david-ui and the rest);
+  a UI project built from scratch gets the question with «sí» recommended.
+- **Evidence:** `test_ui_sync.Adopt` (5: opt-in + first sync, pending then `workspace add` CLI sync, other role
+  ignored, `--off`, no key never synced), `test_onboarding` (start context names `components adopt`); affected suites
+  (agent_skills_static, designer_kit, install_symlink_safety, onboarding, planblock, plan_integration, planner_profile,
+  planner_runtime, relay, regress_select, ui_pool, ui_sync, wiring_contracts, verify_guide, verify_copy,
+  durable_briefs, design_ui_brief, executor test_prompt) OK. `test_continuation` fails identically on main (6 F + 2 E,
+  pre-existing, not reached by this change). Branch `ui-pool-default` (e59fefd03), merged as `0d10d7158` with
+  `--no-regression` (D-261), smoke ok.

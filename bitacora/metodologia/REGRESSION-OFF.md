@@ -36,6 +36,7 @@ Owner, 2026-10-31 17:05: until further notice metodologia integrations run no re
 - 2026-11-01 01:48 · `b45102a58294` · A durable retry never starts from a snapshot that holds under half of its line's files (D-287) · 2 path(s): skill/scripts/bt_durable/adapters/integration.py, skill/scripts/tests/test_durable_line_pin.py
 - 2026-11-01 02:00 · `266388e1978b` · A gutted snapshot never advances a subplan or run line (D-288) · 2 path(s): skill/scripts/bt_durable/adapters/integration.py, skill/scripts/tests/test_durable_line_pin.py
 - 2026-11-01 02:03 · `96b787087814` · A gate task leaves out the subplan lines its base already left out (D-289) · 2 path(s): skill/scripts/bt_durable/adapters/integration.py, skill/scripts/tests/test_durable_line_pin.py
+- 2026-11-01 08:20 · `0d10d7158702` · New projects with a UI adopt @bitacora/ui by default (D-290) · 14 path(s): skill/SKILL.md, skill/agents/designer.md, skill/agents/implementer.md, skill/agents/planner.md, skill/agents/reviewer.md, skill/references/documentation.md …
 
 ## Escaped defects
 
