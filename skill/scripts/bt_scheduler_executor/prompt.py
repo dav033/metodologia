@@ -121,7 +121,7 @@ def _design_context(brief: Brief) -> dict:
         key, sep, value = line.partition(":")
         key = {"kind": "task kind"}.get(key.strip().lower(), key.strip().lower())
         if sep and key in ("design contract", "task kind", "ui task", "approval", "sha-256", "planning draft",
-                           "planning mockup", "planning tsx"):
+                           "planning mockup", "planning tsx", "planning ui pool"):
             facts.setdefault(key, value.strip())
     path = facts.get("design contract") or getattr(brief, "contract_path", "") or ""
     if not path:
@@ -131,7 +131,8 @@ def _design_context(brief: Brief) -> dict:
             "ui": facts.get("ui task", "").lower() == "true" or bool(getattr(brief, "ui_task", False)),
             "approval": facts.get("approval", ""), "sha256": facts.get("sha-256", ""),
             "draft": facts.get("planning draft", ""), "mockup": facts.get("planning mockup", ""),
-            "tsx": facts.get("planning tsx", "")}
+            "tsx": facts.get("planning tsx", ""),
+            "pool": facts.get("planning ui pool", "") or "the shared component pool"}   # named by the brief, never here
 
 
 def _design_instructions(brief: Brief, design: dict) -> list[str]:
@@ -148,7 +149,7 @@ def _design_instructions(brief: Brief, design: dict) -> list[str]:
                 "The Designer authors the contract and must never approve its own contract: the owner approves each version "
                 "before UI work starts."]
     if brief.review_axis == "visual":
-        source = ([f"The approved screen source is `{design['tsx']}` (built from `@bitacora/ui` and the project theme): "
+        source = ([f"The approved screen source is `{design['tsx']}` (built from `{design['pool']}` and the project theme): "
                    "compare the rendered UI against it — the same components in the same places, views, states and "
                    "flows; the implementation may differ only where real data and logic replace its mock data. A screen "
                    "re-created with other components fails, even when it looks alike. The contract text still decides "
@@ -162,11 +163,11 @@ def _design_instructions(brief: Brief, design: dict) -> list[str]:
     if design.get("tsx"):
         # D-280: the screen is written once, by the Designer, from the pool; the implementer wires it, never redraws it
         lines.append(f"The owner approved this screen with the contract: `{design['tsx']}`. START FROM IT: copy it into "
-                     "the route/component the task names, keep its `@bitacora/ui` imports, components, layout, copy, "
+                     f"the route/component the task names, keep its `{design['pool']}` imports, components, layout, copy, "
                      "views and states, remove only the mockup harness (`mountMockup`, `useMockup`, the view/state/theme "
                      "selects from `@kit/…`) and replace its mock data with the real data and logic. Never re-create "
                      "the screen with other components (the project's own UI components lose to the pool). If "
-                     "`@bitacora/ui` is not installed in the repository, stop and report the task as blocked.")
+                     f"`{design['pool']}` is not installed in the repository, stop and report the task as blocked.")
         if design.get("mockup"):
             lines.append(f"`{design['mockup']}` is the same screen built into a static page, for looking only.")
     elif design.get("mockup"):
