@@ -18,7 +18,11 @@ account `role_route(..., "solver")` picks (Claude Sonnet high per D-253, unatten
 another account when its own runs out, and is closed when it writes `result.json`, when its tmux session is gone, or
 after `solver.max_minutes` (then `gave_up`, and the trigger is the owner's). A session whose own integration
 (`bt_integrate.py --session <id>`) is running is neither stopped nor moved to another account until it ends, for at most
-`solver.integrate_grace_minutes` more; a session whose run a stage join superseded is told once and kept. State: `<rdir>/RUN.solver/state.json`
+`solver.integrate_grace_minutes` more; a session whose run a stage join superseded is told once and kept. A session whose
+triggers (the ones it started for and the ones queued to it) were all resolved by someone else (an operator's answer, a
+task that settled) is told once to write `result.json` with outcome `superseded` and stop, and is closed as
+`superseded` after `solver.resolved_grace_minutes` unless it is integrating; that outcome gives back the task's
+`max_per_task` slot (D-271). State: `<rdir>/RUN.solver/state.json`
 (the panel reads it). Nothing here claims a session runs exactly once: a crash between a launch and the state write
 can start a second one on the next pass, which then finds the same tmux name taken and does not start.
 """
@@ -39,6 +43,7 @@ from .solver_triggers import (
     QUIET,
     _iso,
     _live_tasks,
+    answered_by,
     blocked_key,
     blocked_triggers,
     ended_triggers,
@@ -55,9 +60,10 @@ from .solver_triggers import (
 LOG = logging.getLogger("bt_durable.solver")
 DIR = "RUN.solver"
 STATE = "state.json"
-OUTCOMES = ("fixed", "answered", "asked_owner", "gave_up")
+OUTCOMES = ("fixed", "answered", "asked_owner", "gave_up", "superseded")
 OUTCOME_ES = {"fixed": "arreglado en su origen", "answered": "decisión respondida", "asked_owner": "te pregunta algo",
-              "gave_up": "no pudo resolverlo"}
+              "gave_up": "no pudo resolverlo", "superseded": "ya se resolvió por otra vía"}
+SETTLED_ES = {"completed": "completada", "inherited": "completada", "blocked": "bloqueada", "cancelled": "cancelada"}
 MAX_RESTARTS = 2                                          # account moves per session (quota, an owner-only prompt)
 WORK = Path.home() / ".local" / "share" / "bitacora-solver"   # sessions' working folders, outside every repository
 RESTART_MESSAGE = ("You were restarted on another account (the previous one ran out). Your earlier conversation is above "
@@ -73,7 +79,8 @@ def enabled() -> bool:
 def settings() -> dict[str, int]:
     import bt_config
     defaults = {"max_concurrent": 1, "max_per_task": 3, "max_minutes": 120, "stuck_minutes": 45,
-                "resolution_after_seconds": 120, "integrate_grace_minutes": 120, "blocked_after_seconds": 300}
+                "resolution_after_seconds": 120, "integrate_grace_minutes": 120, "blocked_after_seconds": 300,
+                "resolved_grace_minutes": 5}
     out = {}
     for name, default in defaults.items():
         value = bt_config.get(f"solver.{name}", default)
@@ -189,6 +196,10 @@ class Solver:
                 said += self._register(run, rdir, state, item)
             if state.get("active"):
                 said += self._queue(run, rdir, state)
+                # after the queue: a decision that replaced the answered one is this session's work, not a resolution
+                told, closed = self._resolved(run, rdir, state, status, cfg)
+                said += told
+                active -= closed
             elif active < cfg["max_concurrent"] and (items := self._pending(run, rdir, state, status, cfg)):
                 said += self._launch(run, rdir, state, status, items)
                 active += bool(state.get("active"))
@@ -388,6 +399,8 @@ class Solver:
                             f"(hasta {cfg['integrate_grace_minutes']} min más) antes de detenerlo o cambiarlo de cuenta")
             return said + [f"{run.run_id}: solver {sid} integrating (pid {', '.join(map(str, integrating))}): waited for"]
         if elapsed > cfg["max_minutes"] * 60:
+            if session.get("resolved"):                  # resolved elsewhere and told: closed as such, not given up
+                return said + self._close_resolved(run, rdir, state, session)
             extra = (f" (y {cfg['integrate_grace_minutes']} min de gracia de su integración)" if integrating else "")
             return said + self._finish(run, rdir, state, session, {
                 "outcome": "gave_up", "summary": f"pasó {cfg['max_minutes']} min sin escribir result.json{extra}; "
@@ -460,7 +473,114 @@ class Solver:
                     "la decisión anterior")
         return [f"{run.run_id}: solver {session['id']} told its run {', '.join(sorted(origins))} was superseded"]
 
-    def _finish(self, run, rdir, state, session: dict, result: dict) -> list[str]:
+    def _resolved(self, run, rdir, state, status: dict | None, cfg) -> tuple[list[str], bool]:
+        """Every trigger of the session resolved by someone else (D-271). Pictures REQ-021, 2026-10-31: the session
+        20261031-184040-40be (Claude Opus) started at 18:40 for T3.91:d5 and got d6 and d7 queued; the operator answered
+        all three himself (`bt-durable answer ... --by operator`) and T3.91 completed at 20:26, yet the session kept
+        working until the watchdog stopped it at 20:40 as «no pudo resolverlo». Told once (inbox and terminal) to write
+        `result.json` with outcome `superseded`; closed as `superseded` after `solver.resolved_grace_minutes`
+        (`_supervise` closes it so at `max_minutes`, and a vanished one as it always did), never while it integrates.
+        Checked after the pass queued its new triggers. Returns the pass's lines and whether the session was closed."""
+        session = next((s for s in state.get("sessions", []) if s.get("id") == state.get("active")), None)
+        if session is None or not isinstance(status, dict):  # nothing known this pass: nothing changes
+            return [], False
+        facts = self._closed_elsewhere(run, rdir, state, session, status)
+        if facts is None:
+            if session.pop("resolved", None) is not None:    # a trigger reopened (a new one queued): it works on
+                self.record(rdir, f"{session['task']}: llegó un caso nuevo al Solucionador; sigue trabajando")
+            return [], False
+        what = ", ".join(f"{task} ya se resolvió ({'; '.join(parts)})" for task, parts in facts.items())
+        said: list[str] = []
+        mark = session.get("resolved")
+        if mark is None:
+            mark = session["resolved"] = {"at": self.now(), "what": what}
+            self._tell_resolved(session, what, cfg["resolved_grace_minutes"])
+            said.append(f"{run.run_id}: solver {session['id']} told its triggers were resolved elsewhere")
+        else:
+            mark["what"] = what                              # a task that settled since the notice joins the record
+        if self.now() - float(mark["at"]) < cfg["resolved_grace_minutes"] * 60:
+            return said, False
+        if self.integrating(session["id"]):                 # never cut mid-integration: the next pass after it ends
+            if not mark.get("integrating"):
+                mark["integrating"] = self.now()
+                self.record(rdir, f"{session['task']}: lo que el Solucionador atendía ya se resolvió, pero está "
+                            "integrando; se le espera antes de cerrarlo")
+            return said + [f"{run.run_id}: solver {session['id']} resolved elsewhere but integrating: waited for"], False
+        return said + self._close_resolved(run, rdir, state, session), True
+
+    def _close_resolved(self, run, rdir, state, session: dict) -> list[str]:
+        what = str((session.get("resolved") or {}).get("what") or "")
+        return self._finish(run, rdir, state, session, {"outcome": "superseded", "summary": what,
+                                                        "handled": self._keys(session)},
+                            activity=f"el Solucionador se cerró: {what}")
+
+    def _tell_resolved(self, session: dict, what: str, grace: int) -> None:
+        text = ("[Automatic notice from the engine, not typed by the owner] Every trigger you were started for, and every "
+                f"one queued to you, was resolved elsewhere: {what}. Nothing is left for you to answer. Write result.json "
+                "with outcome `superseded` and stop; do not integrate. Only if that resolution was your own work, write "
+                f"result.json with your real outcome instead. Without result.json the session is closed in {grace} min.")
+        with (Path(session["dir"]) / "inbox.jsonl").open("a", encoding="utf-8") as stream:
+            stream.write(json.dumps({"kind": "resolved", "what": what, "triggers": self._keys(session),
+                                     "at": _iso(self.now())}, ensure_ascii=False) + "\n")
+        try:
+            self.terminal.send(session["name"], text)
+        except Exception:  # noqa: BLE001 - the inbox file is what counts; typing it is a courtesy
+            pass
+
+    @staticmethod
+    def _keys(session: dict) -> list[str]:
+        return [*session.get("triggers", []), *session.get("queued", [])]
+
+    def _closed_elsewhere(self, run, rdir, state, session: dict, status: dict | None) -> dict[str, list[str]] | None:
+        """What closed each trigger of the session, by task ({"T3.91": ["respondida por operator", "completada"]}), when
+        none is still open; None while one is open, when it cannot be told (no status, a trigger missing or of another
+        run: a stage join is `_superseded`'s), or when the session answered one itself (`by: solver`): its own work,
+        which it closes with its own result.json. "Open" is what `_pending` asks before a launch (`_current`, or the
+        rejection still standing), and for a decision also that its task has not settled."""
+        if not isinstance(status, dict):
+            return None
+        from . import rejections
+        tasks = status.get("tasks") or {}
+        triggers = state.get("triggers", {})
+        keys = self._keys(session)
+        items = [triggers.get(key) for key in keys]
+        if not items or any(not isinstance(i, dict) or str(i.get("run_id") or run.run_id) != run.run_id for i in items):
+            return None
+        answers: dict[str, str] | None = None
+        facts: dict[str, list[str]] = {}
+        for item in items:
+            task = tasks.get(item.get("task_id") or "") or {}
+            settled = task.get("workflow_status") not in (None, "PENDING", "ENQUEUED")
+            if item["kind"] == "owner_rejected":
+                try:
+                    open_ = rejections.current(rdir, item)
+                except Exception as error:  # noqa: BLE001 - a ledger that cannot be read: still open for now
+                    LOG.warning("solver: %s rejection unreadable: %s", run.run_id, error)
+                    return None
+            else:
+                open_ = self._current(item, tasks, status) and not (item["kind"] in ("decision", "repeat") and settled)
+            if open_:
+                return None
+            parts = facts.setdefault(slot(item), [])
+            if item["kind"] in ("decision", "repeat"):
+                if answers is None:
+                    answers = answered_by(self.state_dir / "telemetry.jsonl", run.run_id)
+                by = answers.get(f"{item.get('task_id')}|{item.get('request_id')}")
+                if by == "solver":
+                    return None
+                if by and f"respondida por {by}" not in parts:
+                    parts.append(f"respondida por {by}")
+            if item.get("task_id") and settled:
+                state_of = task.get("state") if isinstance(task.get("state"), dict) else {}
+                word = SETTLED_ES.get(str(state_of.get("state")), "terminada")
+                if word not in parts:
+                    parts.append(word)
+        for parts in facts.values():
+            if not parts:
+                parts.append("ya no está abierto")
+        return facts
+
+    def _finish(self, run, rdir, state, session: dict, result: dict, activity: str | None = None) -> list[str]:
         outcome = result.get("outcome") if result.get("outcome") in OUTCOMES else "gave_up"
         summary = str(result.get("summary") or "")[:300]
         session.update(status=outcome, ended=self.now(), ended_at=_iso(self.now()), summary=summary,
@@ -479,11 +599,20 @@ class Solver:
             if vanished:
                 item["status"] = "pending"
             elif key in session.get("triggers", []) or (handled is not None and key in handled):
-                item["status"] = outcome                 # a trigger that started a session never starts another
+                # a trigger that started a session never starts another; one resolved elsewhere is `resolved`
+                item["status"] = "resolved" if outcome == "superseded" else outcome
             else:
                 item["status"] = "pending"               # queued in its inbox and not handled: the next session's
+        if outcome == "superseded":                      # it did nothing to count: its task keeps its sessions (D-271)
+            counts = state.setdefault("tasks", {})
+            for key in session.get("triggers", []):
+                item = state.get("triggers", {}).get(key)
+                if item is not None and slot(item) in counts:
+                    counts[slot(item)] = max(0, int(counts[slot(item)]) - 1)
         state.pop("active", None)
         text = f"{session['task']}: Solucionador · {OUTCOME_ES[outcome]}" + (f": {summary}" if summary else "")
+        if activity:
+            text = activity
         if vanished:
             text = (f"{session['task']}: la sesión del Solucionador se cerró sin terminar (¿reinicio del equipo?); "
                     "sus casos vuelven a la cola")

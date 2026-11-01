@@ -6,7 +6,7 @@ from __future__ import annotations
 from html import escape as e
 
 OUTCOME_ES = {"running": "trabajando", "fixed": "arreglado", "answered": "respondida", "asked_owner": "te pregunta",
-              "gave_up": "no pudo"}
+              "gave_up": "no pudo", "superseded": "ya resuelto"}
 KIND_ES = {"decision": "decisión que la autocuración no resolvió", "repeat": "el mismo fallo volvió",
            "stuck": "tarea sin avance", "error": "run en error",
            "resolution": "conflicto de composición sin resolver"}

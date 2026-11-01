@@ -498,8 +498,10 @@ once per signature (D-167) → the Solucionador → the owner, only for what nee
 - **Brief and contract.** `<rdir>/RUN.solver/<id>/`: `BRIEF.md` (triggers, the decision's evidence, attempt history,
   diagnosis, run status, SPEC/PLAN/frozen plan, both `DECISIONS.md`, recent day logs, journal, answer, Planner and
   integration commands), `triggers.json`, `status.json`, `inbox.jsonl`, `PROMPT.md` (`agents/solver.md` + the brief's
-  path). It ends by writing `REPORT.md` and `result.json` (`fixed|answered|asked_owner|gave_up`, summary, handled
-  trigger keys, question). State and history: `RUN.solver/state.json`; the run page and a subplan's «Ejecución» tab show
+  path). It ends by writing `REPORT.md` and `result.json` (`fixed|answered|asked_owner|gave_up|superseded`, summary, handled
+  trigger keys, question). A session whose triggers were all resolved elsewhere (an operator's answer, a settled task)
+  is told once and closed as `superseded` after `solver.resolved_grace_minutes` (default 5) unless it is integrating;
+  its triggers become `resolved` and the task's `max_per_task` slot is given back (D-271). State and history: `RUN.solver/state.json`; the run page and a subplan's «Ejecución» tab show
   it (`bt_durable_panel.solver_state`, `bt_page_solver`); every step is an activity line «Solucionador» and an engine
   journal line `solver: …`.
 - **Rules it follows** (`agents/solver.md`): fix at the origin; metodologia only in its own worktree and only integrated

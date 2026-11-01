@@ -268,6 +268,109 @@ class SolverTests(unittest.TestCase):
         inbox = (Path(self.session()["dir"]) / "inbox.jsonl").read_text()
         self.assertIn('"superseded"', inbox)
 
+    def answer_elsewhere(self, request="T7.4:d1", by="operator", req="REQ-900", settled=None):
+        """Someone other than the session answers `request` (the decision event is cleared, the engine's telemetry says
+        who); with `settled` the task workflow also ends with that state."""
+        run_id = f"proj:{req}:r1"
+        task = self.client.runs[run_id]["tasks"]["T7.4"]
+        task.update(decision=None, state={"state": "running"})
+        if settled:
+            task.update(workflow_status="SUCCESS", state={"state": settled})
+        telemetry = self.root / ".state" / "durable" / "telemetry.jsonl"
+        telemetry.parent.mkdir(parents=True, exist_ok=True)
+        with telemetry.open("a") as stream:
+            stream.write(json.dumps({"event": "decision_answered", "run_id": run_id, "task_id": "T7.4",
+                                     "request_id": request, "action": "retry_with_note", "by": by}) + "\n")
+
+    def test_a_session_whose_triggers_were_all_resolved_elsewhere_is_told_and_closed_after_a_grace(self):
+        """pictures REQ-021, 2026-10-31: the session started at 18:40 for T3.91:d5 (d6, d7 queued); the operator
+        answered all three and T3.91 completed at 20:26, yet the session ran until the watchdog at 20:40 (D-271)."""
+        first = self.open_decision()
+        self.solver().run_pass([first])
+        later = self.open_decision(request="T7.4:d2")
+        self.solver().run_pass([later])                                     # queued to the running session
+        self.answer_elsewhere("T7.4:d1")
+        self.answer_elsewhere("T7.4:d2", settled="completed")
+        self.clock[0] += 60
+        said = self.solver().run_pass([])
+        told = [text for _name, text in self.terminal.sent if "resolved elsewhere" in text]
+        self.assertEqual(len(told), 1, said)
+        self.assertIn("outcome `superseded`", told[0])
+        self.assertIn("do not integrate", told[0])
+        self.assertIn("T7.4 ya se resolvió (respondida por operator; completada)", told[0])
+        self.assertIn('"resolved"', (Path(self.session()["dir"]) / "inbox.jsonl").read_text())
+        self.assertEqual((self.session()["status"], self.terminal.killed), ("running", []))
+        self.clock[0] += 4 * 60                                             # within the grace: told once, kept
+        self.solver().run_pass([])
+        self.assertEqual(len([t for _n, t in self.terminal.sent if "resolved elsewhere" in t]), 1)
+        self.assertEqual(self.session()["status"], "running")
+        self.clock[0] += 60
+        self.notified.clear()
+        self.solver().run_pass([])
+        state = self.state()
+        self.assertEqual(state["sessions"][0]["status"], "superseded")
+        self.assertNotIn("active", state)
+        self.assertIn("bit-proj-REQ-900-solver", self.terminal.killed)
+        self.assertEqual({state["triggers"][k]["status"] for k in (first["key"], later["key"])}, {"resolved"})
+        self.assertEqual(self.notified, [])                                 # nothing for the owner
+        self.assertIn("el Solucionador se cerró: T7.4 ya se resolvió (respondida por operator; completada)",
+                      self.activity)
+        self.solver().run_pass([])                                          # resolved triggers never start another
+        self.assertEqual(len(self.terminal.started), 1)
+
+    def test_a_session_with_one_trigger_still_open_keeps_running(self):
+        self.solver().run_pass([self.open_decision()])
+        later = self.open_decision(request="T7.4:d2", round_no=3)          # d1 moved on; d2 is open and queued
+        self.solver().run_pass([later])
+        self.answer_elsewhere("T7.4:d1")                                   # the operator answered d1 ...
+        self.client.runs["proj:REQ-900:r1"]["tasks"]["T7.4"]["decision"] = decision("T7.4:d2")   # ... d2 still open
+        self.clock[0] += 30 * 60
+        self.solver().run_pass([])
+        self.assertEqual((self.session()["status"], self.terminal.killed), ("running", []))
+        self.assertFalse([t for _n, t in self.terminal.sent if "resolved elsewhere" in t])
+
+    def test_a_decision_the_session_answered_itself_is_not_resolved_elsewhere(self):
+        self.solver().run_pass([self.open_decision()])
+        self.answer_elsewhere("T7.4:d1", by="solver")
+        self.clock[0] += 30 * 60
+        self.solver().run_pass([])
+        self.assertEqual((self.session()["status"], self.terminal.killed), ("running", []))
+        self.assertFalse([t for _n, t in self.terminal.sent if "resolved elsewhere" in t])
+
+    def test_a_session_resolved_elsewhere_is_never_cut_mid_integration(self):
+        self.solver().run_pass([self.open_decision()])
+        sid = self.session()["id"]
+        self.answer_elsewhere("T7.4:d1", settled="completed")
+        self.solver().run_pass([])                                          # told
+        self.integrating = {sid: [4242]}
+        self.clock[0] += 10 * 60
+        said = self.solver().run_pass([])
+        self.assertEqual((self.session()["status"], self.terminal.killed), ("running", []), said)
+        self.assertTrue(any("está integrando" in line for line in self.activity))
+        self.integrating = {}                                               # the integration ended
+        self.solver().run_pass([])
+        self.assertEqual(self.state()["sessions"][0]["status"], "superseded")
+
+    def test_a_superseded_session_does_not_use_up_its_tasks_sessions(self):
+        solver.save(self.rdirs["REQ-900"], {"tasks": {"T7.4": 2}})         # one session left of max_per_task 3
+        self.solver().run_pass([self.open_decision()])
+        self.assertEqual(self.state()["tasks"], {"T7.4": 3})
+        self.answer_elsewhere("T7.4:d1")
+        self.solver().run_pass([])
+        self.clock[0] += 5 * 60
+        self.solver().run_pass([])
+        self.assertEqual(self.state()["sessions"][0]["status"], "superseded")
+        self.assertEqual(self.state()["tasks"], {"T7.4": 2})
+        self.solver().run_pass([self.open_decision(request="T7.4:d2", round_no=3)])
+        self.assertEqual(len(self.terminal.started), 2)                     # not left for the owner as `limit`
+        folder = Path(self.session()["dir"])                                # the session may say it itself
+        (folder / "result.json").write_text(json.dumps({"outcome": "superseded", "summary": "ya respondida"}))
+        self.solver().run_pass([])
+        state = self.state()
+        self.assertEqual([s["status"] for s in state["sessions"]], ["superseded", "superseded"])
+        self.assertEqual(state["tasks"], {"T7.4": 2})
+        self.assertEqual(state["triggers"]["proj:REQ-900:r1:T7.4:T7.4:d2@k3"]["status"], "resolved")
+
     def test_integrations_reads_the_sessions_own_bt_integrate_processes(self):
         proc = self.base / "proc"
         for pid, args in ((11, ["python3", "/x/bt_integrate.py", "--branch", "b", "--session", "S1"]),

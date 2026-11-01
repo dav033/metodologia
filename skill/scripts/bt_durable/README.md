@@ -251,7 +251,10 @@ no round cleared, after `solver.blocked_after_seconds`, once per block, D-235) a
 metodologia fixes only through `skill/scripts/bt_integrate.py`. Switch: `bitacora.py config set solver.enabled false`.
 The `solver.max_minutes` watchdog and the account move never cut a session's own integration (`bt_integrate.py --session
 <id>`, a child of its agent in tmux): they wait for it, at most `solver.integrate_grace_minutes` (120) more. A session
-whose run a stage join superseded is told once (its old decision is gone; finish and integrate the fix) and kept.
+whose run a stage join superseded is told once (its old decision is gone; finish and integrate the fix) and kept. A
+session whose triggers were all resolved elsewhere (an operator answered them, the task settled) is told once to write
+`result.json` with outcome `superseded` and closed so after `solver.resolved_grace_minutes` (5) unless it is integrating;
+that outcome does not count against `solver.max_per_task` (D-271).
 Details: `references/modules.md` §Solver.
 
 ## Recovery and rollback
