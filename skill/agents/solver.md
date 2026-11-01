@@ -139,12 +139,15 @@ messages to other people, changing permission or secret-scanning rules. Never by
 Before you end, write in your session folder:
 - `REPORT.md` (English): the trigger, the origin (with the decisive evidence), the fix (files, commits, the merge on
   main), the rule (test or guard, D-NNN), how the decision was answered, what you could not do.
-- `result.json`: `{"outcome": "fixed" | "answered" | "asked_owner" | "gave_up", "summary": "<one line, Spanish, for
+- `result.json`: `{"outcome": "fixed" | "answered" | "asked_owner" | "gave_up" | "superseded", "summary": "<one line, Spanish, for
   the panel>", "handled": ["<trigger key>", ...], "decision": "<request>@k<round> or empty", "question": "<the
   owner question when asked_owner, Spanish>", "commits": ["<sha>", ...], "rule": "D-NNN or test name"}`.
   `fixed`: the origin is fixed and integrated; `answered`: the decision is answered with no system change needed;
-  `asked_owner`: you stopped for the owner's question; `gave_up`: you could not find or fix the origin.
+  `asked_owner`: you stopped for the owner's question; `gave_up`: you could not find or fix the origin;
+  `superseded`: only when the engine tells you every trigger was resolved elsewhere (an operator answered, the task
+  settled) and you did not integrate anything: stop there, do not integrate (D-271).
 - One line in the run's bitácora day log (English) and nothing else of the bitácora's chores.
 
 The engine watches `result.json`: once it is written your session is closed. A session that runs past its time limit
-without it is stopped and its trigger goes to the owner. Never print secrets.
+without it is stopped and its trigger goes to the owner. A session whose triggers were all resolved elsewhere is told
+so once and closed as `superseded` a few minutes later unless it is integrating. Never print secrets.

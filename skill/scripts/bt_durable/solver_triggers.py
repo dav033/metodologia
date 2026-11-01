@@ -138,6 +138,26 @@ def owner_stops(rdir: Path, telemetry: Path | None, run_id: str) -> set[str]:
     return out
 
 
+def answered_by(telemetry: Path, run_id: str) -> dict[str, str]:
+    """Who answered each decision of the run ("<task>|<request>" -> `by`: operator, owner, healing, solver...), from the
+    engine's `decision_answered` telemetry; the last answer wins (D-271)."""
+    out: dict[str, str] = {}
+    try:
+        lines = Path(telemetry).read_text(encoding="utf-8").splitlines()
+    except OSError:
+        return out
+    for line in lines:
+        if "decision_answered" not in line or run_id not in line:
+            continue
+        try:
+            row = json.loads(line)
+        except ValueError:
+            continue
+        if isinstance(row, dict) and row.get("event") == "decision_answered" and row.get("run_id") == run_id:
+            out[f"{row.get('task_id')}|{row.get('request_id')}"] = str(row.get("by") or "")
+    return out
+
+
 def ended_triggers(run, status: dict, stopped_by_owner: set[str], handed: Iterable[str] = ()) -> list[dict]:
     """A run workflow that ended (SUCCESS) blocked: a rejected composition gate (never the owner's stop), or a blocked
     task the owner did not stop and whose block was not already given to the Solucionador while the run went on
