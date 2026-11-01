@@ -30,8 +30,15 @@ class PlanningActions:
             if not mockup.is_file():
                 return self.file(None)
             import bt_mockup_bridge
-            return self.send(bt_mockup_bridge.inject(mockup.read_text(encoding="utf-8", errors="replace")), 200,
-                             "text/html; charset=utf-8", sandbox=True)
+            import bt_ui
+            # live (D-280): the mockup's TSX rebuilt against the current pool and the project's theme; a mockup with
+            # no source (or one that no longer builds) is its frozen export with the current theme linked after it
+            tsx = bt_ui.source_tsx(mockup) or (drafts.source_tsx(rdir, ref) if rev is None and not q.get("direction")
+                                               else None)
+            page = bt_ui.live_mockup(project, tsx) if tsx else None
+            page = page or bt_ui.with_theme(mockup.read_text(encoding="utf-8", errors="replace"), project)
+            return self.send(bt_mockup_bridge.inject(page), 200, "text/html; charset=utf-8", sandbox=True,
+                             live_ui=True)
         opts = planning.options(rdir, q)
         planning.follow(project, rdir, opts["lang"])
         html = planning.fragment(project, req_id(rdir), rdir, planning.plan_status(rdir), token(),

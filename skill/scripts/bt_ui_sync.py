@@ -1,0 +1,248 @@
+"""Write `@bitacora/ui` into a child project's repository and commit it on its default branch (D-280).
+
+Owner, 2026-10-31: the pool is the single source of UI components; a change in it reaches the project «directo, sin
+paso intermedio». So `sync` writes the package (package.json, LICENSES.md, `src/**` and the project's own theme as
+`themes/<project>.css`) into `<repo>/packages/bitacora-ui`, records what it wrote in `packages/bitacora-ui/SYNC.json`
+(pool version, digest, the metodologia commit that last changed the pool) and commits only that path on the
+project's default branch. No check gates it. It never touches the project's other files or its checked-out branch:
+
+- when the default branch is checked out in some worktree, the files are written there and `git commit -- <path>`
+  commits that path alone (refused when the path has uncommitted edits: they are someone's, never overwritten);
+- otherwise the commit is built with plumbing (a temporary index from the branch, `commit-tree`, a compare-and-swap
+  `update-ref`), so no checkout moves.
+
+Same pool, same commit: a second sync finds the tree unchanged and commits nothing. A project opts in with
+`"ui": {"sync": true, "repo": "<role>", "branch": "<default>", "push": false}` in its bitácora `project.json`;
+`sync_all` (run by `bt_integrate` after a merge that changes `skill/ui/`) syncs every opted-in project.
+"""
+from __future__ import annotations
+
+import json
+import os
+import subprocess
+import tempfile
+from pathlib import Path
+
+import bt_ui
+
+TARGET = "packages/bitacora-ui"
+STAMP = "SYNC.json"
+REPO_ROOT = bt_ui.SKILL_ROOT.parent
+
+
+class SyncError(RuntimeError):
+    pass
+
+
+def _git(repo: Path, *args: str, env: dict | None = None, input_: str | None = None, check: bool = True) -> str:
+    base = {k: v for k, v in os.environ.items() if not k.startswith("GIT_")}
+    done = subprocess.run(["git", "-C", str(repo), *args], capture_output=True, text=True, input=input_,
+                          env={**base, **(env or {})}, check=False)
+    if check and done.returncode:
+        raise SyncError(f"git {' '.join(args[:3])} in {repo}: {(done.stderr or done.stdout).strip()[-400:]}")
+    return done.stdout.strip() if done.returncode == 0 else ""
+
+
+# ------------------------------------------------------------------------------------------------ what is written
+def source_commit() -> str:
+    """The metodologia commit that last changed the pool (stable across unrelated commits, so syncs stay idempotent)."""
+    try:
+        return _git(REPO_ROOT, "log", "-1", "--format=%H", "--", "skill/ui", check=False)
+    except (OSError, SyncError):
+        return ""
+
+
+def payload(project: str) -> dict[str, bytes]:
+    """Relative path under `packages/bitacora-ui` → bytes, SYNC.json included."""
+    files = bt_ui.files(project)
+    out = {}
+    for f in files:
+        rel = f.relative_to(bt_ui.UI).as_posix()
+        out[rel] = f.read_bytes()
+    pkg = bt_ui.package()
+    stamp = {"name": pkg["name"], "version": pkg["version"], "pool": bt_ui.digest(files),
+             "theme": f"themes/{project}.css" if bt_ui.theme_path(project) else None,
+             "source": "metodologia skill/ui", "source_commit": source_commit(),
+             "note": "Written by `bitacora.py components sync`; change the pool in metodologia, never this copy (D-280)."}
+    out[STAMP] = (json.dumps(stamp, indent=1, ensure_ascii=False) + "\n").encode()
+    return out
+
+
+def recorded(repo: Path, branch: str) -> dict | None:
+    """The SYNC.json the project's default branch holds, or None."""
+    text = _git(repo, "show", f"{branch}:{TARGET}/{STAMP}", check=False)
+    try:
+        return json.loads(text) if text else None
+    except ValueError:
+        return None
+
+
+# ------------------------------------------------------------------------------------------------ where
+def project_meta(project: str, root: Path | None = None) -> dict:
+    from bt_core import ROOT
+    path = Path(root or ROOT) / project / "project.json"
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+
+
+def config(project: str, root: Path | None = None) -> dict:
+    ui = project_meta(project, root).get("ui")
+    return ui if isinstance(ui, dict) else {}
+
+
+def repo_for(project: str, cfg: dict, root: Path | None = None) -> Path:
+    import bt_workspace
+    from bt_core import ROOT
+    repos = bt_workspace.repos(Path(root or ROOT), project, discover=False)
+    role = cfg.get("repo") or (next(iter(repos)) if len(repos) == 1 else "")
+    path = repos.get(role) if role else None
+    if not path or not Path(path).exists():
+        raise SyncError(f"{project}: no repository for the pool (set \"ui\": {{\"repo\": \"<role>\"}} in project.json; "
+                        f"roles: {', '.join(repos) or 'none'})")
+    return Path(path)
+
+
+def default_branch(repo: Path, wanted: str = "") -> str:
+    if wanted:
+        return wanted
+    head = _git(repo, "symbolic-ref", "--short", "refs/remotes/origin/HEAD", check=False)
+    if head.startswith("origin/"):
+        return head.split("/", 1)[1]
+    for name in ("main", "master"):
+        if _git(repo, "rev-parse", "--verify", "-q", f"refs/heads/{name}", check=False):
+            return name
+    raise SyncError(f"{repo}: no default branch (origin/HEAD, main or master)")
+
+
+def _checked_out(repo: Path, branch: str) -> Path | None:
+    current = None
+    for line in _git(repo, "worktree", "list", "--porcelain").splitlines():
+        if line.startswith("worktree "):
+            current = Path(line[9:])
+        elif line == f"branch refs/heads/{branch}" and current is not None:
+            return current
+    return None
+
+
+# ------------------------------------------------------------------------------------------------ commit
+def _message(project: str, data: dict[str, bytes]) -> str:
+    stamp = json.loads(data[STAMP])
+    return (f"chore(ui): sync @bitacora/ui {stamp['version']}+{stamp['pool']} from metodologia (D-280)\n\n"
+            f"Written by `bitacora.py components sync {project}`: the component pool is metodologia's (skill/ui) and\n"
+            f"reaches this repository directly. Do not edit {TARGET} here; change the pool and it propagates.\n"
+            + (f"Source: metodologia {stamp['source_commit'][:12]}\n" if stamp.get("source_commit") else ""))
+
+
+def _write_tree(dest: Path, data: dict[str, bytes]) -> None:
+    dest.mkdir(parents=True, exist_ok=True)
+    for old in sorted(dest.rglob("*"), reverse=True):
+        rel = old.relative_to(dest).as_posix()
+        if old.is_file() and rel not in data:
+            old.unlink()
+        elif old.is_dir() and not any(old.iterdir()):
+            old.rmdir()
+    for rel, blob in data.items():
+        out = dest / rel
+        out.parent.mkdir(parents=True, exist_ok=True)
+        if not out.is_file() or out.read_bytes() != blob:
+            out.write_bytes(blob)
+
+
+def _commit_in_worktree(worktree: Path, data: dict[str, bytes], message: str) -> str | None:
+    if _git(worktree, "status", "--porcelain", "--", TARGET):
+        raise SyncError(f"{worktree / TARGET} has uncommitted changes: not overwritten (commit or discard them first)")
+    _write_tree(worktree / TARGET, data)
+    _git(worktree, "add", "-A", "--", TARGET)
+    if not _git(worktree, "diff", "--cached", "--name-only", "--", TARGET):
+        return None
+    _git(worktree, "commit", "-q", "-m", message, "--", TARGET, env=_identity(worktree))
+    return _git(worktree, "rev-parse", "HEAD")
+
+
+def _identity(repo: Path) -> dict:
+    """The repository's own identity when it has one; else a neutral bitácora author (never the owner's name)."""
+    env = {}
+    if not _git(repo, "config", "user.name", check=False):
+        env.update(GIT_AUTHOR_NAME="bitácora", GIT_COMMITTER_NAME="bitácora")
+    if not _git(repo, "config", "user.email", check=False):
+        env.update(GIT_AUTHOR_EMAIL="bitacora@localhost", GIT_COMMITTER_EMAIL="bitacora@localhost")
+    return env
+
+
+def _commit_plumbing(repo: Path, branch: str, data: dict[str, bytes], message: str) -> str | None:
+    old = _git(repo, "rev-parse", f"refs/heads/{branch}")
+    with tempfile.TemporaryDirectory() as tmp:
+        env = {"GIT_INDEX_FILE": str(Path(tmp) / "index")}
+        _git(repo, "read-tree", old, env=env)
+        _git(repo, "rm", "-r", "--cached", "-q", "--ignore-unmatch", "--", TARGET, env=env)
+        staged = Path(tmp) / "files"
+        lines = []
+        for rel, blob in sorted(data.items()):
+            f = staged / rel
+            f.parent.mkdir(parents=True, exist_ok=True)
+            f.write_bytes(blob)
+            lines.append(str(f))
+        shas = _git(repo, "hash-object", "-w", "--stdin-paths", input_="\n".join(lines) + "\n").splitlines()
+        info = "".join(f"100644 {sha}\t{TARGET}/{rel}\n" for sha, rel in zip(shas, sorted(data), strict=True))
+        _git(repo, "update-index", "--index-info", env=env, input_=info)
+        tree = _git(repo, "write-tree", env=env)
+    if tree == _git(repo, "rev-parse", f"{old}^{{tree}}"):
+        return None
+    new = _git(repo, "commit-tree", tree, "-p", old, input_=message, env=_identity(repo))
+    _git(repo, "update-ref", "-m", "bitacora-ui sync (D-280)", f"refs/heads/{branch}", new, old)
+    return new
+
+
+def sync(project: str, repo: Path | None = None, branch: str = "", push: bool | None = None,
+         root: Path | None = None) -> dict:
+    """Write and commit the pool into `project`'s repository. Returns {"status": "committed"|"unchanged", "commit",
+    "branch", "repo", "pool", "pushed"}; raises SyncError when it cannot (nothing half-written is committed)."""
+    if not bt_ui._PROJECT.match(project or ""):
+        raise SyncError(f"invalid project {project!r}")
+    cfg = config(project, root)
+    repo = Path(repo) if repo else repo_for(project, cfg, root)
+    if not _git(repo, "rev-parse", "--git-dir", check=False):
+        raise SyncError(f"{repo} is not a git repository")
+    branch = default_branch(repo, branch or cfg.get("branch", ""))
+    if not _git(repo, "rev-parse", "--verify", "-q", f"refs/heads/{branch}", check=False):
+        raise SyncError(f"{repo}: branch {branch} does not exist")
+    data = payload(project)
+    pool = json.loads(data[STAMP])["pool"]
+    message = _message(project, data)
+    worktree = _checked_out(repo, branch)
+    commit = _commit_in_worktree(worktree, data, message) if worktree else _commit_plumbing(repo, branch, data, message)
+    result = {"status": "committed" if commit else "unchanged", "commit": commit or _git(repo, "rev-parse", branch),
+              "branch": branch, "repo": str(repo), "pool": pool, "pushed": None}
+    if commit and (cfg.get("push") is True if push is None else push):
+        done = subprocess.run(["git", "-C", str(repo), "push", "origin", branch], capture_output=True, text=True,
+                              check=False)
+        result["pushed"] = done.returncode == 0 or (done.stderr or done.stdout).strip()[-300:]
+    return result
+
+
+def opted_in(root: Path | None = None) -> list[str]:
+    from bt_core import ROOT
+    base = Path(root or ROOT)
+    return sorted(p.parent.name for p in base.glob("*/project.json") if config(p.parent.name, base).get("sync") is True)
+
+
+def sync_all(note=print, root: Path | None = None) -> dict[str, dict | str]:
+    """Sync every opted-in project; a failure is reported, never raised (a merge in metodologia is already done)."""
+    out: dict[str, dict | str] = {}
+    for project in opted_in(root):
+        try:
+            r = sync(project, root=root)
+            out[project] = r
+            note(f"@bitacora/ui → {project}: {r['status']} {r['commit'][:12]} on {r['branch']} (pool {r['pool']})"
+                 + (f", push: {r['pushed']}" if r["pushed"] not in (None, True) else ", pushed" if r["pushed"] else ""))
+        except (SyncError, OSError) as exc:
+            out[project] = str(exc)
+            note(f"WARNING @bitacora/ui not synced into {project}: {exc}")
+    return out
+
+
+def describe(result: dict) -> str:
+    return (f"{result['status']}: {result['repo']} {result['branch']} {result['commit'][:12]} · pool {result['pool']}"
+            + (f" · push {result['pushed']}" if result.get("pushed") is not None else ""))

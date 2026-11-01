@@ -25,7 +25,9 @@ Under one machine-wide lock (flock on `<state>/integrate.lock`), in this order:
      started); a failed smoke reverts the merge the same way (deploy worktree, ff-only, restart) and says so. When the
      remote API's pinned release copy lacks what the merge changed in the paths it runs, the copy of the merge is made,
      the drop-in repinned and `bitacora-remote-api.service` restarted and smoked with the others; a failed smoke puts
-     the previous pin back; a passing one prunes old copies (`bt_remote_pin`, D-274);
+     the previous pin back; a passing one prunes old copies (`bt_remote_pin`, D-274). A passing smoke of a merge that
+     changes the component pool (`skill/ui/`) then writes it into every opted-in project's repository and commits it
+     on that project's default branch (`bitacora.py components sync --all`, D-280);
   7. after a passing smoke, clean up: when the branch's worktree is clean (no tracked change, no untracked file),
      `git worktree remove` it and `git branch -d` the branch (never -D). `--keep-worktree` skips this; a caller whose
      cwd is inside that worktree keeps it and gets the command instead; the live checkout and the deploy worktree are
@@ -155,6 +157,8 @@ CATCH_UP_RUNS = 2
 
 # what the live venv's install is made from: a merge that changes one refreshes it before the restart (D-277)
 VENV_PATHS = ("pyproject.toml", "uv.lock")
+# the component pool: a merge that changes it is written into every opted-in project after the smoke (D-280)
+UI_PATH = "skill/ui/"
 VENV_SYNC_SECONDS = 600
 
 def runtime_path(path: str) -> bool:
@@ -367,6 +371,19 @@ class Services:
             if not problems or time.monotonic() >= deadline:
                 return problems
             time.sleep(3)
+
+    def sync_ui(self, live: Path) -> str:
+        """Write the merged component pool into every opted-in project and commit it there (D-280), with the live
+        checkout's code and pool. Returns its report; never raises (main is already integrated)."""
+        live = Path(live)
+        python = live / ".venv" / "bin" / "python"
+        try:
+            done = subprocess.run([str(python if python.is_file() else sys.executable),
+                                   str(live / "skill" / "scripts" / "bitacora.py"), "components", "sync", "--all"],
+                                  cwd=str(live), capture_output=True, text=True, timeout=600, check=False)
+        except (OSError, subprocess.TimeoutExpired) as error:
+            return f"WARNING @bitacora/ui sync did not run ({error})"
+        return (done.stdout + done.stderr).strip()[-1500:] or "@bitacora/ui: no project opts in (project.json ui.sync)"
 
     def refresh_venv(self, live: Path) -> str:
         """Reinstall the live checkout's project into its venv from the lock (`uv sync --frozen`: the lock is never
@@ -689,6 +706,9 @@ def _integrate(req: Request, services: Services, note: Callable[[str], None], li
             _ledger_add("Integrated without regression", f"- {dt.datetime.now():%Y-%m-%d %H:%M} · `{merge[:12]}` · "
                         f"{req.title} · {len(paths)} path(s): {', '.join(paths[:6])}" + (" …" if len(paths) > 6 else ""),
                         req.ledger)
+        if any(p.startswith(UI_PATH) for p in paths) and hasattr(services, "sync_ui"):
+            for line in services.sync_ui(Path(req.live)).splitlines():   # the pool reaches projects directly (D-280)
+                note(line)
         if selective:
             import bt_integrate_post
             bt_integrate_post.start(req, merge, log, services, note)

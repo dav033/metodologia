@@ -228,12 +228,37 @@ def _event(rdir: Path, who: str, text: str, entry: dict, kind: str = "design") -
 
 
 def _archive(rdir: Path, ref: str, rev: int) -> None:
-    """Keep each finished revision (`design/history/<ref>/r<N>.md|.html`) so the owner can compare versions."""
+    """Keep each finished revision (`design/history/<ref>/r<N>.md|.html|.tsx`) so the owner can compare versions; the
+    TSX lets an old revision render live against the current pool (D-280)."""
     target = Path(rdir) / DIR / "history" / ref
     target.mkdir(parents=True, exist_ok=True)
-    for source, suffix in zip(paths(rdir, ref), (".md", ".html"), strict=True):
-        if source.is_file():
+    tsx = source_tsx(rdir, ref)
+    for source, suffix in (*zip(paths(rdir, ref), (".md", ".html"), strict=True), (tsx, ".tsx")):
+        if source is not None and source.is_file():
             (target / f"r{rev}{suffix}").write_bytes(source.read_bytes())
+
+
+def source_tsx(rdir: Path, ref: str) -> Path | None:
+    """The TSX the current mockup of `ref` is built from (D-280): `design/<ref>.tsx` written with it, else the source of
+    the last plan-change update (`amend_source`), else the chosen direction's entry. None for a mockup with no source
+    (written before D-280 or by the plain-HTML fallback kit)."""
+    own = paths(rdir, ref)[1].with_suffix(".tsx")
+    if own.is_file():
+        return own
+    try:
+        entry = _load(rdir)["drafts"].get(ref) or {}
+    except (OSError, ValueError, KeyError):
+        return None
+    amend = entry.get("amend_source")
+    if isinstance(amend, str) and re.fullmatch(r"[\w@.-]+\.tsx", amend) and (Path(rdir) / DIR / amend).is_file():
+        return Path(rdir) / DIR / amend
+    chosen = next((d for d in entry.get("directions") or [] if isinstance(d, dict) and d.get("id") == entry.get("chosen")),
+                  None)
+    if chosen and isinstance(chosen.get("revision"), int):
+        import bt_design_directions
+        tsx = bt_design_directions.files(rdir, ref, chosen["revision"], chosen["id"])["tsx"]
+        return tsx if tsx.is_file() else None
+    return None
 
 
 def revision_file(rdir: Path, ref: str, rev: int | None, suffix: str) -> Path:
@@ -448,6 +473,8 @@ def pin_for_plan(rdir: Path, refs: list[str] | None = None) -> list[str]:
             frozen.write_bytes(blob)
             if paths(rdir, ref)[1].is_file():
                 frozen.with_suffix(".html").write_bytes(paths(rdir, ref)[1].read_bytes())
+            if (tsx := source_tsx(rdir, ref)) is not None:     # the screen the implementer starts from (D-280)
+                frozen.with_suffix(".tsx").write_bytes(tsx.read_bytes())
             approval.approve_planning_draft(rdir, ref, blob, frozen.as_posix())
             data["drafts"][ref].update({"status": "approved", "approved": _now()})
         return list(blobs)
@@ -458,11 +485,12 @@ def execution_notes(rdir: Path, ref: str) -> str:
     import bt_design_approval as approval
     record = approval.approvals(rdir).get(ref) if (Path(rdir) / approval.FILE).exists() else None
     frozen = Path(rdir) / DIR / "history" / ref / "approved.md"
-    html = frozen.with_suffix(".html")
+    html, tsx = frozen.with_suffix(".html"), frozen.with_suffix(".tsx")
     if not isinstance(record, dict) or record.get("via") != "plan" or not frozen.is_file() or \
             hashlib.sha256(frozen.read_bytes()).hexdigest() != record.get("sha256"):
         return ""
-    return f"Planning draft: {frozen.as_posix()}" + (f"\nPlanning mockup: {html.as_posix()}" if html.is_file() else "")
+    return (f"Planning draft: {frozen.as_posix()}" + (f"\nPlanning mockup: {html.as_posix()}" if html.is_file() else "")
+            + (f"\nPlanning TSX: {tsx.as_posix()}" if tsx.is_file() else ""))
 
 
 def follow_project(root: Path, project: str) -> list[str]:
