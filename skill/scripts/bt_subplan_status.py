@@ -175,6 +175,9 @@ def status(ctx: dict, s: dict, shared: dict) -> dict:
                                                                               if queued.get("error") else "")})
     elif flow is not None and state == "confirmed" and not staged and s["tasks"]:
         you.append({"kind": "run", "text": "Mandarlo a ejecutar: aprobarlo como etapa", "action": "run", "view": ""})
+    if staged and (waiting := (shared.get("join_confirm") or {}).get(sid)):     # D-275: the join waits for you
+        you.append({"kind": "run", "text": f"Confirmar que se rehagan {len(waiting['tasks'])} tareas aceptadas para unir "
+                                           f"la etapa r{waiting['revision']} a la ejecución", "action": "run", "view": ""})
     waits: dict[str, list[str]] = {}
     for t in own:
         attempt = t.get("attempt") or {}
@@ -247,6 +250,15 @@ def _stages(ctx: dict) -> dict:
         return {}
 
 
+def _join_confirm(ctx: dict, held) -> dict[str, dict]:
+    """Held subplan -> the stage join waiting for the owner's confirmation where it concerns that subplan (D-275)."""
+    try:
+        import bt_page_planning_flow as flow_view
+        return {sid: w for sid in held if (w := flow_view.join_confirmation(ctx, sid))}
+    except Exception:  # noqa: BLE001 - nothing to confirm when it cannot be read
+        return {}
+
+
 def _corrections(ctx: dict) -> dict:
     try:
         import bt_verification_correction as correction
@@ -274,7 +286,7 @@ def statuses(ctx: dict) -> dict[str, dict]:
     stages = _stages(ctx)
     shared = {"rounds": _rounds(rdir), "inputs": inputs, "run": run, "tasks": _tasks_by_id(run), "gates": _gates(rdir),
               "decisions": decisions, "decided": {d.get("task") for d in decisions}, "held": set(stages.get("held") or ()),
-              "queued": stages.get("queued") or {},
+              "queued": stages.get("queued") or {}, "join_confirm": _join_confirm(ctx, stages.get("held") or ()),
               "verified": {r["id"]: r for r in ver["subplans"]}, "events": activity.events(rdir, 300),
               "corrections": _corrections(ctx) if any((r.get("decision") or {}).get("decision") == "rejected"
                                                       for r in ver["subplans"]) else {}}
