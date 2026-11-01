@@ -30,9 +30,9 @@
    "via": "web"
   },
   "SP-10": {
-   "at": "2026-11-01T10:51:31-05:00",
+   "at": "2026-11-01T11:32:52-05:00",
    "by": "policy",
-   "digest": "9d426f2da25d5f92",
+   "digest": "b7b2906f9d77d11f",
    "history": [
     {
      "at": "2026-10-31T09:56:35-05:00",
@@ -84,20 +84,42 @@
       "rule": "D-241"
      },
      "via": "policy"
+    },
+    {
+     "at": "2026-11-01T10:51:31-05:00",
+     "by": "policy",
+     "digest": "9d426f2da25d5f92",
+     "policy": {
+      "evidence": [
+       "RUN.notes/T10.5.manual-observation-r37.md"
+      ],
+      "previous": {
+       "at": "2026-11-01T10:15:11-05:00",
+       "by": "policy",
+       "digest": "2684000c301459c3",
+       "via": "policy"
+      },
+      "repair": [
+       "T10.453"
+      ],
+      "requested_by": "planner",
+      "rule": "D-241"
+     },
+     "via": "policy"
     }
    ],
    "policy": {
     "evidence": [
-     "RUN.notes/T10.5.manual-observation-r37.md"
+     "RUN.notes/T10.5.manual-observation-r38.md"
     ],
     "previous": {
-     "at": "2026-11-01T10:15:11-05:00",
+     "at": "2026-11-01T10:51:31-05:00",
      "by": "policy",
-     "digest": "2684000c301459c3",
+     "digest": "9d426f2da25d5f92",
      "via": "policy"
     },
     "repair": [
-     "T10.453"
+     "T10.454"
     ],
     "requested_by": "planner",
     "rule": "D-241"

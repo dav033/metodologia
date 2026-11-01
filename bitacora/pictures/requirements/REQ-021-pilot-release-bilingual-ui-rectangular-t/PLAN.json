@@ -12947,6 +12947,136 @@
       "ui": false
     },
     {
+      "id": "T10.454",
+      "milestone_id": "M3",
+      "title": "English subtitles for guided-chat idea cards through the SP-9 pipeline",
+      "objective": "Owner decision 2026-11-01 (~11:55, relayed by the operator, «Dentro: traducirlos»; closes P-215): the idea card subtitles are inside T10.5's criterion «an English conversation receives an English reply» and are translated with the project's own tool, accepting its provider token spend. Evidence: RUN.notes/T10.5.manual-observation-r38.md on candidate 35670557 (a38776b4 + T10.451 + T10.452 + T10.453): reply, chrome and the six card titles are English; the six subtitles stay Spanish (\"Rosa y dorado\", \"Baby shower niña\"…). Builds on the accepted T10.451-T10.453 files (already in the candidate; the graph edge goes to T10.442 only to keep the SP-10 implement chain within six). Cause: src/components/guiado/CarruselDecoraciones.tsx renders decoracion.tematica as the subtitle; SP-9 data (data/textos-ingles/ideas.json) has only name and description per idea, the route's substitution (src/lib/ia/guiado/nombres-decoracion-ingles.ts) replaces only titulo, and cargarNombresDecoracionIngles (src/lib/textos-ingles/aplicar.ts) loads only field name. Follow the project's pipeline in scripts/textos (fuentes, traducir, validar, sembrar); never hand-write English: add the guided-chat library decorations' tematica as an SP-9 field of kind campo_decoracion (scripts/textos/fuentes.ts) with the same id form T10.453 used for their names; run npm run textos:traducir -- --solo-faltantes ONCE so only the missing subtitle entries are translated (its provider is the local Claude CLI, claude -p --model claude-haiku-5-5, batches of 40, up to 6 concurrent; the owner's token-spend acceptance covers exactly that run), no retry loops, existing translations byte-identical, and record the provider and the count of translated entries; make textos:validar fail on any library subtitle without English; load the new field next to the name and apply it in the route's substitution guarded by its Spanish source like the title, so the card renders the English subtitle in English with the Spanish text as fallback only when no current English text exists. The stored brief theme, catalogue search arguments (Spanish), prompts and Spanish rendering stay unchanged. Author scripts/test/test-chat-guiado-subtitulos-ingles.ts and register only idioma:test-chat-subtitulos, reusing the T10.452/T10.453 real-route harness helpers (POST handler, stub provider, SSE fin, invocation-owned isolated database seeded through the existing textos:sembrar library); expected English comes from the SP-9 data, never from the function under test; show red on 35670557 and green after. No live chat provider in tests, production data, or change to any other task, criterion, check or gate. T10.5 then reruns unchanged; its manual observation stays NOT_RUN until genuinely re-observed.",
+      "repository": "pictures",
+      "after": [
+        "T10.442"
+      ],
+      "complexity": "low",
+      "scope": "small_change",
+      "estimated_minutes": 75,
+      "risk": "medium",
+      "coupling": "medium",
+      "confidence": "high",
+      "estimate_rationale": "Agent estimate in minutes: 15 SP-9 field in source, loader and route substitution + 15 one textos:traducir run and review + 10 validator rule and negative + 25 real-route regression + 10 red/green = 75.",
+      "classification_evidence": {
+        "complexity": {
+          "justification": "One more SP-9 field through the existing source, translate, validate, seed and substitution path that T10.453 already extended for names.",
+          "evidence": [
+            "file:src/components/guiado/CarruselDecoraciones.tsx",
+            "task:T10.453"
+          ]
+        },
+        "scope": {
+          "justification": "SP-9 source, validator and data, the loader, the route substitution and one regression script.",
+          "evidence": [
+            "file:src/lib/biblioteca-sempertex/decoraciones.json",
+            "task:T9.2"
+          ]
+        },
+        "duration": {
+          "justification": "Fifteen, fifteen, ten, twenty-five and ten minutes make seventy-five.",
+          "evidence": [
+            "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind implement -> no comparable samples",
+            "task:T10.453"
+          ]
+        },
+        "risk": {
+          "justification": "A subtitle copied from the title or left Spanish reaches every English customer; one translator run spends provider tokens the owner accepted.",
+          "evidence": [
+            "file:src/components/guiado/CarruselDecoraciones.tsx",
+            "spec:SPEC.md#requirements"
+          ]
+        },
+        "coupling": {
+          "justification": "Extends the SP-9 texts and the T10.453 reply path; T10.5 reruns on the result.",
+          "evidence": [
+            "task:T9.2",
+            "task:T10.453",
+            "task:T10.5"
+          ]
+        },
+        "confidence": {
+          "justification": "The observation shows only subtitles remain Spanish and the renderer reads tematica.",
+          "evidence": [
+            "file:src/components/guiado/CarruselDecoraciones.tsx",
+            "task:T10.5"
+          ]
+        }
+      },
+      "expected_paths": [
+        "scripts/textos/fuentes.ts",
+        "scripts/textos/validacion.ts",
+        "scripts/textos/test-textos-scripts.ts",
+        "data/textos-ingles/ideas.json",
+        "src/lib/textos-ingles/aplicar.ts",
+        "src/lib/ia/guiado/nombres-decoracion-ingles.ts",
+        "src/app/api/asistente-guiado/route.ts",
+        "scripts/test/test-chat-guiado-subtitulos-ingles.ts"
+      ],
+      "shared_resources": [
+        "package.json scripts:idioma:test-chat-subtitulos",
+        "contract:idioma",
+        "contract:textos-ingles"
+      ],
+      "acceptance_criteria": [
+        "Through the real guided-chat API route with a controlled stub provider and an isolated database seeded by the existing SP-9 seeding library from the repository's data, every idea card of the guided-chat library reaches an English conversation with its SP-9 English subtitle (the decoration tematica) as well as its English title, never a copy of the title; a Spanish conversation receives every title and subtitle unchanged; the regression fails on the r38 candidate.",
+        "npm run textos:validar reports complete English coverage that now includes the subtitle of every guided-chat library decoration; every English text that existed before is byte-identical and the new subtitles were produced by one run of the project's own npm run textos:traducir -- --solo-faltantes, whose provider/model (Claude CLI, claude-haiku-5-5) and number of translated entries are recorded in the task evidence.",
+        "The SP-9 script tests pass with every existing case kept, plus a negative fixture in which one guided-chat library decoration subtitle has no English text and validation fails naming it.",
+        "The T10.453 real-route regression passes unchanged for English colour names and the English titles of the whole guided-chat library.",
+        "The complete repository passes strict TypeScript after the repair without casts, suppressions or relaxed settings."
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npm run idioma:test-chat-subtitulos",
+          "purpose": "Through the real guided-chat API route with a controlled stub provider and an isolated database seeded by the existing SP-9 seeding library from the repository's data, every idea card of the guided-chat library reaches an English conversation with its SP-9 English subtitle (the decoration tematica) as well as its English title, never a copy of the title; a Spanish conversation receives every title and subtitle unchanged; the regression fails on the r38 candidate.",
+          "created_by": "T10.454",
+          "category": "regression",
+          "requires": [
+            "PICTURES_REQ021_DATABASE_URL"
+          ]
+        },
+        {
+          "type": "command",
+          "value": "npm run textos:validar",
+          "purpose": "npm run textos:validar reports complete English coverage that now includes the subtitle of every guided-chat library decoration; every English text that existed before is byte-identical and the new subtitles were produced by one run of the project's own npm run textos:traducir -- --solo-faltantes, whose provider/model (Claude CLI, claude-haiku-5-5) and number of translated entries are recorded in the task evidence.",
+          "category": "static"
+        },
+        {
+          "type": "command",
+          "value": "npm run textos:test-scripts",
+          "purpose": "The SP-9 script tests pass with every existing case kept, plus a negative fixture in which one guided-chat library decoration subtitle has no English text and validation fails naming it.",
+          "category": "regression"
+        },
+        {
+          "type": "command",
+          "value": "npm run idioma:test-chat-colores",
+          "purpose": "The T10.453 real-route regression passes unchanged for English colour names and the English titles of the whole guided-chat library.",
+          "created_by": "T10.453",
+          "category": "regression",
+          "requires": [
+            "PICTURES_REQ021_DATABASE_URL"
+          ]
+        },
+        {
+          "type": "command",
+          "value": "NODE_OPTIONS=--max-old-space-size=4096 npx --no-install tsc --noEmit --incremental false",
+          "purpose": "The complete repository passes strict TypeScript after the repair without casts, suppressions or relaxed settings.",
+          "category": "static"
+        }
+      ],
+      "covers": [
+        "R12"
+      ],
+      "kind": "implement",
+      "subplan_id": "SP-10",
+      "ui": false
+    },
+    {
       "id": "T10.5",
       "milestone_id": "M3",
       "title": "Browser end-to-end: external screens and one live AI turn in English",
@@ -12956,7 +13086,8 @@
         "T10.45",
         "T10.451",
         "T10.452",
-        "T10.453"
+        "T10.453",
+        "T10.454"
       ],
       "complexity": "medium",
       "scope": "small_change",
