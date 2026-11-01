@@ -24,6 +24,7 @@ from pathlib import Path
 
 from bt_contracts.execution import RunRef
 
+from .. import reconcile
 from ..legacy import Plan, TaskSpec, create_composition_engine
 
 VERIFIER = "bt_durable"
@@ -63,6 +64,11 @@ class CompositionComposer:
         role = plan.task(gate.task).repository
         engine, store = self._engine(run, role)
         repo = self.lines._repo(role)
+        waiting = self._unreconciled(run, gate, role, repo)
+        if waiting:
+            return {"state": "rejected", "reason": f"{reconcile.PENDING}: {', '.join(waiting)}", "conflicts": {}}
+        import bt_verification_tree as tree_rules
+        resolutions = self.state_dir / "composition" / "resolutions"
         base = self.lines.line_base(run, role)
         built = [c for c in store.list_candidates(self.plan_id(run)) if c.state != "rejected" and c.integrated_commit]
         versions, previous = {}, ""
@@ -74,7 +80,11 @@ class CompositionComposer:
             # often contains an earlier one (pictures REQ-021: SP-2 ⊇ SP-1). Folded as a delta from the run line's
             # base, the shared work would be applied twice and conflict with itself; measured from its merge base with
             # the member folded just before it, a member brings only what it adds (the run line's base otherwise).
-            own_base = (_prior_candidate(repo, tip, built, set(versions))
+            # A line that holds the member before it, as a reconciled line does (D-297), adds only what it adds over that
+            # member: measured from an older commit (an earlier candidate, its first snapshot) it would meet the newer
+            # version of what it already combined, and an agent would settle the same clash again.
+            own_base = ((previous if previous and tree_rules.holds(repo, tip, previous, resolutions) else "")
+                        or _prior_candidate(repo, tip, built, set(versions))
                         or _own_work_base(repo, tip, evidence.get(subplan_id, ())) or _merge_base(repo, tip, previous)
                         or base)
             previous = tip
@@ -89,6 +99,32 @@ class CompositionComposer:
         return {"state": candidate.state, "candidate_id": candidate.id, "commit": candidate.integrated_commit,
                 "members": dict(candidate.members), "reason": candidate.reason_code or "",
                 "conflicts": {key: list(value) for key, value in (candidate.conflicts or {}).items()}}
+
+    def _unreconciled(self, run: RunRef, gate, role: str, repo: Path) -> list[str]:
+        """The gate's members whose line does not yet hold the lines it builds on (`bt_durable.reconcile`, D-297). Composed
+        now they would conflict and ask an agent to settle again, against other merge bases, the clash the reconciliation
+        settles once. Its next pass sends `recheck_gates`. Empty when reconciliation is off."""
+        if not reconcile.enabled():
+            return []
+        import json
+
+        import bt_verification_tree as tree
+        try:
+            doc = json.loads(Path(run.plan_path).read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            return []
+        names = {"project": run.project, "req": run.req, "revision": run.revision}
+        resolutions = self.state_dir / "composition" / "resolutions"
+        out = []
+        for subplan_id in gate.subplans:
+            tip = self.lines._tip(repo, self.lines.subplan_ref(run, role, subplan_id))
+            preds = [(p, self.lines._tip(repo, self.lines.subplan_ref(run, role, p))) for p in tree.predecessors(doc, subplan_id)]
+            preds = [(p, line) for p, line in preds if line]
+            if tip and preds:
+                done = tree.fold(repo, tip, preds, tree.try_ref(names, role, subplan_id), resolutions)
+                if done["conflict"] or done["commit"] != tip:
+                    out.append(subplan_id)
+        return out
 
     def stale_members(self, run: RunRef, gate_id: str, snapshot: str) -> list[str]:
         """The members of a passed gate whose subplan line now holds work the gate's accepted snapshot was not built on

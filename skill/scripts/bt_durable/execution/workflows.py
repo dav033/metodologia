@@ -42,6 +42,7 @@ from dbos._error import (
 )
 
 from ..control import classify, frontier, policy, subplans
+from ..reconcile import PENDING as RECONCILE_PENDING
 from ..settings import Settings
 from . import engine, integration_policy, recovery_policy, steps
 
@@ -59,6 +60,9 @@ PATCH_RUN_STEP_FAILURES = "bt-run-survives-step-failures"
 PATCH_RUN_REOPENED = "bt-run-reopened"
 PATCH_RUN_RECOMPOSE = "bt-run-recompose-gate"
 PATCH_RUN_FRESH_GATES = "bt-run-fresh-gates"
+# D-297 (pictures REQ-021 r39: T98/T99 still counted on r26's versions): a later gate supersedes a passed one only if it
+# judged, is judging or can compose now, and a passed gate rejected on recomposition stops counting as passed
+PATCH_RUN_LIVE_GATES = "bt-run-live-gates"
 # D-262 (pictures REQ-021 r32 T2.57): readiness through inherited tasks, a round handed back while its ancestors are not
 # done, a continuing retry caught up with its line, and the UI contract checked on the base before an agent runs
 PATCH_RUN_TRANSITIVE = "bt-run-transitive-readiness"
@@ -145,6 +149,7 @@ def run_workflow(run_data: dict, settings_data: dict, legacy_data: dict) -> dict
     fresh_on = False
     fresh_seen: dict[str, frozenset] = {}
     fresh_failures: dict[str, int] = {}
+    live_gates = False
     # an incarnation forked by `reopen` from a run that ended blocked waits for the owner's command that reopened it
     # (a retry) instead of ending again at once; the original run never takes this path. Incarnation `@N` replays the
     # reopenings of `@2`..`@N-1` from its history, so it waits once more than they did: N-1 reopenings in all
@@ -183,8 +188,17 @@ def run_workflow(run_data: dict, settings_data: dict, legacy_data: dict) -> dict
             if fresh_on and synced:                     # every line holds every accepted snapshot
                 # keyed by the snapshots, not only the task ids: a member's new round (an audit's coordinated repair)
                 # changes its line without changing which tasks are accepted
-                _refresh_gates(run, plan, states, results, accepted, frozenset(accepted.items()), rounds, settings,
-                               subplans.Gates(composed, rejected), composed, rejected, fresh_seen, fresh_failures)
+                seen = frozenset(accepted.items())
+                # right before a plain step: an older history holds the step or event it recorded here
+                if not live_gates and (any(fresh_seen.get(g.id) != seen and accepted.get(g.task) for g in
+                                           subplans.fresh_targets(plan, states, subplans.Gates(composed, rejected), True))
+                                       or any(states.get(t) in frontier.DONE for t in subplans.judged_again(
+                                           plan, subplans.Gates(composed, rejected)))) \
+                        and DBOS.patch(PATCH_RUN_LIVE_GATES):
+                    live_gates = True
+                _refresh_gates(run, plan, states, results, accepted, seen, rounds, settings,
+                               subplans.Gates(composed, rejected, live_gates), composed, rejected, fresh_seen,
+                               fresh_failures)
             for gate in subplans.to_compose(plan, states, subplans.Gates(composed, rejected)):
                 try:
                     built = steps.compose(run_data, gate.id, {sp: subplans.evidence(plan, sp, results)
@@ -203,7 +217,7 @@ def run_workflow(run_data: dict, settings_data: dict, legacy_data: dict) -> dict
                 else:
                     composed[gate.id] = str(built.get("candidate_id"))
                 steps.emit("gate_composed", {"run_id": run.run_id, "gate": gate.id, **built})
-        gates = subplans.Gates(composed, rejected) if lines_on else None
+        gates = subplans.Gates(composed, rejected, live_gates) if lines_on else None
         # an older iteration records a task start or the summary event here (the patch returns False); a new history
         # records the marker and then a plain step (bt.emit), never a wait
         if not transitive_on and DBOS.patch(PATCH_RUN_TRANSITIVE):
@@ -217,10 +231,12 @@ def run_workflow(run_data: dict, settings_data: dict, legacy_data: dict) -> dict
                 _start_task(run, task_id, rounds[task_id], settings, note="",
                             legacy=reconcile.get(task_id) if rounds[task_id] == 1 else None)
                 states[task_id] = "running"
-        DBOS.set_event("summary", _summary(run, states, results, paused, gates))
+        DBOS.set_event("summary", _summary(run, states, results, paused, gates, plan=plan))
         if front.finished:
             break
         retrying = [g for g in compose_failures if g not in composed and g not in rejected]
+        # a gate held for a subplan line still being reconciled: `recheck_gates` composes it, so the run does not end
+        retrying += [g for g, why in rejected.items() if why.startswith(RECONCILE_PENDING)]
         if not paused and not any(s == "running" for s in states.values()) and not front.ready and not retrying \
                 and not awaiting_command:
             if reopenings < incarnation - 1 and DBOS.patch(PATCH_RUN_REOPENED):
@@ -288,6 +304,14 @@ def run_workflow(run_data: dict, settings_data: dict, legacy_data: dict) -> dict
             compose_failures.pop(gate_id, None)
             fresh_seen.pop(gate_id, None)               # a passed gate rejected on recomposition is checked again
             fresh_failures.pop(gate_id, None)
+        elif command.kind == "recheck_gates":
+            # subplan lines moved outside any task (bt_durable.reconcile, D-297): compose what they held back and check
+            # the passed gates against the new versions. Only a message sent since then takes this path
+            for gate_id in list(rejected):
+                steps.emit("gate_recompose", {"run_id": run.run_id, "gate": gate_id, "previous": rejected.pop(gate_id)})
+            compose_failures.clear()
+            fresh_seen.clear()
+            fresh_failures.clear()
         elif command.kind == "retry_task" and command.task_id and states.get(command.task_id) in frontier.STOPPED:
             if command.task_id in remediations:         # the owner retrying a blocked audit grants it one more round
                 remediations[command.task_id]["extra"] += 1
@@ -297,8 +321,8 @@ def run_workflow(run_data: dict, settings_data: dict, legacy_data: dict) -> dict
         else:
             steps.emit("command_refused", {"run_id": run.run_id, "request_id": command.request_id,
                                            "reason": f"{command.kind} does not apply to the current state"})
-    summary = _summary(run, states, results, paused, subplans.Gates(composed, rejected) if lines_on else None,
-                       final=True, finished=front.finished)
+    summary = _summary(run, states, results, paused, subplans.Gates(composed, rejected, live_gates) if lines_on else None,
+                       final=True, finished=front.finished, plan=plan)
     DBOS.set_event("summary", summary)
     steps.emit("run_settled", {"run_id": run.run_id, "status": summary["status"]})
     return summary
@@ -310,7 +334,7 @@ def _refresh_gates(run: RunRef, plan, states: dict, results: dict, accepted: dic
     """Compose again a passed gate that no later gate supersedes when a member's line holds work its gate task was not
     verified with, and run the gate task again on the new candidate (its checks judge the new combination). Checked
     once per accepted set (`fresh_seen`), so an unchanged run takes no step; deterministic: every input is recorded."""
-    due = [gate for gate in subplans.fresh_targets(plan, states, gates)
+    due = [gate for gate in subplans.fresh_targets(plan, states, gates, gates.strict)
            if fresh_seen.get(gate.id) != seen and accepted.get(gate.task)]
     if not due:
         return
@@ -477,9 +501,10 @@ def _start_task(run: RunRef, task_id: str, round_no: int, settings: Settings, no
 
 
 def _summary(run: RunRef, states: dict, results: dict, paused: bool, gates: subplans.Gates | None = None,
-             final: bool = False, finished: bool = False) -> dict:
+             final: bool = False, finished: bool = False, plan=None) -> dict:
     """`finished`: every task of the PLAN is done (`states` holds only the tasks that started: a run that stops with a
-    gate task never started is not completed)."""
+    gate task never started is not completed). A gate task whose gate was rejected after it passed is not shown as done,
+    and a stage join does not inherit it (D-297)."""
     values = set(states.values())
     if final:
         stuck = bool(values & frontier.STOPPED) or bool(gates is not None and gates.rejected)
@@ -487,6 +512,9 @@ def _summary(run: RunRef, states: dict, results: dict, paused: bool, gates: subp
     else:
         status = "paused" if paused else "running"
     out = {"run_id": run.run_id, "status": status, "tasks": dict(states), "results": results}
+    if gates is not None and gates.strict and plan is not None:
+        out["tasks"].update({task: "blocked" for task in subplans.judged_again(plan, gates)
+                             if states.get(task) in frontier.DONE})
     if gates is not None:
         out["gates"] = {"composed": dict(gates.composed), "rejected": dict(gates.rejected)}
     return out

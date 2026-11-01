@@ -61,9 +61,11 @@ def complete(plan: Plan, states: Mapping[str, str], subplan_id: str) -> bool:
 
 @dataclass(frozen=True)
 class Gates:
-    """The run's gate facts: `composed` gate id -> candidate id (built, not rejected); `rejected` gate id -> reason."""
+    """The run's gate facts: `composed` gate id -> candidate id (built, not rejected); `rejected` gate id -> reason.
+    `strict` (D-297, off in histories recorded before it): a passed gate rejected on recomposition no longer counts."""
     composed: Mapping[str, str] = field(default_factory=dict)
     rejected: Mapping[str, str] = field(default_factory=dict)
+    strict: bool = False
 
 
 def gate_ready(plan: Plan, states: Mapping[str, str], gate) -> bool:
@@ -94,30 +96,44 @@ def held(plan: Plan, states: Mapping[str, str], gates: Gates, task_id: str) -> s
             return f"{gate.id}: composition candidate not built yet"
     ancestors = plan.ancestors(task_id)
     for other in plan.composition_gates:
-        if other.task in ancestors and states.get(other.task) not in DONE:
+        if other.task in ancestors and (states.get(other.task) not in DONE or (gates.strict and other.id in gates.rejected)):
             return f"{other.id}: the gate has not passed"
     return ""
 
 
-def superseded(plan: Plan, gate) -> bool:
+def superseded(plan: Plan, gate, states: Mapping[str, str] | None = None) -> bool:
     """A later gate holds every member of `gate` (cumulative gates, pictures REQ-021 CG-1 ⊂ CG-4 ⊂ … ⊂ CG-12): that
-    gate verifies the combination again, so `gate` never needs to be composed again for a change of its members."""
+    gate verifies the combination again, so `gate` never needs to be composed again for a change of its members.
+
+    With `states` (D-297) only a later gate that judged, is judging or can compose now counts: one waiting for members not
+    built verifies nothing yet. pictures REQ-021 r39: CG-10..CG-12 wait behind SP-10 and the owner's T10.5, so no gate at all
+    was checked, and T98/T99 still counted on the versions of r26 while SP-2 had two more rounds of repairs."""
     ids = [item.id for item in plan.composition_gates]
     mine, at = set(gate.subplans), ids.index(gate.id)
-    return any(set(other.subplans) > mine or (set(other.subplans) == mine and index > at)
-               for index, other in enumerate(plan.composition_gates) if other.id != gate.id)
+    later = [other for index, other in enumerate(plan.composition_gates) if other.id != gate.id
+             and (set(other.subplans) > mine or (set(other.subplans) == mine and index > at))]
+    if states is None:
+        return bool(later)
+    return any(states.get(other.task) in DONE or states.get(other.task) == "running" or gate_ready(plan, states, other)
+               for other in later)
 
 
-def fresh_targets(plan: Plan, states: Mapping[str, str], gates: Gates) -> tuple:
+def fresh_targets(plan: Plan, states: Mapping[str, str], gates: Gates, live_later: bool = False) -> tuple:
     """Passed gates (their gate task accepted or inherited) that no later gate supersedes, whose members are complete
     and whose candidate is not rejected: the gates whose verified combination a newer member version would leave
     unverified (D-213 repairs integrate into their own subplan's line after the last gate holding it passed). A gate
-    that is not composed yet needs nothing: it composes from the members' current lines."""
+    that is not composed yet needs nothing: it composes from the members' current lines. `live_later`: see `superseded`."""
     if not enabled(plan):
         return ()
     return tuple(gate for gate in plan.composition_gates
-                 if states.get(gate.task) in DONE and gate.id not in gates.rejected and not superseded(plan, gate)
+                 if states.get(gate.task) in DONE and gate.id not in gates.rejected
+                 and not superseded(plan, gate, states if live_later else None)
                  and gate_ready(plan, states, gate))
+
+
+def judged_again(plan: Plan, gates: Gates) -> tuple[str, ...]:
+    """The gate tasks whose gate was rejected after they passed: their verdict does not stand (D-297)."""
+    return tuple(gate.task for gate in plan.composition_gates if gate.id in gates.rejected)
 
 
 def evidence(plan: Plan, subplan_id: str, results: Mapping[str, Mapping]) -> list[dict[str, str]]:

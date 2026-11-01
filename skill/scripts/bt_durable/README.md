@@ -156,10 +156,20 @@ engine (`bt_composition`, through `bt_composition_adapter`).
   out, D-173), and nothing after the gate starts before the gate task is accepted. A text conflict between members, or
   a composition that fails `COMPOSE_TURNS` turns, is a rejected candidate: the gate task is held and the run summary
   says why (`gates.rejected`); the owner's `retry-task` of the gate task composes the gate again.
+- Subplan lines keep up with the subplans they build on (D-297, `reconcile.py`): every maintenance pass folds each line,
+  in plan order, with its predecessors' lines by the composer's rules. A fold that changes the tree moves the line by CAS
+  (the same commit «Probar» offered, so the version and the owner's decision stand; an earlier subplan never moves for a
+  later one). A conflict moves nothing and opens the recorded-resolution requests, bound to the run, which the Solucionador
+  answers; a line whose predecessor is pending waits for it. A moved line sends `recheck_gates`. While a gate's member is
+  not reconciled the composer returns `RECONCILE_PENDING` instead of asking an agent to settle the same clash twice, and
+  the run does not end. A merge whose conflict is left out by design (`_caught_up`, `continuation_base`, `sync`, another
+  subplan's line, the run line) opens no request.
 - A gate that already passed is composed again when one of its members' lines takes newer accepted work (a repair a
-  later stage added to that subplan, D-213) and no later gate holds all its members (D-245, `bt-run-fresh-gates`; cumulative
-  gates need this only for the last one, and a gate not composed yet composes from the current lines anyway). Once per
-  accepted set the run asks `bt.gate_freshness` which members' line trees differ from the version commits the gate
+  later stage added to that subplan, D-213) and no later gate that judged, is judging or can compose now holds all its
+  members (D-245, `bt-run-fresh-gates`; D-297, `bt-run-live-gates`: a later gate waiting for members not built verifies
+  nothing yet), and a passed gate rejected on recomposition no longer counts as passed: what follows it waits and the
+  summary shows its task `blocked`. Cumulative gates need this only for the newest one that passed; a gate not composed
+  yet composes from the current lines anyway. Once per accepted set, and whenever `recheck_gates` arrives, the run asks `bt.gate_freshness` which members' line trees differ from the version commits the gate
   task's snapshot was built on (the candidate's `compose <plan> <SP>@v<N>` commits); a stale gate reports `gate_stale`,
   is composed again and its gate task runs a new round on the new candidate, so its checks judge the new combination
   (nothing after the gate starts meanwhile). A rejected recomposition holds the gate as above. The re-run is at least
@@ -398,7 +408,7 @@ engine code (exported with `git archive`) is recovered by the current code from 
 still be on the old path, `deprecate_patch`, then remove it.
 
 Patches in use: `bt-run-subplans`, `bt-run-audit-remediation`, `bt-run-survives-step-failures`, `bt-run-reopened`,
-`bt-run-recompose-gate`, `bt-run-fresh-gates` (run workflow); `bt-task-respects-pause`, `bt-task-owner-reverify`,
+`bt-run-recompose-gate`, `bt-run-fresh-gates`, `bt-run-live-gates` (run workflow); `bt-task-respects-pause`, `bt-task-owner-reverify`,
 `bt-task-reconcile-asks-owner`, `bt-task-continues-latest-tree` (task workflow); D-262: `bt-run-transitive-readiness`,
 `bt-run-requeues-unready-task` (run workflow), `bt-task-rechecks-ancestors`, `bt-task-retry-catches-up`,
 `bt-task-contract-gate`, `bt-task-no-change-is-not-check-failed`, `bt-task-heap-limit-is-not-sandbox-oom` (task

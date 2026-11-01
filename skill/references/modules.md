@@ -76,7 +76,9 @@ be simulated with `bt_scheduler_core.simulators`.
 owns the real Git port. It publishes immutable `SP@vN` refs, creates disposable `C<N>` candidates from published
 subplan versions, and advances `current` only after candidate-bound M6 verdict proofs pass. Rejected candidates leave
 the published composition intact. Selective propagation returns only evidence-supported actions; ancestry alone never
-triggers reimplementation. The package does not know project paths or launch agents.
+triggers reimplementation. The package does not know project paths or launch agents. In the durable runtime the subplan
+lines keep up with what they build on before any gate composes them (`bt_durable/reconcile.py`, D-297): one resolution of
+each clash, so the gates compose the tree the owner tried.
 
 The opt-in owner path lives in `bt_scheduler_owner_composition.py` and
 `bt_scheduler_owner_propagation.py`, wired by `bt_scheduler_run.py`. It binds its composition store and owned workspaces

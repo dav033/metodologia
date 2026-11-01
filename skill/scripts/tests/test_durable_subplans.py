@@ -280,8 +280,8 @@ class AtomicLines(unittest.TestCase):
         before_run, other = self.tip(self.run_line), self.snapshot("other.txt").snapshot_sha
         merge = self.lines._merge
 
-        def racing(repo, tip, snapshot, message):           # the last line's merge is done: then a writer moves it
-            out = merge(repo, tip, snapshot, message)
+        def racing(repo, tip, snapshot, message, ask=True):  # the last line's merge is done: then a writer moves it
+            out = merge(repo, tip, snapshot, message, ask)
             if "(SP-1)" in message:
                 lab_support.git(self.repo, "update-ref", self.sp_line, other)
             return out
@@ -333,11 +333,9 @@ class OtherSubplansLine(AtomicLines):
         self.assertIn("(line of SP-2)", conflict)
 
     def test_without_a_home_every_line_must_take_it(self):
-        """A gate task (or a caller that names no home) keeps the old rule: its base is caught up with the lines."""
-        for home in ("", "gate:CG-1"):
-            _tip, conflict, _note, _left = self.lines.integrate(self.run_ref, self.task, self.snap,
-                                                                lines=("SP-1", "SP-2"), home=home)
-            self.assertIn("(line of SP-2)", conflict)
+        """A caller that names no home keeps the old rule (a gate task no longer does: D-289, test_durable_line_pin)."""
+        _tip, conflict, _note, _left = self.lines.integrate(self.run_ref, self.task, self.snap, lines=("SP-1", "SP-2"), home="")
+        self.assertIn("(line of SP-2)", conflict)
 
     test_a_line_moved_in_between_leaves_every_line_as_it_was = None
 
