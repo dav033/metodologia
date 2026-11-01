@@ -142,6 +142,52 @@ class DraftTests(unittest.TestCase):
         self.assertIn("Planning draft:", drafts.execution_notes(self.rdir, "checkout@v1"))
         self.assertIn("ya fue aprobado", drafts.add_feedback("demo", self.rdir, "checkout@v1", "more", "web"))
 
+    def test_the_approved_screen_tsx_is_frozen_with_the_plan_and_handed_to_the_run_without_a_hash(self):
+        """D-280: the implementer starts from the Designer's TSX; approval stays on the contract (structure)."""
+        drafts.request("demo", self.rdir)
+        self.finish("D-1")
+        tsx = drafts.paths(self.rdir, "checkout@v1")[1].with_suffix(".tsx")
+        tsx.write_text("import { Button } from '@bitacora/ui/components/ui/button';\n", encoding="utf-8")
+        self.assertEqual(drafts.source_tsx(self.rdir, "checkout@v1"), tsx)
+        self.assertEqual(drafts.pin_for_plan(self.rdir), ["checkout@v1"])
+        frozen = self.rdir / "design/history/checkout@v1/approved.tsx"
+        self.assertEqual(frozen.read_text(encoding="utf-8"), tsx.read_text(encoding="utf-8"))
+        notes = drafts.execution_notes(self.rdir, "checkout@v1")
+        self.assertIn(f"Planning TSX: {frozen.as_posix()}", notes)
+        record = approval.approvals(self.rdir)["checkout@v1"]
+        self.assertEqual(record["sha256"], hashlib.sha256(CONTRACT.encode()).hexdigest())
+        frozen.write_text("// the look changed with the pool\n", encoding="utf-8")       # no reapproval for pixels
+        frozen.with_suffix(".html").write_text("<p>restyled</p>", encoding="utf-8")
+        self.assertIn("Planning TSX:", drafts.execution_notes(self.rdir, "checkout@v1"))
+
+    def test_source_tsx_falls_back_to_the_amendment_then_the_chosen_direction(self):
+        drafts.request("demo", self.rdir)
+        self.finish("D-1")
+        self.assertIsNone(drafts.source_tsx(self.rdir, "checkout@v1"))
+        design = self.rdir / "design"
+        (design / "checkout@v1.r2.dir-b.tsx").write_text("// b\n", encoding="utf-8")
+        with drafts._locked(self.rdir) as data:
+            data["drafts"]["checkout@v1"].update(chosen="b", directions=[{"id": "b", "revision": 2}])
+        self.assertEqual(drafts.source_tsx(self.rdir, "checkout@v1").name, "checkout@v1.r2.dir-b.tsx")
+        (design / "checkout@v1.amend-1.tsx").write_text("// amended\n", encoding="utf-8")
+        with drafts._locked(self.rdir) as data:
+            data["drafts"]["checkout@v1"]["amend_source"] = "checkout@v1.amend-1.tsx"
+        self.assertEqual(drafts.source_tsx(self.rdir, "checkout@v1").name, "checkout@v1.amend-1.tsx")
+        with drafts._locked(self.rdir) as data:
+            data["drafts"]["checkout@v1"]["amend_source"] = "../../escape.tsx"
+        self.assertEqual(drafts.source_tsx(self.rdir, "checkout@v1").name, "checkout@v1.r2.dir-b.tsx")
+
+    def test_the_designer_brief_asks_for_the_screen_tsx_from_the_pool(self):
+        import bt_design_brief
+        row = next(r for r in drafts.subplans(self.rdir) if r["ref"] == "checkout@v1")
+        brief = bt_design_brief._brief("demo", self.rdir, row, [])
+        tsx = drafts.paths(self.rdir, "checkout@v1")[1].with_suffix(".tsx")
+        self.assertIn(str(tsx), brief)
+        self.assertIn("@bitacora/ui/components/", brief)
+        self.assertIn("Write exactly these three files", brief)
+        self.assertIn("--project demo components mockup build", brief)
+        self.assertIn("no `:root` token blocks", brief)
+
     def test_plan_decide_refuses_while_designer_works(self):
         drafts.request("demo", self.rdir)
         with patch("bt_scheduler_adapter.plan_compatibility_report", return_value=None), \

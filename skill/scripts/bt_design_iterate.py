@@ -226,6 +226,7 @@ to the product's design system. {directions._ledger(rdir, row['ref'])}
 Those source files are immutable: never edit them. If the canonical contract {md} or mockup {md.with_suffix('.html')}
 carries later plan-change amendments, keep them in this revision.
 Write ONLY {out['tsx']} (start from a copy of the previous source), {out['html']}, {out['md']} and {out['json']}.
+Components only from `@bitacora/ui` (`@bitacora/ui/components/…`); the look is the project theme from the pool: never redefine tokens, fonts or pool component styles in the TSX (D-280). 
 Keep the eight-axis note in {out['md']} and the JSON shape valid, updating them only where the changes demand:
 {shape}
 Selectors must match rendered elements that demonstrate the claims; motion evidence must actually animate.
