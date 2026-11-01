@@ -18,6 +18,8 @@ When the brief names an approved screen TSX (`Planning TSX`), the screen is alre
 file, keep its `@bitacora/ui` components, layout, copy, views and states, drop only the mockup harness (`@kit/…`
 `mountMockup`/`useMockup` and the view/state selects) and wire real data and logic into it. Never re-create the screen
 with the project's own UI components: the pool wins. The static mockup HTML is the same screen, for looking only.
+In any repo with `packages/bitacora-ui` (synced, never edited there) import UI components from `@bitacora/ui/…`; a
+component the pool lacks goes under CONCERNS as a pool change, never as a local copy or `npx shadcn add` (D-290).
 
 Before coding:
 - Read the pointers in the brief: the spec, the plan (your task and its "verify"), and the files named.

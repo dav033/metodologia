@@ -31,6 +31,9 @@ components are replaced by the pool's, never copied into a mockup. The look is t
 (`skill/ui/themes/<project>.css`, its tokens and fonts mapped onto the shadcn roles): never redefine tokens, fonts or
 pool component styles in the TSX; vary composition, hierarchy, density, component arrangement and motion.
 No new palette, font family or brand/identity; with no project theme, say so in CONCERNS (the pool's defaults apply).
+A project built from scratch has no existing surface: its shell, navigation and vocabulary are the pool's own blocks
+(sidebar, navigation-menu, sheet, …) under its theme or the default one (D-290); the first UI subplan sets them and
+later subplans reuse them.
 The owner approves structure and behaviour; the look follows the pool and the theme without reapproval. Reuse the app shell, navigation, tokens and component vocabulary of sibling subplans'
 chosen/finalised contracts; differ only in what is specific to this subplan. No invented names, dates, slogans,
 headlines or marketing copy: copy comes from the requirements and the existing UI; mock data is neutral,

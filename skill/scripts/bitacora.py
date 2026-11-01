@@ -159,16 +159,18 @@ def main() -> None:
     p_web.add_argument("--no-open", action="store_true")
     p_comp = sub.add_parser("components", help="the component pool @bitacora/ui (skill/ui, D-280): open the gallery "
                             "(/components), install the toolchain, build the gallery, build a mockup, status, sync the "
-                            "pool into a project, import a project theme, build the pool")
+                            "pool into a project, opt a project in (adopt), import a project theme, build the pool")
     p_comp.add_argument("action", nargs="?", default="open",
-                        choices=["open", "install", "build", "status", "mockup", "sync", "theme", "pool"])
-    p_comp.add_argument("rest", nargs="*", help="mockup: build ENTRY.tsx · sync: PROJECT · theme: import PROJECT · "
+                        choices=["open", "install", "build", "status", "mockup", "sync", "adopt", "theme", "pool"])
+    p_comp.add_argument("rest", nargs="*", help="mockup: build ENTRY.tsx · sync: PROJECT · adopt: PROJECT · theme: import PROJECT · "
                         "pool: version|build|import-sources")
     p_comp.add_argument("--repo", help="sync: the project's repository (default: project.json ui.repo)")
     p_comp.add_argument("--branch", default="", help="sync: branch to commit on (default: the repo's default branch)")
     p_comp.add_argument("--push", action="store_true", help="sync: push the branch after committing")
+    p_comp.add_argument("--off", action="store_true", help="adopt: record the owner's «no» (ui.sync false)")
+    p_comp.add_argument("--role", default="", help="adopt: the workspace role of the UI repository (project.json ui.repo)")
     p_comp.add_argument("--all", action="store_true", help="sync: every project whose project.json says ui.sync")
-    p_comp.add_argument("--from", dest="source", help="theme import: the project's token source (e.g. src/app/globals.css)")
+    p_comp.add_argument("--from", dest="source", help="theme import / adopt: the project's token source (e.g. src/app/globals.css)")
     p_comp.add_argument("--mockup-fonts", default="", help="theme import: fontsource packages for mockups, comma-separated")
     p_comp.add_argument("--sans", default="", help="theme import: value of --ui-font-sans")
     p_comp.add_argument("--mono", default="", help="theme import: value of --ui-font-mono")
@@ -241,7 +243,7 @@ def main() -> None:
         if a.cmd == "serve-remote":
             return serve_remote(a.port or REMOTE_PORT)
         return serve(a.port or DEFAULT_PORT)
-    if a.cmd == "components" and a.action in ("sync", "theme", "pool"):
+    if a.cmd == "components" and a.action in ("sync", "adopt", "theme", "pool"):
         import bt_ui
         if a.action == "pool":
             sys.exit(bt_ui.main(a.rest))
@@ -252,6 +254,20 @@ def main() -> None:
                                      [f.strip() for f in a.mockup_fonts.split(",") if f.strip()], a.sans, a.mono)
             return print(out)
         import bt_ui_sync
+        if a.action == "adopt":
+            if len(a.rest) != 1:
+                ap.error("usage: components adopt PROJECT [--role ROLE] [--from TOKENS.css] [--mockup-fonts a,b] | --off")
+            try:
+                result = bt_ui_sync.adopt(a.rest[0], a.role, Path(a.source).expanduser() if a.source else None,
+                                          [f.strip() for f in a.mockup_fonts.split(",") if f.strip()], off=a.off)
+            except bt_ui_sync.SyncError as exc:
+                sys.exit(f"adopt refused: {exc}")
+            if result["status"] == "declined":
+                return print(f"{a.rest[0]}: @bitacora/ui declined (ui.sync false)")
+            theme = f" · theme {result['theme'] or 'pool default (theme.css)'}"
+            if result["status"] == "pending":
+                return print(f"opted in, first sync pending: {result['reason']}{theme}")
+            return print(bt_ui_sync.describe(result) + theme)
         if a.all:
             bt_ui_sync.sync_all()
             return
@@ -500,7 +516,13 @@ def main() -> None:
         if a.action == "add":
             if not (a.role and a.path):
                 sys.exit("usage: workspace add <role> <path>")
-            register_repo(project, Path(a.path), a.role)
+            role = register_repo(project, Path(a.path), a.role)
+            import bt_ui_sync
+            try:
+                if first := bt_ui_sync.first_sync(project, role):
+                    print("@bitacora/ui first sync:", bt_ui_sync.describe(first))
+            except bt_ui_sync.SyncError as exc:
+                print(f"@bitacora/ui first sync pending: {exc}")
         elif a.action == "remove":
             ws.remove_repo(ROOT, project, a.role or "")
         elif a.action == "root":

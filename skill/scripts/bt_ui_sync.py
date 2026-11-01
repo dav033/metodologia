@@ -13,7 +13,9 @@ project's default branch. No check gates it. It never touches the project's othe
 
 Same pool, same commit: a second sync finds the tree unchanged and commits nothing. A project opts in with
 `"ui": {"sync": true, "repo": "<role>", "branch": "<default>", "push": false}` in its bitácora `project.json`;
-`sync_all` (run by `bt_integrate` after a merge that changes `skill/ui/`) syncs every opted-in project.
+`sync_all` (run by `bt_integrate` after a merge that changes `skill/ui/`) syncs every opted-in project. A new project
+with a UI opts in by default (D-290): `adopt` writes the opt-in and does the first sync, or `first_sync` does it when
+the repository is registered later; projects without the key keep the explicit opt-in.
 """
 from __future__ import annotations
 
@@ -220,6 +222,49 @@ def sync(project: str, repo: Path | None = None, branch: str = "", push: bool | 
                               check=False)
         result["pushed"] = done.returncode == 0 or (done.stderr or done.stdout).strip()[-300:]
     return result
+
+
+def adopt(project: str, role: str = "", source: Path | None = None, mockup_fonts: list[str] | None = None,
+          root: Path | None = None, off: bool = False) -> dict:
+    """Opt `project` into the pool (D-290): the default for every project with a UI, answered «sí» in the
+    requirements interview. Writes `"ui": {"sync": true, "repo": <role>, "push": false}` into its `project.json`
+    (other keys kept), imports its theme when a token source is given (else the pool's default `theme.css` applies)
+    and runs the first sync. With no repository registered yet (a greenfield plan creates it), the opt-in is
+    recorded and the result is `pending`: `first_sync` runs when `workspace add <role>` registers it. `off` records
+    the owner's «no» (`"sync": false`): nothing is synced and the question is not asked again."""
+    if not bt_ui._PROJECT.match(project or ""):
+        raise SyncError(f"invalid project {project!r}")
+    from bt_core import ROOT
+    path = Path(root or ROOT) / project / "project.json"
+    data = project_meta(project, root)
+    ui = {**(data.get("ui") if isinstance(data.get("ui"), dict) else {}), "sync": not off}
+    if role:
+        ui["repo"] = role
+    ui.setdefault("push", False)
+    data["ui"] = ui
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(data, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
+    if off:
+        return {"status": "declined", "theme": None}
+    theme = bt_ui.import_theme(project, Path(source), mockup_fonts or []) if source else bt_ui.theme_path(project)
+    try:
+        repo = repo_for(project, ui, root)
+    except SyncError as exc:
+        return {"status": "pending", "reason": str(exc), "theme": str(theme) if theme else None}
+    return {**sync(project, repo, root=root), "theme": str(theme) if theme else None}
+
+
+def first_sync(project: str, role: str, root: Path | None = None) -> dict | None:
+    """After `workspace add`: the first sync of an opted-in project whose pool repository was just registered and
+    holds no `SYNC.json` yet. None when nothing applies (not opted in, another role, already synced)."""
+    cfg = config(project, root)
+    if cfg.get("sync") is not True or (cfg.get("repo") and cfg["repo"] != role):
+        return None
+    repo = repo_for(project, cfg, root)
+    branch = default_branch(repo, cfg.get("branch", ""))
+    if recorded(repo, branch) is not None:
+        return None
+    return sync(project, repo, branch, root=root)
 
 
 def opted_in(root: Path | None = None) -> list[str]:

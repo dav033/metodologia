@@ -104,7 +104,13 @@ of doing it.
 When scope includes a user-facing UI/UX subplan, detect it during the interview and settle visual direction in
 that same front-loaded round: audience, primary task, existing design system or brand, supported states and
 accessibility constraints. Offer a recommended direction grounded in repository and owner evidence so the owner
-can accept it directly; do not defer this decision to an implementer.
+can accept it directly; do not defer this decision to an implementer. When the project's `project.json` has no
+`ui` key (a project built from scratch), the same round asks whether its UI is built from the component pool
+`@bitacora/ui` — recommended «sí» (D-290) — and where its brand tokens live, if any (none: the pool's Catppuccin
+default). A «sí» runs `bitacora.py components adopt <project> --role <ui repo role> [--from <tokens.css>]`: it
+writes the opt-in and does the first sync, or the sync runs when `workspace add <role>` registers the repo later.
+A «no» runs `components adopt <project> --off` (`"ui": {"sync": false}`), so it is not asked again. Existing
+projects keep their explicit choice.
 
 ## 4. Ask in rounds
 

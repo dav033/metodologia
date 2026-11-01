@@ -95,6 +95,9 @@ For UI work, a subplan's `ui` block identifies its versioned Designer contract, 
 Every `ui: true` implementation follows the design task, visual review follows all UI tasks, and the subplan audit
 follows visual review. The contract is required for UI work. A preview is optional and configured per project; it is
 not a PLAN.json field. `UI_WORK_UNDECLARED` catches UI-like expected paths without an explicit `ui` declaration.
+When the project opted into `@bitacora/ui` (`project.json` `ui.sync: true`) and the plan creates its UI repository or
+that repository is not wired yet, the plan's first implementation task is «wire @bitacora/ui» (`kind: implement`,
+before every `ui: true` task; steps and verify in `stacks/nextjs.md` §Component pool, D-290).
 
 A UI subplan should also carry the Planner's design hand-off `ui_brief` (schema 1.3.0, optional for validation,
 expected by the Planner role): `flows` (strings or `{name, steps[]}`), `screens_states`, `existing_surface`
