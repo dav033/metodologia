@@ -454,12 +454,16 @@ def planner_route(project: str, avoid: str = "") -> dict[str, str]:
 
 def role_route(project: str, role: str, avoid: str = "", *, override: str = "") -> dict[str, str]:
     """`planner_route` for any long-lived full-access session of a role (the Planner, the Solucionador of REQ-031):
-    Claude Opus at high effort on the first unattended account the router ranks for `role`, else that ranking's first
-    Codex route, else ~/.claude-work. `override` names an environment variable that pins the Claude account. When the
+    the first unattended Claude account the router ranks for `role`, else that ranking's first Codex route, else
+    ~/.claude-work. Every route carries the model and effort the role policy (`bt_role_policy`) gives that provider:
+    the ranked route's own, else the policy's Claude rung for the pinned account and the ~/.claude-work fallback
+    (`claude_choice`). A fixed Opus high here ran the Solucionador on Opus although D-253 says Sonnet high (pictures
+    REQ-021, 2026-10-31; D-267). `override` names an environment variable that pins the Claude account. When the
     ranking leaves no account but `avoid` (every other one is spent or cooling), the fallback says so: `exhausted` and
     `until`, the epoch the first one frees up ("" when unknown); a caller leaving a spent account waits instead."""
+    model, effort = claude_choice(role)
     if override and (pinned := os.environ.get(override)):
-        return {"provider": "claude", "home": pinned, "model": "opus", "effort": "high"}
+        return {"provider": "claude", "home": pinned, "model": model, "effort": effort}
     codex: dict[str, str] | None = None
     spent: dict[str, str] = {}
     try:
@@ -476,7 +480,8 @@ def role_route(project: str, role: str, avoid: str = "", *, override: str = "") 
                 path = env.get("CLAUDE_CONFIG_DIR") or str(Path.home() / ".claude")
                 others += path != avoid
                 if path != avoid and unattended(path):
-                    return {"provider": "claude", "home": path, "model": "opus", "effort": "high"}
+                    return {"provider": "claude", "home": path, "model": str(route.get("model") or model),
+                            "effort": str(route.get("effort") or effort)}
             elif route.get("agent") == "codex" and codex is None:
                 home = env.get("CODEX_HOME") or str(Path.home() / ".codex")
                 others += home != avoid
@@ -490,8 +495,19 @@ def role_route(project: str, role: str, avoid: str = "", *, override: str = "") 
     if codex:
         return codex
     work = Path.home() / ".claude-work"
-    return {"provider": "claude", "home": str(work) if work.is_dir() and str(work) != avoid else "", "model": "opus",
-            "effort": "high", **spent}
+    return {"provider": "claude", "home": str(work) if work.is_dir() and str(work) != avoid else "", "model": model,
+            "effort": effort, **spent}
+
+
+def claude_choice(role: str) -> tuple[str, str]:
+    """The role policy's Claude model and effort for `role` (`bt_role_policy.native_option`); Opus high, what every
+    role session used before D-267, only for a role the policy does not know or gives no Claude rung."""
+    try:
+        import bt_role_policy
+        choice = bt_role_policy.native_option(role, "claude")
+    except Exception:  # noqa: BLE001 - no policy readable: the old default
+        choice = None
+    return choice or ("opus", "high")
 
 
 def _prompt_file(project: str, name: str, text: str) -> Path:
@@ -531,7 +547,9 @@ def start_planner(root: Path, project: str, rdir: Path, *, fresh: bool = False, 
         return True, (f"Planner abierto ({name}) en Codex {route['model']}: ninguna cuenta de Claude con cuota puede correr "
                       "sin pedirte permiso, así que empezó desde el plan y sus notas guardadas.")
     env = {"CLAUDE_CONFIG_DIR": account} if account else {}
-    flags = "--model opus --effort high --dangerously-skip-permissions"
+    # the routed model and effort (D-267); a route without them (an older caller) keeps the Planner's Opus high
+    flags = (f"--model {shlex.quote(route.get('model') or 'opus')} --effort {shlex.quote(route.get('effort') or 'high')} "
+             "--dangerously-skip-permissions")
     prior = {} if fresh else _record(rdir)
     sid = prior.get("session_id") or ""
     if sid:
