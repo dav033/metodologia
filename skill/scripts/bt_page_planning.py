@@ -121,6 +121,8 @@ def fragment(project: str, rid: str, rdir: Path, status: str | None, token: str,
            "cache": tr.load_cache(rdir) if opts["lang"] != "en" else {}, "subplans": drafts.subplans(rdir),
            "rows": {row["ref"]: row for row in drafts.rows(rdir)}, "flow": None, "root": ROOT}
     if bt_planning_flow.active(rdir):
+        import bt_confirmed_content
+        bt_confirmed_content.restore(rdir)      # undone changes: back to content already confirmed (D-276)
         ctx["flow"] = bt_planning_flow.state(rdir, ctx["subplans"], ctx["rows"])
         import bt_input_rounds
         if bt_input_rounds.ensure(rdir, ctx["flow"]) is not None:       # a Planner assumption waits for the owner: ask it

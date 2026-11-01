@@ -10,11 +10,13 @@ from bt_core import find_req
 
 def register(subparsers: argparse._SubParsersAction) -> None:
     parser = subparsers.add_parser("planning", help="collaborative planning: skeleton, subplan focus and confirmations")
-    parser.add_argument("action", choices=("start", "status", "resume", "note", "outline-confirm", "focus", "confirm"))
+    parser.add_argument("action", choices=("start", "status", "resume", "note", "outline-confirm", "focus", "confirm",
+                                                "reject"))
     parser.add_argument("req", help="REQ-NNN")
-    parser.add_argument("subplan", nargs="?", help="SP-n (focus, confirm)")
+    parser.add_argument("subplan", nargs="?", help="SP-n (focus, confirm, reject)")
     parser.add_argument("--kind", default="finding", help="note: finding, decision, question, todo or handoff")
-    parser.add_argument("--text", help="note: what to remember (findings with file paths, decisions with their reason)")
+    parser.add_argument("--text", help="note: what to remember (findings with file paths, decisions with their reason); "
+                                       "reject: why the owner rejects the content the subplan is confirmed with")
     parser.add_argument("--by", choices=("owner", "planner"),
                         help="who decided (required to confirm): an agent passes `owner` only to relay the owner's "
                              "explicit words in the conversation, never on its own judgment")
@@ -34,10 +36,12 @@ def dispatch(args: argparse.Namespace, root: Path, project: str) -> int:
     elif args.action == "status":
         import bt_input_rounds
         bt_input_rounds.ensure(rdir)                    # an assumption that waits for the owner gets its question now
+        import bt_confirmed_content
+        bt_confirmed_content.restore(rdir)              # undone changes: back to content already confirmed (D-276)
         st = flow.state(rdir)
         st["inputs"] = [row for row in st["inputs"] if row["pending"]]
         print(json.dumps(st, indent=1, ensure_ascii=False))
-    elif args.action in ("outline-confirm", "confirm") and args.by != "owner":
+    elif args.action in ("outline-confirm", "confirm", "reject") and args.by != "owner":
         raise SystemExit(f"planning {args.action} records the owner's confirmation: pass --by owner, and only when "
                          "the owner said so")
     elif args.action == "outline-confirm":
@@ -46,6 +50,9 @@ def dispatch(args: argparse.Namespace, root: Path, project: str) -> int:
         raise SystemExit(f"planning {args.action} needs SP-n")
     elif args.action == "focus":
         print(flow.focus(project, rdir, args.subplan, args.by or "planner"))
+    elif args.action == "reject":
+        import bt_confirmed_content
+        print(bt_confirmed_content.reject(rdir, args.subplan, by="owner", via="conversation", why=args.text or ""))
     else:
         print(flow.confirm(project, rdir, args.subplan, "owner", via="conversation"))
     return 0

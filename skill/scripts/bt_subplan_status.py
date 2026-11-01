@@ -148,7 +148,11 @@ def status(ctx: dict, s: dict, shared: dict) -> dict:
 
     state = (flow or {}).get("state")
     policy = (flow or {}).get("policy") if state == "confirmed" else None
-    if isinstance(policy, dict):            # D-241: re-confirmed by the owner's standing rule for a bounded repair
+    if isinstance(policy, dict) and policy.get("reason"):    # D-276: back to content already confirmed in that form
+        decisions.append({"when": (flow or {}).get("confirmed_at") or "", "text": (
+            f"Sigue confirmado por la regla {policy.get('rule') or ''}: {policy['reason']}; lo que cambió después se "
+            "deshizo")})
+    elif isinstance(policy, dict):            # D-241: re-confirmed by the owner's standing rule for a bounded repair
         decisions.append({"when": (flow or {}).get("confirmed_at") or "", "text": (
             f"Sigue confirmado por tu regla {policy.get('rule') or ''}: solo se añadió la reparación acotada "
             f"{', '.join(policy.get('repair') or [])} de un defecto confirmado (lo pidió {policy.get('requested_by') or '?'}; "
