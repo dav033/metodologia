@@ -45,6 +45,7 @@ class OnboardingContextTests(unittest.TestCase):
         self.assertIn("purpose, users,", context)
         self.assertIn("deep workspace onboarding/audit", context)
         self.assertIn("then bootstrap ARCHITECTURE.md", context)
+        self.assertIn("components adopt", context)                     # a UI project builds from the pool (D-290)
 
     def test_existing_project_does_not_get_a_false_new_project_prompt(self):
         bt_core.ensure_project("sample")

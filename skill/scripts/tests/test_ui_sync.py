@@ -136,6 +136,77 @@ class Sync(Fixture):
         self.assertIn("@bitacora/ui → pictures: committed", lines[0])
 
 
+class Adopt(Fixture):
+    """A project built from scratch with a UI uses the pool by default (D-290); existing projects keep the explicit
+    opt-in."""
+
+    def setUp(self):
+        super().setUp()
+        self.root = self.tmp / "bitacora"
+        patcher = mock.patch("bt_core.ROOT", self.root)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        repo_patch = mock.patch("bt_vcs.ensure_repo", lambda _root: None)
+        repo_patch.start()
+        self.addCleanup(repo_patch.stop)
+        import bt_core
+        bt_core.ensure_project("fresh")
+
+    def meta(self, project: str = "fresh") -> dict:
+        return json.loads((self.root / project / "project.json").read_text())
+
+    def test_a_new_project_adopting_the_pool_gets_the_opt_in_and_its_first_sync(self):
+        import bt_workspace
+        bt_workspace.add_repo(self.root, "fresh", self.repo, "web")
+        r = sync.adopt("fresh", "web", root=self.root)
+        self.assertEqual(r["status"], "committed")
+        self.assertIsNone(r["theme"])                                   # no tokens: the pool's default theme.css
+        self.assertEqual(self.meta()["ui"], {"sync": True, "repo": "web", "push": False})
+        self.assertIn("web", self.meta()["repos"])                      # the rest of project.json is kept
+        self.assertEqual(sync.recorded(self.repo, "main")["pool"], r["pool"])
+        self.assertIn("fresh", sync.opted_in(self.root))
+        self.assertEqual(sync.adopt("fresh", root=self.root)["status"], "unchanged")
+
+    def test_opting_in_before_the_repo_exists_is_pending_and_registering_the_repo_does_the_first_sync(self):
+        r = sync.adopt("fresh", "web", root=self.root)
+        self.assertEqual(r["status"], "pending")
+        self.assertEqual(self.meta()["ui"]["sync"], True)
+        self.assertFalse((self.repo / "packages").exists())
+        import bt_workspace
+        bt_workspace.add_repo(self.root, "fresh", self.repo, "api")
+        self.assertIsNone(sync.first_sync("fresh", "api", root=self.root))   # not the UI repo
+        bt_workspace.add_repo(self.root, "fresh", self.repo, "web")
+        first = sync.first_sync("fresh", "web", root=self.root)
+        self.assertEqual(first["status"], "committed")
+        self.assertIn("packages/bitacora-ui/SYNC.json", self.files_on("main"))
+        self.assertIsNone(sync.first_sync("fresh", "web", root=self.root))   # already synced: the merges keep it
+
+    def test_workspace_add_of_the_ui_repo_syncs_a_project_that_opted_in(self):
+        sync.adopt("fresh", "web", root=self.root)
+        env = {**__import__("os").environ, "BITACORA_ROOT": str(self.root), **ENV}
+        done = subprocess.run([sys.executable, str(Path(sync.__file__).parent / "bitacora.py"), "--project", "fresh",
+                               "workspace", "add", "web", str(self.repo)], capture_output=True, text=True, env=env)
+        self.assertEqual(done.returncode, 0, done.stderr)
+        self.assertIn("@bitacora/ui first sync: committed", done.stdout)
+        self.assertIn("packages/bitacora-ui/package.json", self.files_on("main"))
+
+    def test_a_declined_pool_is_recorded_and_never_synced(self):
+        import bt_workspace
+        self.assertEqual(sync.adopt("fresh", "web", root=self.root, off=True)["status"], "declined")
+        self.assertEqual(self.meta()["ui"]["sync"], False)
+        bt_workspace.add_repo(self.root, "fresh", self.repo, "web")
+        self.assertIsNone(sync.first_sync("fresh", "web", root=self.root))
+        self.assertFalse((self.repo / "packages").exists())
+
+    def test_an_existing_project_without_the_key_is_never_synced(self):
+        import bt_workspace
+        bt_workspace.add_repo(self.root, "fresh", self.repo, "web")
+        self.assertNotIn("ui", self.meta())
+        self.assertIsNone(sync.first_sync("fresh", "web", root=self.root))
+        self.assertEqual(sync.opted_in(self.root), [])
+        self.assertFalse((self.repo / "packages").exists())
+
+
 class Integration(unittest.TestCase):
     """A merge that changes `skill/ui/` writes the pool into the projects after the smoke; other merges do not."""
     setUp, request, run_it = base.Integrate.setUp, base.Integrate.request, base.Integrate.run_it

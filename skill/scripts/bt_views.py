@@ -96,7 +96,9 @@ def build_context(project: str | None, session_id: str, cwd: Path, source: str) 
         out.append("NEW PROJECT: before scanning, interview the owner about the application's purpose, users, "
                    "main flows, constraints, and success criteria. Then run the deep workspace onboarding/audit "
                    "across all registered repos as one product; record the confirmed purpose and its last-confirmed "
-                   "date in SUMMARY.md, then bootstrap ARCHITECTURE.md (see references/architecture-audit.md).")
+                   "date in SUMMARY.md, then bootstrap ARCHITECTURE.md (see references/architecture-audit.md). "
+                   "If it has a UI, the first round also asks to build it from the component pool @bitacora/ui "
+                   "(recommended: yes → `components adopt <project> --role <ui repo role>`, D-290).")
     if source == "compact":
         out.append("Context was just compacted: re-read today's log before continuing, and log anything "
                    "important from before the compaction that isn't there yet.")

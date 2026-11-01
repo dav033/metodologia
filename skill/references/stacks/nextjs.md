@@ -15,7 +15,7 @@ src/
     index.ts                public API for any caller: named exports only
     index.server.ts         public API that must never reach the client (DAL functions)
   shared/
-    ui/atoms|molecules|organisms   design system (shadcn-based), domain-free; no index.ts barrels
+    ui/atoms|molecules|organisms   project compositions over `@bitacora/ui`, domain-free; no index.ts barrels
     lib/ errors/ config/
   mocks/ test/ types/       MSW handlers, test setup, global *.d.ts
 ```
@@ -57,13 +57,31 @@ src/
 ## Defaults
 - App Router, React Server Components by default.
 - Forms: react-hook-form + zod (the same zod schema validates on the server).
-- UI: Tailwind + shadcn/ui as `shared/ui` atoms/molecules. No inline styles, no ad-hoc CSS files per component.
+- UI: Tailwind + the component pool `@bitacora/ui` (D-280, see §Component pool). `shared/ui` only composes pool
+  components; never a local copy of one and no `npx shadcn add`. No inline styles, no ad-hoc CSS files per component.
 - Env: validated with zod in `shared/config`; only `NEXT_PUBLIC_*` reaches the client, never secrets.
 - Errors: expected failures (validation, 4xx, not found) are return values: actions return
   `{ ok: false, error: AppError }`, consumed with `useActionState`; `notFound()` for missing resources. Bugs throw
   and land in `error.tsx` per segment (+ `global-error.tsx`). Error boundaries don't catch event-handler or async
   errors: catch those and set state. `AppError` (code + message) maps to user text in one place.
 - Loading/empty/error states for every data view.
+
+## Component pool (`@bitacora/ui`, D-280/D-290)
+A project with a UI opts in during the requirements interview (`bitacora.py components adopt <project> --role <ui
+repo role> [--from <tokens.css>]`); the sync writes the package into `packages/bitacora-ui` (+ `SYNC.json`) on the
+default branch and keeps it current. Never edit that folder: change the pool in metodologia. The plan's first task in
+a repo without the wiring is «wire @bitacora/ui»:
+- root `package.json`: `"workspaces": ["packages/*"]` and `"@bitacora/ui": "*"` in `dependencies`; `npm install`
+  links it and installs its dependencies (peers: react/react-dom ≥ 19, motion ≥ 12, lucide-react ≥ 1); commit the
+  lockfile.
+- `next.config.ts`: `transpilePackages: ["@bitacora/ui"]` (the package ships `.tsx`/`.css`, no build).
+- global CSS: `@import "tailwindcss"; @import "@bitacora/ui/styles.css";` then the look:
+  `@import "@bitacora/ui/themes/<project>.css";` when the project has a theme (imported from its tokens), else
+  `@import "@bitacora/ui/theme.css";` (Catppuccin default). A project that keeps its tokens in its own CSS defines
+  the same roles after `styles.css` instead, and re-imports the theme so mockups match.
+- dark mode: `.dark` or `data-theme="dark"` on `<html>` set before hydration.
+- imports are package paths (`@bitacora/ui/components/ui/button`), never the project's `@/` alias.
+- verify: type-check + `next build` pass with one pool component rendered; `packages/bitacora-ui/SYNC.json` exists.
 
 ## Testing
 Vitest + Testing Library: integration tests per feature (render the feature's components, mock the network with

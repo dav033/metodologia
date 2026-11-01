@@ -41,6 +41,10 @@ independence**: expected values come from the SPEC or an approved table, not fro
 role × method (including POST/PUT/PATCH/DELETE) is exercised; denied cases assert the exact 401/403 and a 405, redirect
 or 5xx is never counted as refused. Report a test that could not fail on a wrong implementation as a finding.
 
+In a project that uses `@bitacora/ui` (a `packages/bitacora-ui/SYNC.json` in the repo, D-280/D-290) the standards
+axis also flags a project file that re-declares a component the pool exports (a local button, select, dialog, sheet…
+instead of `@bitacora/ui/components/…`) and any edit inside `packages/bitacora-ui`: the sync owns that folder.
+
 **Axis "visual":** use when the subplan contains UI work or the brief names its `visual_review_task`. Read the
 approved Designer contract at `design/contracts/<id>@v<N>.md` in the project repository and inspect the rendered
 application. Load `agents/reviewer/skills/rendered-ui-fidelity-audit/SKILL.md`. Use Runner's screenshot evidence
