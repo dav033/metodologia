@@ -181,6 +181,27 @@ class RetryCatchUp(unittest.TestCase):
                                                    lines=("SP-3",), home="SP-3")
         self.assertEqual((tip, conflict), (small, ""))                          # a real edit still integrates
 
+    def test_a_gate_task_leaves_out_the_lines_its_base_left_out(self):
+        """pictures REQ-021 r35 T94 (gate CG-4): `_caught_up` left SP-5's line out of its base for a conflict, so every
+        retry built the same snapshot and `integrate` refused it for the same conflict, until the owner was asked (D-289)."""
+        def line(subplan: str, name: str, text: str) -> str:
+            tip = self.commit_on(self.base, name, text, f"accepted {name}")
+            git(self.repo, "update-ref", integration.GitLineIntegrator.subplan_ref(RUN, "app", subplan), tip)
+            return tip
+        clash, other = line("SP-5", "a.txt", "theirs\n"), line("SP-6", "b.txt", "b\n")
+        snapshot = self.commit_on(self.base, "a.txt", "mine\n", "m3 snapshot proj-REQ-900-r1-T2.57-a1-0000aaaa")
+        tip, conflict, _, left = self.line.integrate(RUN, self.task, SimpleNamespace(snapshot_sha=snapshot),
+                                                      lines=("SP-5", "SP-6"), home="gate:CG-4")
+        self.assertEqual(conflict, "")
+        self.assertEqual(set(left), {"SP-5"})
+        self.assertEqual(git(self.repo, "rev-parse", integration.GitLineIntegrator.subplan_ref(RUN, "app", "SP-5")), clash)
+        self.assertNotEqual(git(self.repo, "rev-parse", integration.GitLineIntegrator.subplan_ref(RUN, "app", "SP-6")), other)
+        # a task of a subplan keeps the old rule for its own line, and a gate that no line takes is still refused
+        tip, conflict, _, _ = self.line.integrate(RUN, self.task, SimpleNamespace(snapshot_sha=snapshot),
+                                                   lines=("SP-5",), home="gate:CG-4")
+        self.assertIsNone(tip)
+        self.assertIn("line of SP-5", conflict)
+
     def test_a_snapshot_already_holding_the_line_is_kept(self):
         snapshot = self.commit_on(self.base, "src/menu.tsx", "a1\n", "m3 snapshot proj-REQ-900-r1-T2.57-a1-0000aaaa")
         self.assertEqual(self.line.continuation_base(RUN, self.task, snapshot), snapshot)
