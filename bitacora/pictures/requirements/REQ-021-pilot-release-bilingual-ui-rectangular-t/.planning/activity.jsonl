@@ -512,3 +512,6 @@
 {"at": "2026-11-01T08:18:16-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-7", "text": "SP-7 terminó y está listo para probar", "diff": ""}
 {"at": "2026-11-01T08:18:16-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-8", "text": "SP-8 terminó y está listo para probar", "diff": ""}
 {"at": "2026-11-01T08:18:16-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-9", "text": "SP-9 terminó y está listo para probar", "diff": ""}
+{"at": "2026-11-01T08:41:27-05:00", "who": "Autocuración", "kind": "flow", "sp": "", "text": "T10.5: el diagnóstico no basta para decidir solo (stop, confianza media); T10.5:d1 queda para ti", "diff": ""}
+{"at": "2026-11-01T08:41:28-05:00", "who": "Solucionador", "kind": "flow", "sp": "", "text": "T10.5: la autocuración dejó la decisión para ti; pasa al Solucionador (the diagnosis is not enough to answer alone (option stop, confidence media): Falta la observación manual EN/ES del chat con el proveedor configurado.)", "diff": ""}
+{"at": "2026-11-01T08:41:28-05:00", "who": "Solucionador", "kind": "flow", "sp": "", "text": "T10.5: el Solucionador ya lo intentó 3 veces; queda para ti (the diagnosis is not enough to answer alone (option stop, confidence media): Falta la observación manual EN/ES del chat con el proveedor configurado.)", "diff": ""}

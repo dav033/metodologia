@@ -324,6 +324,11 @@
    "id": "D-290",
    "by": "claude-luis D-20261101-081430-404c: new UI projects adopt @bitacora/ui by default (Job B)",
    "at": "2026-11-01T08:16:32"
+  },
+  {
+   "id": "D-291",
+   "by": "claude-luis D-20261101-081430-404c: pictures adopts @bitacora/ui; pool fixes found by the adoption (Job A)",
+   "at": "2026-11-01T08:39:33"
   }
  ]
 }

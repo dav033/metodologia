@@ -1,0 +1,22 @@
+{
+ "request": "pictures:REQ-021:r36:T10.5:T10.5:d1@k1",
+ "state": "done",
+ "kind": "manual",
+ "label": "Comprobación manual",
+ "tone": "lav",
+ "headline": "Falta la observación manual EN/ES del chat con el proveedor configurado.",
+ "origin": "",
+ "steps": [
+  "Observar en local el chat configurado con el proveedor real: una conversación en inglés (respuesta en inglés) y otra en español (respuesta en español). Anotar solo el proveedor y el resultado, sin secretos ni textos exactos.",
+  "Registrar y atestiguar esa observación como evidencia manual de T10.5 (decisión T10.5:d1) antes de cualquier reverificación.",
+  "Cuando esté atestiguada, reverificar el mismo snapshot (opción reverify); no volver a ejecutar el harness como sustituto de la observación."
+ ],
+ "option": "stop",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-11-01T08:41:08",
+ "seconds": 11.8
+}

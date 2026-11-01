@@ -134,7 +134,8 @@
   "pictures:REQ-021:r32:T3.91:T3.91:d6@k1",
   "pictures:REQ-021:r32:T3.91:T3.91:d7@k1",
   "pictures:REQ-021:r35:T94:T94:d1@k1",
-  "pictures:REQ-021:r35:T10.5:T10.5:d1@k1"
+  "pictures:REQ-021:r35:T10.5:T10.5:d1@k1",
+  "pictures:REQ-021:r36:T10.5:T10.5:d1@k1"
  ],
  "actions": 11
 }

@@ -37,6 +37,7 @@ Owner, 2026-10-31 17:05: until further notice metodologia integrations run no re
 - 2026-11-01 02:00 · `266388e1978b` · A gutted snapshot never advances a subplan or run line (D-288) · 2 path(s): skill/scripts/bt_durable/adapters/integration.py, skill/scripts/tests/test_durable_line_pin.py
 - 2026-11-01 02:03 · `96b787087814` · A gate task leaves out the subplan lines its base already left out (D-289) · 2 path(s): skill/scripts/bt_durable/adapters/integration.py, skill/scripts/tests/test_durable_line_pin.py
 - 2026-11-01 08:20 · `0d10d7158702` · New projects with a UI adopt @bitacora/ui by default (D-290) · 14 path(s): skill/SKILL.md, skill/agents/designer.md, skill/agents/implementer.md, skill/agents/planner.md, skill/agents/reviewer.md, skill/references/documentation.md …
+- 2026-11-01 08:43 · `e9d61b4d768b` · Pool fixes found by pictures' adoption; pictures theme re-imported (D-291) · 4 path(s): skill/scripts/bt_ui_sync.py, skill/scripts/tests/test_ui_sync.py, skill/ui/package.json, skill/ui/themes/pictures.css
 
 ## Escaped defects
 

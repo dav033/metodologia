@@ -1,10 +1,10 @@
 {
  "watch": {
   "T10.5": {
-   "fp": "dd19720d538ac026",
-   "since": 1793540008.0100214,
-   "epoch": "96799f0e7b6a44799893b03c2c6efe49",
-   "observed_at": 1793540232.7361696
+   "fp": "0c211398b57afe03",
+   "since": 1793540504.2439318,
+   "epoch": "de4705c996144f758c0e470d2dd9d3d4",
+   "observed_at": 1793545762.36228
   }
  },
  "tasks": {
@@ -1739,6 +1739,17 @@
    "status": "asked_owner",
    "at": "2026-11-01T02:18:46",
    "session": "20261101-021846-6343"
+  },
+  "pictures:REQ-021:r36:T10.5:T10.5:d1@k1": {
+   "kind": "decision",
+   "key": "pictures:REQ-021:r36:T10.5:T10.5:d1@k1",
+   "run_id": "pictures:REQ-021:r36",
+   "task_id": "T10.5",
+   "request_id": "T10.5:d1",
+   "round": 1,
+   "reason": "the diagnosis is not enough to answer alone (option stop, confidence media): Falta la observación manual EN/ES del chat con el proveedor configurado.",
+   "status": "limit",
+   "at": "2026-11-01T08:41:28"
   }
  },
  "sessions": [
