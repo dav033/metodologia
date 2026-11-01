@@ -20,7 +20,9 @@ the repository is registered later; projects without the key keep the explicit o
 Development (D-293): `write_dev` puts a pool under development (a worktree's `skill/ui`) into a project working tree
 without committing, so its dev server hot-reloads; its `SYNC.json` says `"dev": true` and its `pool` is not a digest,
 so the project's guard fails on it. A dev write is the only uncommitted content `sync` and `write_dev` overwrite;
-`restore` puts the committed copy back. `bt_ui_watch` (`components watch`) drives both.
+`restore` puts the committed copy back. `bt_ui_watch` (`components watch`, `components dev`) drives both. Files are
+replaced atomically, new ones first and deletions last, so a running `next dev` hot-reloads without a transient
+«module not found» (D-295).
 """
 from __future__ import annotations
 
@@ -35,6 +37,7 @@ import bt_ui
 
 TARGET = "packages/bitacora-ui"
 STAMP = "SYNC.json"
+TMP = ".bt-tmp"                  # suffix of a file being replaced atomically (a crash may leave one: never content)
 REPO_ROOT = bt_ui.SKILL_ROOT.parent
 
 
@@ -80,8 +83,9 @@ def payload(project: str, ui: Path | None = None, dev: bool = False) -> dict[str
              "note": "Written by `bitacora.py components sync`; change the pool in metodologia, never this copy (D-280)."}
     if dev:
         stamp.update(pool=f"dev-{pool}", dev=True, dev_pool=pool, dev_source=str(base), written=_content_digest(out),
-                     note="DEVELOPMENT COPY written by `bitacora.py components watch --into` (D-293): never commit or "
-                          "deploy it. `components watch --into <this tree> --restore` (or `components sync <project>` "
+                     note="DEVELOPMENT COPY written by `bitacora.py components dev` / `components watch --into` "
+                          "(D-293, D-295): never commit or deploy it. `components watch --into <this tree> --restore` "
+                          "(or `components sync <project>` "
                           "on the default branch's worktree) puts the committed copy back.")
     out[STAMP] = (json.dumps(stamp, indent=1, ensure_ascii=False) + "\n").encode()
     return out
@@ -98,7 +102,8 @@ def _content_digest(data: dict[str, bytes]) -> str:
 
 def _on_disk(dest: Path) -> dict[str, bytes]:
     return {p.relative_to(dest).as_posix(): p.read_bytes() for p in sorted(dest.rglob("*"))
-            if p.is_file() and not _installed(p.relative_to(dest).as_posix())} if dest.is_dir() else {}
+            if p.is_file() and not p.name.endswith(TMP) and not _installed(p.relative_to(dest).as_posix())} \
+        if dest.is_dir() else {}
 
 
 def dev_write(dest: Path) -> dict | None:
@@ -193,8 +198,27 @@ def _installed(rel: str) -> bool:
     return rel.split("/", 1)[0] == "node_modules"
 
 
+def _replace(path: Path, blob: bytes) -> None:
+    """Write `path` atomically (a temporary sibling renamed over it): a bundler watching the tree never reads a
+    truncated or half-written file."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_name(f".{path.name}{TMP}")
+    try:
+        tmp.write_bytes(blob)
+        os.replace(tmp, path)
+    finally:
+        tmp.unlink(missing_ok=True)
+
+
 def _write_tree(dest: Path, data: dict[str, bytes]) -> None:
+    """Make `dest` hold exactly `data` (npm's `node_modules` kept) in an order a running `next dev` follows without a
+    transient error (D-295): new files first, so an importer never names a file that is not there yet; then the changed
+    files; deletions last, after the importers that dropped them are rewritten."""
     dest.mkdir(parents=True, exist_ok=True)
+    new = [rel for rel in data if not (dest / rel).is_file()]
+    changed = [rel for rel in data if rel not in new and (dest / rel).read_bytes() != data[rel]]
+    for rel in new + changed:
+        _replace(dest / rel, data[rel])
     for old in sorted(dest.rglob("*"), reverse=True):
         rel = old.relative_to(dest).as_posix()
         if _installed(rel):
@@ -203,11 +227,6 @@ def _write_tree(dest: Path, data: dict[str, bytes]) -> None:
             old.unlink()
         elif old.is_dir() and not any(old.iterdir()):
             old.rmdir()
-    for rel, blob in data.items():
-        out = dest / rel
-        out.parent.mkdir(parents=True, exist_ok=True)
-        if not out.is_file() or out.read_bytes() != blob:
-            out.write_bytes(blob)
 
 
 def _commit_in_worktree(worktree: Path, data: dict[str, bytes], message: str) -> str | None:
@@ -304,6 +323,32 @@ def check_dev_target(tree: Path) -> Path:
         raise SyncError(f"{tree / TARGET} has uncommitted changes that are not a previous dev write: not overwritten "
                         "(commit or discard them first)")
     return tree
+
+
+def main_worktree(repo: Path) -> Path:
+    """The repository's main working tree (the owner's own checkout, where `next dev` runs), whichever of its
+    worktrees `repo` is."""
+    for line in _git(repo, "worktree", "list", "--porcelain").splitlines():
+        if line.startswith("worktree "):
+            return Path(line[9:])
+    raise SyncError(f"{repo}: no working tree")
+
+
+def wiring(tree: Path) -> list[str]:
+    """Why a dev copy in `tree` would not reach `next dev`: [] when the checked-out branch depends on `@bitacora/ui`
+    and npm links it to `packages/bitacora-ui`; raises when the branch does not use the pool at all."""
+    try:
+        pkg = json.loads((Path(tree) / "package.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        raise SyncError(f"{tree}: no readable package.json ({exc})") from exc
+    if not any("@bitacora/ui" in (pkg.get(key) or {}) for key in ("dependencies", "devDependencies")):
+        branch = _git(tree, "branch", "--show-current", check=False) or "a detached HEAD"
+        raise SyncError(f"{tree} ({branch}) does not depend on @bitacora/ui: nothing there would load a dev copy; "
+                        "check out a branch wired to the pool (the default branch is) or pass --into another tree")
+    link = Path(tree) / "node_modules" / "@bitacora" / "ui"
+    if not (link.is_symlink() or link.exists()) or link.resolve() != (Path(tree) / TARGET).resolve():
+        return [f"{link} does not lead to {TARGET}: run `npm install` in {tree} so the app loads the dev copy"]
+    return []
 
 
 def write_dev(project: str, ui: Path, tree: Path) -> dict:

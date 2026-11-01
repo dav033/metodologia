@@ -83,16 +83,18 @@ a repo without the wiring is «wire @bitacora/ui»:
 - imports are package paths (`@bitacora/ui/components/ui/button`), never the project's `@/` alias.
 - verify: type-check + `next build` pass with one pool component rendered; `packages/bitacora-ui/SYNC.json` exists.
 
-Developing a pool change (D-293): edit `skill/ui` in a metodologia worktree, never the live checkout. Run
-`bitacora.py components watch --from <wt>/skill/ui --into <project worktree>` beside `next dev` in that project
-worktree: each saved change (stable for ~2 s) is written into its `packages/bitacora-ui`, uncommitted, and Next
-reloads. That copy's `SYNC.json` says `"dev": true` and its `pool` is `dev-<digest>`, so the project's guard fails
-on it: never commit or deploy it. A dev write is the only uncommitted content the watcher overwrites; it refuses over
-anyone's edits there. Ctrl-C leaves the files; `components watch --into <project worktree> --restore` puts the
-committed copy back (`components sync <project>` does it on the default branch's worktree). Then integrate the
-metodologia branch: the merge syncs the pool into every opted-in project. The user unit `bitacora-ui-watch.service`
-(installed by `install.py`, enable it with `systemctl --user enable --now bitacora-ui-watch`) runs the default mode
-on the live pool: a change there is synced like the integrate trigger does (same digest: nothing).
+Developing a pool change, the two-step loop (D-293/D-295):
+1. Run `npm run dev` in the project checkout and, beside it, `bitacora.py components dev <project>` (target: the main
+   checkout of the project's UI repo, or `--into <tree>`; source: the live `skill/ui` with uncommitted edits, or
+   `--from <wt>/skill/ui`). It refuses a branch without `@bitacora/ui` and anyone's edits in `packages/bitacora-ui`.
+2. Edit the pool: each save (stable ~2 s) is written into `packages/bitacora-ui`, uncommitted, and every page using
+   it hot-reloads — no commit, no integration, no restart.
+The copy's `SYNC.json` says `"dev": true` (`pool: dev-<digest>`), so the project's guard fails on it: never commit it
+(no `git commit -a` there). Ctrl-C (or a closed terminal) restores the committed package (`--keep` leaves it;
+`components dev <project> --restore` later). Then commit/integrate the pool: the merge syncs every opted-in project.
+`components watch --from <wt> --into <tree>` is the same without the defaults. The user unit `bitacora-ui-watch.service`
+(installed by `install.py`, `systemctl --user enable --now bitacora-ui-watch`) runs the default mode on the live
+pool: a committed change there is synced like the integrate trigger does; uncommitted edits under `skill/ui` wait.
 
 ## Testing
 Vitest + Testing Library: integration tests per feature (render the feature's components, mock the network with

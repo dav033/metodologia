@@ -4,15 +4,19 @@ Owner, 2026-11-01: in development a change to the pool reaches the project witho
 Real git repositories and a copy of the pool in a temporary directory; nothing touches a real project."""
 from __future__ import annotations
 
+import contextlib
 import fcntl
 import hashlib
 import importlib.util
+import io
 import json
 import os
 import shutil
+import signal
 import subprocess
 import sys
 import tempfile
+import time
 import unittest
 from pathlib import Path
 from unittest import mock
@@ -126,13 +130,16 @@ class Debounce(Fixture):
     def test_a_running_integration_holds_the_sync_until_it_ends(self):
         busy = [True]
         acted: list[str] = []
-        w = watch.Watch(self.ui, lambda d: acted.append(d) or True, ready=lambda: not busy[0], note=self.lines.append)
-        for _ in range(4):
+        with mock.patch.object(watch, "integration_running", lambda: busy[0]), \
+                mock.patch.object(watch, "pool_wip", lambda ui: None):
+            w = watch.Watch(self.ui, lambda d: acted.append(d) or True, ready=watch.default_ready(self.ui),
+                            note=self.lines.append)
+            for _ in range(4):
+                w.poll()
+            self.assertEqual(acted, [])
+            self.assertEqual(sum("integration is running" in line for line in self.lines), 1)
+            busy[0] = False
             w.poll()
-        self.assertEqual(acted, [])
-        self.assertEqual(sum("integration is running" in line for line in self.lines), 1)
-        busy[0] = False
-        w.poll()
         self.assertEqual(len(acted), 1)
 
     def test_the_integrate_lock_is_seen_while_held(self):
@@ -278,7 +285,7 @@ class DevMode(Fixture):
         self.assertIs(json.loads((self.pkg / "SYNC.json").read_text())["dev"], True)
         refused = cli("--from", str(self.ui), "--once")                # no --into: only the live pool
         self.assertEqual(refused.returncode, 1)
-        self.assertIn("develop with --into", refused.stderr)
+        self.assertIn("develop with `components dev` or --into", refused.stderr)
         other = cli("--from", str(self.ui), "--into", str(self.other), "--once")
         self.assertEqual(other.returncode, 1)                          # a project without opt-in is never touched
         self.assertIn("no opted-in project", other.stderr)
@@ -286,6 +293,211 @@ class DevMode(Fixture):
         done = cli("--into", str(self.tree), "--restore")
         self.assertEqual(done.returncode, 0, done.stderr)
         self.assertEqual(git(self.tree, "status", "--porcelain"), "")
+
+
+class WorkInProgress(Fixture):
+    """D-295: the owner edits the live checkout's `skill/ui`; the default mode never commits half-written work."""
+
+    def setUp(self):
+        super().setUp()
+        self.live = self.tmp / "metodologia"                       # a live checkout: the pool tracked by git
+        self.ui = self.live / "skill" / "ui"
+        shutil.copytree(bt_ui.UI, self.ui)
+        git(self.live, "init", "-q", "-b", "main")
+        git(self.live, "add", "-A")
+        git(self.live, "commit", "-q", "-m", "pool")
+
+    def watcher(self) -> watch.Watch:
+        act = watch.sync_projects(lambda: sync.opted_in(self.root), note=self.lines.append, root=self.root,
+                                  ui=self.ui)
+        return watch.Watch(self.ui, act, ready=watch.default_ready(self.ui), note=self.lines.append)
+
+    def test_the_pool_is_work_in_progress_while_skill_ui_has_uncommitted_changes(self):
+        self.assertIsNone(watch.pool_wip(self.ui))
+        self.edit_pool()
+        self.assertIn("uncommitted changes", watch.pool_wip(self.ui))
+        git(self.live, "checkout", "--", ".")
+        self.assertIsNone(watch.pool_wip(self.ui))
+        (self.ui / "src/components/ui/new-thing.tsx").write_text("export const X = 1;\n")   # untracked counts
+        self.assertIn("uncommitted changes", watch.pool_wip(self.ui))
+        (self.ui / "src/components/ui/new-thing.tsx").unlink()
+        (self.live / "elsewhere.txt").write_text("outside the pool\n")                     # outside skill/ui: no
+        self.assertIsNone(watch.pool_wip(self.ui))
+        self.assertIn("git cannot tell", watch.pool_wip(self.tmp / "wt" / "skill" / "ui"))  # not a repository
+
+    def test_normal_mode_waits_for_a_committed_pool_and_logs_once_per_digest(self):
+        with mock.patch.object(watch, "integration_running", lambda: False):
+            w = self.watcher()
+            watch.run(w, sleep=lambda s: None, max_polls=3)
+            self.assertEqual(self.count(self.repo), 2)                # a clean pool syncs as before
+            self.edit_pool()                                          # the owner starts editing: half-written
+            watch.run(w, sleep=lambda s: None, max_polls=6)
+            self.assertEqual(self.count(self.repo), 2)                # nothing committed on the project's main
+            self.assertEqual(sum("uncommitted changes" in line for line in self.lines), 1)
+            self.edit_pool("export const Button = () => 1;\n")         # still editing: one line for the new digest
+            watch.run(w, sleep=lambda s: None, max_polls=6)
+            self.assertEqual(sum("uncommitted changes" in line for line in self.lines), 2)
+            self.assertEqual(self.count(self.repo), 2)
+            git(self.live, "commit", "-q", "-am", "button")           # committed: synced on the next polls
+            watch.run(w, sleep=lambda s: None, max_polls=3)
+        self.assertEqual(self.count(self.repo), 3)
+        self.assertEqual((self.repo / sync.TARGET / "src/components/ui/button.tsx").read_text(),
+                         "export const Button = () => 1;\n")
+        self.assertIn("pictures: committed", self.lines[-1])
+
+
+class WriteOrder(unittest.TestCase):
+    """D-295: a running `next dev` must never see an importer before the file it imports, nor a deleted file still
+    imported, nor a half-written file."""
+
+    def test_new_files_first_then_changed_and_deletions_last_each_replaced_atomically(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            dest = Path(tmp) / "pkg"
+            (dest / "src").mkdir(parents=True)
+            (dest / "src/gone.ts").write_text("old\n")
+            (dest / "src/button.tsx").write_text("import './gone'\n")
+            (dest / "node_modules/x").mkdir(parents=True)
+            inode = (dest / "src/button.tsx").stat().st_ino
+            ops: list[str] = []
+            real_replace, real_unlink = sync._replace, Path.unlink
+            def unlink(path: Path, missing_ok: bool = False) -> None:
+                if not path.name.endswith(sync.TMP):
+                    ops.append(f"rm {path.name}")
+                real_unlink(path, missing_ok=missing_ok)
+            data = {"src/button.tsx": b"import './zz-new'\n", "src/zz-new.ts": b"new\n", "SYNC.json": b"{}\n"}
+            with mock.patch.object(sync, "_replace", lambda p, b: ops.append(f"write {p.name}") or real_replace(p, b)), \
+                    mock.patch.object(Path, "unlink", unlink):
+                sync._write_tree(dest, data)
+            self.assertEqual(ops, ["write zz-new.ts", "write SYNC.json", "write button.tsx", "rm gone.ts"])
+            self.assertEqual(sync._on_disk(dest), data)
+            self.assertNotEqual((dest / "src/button.tsx").stat().st_ino, inode)   # renamed over, not truncated
+            self.assertEqual(sorted(p.name for p in dest.rglob("*") if p.name.endswith(sync.TMP)), [])
+            self.assertTrue((dest / "node_modules/x").is_dir())
+            (dest / "src/.button.tsx.bt-tmp").write_text("left by a crash\n")       # never content
+            self.assertEqual(sync._on_disk(dest), data)
+
+
+class DevLoop(Fixture):
+    """D-295: `components dev [PROJECT]`, the owner's two-step loop."""
+
+    def setUp(self):
+        super().setUp()
+        (self.repo / "package.json").write_text(json.dumps({"name": "app", "workspaces": ["packages/*"],
+                                                            "dependencies": {"@bitacora/ui": "*"}}))
+        (self.repo / ".gitignore").write_text("/node_modules\n/packages/*/node_modules\n")
+        git(self.repo, "add", "-A")
+        git(self.repo, "commit", "-q", "-m", "wire the pool")
+        sync.sync("pictures", self.repo, root=self.root)
+        (self.repo / "node_modules/@bitacora").mkdir(parents=True)
+        (self.repo / "node_modules/@bitacora/ui").symlink_to("../../packages/bitacora-ui")
+        git(self.repo, "worktree", "add", "-q", "-b", "feature", str(self.tmp / "feature"))
+        meta = json.loads((self.root / "pictures/project.json").read_text())
+        meta["repos"]["app"]["hint"] = str(self.tmp / "feature")      # the role names a linked worktree
+        (self.root / "pictures/project.json").write_text(json.dumps(meta))
+        self.pkg = self.repo / sync.TARGET
+
+    def run_dev(self, polls: int, **kw) -> tuple[int, str]:
+        out = io.StringIO()
+        real_run = watch.run
+        def run(w, interval, once, reexec=False, on_stop=None):
+            w.note = self.lines.append
+            ticks = iter(range(polls))
+            def sleep(_s: float) -> None:
+                if next(ticks, None) is None:
+                    raise KeyboardInterrupt
+            return real_run(w, interval, once, sleep=sleep, on_stop=on_stop)
+        with mock.patch.object(watch, "run", run), mock.patch.object(watch, "log", self.lines.append), \
+                contextlib.redirect_stdout(out):
+            code = watch.dev(kw.pop("project", "pictures"), str(self.ui), root=self.root, **kw)
+        return code, out.getvalue()
+
+    def test_it_writes_into_the_main_checkout_and_restores_it_on_ctrl_c(self):
+        self.edit_pool()
+        seen: list[str] = []
+        real = sync.write_dev
+        def spy(project, ui, tree):
+            r = real(project, ui, tree)
+            seen.append((Path(tree) / sync.TARGET / "src/components/ui/button.tsx").read_text())
+            return r
+        with mock.patch.object(sync, "write_dev", spy):
+            code, banner = self.run_dev(3)
+        self.assertEqual(code, 0)
+        self.assertEqual(seen, ["export const Button = () => null;\n"])   # the main checkout got the dev copy
+        self.assertIn(f"-> {self.pkg}", banner)
+        self.assertIn("guard fails on it on purpose", banner)
+        self.assertIn("git commit -a", banner)
+        self.assertNotIn("npm install", banner)                        # wired: no warning
+        self.assertIn("restored", self.lines[-1])
+        self.assertEqual(git(self.repo, "status", "--porcelain"), "")   # Ctrl-C: the committed package is back
+        self.assertEqual(git(self.tmp / "feature", "status", "--porcelain"), "")
+
+    def test_keep_leaves_the_dev_copy_and_restore_puts_the_package_back(self):
+        self.edit_pool()
+        code, _banner = self.run_dev(3, keep=True)
+        self.assertEqual(code, 0)
+        self.assertIn("--keep", self.lines[-1])
+        self.assertIs(json.loads((self.pkg / "SYNC.json").read_text())["dev"], True)
+        self.assertFalse(guard_passes(self.pkg))
+        with mock.patch.object(watch, "log", self.lines.append):
+            self.assertEqual(watch.dev("pictures", restore=True, root=self.root), 0)
+        self.assertIn("restored", self.lines[-1])
+        self.assertEqual(git(self.repo, "status", "--porcelain"), "")
+
+    def test_refusals_are_clear_and_touch_nothing(self):
+        err = io.StringIO()
+        edited = self.pkg / "src/components/ui/button.tsx"
+        edited.write_text("// someone's edit\n")
+        with contextlib.redirect_stderr(err):
+            self.assertEqual(watch.dev("pictures", str(self.ui), root=self.root), 1)
+        self.assertIn("not a previous dev write", err.getvalue())
+        self.assertEqual(edited.read_text(), "// someone's edit\n")
+        git(self.repo, "checkout", "--", sync.TARGET)
+        git(self.repo, "checkout", "-q", "-b", "old-branch", "HEAD~2")    # a branch from before the wiring
+        (self.repo / "package.json").write_text(json.dumps({"name": "app"}))
+        git(self.repo, "add", "package.json")
+        git(self.repo, "commit", "-q", "-m", "no pool here")
+        with contextlib.redirect_stderr(err):
+            self.assertEqual(watch.dev("pictures", str(self.ui), root=self.root), 1)
+        self.assertIn("(old-branch) does not depend on @bitacora/ui", err.getvalue())
+        self.assertFalse((self.repo / sync.TARGET).exists())
+        with contextlib.redirect_stderr(err):
+            self.assertEqual(watch.dev("other", str(self.ui), root=self.root), 1)
+            self.assertEqual(watch.dev(None, str(self.ui), into=str(self.other), root=self.root), 1)
+        self.assertIn("other does not opt in", err.getvalue())
+        self.assertIn("no opted-in project uses this repository", err.getvalue())
+        self.assertFalse((self.other / "packages").exists())
+
+    def test_an_unlinked_package_is_warned_about(self):
+        (self.repo / "node_modules/@bitacora/ui").unlink()
+        self.edit_pool()
+        _code, banner = self.run_dev(2)
+        self.assertIn("run `npm install`", banner)
+
+    def test_sigterm_restores_the_committed_package(self):
+        self.edit_pool()
+        env = {**os.environ, "BITACORA_ROOT": str(self.root), **ENV}
+        proc = subprocess.Popen([sys.executable, str(SCRIPTS / "bitacora.py"), "components", "dev", "pictures",
+                                 "--from", str(self.ui.parent.parent), "--interval", "0.2"],
+                                stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, env=env)
+        try:
+            for _ in range(150):
+                stamp = self.pkg / "SYNC.json"
+                if stamp.is_file() and json.loads(stamp.read_text()).get("dev"):
+                    break
+                if proc.poll() is not None:
+                    self.fail(f"dev exited {proc.returncode}: {proc.communicate()}")
+                time.sleep(0.1)
+            self.assertIn(f"{sync.TARGET}/", git(self.repo, "status", "--porcelain"))
+            proc.send_signal(signal.SIGTERM)
+            out, err = proc.communicate(timeout=30)
+        finally:
+            if proc.poll() is None:
+                proc.kill()
+        self.assertEqual(proc.returncode, 0, err)
+        self.assertIn("DEV loop for pictures", out)
+        self.assertIn("restored", out)
+        self.assertEqual(git(self.repo, "status", "--porcelain"), "")
+        self.assertTrue(guard_passes(self.pkg))
 
 
 class Unit(unittest.TestCase):
