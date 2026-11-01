@@ -11,8 +11,10 @@ phase of its correction in the order of the real pipeline, from data that alread
   rediseñando → elige una dirección → aprueba el contrato → reconfirma el subplan → construyendo vN+1;
 - repair (anything else: bounded repair tasks, the Solucionador; pictures REQ-021 SP-3): reparando.
 
-Both end at «vN+1 lista para probar»: once the engine publishes a newer version the row is `outdated` with `retest` in
-`bt_verification.state` and this returns None, so the views show «por probar» with the owner's note, as before.
+Both end at «vN+1 lista para probar»: once the engine publishes a version above N this returns None, so the views show
+«por probar» with the owner's note, as before. A version re-published at or below N does not end it: after the rejection
+pictures REQ-021's new run revision re-published SP-14 v2 / SP-2 v1 / SP-3 v2 (`outdated`, `retest`) while the
+decisions rejected v2 / v2 / v3 — the panel showed nothing until `in_correction` stopped requiring `state == rejected`.
 Read-only: no lock is taken and nothing is settled or written.
 """
 from __future__ import annotations
@@ -26,6 +28,20 @@ REDESIGN = (("redesigning", "rediseñando"), ("choosing", "elige una dirección"
             ("reconfirm", "reconfirma el subplan"), ("building", "construyendo v{next}"),
             ("ready", "v{next} lista para probar"))
 REPAIR = (("repairing", "reparando"), ("ready", "v{next} lista para probar"))
+
+
+def in_correction(row: dict | None) -> bool:
+    """`row` (of `bt_verification.state`) waits for the correction of the owner's rejection: its latest decision rejects
+    version N and no published version above N exists. A re-published older or equal version (`outdated` + `retest`)
+    or no published version at all keeps it waiting."""
+    dec = (row or {}).get("decision") or {}
+    if dec.get("decision") != "rejected":
+        return False
+    if row.get("state") == "rejected":
+        return True
+    rejected, current = dec.get("version"), row.get("version")
+    newer = isinstance(rejected, int) and isinstance(current, int) and current > rejected
+    return not newer
 
 
 def _when(stamp: object) -> float | None:
@@ -102,13 +118,13 @@ def correction(rdir: Path, sid: str, *, row: dict | None = None, design: dict | 
     `row` is `sid`'s row of `bt_verification.state` (read when omitted); `design` its draft row (`bt_design_drafts.rows`,
     read lock-free when omitted); `flow` its planning-flow item ({"state", "confirmed_at"}; None = no flow; omitted =
     read); `progress` the run's (completed, total) tasks of the subplan, shown while building. Returns {"id", "version",
-    "next", "path" (redesign | repair), "phase", "phase_es", "label", "steps", "detail", "note", "pending", "at"}."""
+    "next", "path" (redesign | repair), "phase", "phase_es", "label", "steps", "detail", "note", "pending", "at", "retest"}; `retest` is the re-published older version, or None."""
     rdir = Path(rdir)
     if row is None:
         import bt_verification
         row = next((r for r in bt_verification.state(rdir)["subplans"] if r["id"] == sid), None)
-    if not row or row.get("state") != "rejected":
-        return None                          # nothing rejected, or vN+1 is already published: «por probar» again
+    if not in_correction(row):
+        return None                          # nothing rejected, or a version above N is published: «por probar» again
     dec = row.get("decision") or {}
     version = dec.get("version") or row.get("version")
     upcoming = version + 1 if isinstance(version, int) else "?"
@@ -134,12 +150,15 @@ def correction(rdir: Path, sid: str, *, row: dict | None = None, design: dict | 
         detail = said + (f" · {detail}" if detail else "")
     if phase == "redesigning" and design and design.get("status") == "failed":
         detail = "el Designer falló en su último intento"
+    if row.get("state") == "outdated" and row.get("version"):     # an older (or equal) tree published again to retry
+        detail += ("" if not detail else " · ") + f"v{row['version']} publicada de nuevo para volver a probarla"
     pending = dec.get("pending") or next(iter(reversed([p for p in dec.get("open_pending") or [] if isinstance(p, str)])), "")
     return {"id": sid, "version": version, "next": upcoming, "path": "redesign" if redesign else "repair", "phase": phase,
             "phase_es": names[phase], "label": f"Rechazada v{version} · {names[phase]}",
             "steps": [{"key": k, "label": names[k], "state": "done" if keys.index(k) < keys.index(phase) else
                        "now" if k == phase else "todo"} for k in keys],
-            "detail": detail, "note": str(dec.get("note") or ""), "pending": str(pending or ""), "at": str(dec.get("at") or "")}
+            "detail": detail, "note": str(dec.get("note") or ""), "pending": str(pending or ""), "at": str(dec.get("at") or ""),
+            "retest": row.get("version") if row.get("state") == "outdated" else None}
 
 
 def corrections(rdir: Path, ctx: dict | None = None) -> dict[str, dict]:
@@ -153,7 +172,7 @@ def corrections(rdir: Path, ctx: dict | None = None) -> dict[str, dict]:
         rows = bt_verification.state(rdir)["subplans"] if bt_verification.applies(rdir) else []
     except Exception:  # noqa: BLE001 - a status label never breaks a page
         rows = []
-    rejected = [r for r in rows if r["state"] == "rejected"]
+    rejected = [r for r in rows if in_correction(r)]
     progress: dict = {}
     if ctx is not None and rejected:
         try:

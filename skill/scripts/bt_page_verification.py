@@ -45,6 +45,12 @@ def _previous(ctx: dict, row: dict) -> str:
     if not row.get("retest"):
         return ""
     pid = f' <span class="pp-meta">({e(str(dec["pending"]))})</span>' if dec.get("pending") else ""
+    import bt_verification_correction as correction
+    if correction.in_correction(row):            # D-268: an older tree published again, not the correction
+        upcoming = dec["version"] + 1 if isinstance(dec.get("version"), int) else "nueva"
+        return (f'<p class="pp-vprev">Rechazaste la versión {e(str(dec.get("version")))}: «{e(str(dec.get("note") or ""))}». '
+                f'La versión {e(str(row.get("version")))} se publicó de nuevo y no es la corrección: puedes volver a '
+                f'probarla mientras llega la versión {e(str(upcoming))}.{pid}</p>' + _thumbs(ctx, dec))
     return (f'<p class="pp-vprev">Rechazaste la versión {e(str(dec.get("version")))}: «{e(str(dec.get("note") or ""))}»; '
             f'comprueba esto en la versión {e(str(row.get("version")))}.{pid}</p>' + _thumbs(ctx, dec))
 
@@ -423,6 +429,8 @@ def panel(ctx: dict, s: dict) -> str:
              if row["state"] == "outdated" and not row.get("retest") else _previous(ctx, row))
     fix = _correction(ctx, row)
     pill = correction_view.badge(fix, "pp-vstate bad") if fix else _state_pill(_shown(row))
+    if fix and row.get("retest"):                # the re-published older version can be tried again meanwhile
+        pill += _state_pill("to_test")
     head = (f'<p class="pp-vintro">{pill} Versión {e(str(row["version"]))} · commit '
             f'<code>{e(str(row["commit"])[:10])}</code>. {e(_tree_text(row))}</p>'
             f'{correction_view.strip(ctx["project"], fix, note=False) if fix else ""}{stale}{_fold_warning(row)}')
@@ -437,10 +445,11 @@ def panel(ctx: dict, s: dict) -> str:
 
 
 def _correction(ctx: dict, row: dict) -> dict | None:
-    """Where the correction of the owner's rejection of this version is (D-268); None when it is not rejected."""
-    if row["state"] != "rejected":
-        return None
+    """Where the correction of the owner's rejection is (D-268); None when nothing waits for one. A re-published older
+    version (`retest`) still waits: its row is `outdated`, the rejection stands."""
     import bt_verification_correction as correction
+    if not correction.in_correction(row):
+        return None
     try:
         return correction.corrections(ctx["rdir"], ctx if "subplans" in ctx else None).get(row["id"]) or \
             correction.correction(ctx["rdir"], row["id"], row=row)
@@ -460,14 +469,16 @@ def chip(rdir: Path) -> str:
     st = verification.state(rdir)
     if not st["applies"]:
         return ""
-    waiting = st["counts"]["to_test"] + st["counts"]["outdated"]
-    rejected = st["counts"]["rejected"]
+    import bt_verification_correction as correction
+    fixes = correction.corrections(rdir) if any(correction.in_correction(r) for r in st["subplans"]) else {}
+    waiting = st["counts"]["to_test"] + st["counts"]["outdated"] - sum(1 for r in st["subplans"] if r["id"] in fixes
+                                                                       and r["state"] == "outdated")
+    rejected = len(fixes)
     cls = "warn" if waiting else "ok" if st["approved"] == st["total"] else ""
     text = f"por probar {waiting}" if waiting else f"aprobados {st['approved']}/{st['total']}"
     chip = f'<span class="pp-chip {cls}">{e(text)}</span>' if waiting or not rejected else ""
     if rejected:                       # D-268: a rejected version waits for its correction, not for the owner's test
-        import bt_verification_correction as correction
-        labels = "; ".join(f"{sid}: {c['label']}" for sid, c in correction.corrections(rdir).items())
+        labels = "; ".join(f"{sid}: {c['label']}" for sid, c in fixes.items())
         chip += (f'<span class="pp-chip bad" title="{e(labels)}">{rejected} '
                  f'{"rechazada" if rejected == 1 else "rechazadas"} en corrección</span>')
     return chip
@@ -480,7 +491,7 @@ def run_card(project: str, rid: str, rdir: Path) -> str:
         return ""
     base = purl(project, "req", rid)
     import bt_verification_correction as correction
-    fixes = correction.corrections(rdir) if st["counts"]["rejected"] else {}
+    fixes = correction.corrections(rdir) if any(correction.in_correction(r) for r in st["subplans"]) else {}
     rows = "".join(
         f'<a class="pp-vrow" href="{e(_link(base, r["id"]))}"><span class="pp-id">{e(r["id"])}</span>'
         f'<span class="grow">{e(r["title"])}</span>'
