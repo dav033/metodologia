@@ -1,16 +1,16 @@
 {
  "watch": {
   "T3.91": {
-   "fp": "e742eb628374cbdf",
-   "since": 1793491605.4469714,
+   "fp": "40bd9eac9ea9b382",
+   "since": 1793492337.2099364,
    "epoch": "1e789423362f4c08acf409cfd0feb2f1",
-   "observed_at": 1793492209.4772878
+   "observed_at": 1793492431.4359004
   },
   "T2.57": {
    "fp": "f82f832f52270c20",
    "since": 1793488854.6743035,
    "epoch": "1e789423362f4c08acf409cfd0feb2f1",
-   "observed_at": 1793492209.4772878
+   "observed_at": 1793492431.4359004
   }
  },
  "tasks": {
@@ -1333,6 +1333,18 @@
    "status": "queued",
    "at": "2026-10-31T18:44:56",
    "session": "20261031-184040-40be"
+  },
+  "pictures:REQ-021:r32:T3.91:T3.91:d7@k1": {
+   "kind": "decision",
+   "key": "pictures:REQ-021:r32:T3.91:T3.91:d7@k1",
+   "run_id": "pictures:REQ-021:r32",
+   "task_id": "T3.91",
+   "request_id": "T3.91:d7",
+   "round": 1,
+   "reason": "the agent says it could not run its checks: aces, TypeScript estricto, ESLint focalizado y `git diff --check`. Solo queda modificado ese harness; no hice commit. **La verificación independiente sigue pendiente; no declaro la tarea verificada.**; the task used its attempts",
+   "status": "queued",
+   "at": "2026-10-31T19:18:57",
+   "session": "20261031-184040-40be"
   }
  },
  "sessions": [
@@ -1726,7 +1738,8 @@
     "pictures:REQ-021:r32:T3.91:T3.91:d5@k1"
    ],
    "queued": [
-    "pictures:REQ-021:r32:T3.91:T3.91:d6@k1"
+    "pictures:REQ-021:r32:T3.91:T3.91:d6@k1",
+    "pictures:REQ-021:r32:T3.91:T3.91:d7@k1"
    ],
    "restarts": 0,
    "dir": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/RUN.solver/20261031-184040-40be",
