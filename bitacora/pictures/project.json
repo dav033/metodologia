@@ -24,5 +24,10 @@
  "work": true,
  "exclude_profiles": [
   "claude-personal"
- ]
+ ],
+ "ui": {
+  "sync": true,
+  "repo": "pictures",
+  "push": false
+ }
 }
