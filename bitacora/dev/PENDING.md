@@ -55,8 +55,7 @@ month summary._
 - P-005 · `test_audit_routing.py` has 3 failures from before D-002 (audit tier escalation vs the role policy) · urgency: low · complexity: S · added 2026-10-19 · session 8eef50ee
 - P-002 · [closed 2026-10-19 by SUPERRR H1: `bt_attempt_facts` shows each attempt's own route, tokens and model_reported from M2/M4; cost still not reported by providers] Show per-attempt model/account for earlier scheduler attempts and read model_reported/cost from the executor ledger · urgency: low · complexity: M · added 2026-10-18 · session 8c9cf122
 - P-010 · The publication step is detected from the verification text (`git merge-base --is-ancestor HEAD origin/main`), not from a declared field of PLAN.json; the planner contract has no way to say "this task publishes" · urgency: low · complexity: M · added 2026-10-19 · D-013
-
-- P-gmail-mcp · gmail-pdf-mcp on advin is deployed and Google OAuth is configured (project gmail-pdf-mcp-513416, ALLOWED_GMAIL_ACCOUNT=llozano@marosconstruction.com). Left: llozano connects the connector from claude.ai and we test a real PDF; Workspace admin may block the restricted scope; Testing mode tokens expire in 7 days (owner decides Publish vs custom domain) · urgency: med · complexity: S · added 2026-11-01 · session 70f44cbc
+  - P-gmail-mcp · gmail-pdf-mcp on advin is deployed and Google OAuth is configured (project gmail-pdf-mcp-513416, ALLOWED_GMAIL_ACCOUNT=llozano@marosconstruction.com). Left: llozano connects the connector from claude.ai and we test a real PDF; Workspace admin may block the restricted scope; Testing mode tokens expire in 7 days (owner decides Publish vs custom domain) · urgency: med · complexity: S · added 2026-11-01 · session 70f44cbc
 
 ## Blocked
 _None_
