@@ -278,6 +278,7 @@ class GitLineIntegrator:
                               "incomplete); it was not integrated"), "", {}
         moves, note, left = [], "", {}
         member = len(targets) > 1                       # at least one of its subplan lines exists
+        gate, refused = home.startswith("gate:"), ""
         # the member's own line exists: only that line (and nothing else) must take it
         own = home if home and not home.startswith("gate:") and any(scope == home for _, _, scope in targets) else ""
         for ref, tip, scope in targets:
@@ -289,9 +290,19 @@ class GitLineIntegrator:
             if conflict and own and scope != own:
                 left[scope] = conflict                  # another subplan's line: left to the gates that compose both
                 continue
+            if conflict and scope and gate:
+                # a gate task has no line of its own: its base already left this line out (`_caught_up`: the same
+                # conflict), so every retry builds the same snapshot and meets it here again (pictures REQ-021 r35 T94:
+                # the composed CG-4 candidate against SP-5's line, a1..a2 and the owner's decision). Left out and
+                # reported like any other line; the task is refused only when no line at all takes it (D-289).
+                left[scope] = conflict
+                refused = refused or conflict + f" (line of {scope})"
+                continue
             if conflict:
                 return None, conflict + (f" (line of {scope})" if scope else ""), "", {}
             moves.append((ref, new or tip, tip))
+        if gate and left and not any(ref != targets[0][0] for ref, _, _ in moves):
+            return None, refused, "", {}                # no subplan line takes the gate's work: a real conflict
         changed = [(ref, new, old) for ref, new, old in moves if new != old]
         if changed:                                     # all lines or none: each `update` checks its old value
             script = "start\n" + "".join(f"update {ref} {new} {old}\n" for ref, new, old in changed) + "prepare\ncommit\n"
