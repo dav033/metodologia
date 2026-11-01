@@ -1,0 +1,182 @@
+"""Where the correction of a rejected subplan version is: the one read model every panel view shows (D-268).
+
+Owner, 2026-10-31, about pictures REQ-021 SP-14 (version 2 rejected in «Probar» at 15:30, its design being redone since):
+«en el panel debe aparecer como rechazada en espera de iteración o algo así». The Plan tab only showed the design state
+(«diseñando…»), so nothing said the subplan was a rejected version waiting for its correction.
+
+`correction(rdir, sid)` answers, for a subplan whose latest owner decision is `rejected` for the published version N, the
+phase of its correction in the order of the real pipeline, from data that already exists (no new state file):
+
+- redesign (the subplan's UI contract is not approved, or was approved after the rejection):
+  rediseñando → elige una dirección → aprueba el contrato → reconfirma el subplan → construyendo vN+1;
+- repair (anything else: bounded repair tasks, the Solucionador; pictures REQ-021 SP-3): reparando.
+
+Both end at «vN+1 lista para probar»: once the engine publishes a newer version the row is `outdated` with `retest` in
+`bt_verification.state` and this returns None, so the views show «por probar» with the owner's note, as before.
+Read-only: no lock is taken and nothing is settled or written.
+"""
+from __future__ import annotations
+
+import datetime as dt
+from pathlib import Path
+
+import bt_design_drafts as drafts
+
+REDESIGN = (("redesigning", "rediseñando"), ("choosing", "elige una dirección"), ("approve_contract", "aprueba el contrato"),
+            ("reconfirm", "reconfirma el subplan"), ("building", "construyendo v{next}"),
+            ("ready", "v{next} lista para probar"))
+REPAIR = (("repairing", "reparando"), ("ready", "v{next} lista para probar"))
+
+
+def _when(stamp: object) -> float | None:
+    try:
+        moment = dt.datetime.fromisoformat(str(stamp or ""))
+    except ValueError:
+        return None
+    return (moment if moment.tzinfo else moment.astimezone()).timestamp()
+
+
+def _after(stamp: object, since: float | None) -> bool:
+    moment = _when(stamp)
+    return moment is not None and since is not None and moment >= since
+
+
+def _design(rdir: Path, sid: str) -> tuple[str | None, dict | None]:
+    """(UI contract ref, its draft row) of `sid` read without the drafts lock; the row is {"status": "none"} when the
+    Designer has no entry for the ref yet."""
+    sub = next((s for s in drafts.subplans(rdir) if s["id"] == sid), None)
+    if not sub or not sub["ref"]:
+        return None, None
+    entry = drafts._load(rdir)["drafts"].get(sub["ref"])
+    if not isinstance(entry, dict):
+        return sub["ref"], {"ref": sub["ref"], "status": "none", "stale": False}
+    status = str(entry.get("status") or "none")
+    stale = status in ("ready", "approved", "choosing") and drafts.behind(entry, sub)
+    return sub["ref"], {**entry, "ref": sub["ref"], "status": status, "stale": stale}
+
+
+def _approved_at(rdir: Path, ref: str, row: dict) -> object:
+    """When the contract `ref` was approved: the draft's stamp, else the approvals record; None when it is not."""
+    if row.get("status") == "approved" and row.get("approved"):
+        return row["approved"]
+    try:
+        import bt_design_approval
+        record = bt_design_approval.approvals(rdir).get(ref) or {}
+    except Exception:  # noqa: BLE001 - an unreadable approvals file only means «not approved» here
+        record = {}
+    if record.get("status") == "approved":
+        return record.get("when") or "?"
+    return "?" if row.get("status") == "approved" else None   # approved at an unknown time: never «after the rejection»
+
+
+def _flow(rdir: Path, sid: str) -> dict | None:
+    """The planning flow's confirmation of `sid` ({"state", "confirmed_at"}), or None when the flow is off."""
+    import bt_planning_flow
+    if not bt_planning_flow.active(rdir):
+        return None
+    record = bt_planning_flow._load(rdir)["subplans"].get(sid) or {}
+    try:
+        ok = bt_planning_flow.confirmed_as(rdir, sid, drafts._plan(rdir))
+    except Exception:  # noqa: BLE001 - a plan caught mid-edit reads as «not confirmed»
+        ok = False
+    return {"state": "confirmed" if ok else "changed", "confirmed_at": record.get("at", "")}
+
+
+def _redesign_phase(design: dict, flow: dict | None, since: float | None, approved: object) -> str:
+    status = design["status"]
+    if status == "choosing" and not design.get("chosen") and not design.get("stale"):
+        return "choosing"
+    if status == "ready" and not design.get("stale"):
+        return "approve_contract"
+    if not approved or design.get("stale") or design.get("amend"):
+        return "redesigning"                 # queued, drafting, amending, failed or a new contract not started yet
+    if flow is not None and not (flow.get("state") == "confirmed" and _after(flow.get("confirmed_at"), since)):
+        return "reconfirm"
+    return "building"
+
+
+def correction(rdir: Path, sid: str, *, row: dict | None = None, design: dict | None = None,
+               flow: dict | None | bool = False, progress: tuple[int, int] | None = None) -> dict | None:
+    """The correction phase of a rejected subplan version, or None when `sid` is not waiting for one.
+
+    `row` is `sid`'s row of `bt_verification.state` (read when omitted); `design` its draft row (`bt_design_drafts.rows`,
+    read lock-free when omitted); `flow` its planning-flow item ({"state", "confirmed_at"}; None = no flow; omitted =
+    read); `progress` the run's (completed, total) tasks of the subplan, shown while building. Returns {"id", "version",
+    "next", "path" (redesign | repair), "phase", "phase_es", "label", "steps", "detail", "note", "pending", "at"}."""
+    rdir = Path(rdir)
+    if row is None:
+        import bt_verification
+        row = next((r for r in bt_verification.state(rdir)["subplans"] if r["id"] == sid), None)
+    if not row or row.get("state") != "rejected":
+        return None                          # nothing rejected, or vN+1 is already published: «por probar» again
+    dec = row.get("decision") or {}
+    version = dec.get("version") or row.get("version")
+    upcoming = version + 1 if isinstance(version, int) else "?"
+    since = _when(dec.get("at"))
+    ref = (design or {}).get("ref")
+    if design is None:
+        ref, design = _design(rdir, sid)
+    approved = _approved_at(rdir, ref, design) if ref and design else None
+    redesign = bool(ref and design and drafts.active(rdir) and (not approved or _after(approved, since)
+                                                                or design.get("stale") or design.get("amend")))
+    if redesign:
+        if flow is False:
+            flow = _flow(rdir, sid)
+        phase, table = _redesign_phase(design, flow, since, approved), REDESIGN
+    else:
+        phase, table = "repairing", REPAIR
+    keys = [k for k, _ in table]
+    names = {k: label.format(next=upcoming) for k, label in table}
+    detail = ""
+    if phase in ("building", "repairing") and progress and progress[1]:
+        detail = f"{progress[0]}/{progress[1]} tareas"
+    if phase == "repairing" and (said := (row.get("solver") or {}).get("text")):
+        detail = said + (f" · {detail}" if detail else "")
+    if phase == "redesigning" and design and design.get("status") == "failed":
+        detail = "el Designer falló en su último intento"
+    pending = dec.get("pending") or next(iter(reversed([p for p in dec.get("open_pending") or [] if isinstance(p, str)])), "")
+    return {"id": sid, "version": version, "next": upcoming, "path": "redesign" if redesign else "repair", "phase": phase,
+            "phase_es": names[phase], "label": f"Rechazada v{version} · {names[phase]}",
+            "steps": [{"key": k, "label": names[k], "state": "done" if keys.index(k) < keys.index(phase) else
+                       "now" if k == phase else "todo"} for k in keys],
+            "detail": detail, "note": str(dec.get("note") or ""), "pending": str(pending or ""), "at": str(dec.get("at") or "")}
+
+
+def corrections(rdir: Path, ctx: dict | None = None) -> dict[str, dict]:
+    """Every rejected subplan's correction, keyed by id; with a Plan tab `ctx` its draft rows, flow and run progress are
+    reused and the result is cached in it for the fragment."""
+    if ctx is not None and "corrections" in ctx:
+        return ctx["corrections"]
+    import bt_verification
+    out: dict[str, dict] = {}
+    try:
+        rows = bt_verification.state(rdir)["subplans"] if bt_verification.applies(rdir) else []
+    except Exception:  # noqa: BLE001 - a status label never breaks a page
+        rows = []
+    rejected = [r for r in rows if r["state"] == "rejected"]
+    progress: dict = {}
+    if ctx is not None and rejected:
+        try:
+            import bt_page_planning_run as run_view
+            progress = run_view.counts(ctx)
+        except Exception:  # noqa: BLE001 - no run progress: the label goes without it
+            progress = {}
+    for r in rejected:
+        kwargs: dict = {"row": r, "progress": progress.get(r["id"])}
+        if ctx is not None:
+            sub = next((s for s in ctx.get("subplans") or [] if s["id"] == r["id"]), None)
+            if sub is not None:
+                kwargs["design"] = (ctx.get("rows") or {}).get(sub["ref"]) if sub["ref"] else None
+                if sub["ref"] and kwargs["design"] is None:
+                    kwargs["design"] = {"ref": sub["ref"], "status": "none", "stale": False}
+            if ctx.get("flow"):
+                kwargs["flow"] = ctx["flow"]["subplans"].get(r["id"])
+        try:
+            found = correction(rdir, r["id"], **kwargs)
+        except Exception:  # noqa: BLE001 - one unreadable subplan keeps the others' labels
+            found = None
+        if found:
+            out[r["id"]] = found
+    if ctx is not None:
+        ctx["corrections"] = out
+    return out

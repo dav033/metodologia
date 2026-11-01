@@ -89,11 +89,15 @@ def verify_html(verify: list[dict]) -> str:
         return '<p class="muted nempty">No hay subplanes esperando que los pruebes.</p>'
     cards = []
     for v in verify:
-        href = (f'/p/{quote(v["project"])}/req/{quote(v["req"])}?tab=plan&mode=subplans&view=verify&sp='
-                f'{quote(v["subplans"][0])}')
+        rejected = v.get("rejected") or {}
+        trying = [sid for sid in v["subplans"] if sid not in rejected]
+        first = (trying or v["subplans"])[0]
+        href = (f'/p/{quote(v["project"])}/req/{quote(v["req"])}?tab=plan&mode=subplans&view=verify&sp={quote(first)}')
+        state = '<i class="dot warn"></i>por probar' if trying else '<i class="dot bad"></i>en corrección'
+        fixes = "".join(f'<p class="muted">{e(sid)} · {e(label)}</p>' for sid, label in rejected.items())
         cards.append(f'<article class="ncard verify" data-k="v-{e(v["project"])}-{e(v["req"])}"><div class="nstate">'
-                     f'<i class="dot warn"></i>por probar</div><div><div class="nwhere">{e(v["project"])} · {e(v["req"])}</div>'
-                     f'<a class="ntitle" href="{e(href)}">{e(", ".join(v["subplans"]))}</a></div>'
+                     f'{state}</div><div><div class="nwhere">{e(v["project"])} · {e(v["req"])}</div>'
+                     f'<a class="ntitle" href="{e(href)}">{e(", ".join(trying or v["subplans"]))}</a>{fixes}</div>'
                      f'<div class="ntok"><span>aprobados {v["approved"]}/{v["total"]}</span>'
                      f'<a href="{e(href)}">Probar →</a></div></article>')
     return "".join(cards)
@@ -116,6 +120,20 @@ def health_html(health: list[dict]) -> str:
     return "".join(cards)
 
 
+def _verify_chip(v: dict) -> str:
+    """«REQ · SP-1 por probar», or, when every subplan left is a rejected version, where its correction is (D-268)."""
+    rejected = v.get("rejected") or {}
+    trying = [sid for sid in v["subplans"] if sid not in rejected]
+    href = (f'/p/{quote(v["project"])}/req/{quote(v["req"])}?tab=plan&mode=subplans&view=verify&sp='
+            f'{quote((trying or v["subplans"])[0])}')
+    if trying:
+        return (f'<a class="nchip" href="{e(href)}" title="Subplanes terminados que esperan tu prueba"><i class="dot warn"></i>'
+                f'{e(v["req"])} · {e(", ".join(trying[:3]))} por probar</a>')
+    sid, label = next(iter(rejected.items()))
+    return (f'<a class="nchip" href="{e(href)}" title="{e("; ".join(f"{k}: {x}" for k, x in rejected.items()))}">'
+            f'<i class="dot bad"></i>{e(v["req"])} · {e(sid)} {e(label[:1].lower() + label[1:])}</a>')
+
+
 def bar_html(items: list[dict], agents: list[dict] = (), verify: list[dict] = (), health: list[dict] = ()) -> str:
     """The strip under the header: one chip per live attempt or working agent; empty string when nothing runs."""
     working = [s for s in agents if s["state"] == "working" and not s.get("quiet")]
@@ -128,10 +146,7 @@ def bar_html(items: list[dict], agents: list[dict] = (), verify: list[dict] = ()
     chips += "".join(
         f'<a class="nchip" href="/now" title="sesión {e(s["session"])}"><i class="dot info live"></i>'
         f'{_agent_name(s)} · {e(s["project"] or "?")} · {_doing(s)}</a>' for s in working[:4])
-    chips += "".join(
-        f'<a class="nchip" href="/p/{quote(v["project"])}/req/{quote(v["req"])}?tab=plan&mode=subplans&view=verify&sp='
-        f'{quote(v["subplans"][0])}" title="Subplanes terminados que esperan tu prueba"><i class="dot warn"></i>'
-        f'{e(v["req"])} · {e(", ".join(v["subplans"][:3]))} por probar</a>' for v in list(verify)[:3])
+    chips += "".join(_verify_chip(v) for v in list(verify)[:3])
     chips = "".join(
         f'<a class="nchip" href="/now" title="{e(a["detail"])}"><i class="dot {"bad" if a["state"] in ("died", "exited", "failed", "never_started") else "warn"}"></i>'
         f'⚠ {e(a["who"])} {e({"died": "murió", "exited": "se cerró", "failed": "falló", "never_started": "no arrancó", "quiet": "sin señales"}[a["state"]])}</a>'
