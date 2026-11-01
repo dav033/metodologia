@@ -3859,3 +3859,35 @@ Solucionador 20261030-100736-d494 integrated merge fff622890f28b8093a9a0afda9c40
 - **Proposal (pictures, not made):** one line in `scripts/test/test-ui-pool-guardia.ts` after reading `sello`:
   `assert.ok(!(sello as { dev?: boolean }).dev, "copia de desarrollo de @bitacora/ui (components watch --into): no se commitea; components watch --into . --restore");`
   so the message names the cause instead of «se editó a mano».
+
+## D-294 — `components sync` commits on pictures' real layout: plumbing with another branch checked out, ignored nested `node_modules`
+
+- **Context:** owner, 2026-11-01: «necesitamos verificar que si un cambio en los componentes local cambia los
+  componentes de pictures local; testéalo y si no funciona arréglalo». End-to-end check in a sandbox (a clone of
+  pictures `main` 516e3f7ab with its remote removed, `npm ci --offline`, a throwaway `BITACORA_ROOT` opting it in, a
+  metodologia worktree whose pool got a test marker `data-bt-verify` on `button.tsx`, never merged). Two links broke:
+  (1) plumbing mode (default branch not checked out, the owner's situation): `git rm --cached` on the temporary index
+  compared it with the checked-out branch's HEAD and files and refused («staged content different from both the file
+  and the HEAD») as soon as the default branch's package differed from the checked-out one's, so every sync after the
+  first one failed while a feature branch held an older package; (2) worktree mode (default branch checked out):
+  pictures ignores `/packages/*/node_modules`, and the `:(exclude)packages/bitacora-ui/node_modules` pathspec naming
+  that ignored path made `git add` exit 1 after staging, so the sync reported a failure, left the package staged and
+  every later sync refused it as «uncommitted changes». The D-291 test had no `.gitignore`, so it never saw (2).
+- **Decision:** `_commit_plumbing` removes the package from the temporary index with `git rm --cached -f` (that index
+  is the default branch's; the checked-out tree is irrelevant). `_commit_in_worktree` asks `git check-ignore` and adds
+  the `node_modules` exclude pathspec only when that path is not ignored (ignored, it is never staged anyway).
+- **Evidence:** two new `test_ui_sync` tests (a feature branch holding an older package: two plumbing syncs commit,
+  checkout untouched; ignored nested `node_modules` + unrelated WIP: commit holds only `SYNC.json` and `button.tsx`)
+  fail on the old code and pass; `test_ui_sync`, `test_ui_watch`, `test_ui_pool` exit 0 on merged main. Merged as
+  `e80d60158` (`--no-regression`, D-261; smoke ok; no `skill/ui/` change, so no project was synced). Sandbox, with the
+  merged code: A) `components sync --all` from the worktree and `Services.sync_ui(<worktree as live>)` commit on the
+  clone's `main` (plumbing with `side` checked out: `side` and its files unchanged; worktree with `main` checked out:
+  unrelated modified/staged files left, commit = package path only; idempotent second run `unchanged`); renamed and
+  deleted pool components disappear from the package, `packages/bitacora-ui/node_modules` (framer-motion, motion-dom,
+  motion-utils) survives every sync and restore; `themes/pictures.css` byte-identical to the pool's and never changed.
+  B) `components watch --once` (live pool) commits; `--from <worktree> --into <clone>` writes an uncommitted copy with
+  `pool: dev-…`, a later pool edit is rewritten within the poll, `--restore` puts the committed copy back. C)
+  `@bitacora/ui` resolves to `packages/bitacora-ui` (npm workspace symlink); pictures' `InterruptorTema` rendered with
+  react-dom/server via tsx shows each new marker; `next build` (transpilePackages, no pool build step) exits 0 and
+  its prerendered HTML holds the marker; `test-ui-pool-guardia` passes after every normal sync and fails at §1 after a
+  dev write. **Not verified:** `next dev` hot reload in a running dev server; a push (disabled in the sandbox).

@@ -339,6 +339,11 @@
    "id": "D-293",
    "by": "metodologia-97 subagent: ui pool watcher",
    "at": "2026-11-01T11:28:20"
+  },
+  {
+   "id": "D-294",
+   "by": "claude-verify: ui pool propagation fix",
+   "at": "2026-11-01T12:18:52"
   }
  ]
 }
