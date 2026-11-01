@@ -1,0 +1,23 @@
+{
+ "request": "pictures:REQ-021:r38:T10.5:T10.5:d1@k1",
+ "state": "done",
+ "kind": "manual",
+ "label": "Comprobación manual",
+ "tone": "lav",
+ "headline": "Falta la observación manual con el proveedor de IA configurado (inglés y español)",
+ "origin": "El fallo es de producto, no de código: el criterio congelado exige una observación manual del chat real con el proveedor configurado, y el evento registra `MANUAL_EVIDENCE_REQUIRED: manual evidence is missing for: A separate manual local observation using the already configured AI provider...`. El último intento (pictures-REQ-021-r38-T10.5-a1-a9116fa8) ejecutó `npm run idioma:test-integracion-resto` con código 0, 8 de 8 pantallas en inglés y una llamada del proveedor controlado, pero dejó esa observación como `NOT_RUN`, así que la evidencia está parcial. Un nuevo intento del agente no puede producir esa observación, y el agente no debe sustituirla con evidencia de stub.",
+ "steps": [
+  "Ejecute `bitacora.py --project pictures scheduler-op REQ-021 decisions` y confirme que la decisión `T10.5:d1` sigue pendiente.",
+  "El owner u operador levanta el build local de producción con el proveedor configurado, envía una conversación en inglés y otra en español, y registra el proveedor y el resultado (sin secretos ni texto libre exacto) en la evidencia de T10.5 de SP-10.",
+  "Cuando la observación esté registrada, use `bitacora.py --project pictures scheduler-op REQ-021 decide T10.5:d1 reverify --reason \"<observación manual registrada>\"` para verificar de nuevo el mismo snapshot.",
+  "No reintente la tarea hasta que exista la observación: un reintento repetiría el mismo bloqueo."
+ ],
+ "option": "stop",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-11-01T11:14:58",
+ "seconds": 13.3
+}

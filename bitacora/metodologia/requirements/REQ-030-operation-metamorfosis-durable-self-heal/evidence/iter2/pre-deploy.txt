@@ -674,3 +674,11 @@ regression: skipped (D-261: integrate.regression = none)
 rollback: git revert the merge of ui-pool-pictures on main, restart bt-durable.service and bitacora-web.service and bitacora-remote-api.service
 remote API pin: 0d10d7158702 -> e9d61b4d768b (backup /home/david/.config/systemd/user/bitacora-remote-api.service.d/exec.conf.bak-0d10d7158702)
 result: merged e9d61b4d768b, restarted bt-durable.service, bitacora-web.service, bitacora-remote-api.service, smoke ok
+
+# integration of UI pool watcher: components watch (D-293), local restart of engine + web + remote API, 2026-11-01 11:28, session metodologia-97
+previous main: a61f01c492346d58bf524fa5ec5768f33840930f
+/home/david/bitacora/.state/durable/backups/bt_durable-20261101-112830.dump 65685324 ea6076ad021a5a385394515dcdddffa027f445712dac8d80ffe406d2ad8df2c5
+regression: skipped (D-261: integrate.regression = none)
+rollback: git revert the merge of ui-watch on main, restart bt-durable.service and bitacora-web.service and bitacora-remote-api.service
+remote API pin: e9d61b4d768b -> c3421a5a6fb4 (backup /home/david/.config/systemd/user/bitacora-remote-api.service.d/exec.conf.bak-e9d61b4d768b)
+result: merged c3421a5a6fb4, restarted bt-durable.service, bitacora-web.service, bitacora-remote-api.service, smoke ok

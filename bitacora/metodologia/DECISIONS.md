@@ -3822,3 +3822,40 @@ Solucionador 20261030-100736-d494 integrated merge fff622890f28b8093a9a0afda9c40
   against the base.
 
 - **Addendum to D-292 (metodologia-97, 2026-11-01 11:0x):** pushed `main` of pictures (`99d53125b..516e3f7ab`, fast-forward) under the owner's standing authorization of 2026-10-19 (push/merge main/Vercel) and his explicit order to integrate the adoption into pictures. Vercel project `demo-decoracion` started a Production build. Rollback point: previous production deployment of `99d53125b` (GitHub deployment 7416103380); redeploy that commit if the new build or its smoke fails.
+
+## D-293 — `components watch`: the pool watcher (live sync, dev copies that the project's guard rejects)
+
+- **Context:** owner, 2026-11-01, on D-280/D-292: in development a change to `@bitacora/ui` must reach the project
+  (pictures) without a manual step or an integration; «sí» to building the watcher. Pool changes are developed in a
+  metodologia worktree, never in the live checkout; the integrate trigger (`sync_ui`) only runs after a merge.
+- **Decision:** `bitacora.py components watch [--from DIR] [--into PATH] [--project P] [--interval S] [--once]
+  [--restore]` (`bt_ui_watch`). It polls a content digest of the source pool (themes included; README, .DS_Store and
+  node_modules skipped) and acts only when two consecutive polls agree on a digest it has not acted on (~2 s debounce;
+  a half-written tree gives two digests and waits). (1) Default mode, source = the live pool: `bt_ui_sync.sync` for
+  every project with `ui.sync` (re-read at each change), like the integrate trigger; it waits while `bt_integrate`
+  holds the machine lock, so the trigger syncs first and the watcher finds `unchanged` (a smoke that reverts the merge
+  leaves no sync behind). `--from` another pool without `--into` is refused: committing an unintegrated pool onto a
+  project's default branch is the integration's job. (2) Dev mode (`--into PATH`): `bt_ui_sync.write_dev` writes the
+  `--from` pool into `PATH/packages/bitacora-ui` without committing; `SYNC.json` gets `dev: true`, `dev_source`,
+  `dev_pool` and a digest of what it wrote, and its `pool` is `dev-<digest>`. The project is `--project` or the
+  opted-in project whose repository shares PATH's git common dir. Uncommitted content there is overwritten only when
+  it is an intact dev write (refused over anyone's edit, also a hand edit of a dev copy); `--restore` puts the
+  committed copy back, and `components sync` overwrites a dev write in the default branch's worktree. Ctrl-C leaves
+  the files. (3) A failed sync/write is logged once for that digest and retried only when the pool changes. The
+  long-running watcher re-executes itself when `bt_ui_watch`/`bt_ui_sync`/`bt_ui` change on disk, so a merge needs
+  no restart of its unit. (4) `skill/scripts/deploy/bitacora-ui-watch.service` (default mode, `Restart=on-failure`,
+  Nice 19, CPU/IO weight 10): `install.py` step 8 writes it with this machine's paths and runs `daemon-reload` only;
+  it is not enabled (install enables no other unit) and is not in the integrate smoke or restart lists.
+- **Rule:** a dev copy of the pool is never committable by accident: its stamp is not a digest, so the project's guard
+  (`packages/bitacora-ui` equals `SYNC.json`'s `pool`) fails on it.
+- **Evidence:** `test_ui_watch` (16: digest/debounce, once per digest, failure logged once, integration lock, `--once`,
+  re-exec, default mode commits once and never touches a project without opt-in, dev write uncommitted and marked,
+  refusals, restore, CLI, unit install), `test_ui_sync`, `test_ui_pool`, `test_install`, `test_integrate`,
+  `test_package_modules`, `test_integrate_package_modules` exit 0 (106 tests). Pictures guard on a throwaway copy of
+  pictures `main`: clean copy passes; after `write_dev` it fails at §1 (`dev-a9cc786ea020` ≠ `a9cc786ea020`); the same
+  dev stamp with the real digest would PASS, so `dev: true` alone is not checked by the guard. Merged as `c3421a5a6`
+  (`--no-regression`, D-261); smoke ok. **Not verified:** `next dev` hot reload in a real pictures worktree; the unit
+  running under systemd (installed by nobody yet).
+- **Proposal (pictures, not made):** one line in `scripts/test/test-ui-pool-guardia.ts` after reading `sello`:
+  `assert.ok(!(sello as { dev?: boolean }).dev, "copia de desarrollo de @bitacora/ui (components watch --into): no se commitea; components watch --into . --restore");`
+  so the message names the cause instead of «se editó a mano».

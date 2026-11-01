@@ -1,10 +1,10 @@
 {
  "watch": {
-  "T10.453": {
-   "fp": "9b47322f400f22ac",
-   "since": 1793548347.1095984,
+  "T10.5": {
+   "fp": "23dbc5b88ca32d6b",
+   "since": 1793549685.03543,
    "epoch": "de4705c996144f758c0e470d2dd9d3d4",
-   "observed_at": 1793548874.8926196
+   "observed_at": 1793550491.221891
   }
  },
  "tasks": {
@@ -1761,6 +1761,17 @@
    "reason": "the diagnosis is not enough to answer alone (option reverify, confidence media): Falta la observación manual del proveedor de IA configurado en inglés y español.",
    "status": "limit",
    "at": "2026-11-01T10:33:46"
+  },
+  "pictures:REQ-021:r38:T10.5:T10.5:d1@k1": {
+   "kind": "decision",
+   "key": "pictures:REQ-021:r38:T10.5:T10.5:d1@k1",
+   "run_id": "pictures:REQ-021:r38",
+   "task_id": "T10.5",
+   "request_id": "T10.5:d1",
+   "round": 1,
+   "reason": "the diagnosis is not enough to answer alone (option stop, confidence media): Falta la observación manual con el proveedor de IA configurado (inglés y español)",
+   "status": "limit",
+   "at": "2026-11-01T11:15:16"
   }
  },
  "sessions": [
