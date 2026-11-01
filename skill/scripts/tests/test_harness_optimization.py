@@ -70,8 +70,10 @@ class LadderAndStartTier(unittest.TestCase):
     def test_fixed_mode_uses_role_defaults_without_failure_tier_escalation(self):  # 3
         state = {"agent": "claude"}
         self.assertEqual(bt_agents.legacy_model_for(state, 1), ("sonnet", "medium"))
-        self.assertEqual(bt_agents.route("p", {"agent": "codex"}, 1)["effort"], "high")
-        self.assertEqual(bt_agents.route("p", {"agent": "codex"}, 2)["effort"], "high")
+        import bt_weekly_cap  # the shared test root may hold a real reading of the default Codex account (D-279)
+        with patch.object(bt_weekly_cap, "for_profile", return_value=bt_weekly_cap.Cap("unknown")):
+            self.assertEqual(bt_agents.route("p", {"agent": "codex"}, 1)["effort"], "high")
+            self.assertEqual(bt_agents.route("p", {"agent": "codex"}, 2)["effort"], "high")
 
 
 class RouterTests(AgentTests):

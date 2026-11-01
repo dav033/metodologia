@@ -23,6 +23,7 @@ import bt_platform as host
 import bt_profiles
 import bt_runprompt as rp
 import bt_runsettle as settle
+import bt_weekly_cap
 from bt_core import ROOT, SCRIPT, STATE
 from bt_runsession import kill_tree
 
@@ -75,7 +76,8 @@ def auto_route(project: str, kind: str, tier: int | None, avoid: set | None = No
                                effort=effort, role=role, complexity=complexity)
     except bt_agents.NoRoute as exc:
         raise SystemExit(f"Every account is waiting for a usage-limit reset (earliest "
-                         f"{dt.datetime.fromtimestamp(exc.until):%Y-%m-%d %H:%M}). Nothing was sent.") from exc
+                         f"{dt.datetime.fromtimestamp(exc.until):%Y-%m-%d %H:%M}). "
+                         + (f"{exc.reason}. " if getattr(exc, "reason", "") else "") + "Nothing was sent.") from exc
 
 
 def create(project: str, task: str, profile: str | None, agent: str | None, workdir: Path, allow: list[str],
@@ -92,6 +94,9 @@ def create(project: str, task: str, profile: str | None, agent: str | None, work
         raise SystemExit(f"Unknown role: {role}")
     requested_effort, requested_model = effort, model
     routed = None
+    capped_pin = bt_weekly_cap.pinned(profile, agent)
+    if capped_pin is not None:   # the owner's weekly cap (D-279) outranks the pin: the router places it instead
+        profile = agent = None
     if not profile and not agent:
         own = os.environ.get("BITACORA_KIND")  # an audit delegated from a builder session goes to another provider
         avoid = {bt_profiles.ambient_provider()} if kind == "audit" and own != "audit" else None
@@ -99,6 +104,11 @@ def create(project: str, task: str, profile: str | None, agent: str | None, work
                             **{k: v for k, v in {"effort": effort, "role": role, "complexity": complexity, "model": model}.items()
                                if v is not None})
         profile, model, effort = routed["profile"], model or routed["model"], effort or routed["effort"]
+        if capped_pin is not None:
+            cap, pid = capped_pin
+            lines = bt_weekly_cap.record([bt_weekly_cap.entry(bt_agents.account_key(pid), cap, pid)],
+                                         profile or routed.get("agent"), f"delegation {project}")
+            routed = {**routed, "why": "; ".join([*lines, str(routed.get("why") or "")]).strip("; ")}
     if profile:
         bt_profiles.authorize(profile, project)
         agent = bt_profiles.require_launchable(profile)
@@ -217,6 +227,13 @@ def execute(did: str, agent_cmd: str | None = None) -> dict:
     outcome, tried = {}, []
     for attempt in range(1, MAX_REROUTES + 2):
         order["attempt"] = attempt
+        capped = bt_weekly_cap.reroute_order(order)   # the owner's weekly cap outranks the order's account (D-279)
+        if not capped and order.get("weekly_cap"):
+            (d / "TASK.json").write_text(json.dumps(order, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
+        if capped:
+            outcome = _capped_outcome(d, order, capped)
+            tried.append(f"{order.get('profile') or order['agent']}:{outcome['status']}")
+            break
         outcome = _attempt(d, order, agent_cmd)
         tried.append(f"{order.get('profile') or order['agent']}:{outcome['status']}")
         if outcome["status"] != "usage_limit" or not (order.get("auto") or order.get("wait_quota")):
@@ -230,6 +247,18 @@ def execute(did: str, agent_cmd: str | None = None) -> dict:
         outcome["rerouted"] = tried
         (d / "TASK.json").write_text(json.dumps(order, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
         (d / "OUTCOME.json").write_text(json.dumps(outcome, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
+    return outcome
+
+
+def _capped_outcome(d: Path, order: dict, reason: str) -> dict:
+    """The outcome of a delegation the weekly cap left without an account: like one whose accounts are all spent
+    (`usage_limit`, nothing ran), the cap named as the reason."""
+    outcome = {"id": order["id"], "status": "usage_limit", "agent": order["agent"], "profile": order.get("profile"),
+               "model": order.get("model"), "effort": order.get("effort"), "kind": order.get("kind"),
+               "claimed_done": False, "verified": None, "rc": None, "seconds": 0, "summary": reason[:SUMMARY_MAX],
+               "changed_files": [], "outside_allowed": [], "followups": [], "verify": None, "result_file": None,
+               "log": None, "retry_after": None, "weekly_cap": True}
+    (d / "OUTCOME.json").write_text(json.dumps(outcome, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
     return outcome
 
 
@@ -280,7 +309,7 @@ def _next_route(order: dict) -> dict | None:
                 return routes[0]
         else:
             soonest = bt_agents.cooling_until(order.get("profile"), order["agent"])
-            if not soonest:
+            if not soonest:     # a capped pin is moved by the next attempt's weekly-cap check (D-279)
                 return same
         if not (order.get("wait_quota") and soonest) or time.time() >= deadline:
             return None

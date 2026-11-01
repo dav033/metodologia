@@ -181,9 +181,11 @@ def ask(project: str, prompt: str, *, runner: Callable[..., Any] = subprocess.ru
     """One model call through the diagnosis profile (no tools): the text it answers."""
     import bt_block_agent
     import bt_profiles
+    import bt_weekly_cap
 
     config = config or bt_block_agent.settings()
     pid, model, effort = config["profile"], config["model"], config["effort"]
+    pid = bt_weekly_cap.reroute_profile(project, pid, f"manual reviewer {project}")  # D-279
     spec = bt_profiles.get(pid)
     provider = spec["provider"]
     bt_profiles.authorize(pid, project)

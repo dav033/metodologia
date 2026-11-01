@@ -36,8 +36,15 @@ def bounded(text: str | None, lines: int) -> str:
 
 def choose_successor(project: str | None, current: str | None, cwd: str, to: str | None = None) -> dict | None:
     """The route of the account that continues: `to` when given (it must be launchable here), else the router's
-    best candidate among the other accounts (work_only and cooling honoured by pool_for/candidates)."""
+    best candidate among the other accounts (work_only and cooling honoured by pool_for/candidates). The owner's weekly
+    cap (D-279) outranks `to`: a capped `to` gives way to the router's choice (candidates never offer a capped account)."""
     import bt_agents
+    import bt_weekly_cap
+    capped_to = None
+    if to and bt_profiles.get(to)["provider"] in bt_weekly_cap.CAPPED_PROVIDERS:
+        cap = bt_weekly_cap.for_profile(to)
+        if cap.capped:
+            capped_to, to = bt_weekly_cap.entry(bt_agents.account_key(to), cap, to), None
     if to:
         spec = bt_profiles.get(to)
         if current and bt_agents.account_key(to) == bt_agents.account_key(current):
@@ -56,7 +63,13 @@ def choose_successor(project: str | None, current: str | None, cwd: str, to: str
             if bt_profiles.provider_of(p) in RELAY_PROVIDERS and bt_agents.account_key(p) != own
             and bt_profiles.gate_cwd(p, cwd)[0]]
     routes, _ = bt_agents.candidates(project or "", pool, 1, "implement", allow_explore=False)
-    return routes[0] if routes else None
+    chosen = routes[0] if routes else None
+    excluded = [*([capped_to] if capped_to else []), *getattr(routes, "weekly_capped", [])]
+    if excluded:
+        lines = bt_weekly_cap.record(excluded, (chosen or {}).get("profile"), f"relay from {current or 'session'}")
+        if chosen is not None:
+            chosen = {**chosen, "why": "; ".join([*lines, str(chosen.get("why") or "")]).strip("; ")}
+    return chosen
 
 
 MAX_LINE = 400

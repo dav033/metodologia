@@ -126,11 +126,24 @@ def ventana(etiqueta, x):
     return f"    {etiqueta:<8} {barra(usado)}   renueva {BOLD}{cuando(reset)}{RST}"
 
 
-def bloque(nombre, w, medido, estado="ok"):
+def tope(fila):
+    """« excluida (≥90 % semanal)» cuando la cuota semanal supera el tope del dueño (D-279: metodologia no la usa)."""
+    try:
+        import bt_weekly_cap
+        if fila.get("provider", "claude") not in bt_weekly_cap.CAPPED_PROVIDERS:
+            return ""
+        cap = bt_weekly_cap.check(fila)
+        return f"  \033[31mexcluida (≥{cap.threshold:g} % semanal){RST}" if cap.capped else ""
+    except Exception:  # noqa: BLE001 - sin tope legible la fila se muestra igual
+        return ""
+
+
+def bloque(nombre, w, medido, estado="ok", fila=None):
     marca = nombre == ACTUAL
     titulo = f"\033[1;7m ▶ {nombre} {RST}" if marca else f"{BOLD}  {nombre}{RST}"
     nota = "" if estado == "ok" else f"  {DIM}[{estado}]{RST}"
-    print(f"{titulo}  {DIM}medido hace {edad(medido)}{RST}{nota}{'  ◀ esta sesión' if marca else ''}")
+    excluida = tope(fila) if fila else ""
+    print(f"{titulo}  {DIM}medido hace {edad(medido)}{RST}{nota}{excluida}{'  ◀ esta sesión' if marca else ''}")
     print(ventana("5 horas", (w or {}).get("five_hour")))
     print(ventana("semana", (w or {}).get("seven_day")))
     print()
@@ -140,7 +153,7 @@ print(f"{BOLD}Uso de suscripciones{RST}  {DIM}{ahora():%d/%m/%Y %H:%M} hora Colo
 for r in rows:
     if r["profile"] in ALIAS:
         continue  # alias de otra cuenta (misma cuenta registrada dos veces)
-    bloque(r["profile"], r.get("windows", {}), r.get("observed_at"), r["status"])
+    bloque(r["profile"], r.get("windows", {}), r.get("observed_at"), r["status"], r)
 try:
     a = json.loads((STATE / "agy-usage.json").read_text())
     bloque("antigravity", a["windows"], a["observed_at"])

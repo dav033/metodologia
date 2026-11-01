@@ -64,6 +64,7 @@ def candidates(project, pool, tier, kind, role, configured=None, avoid_providers
     import bt_agents as agents
     import bt_profiles
     import bt_subscriptions
+    import bt_weekly_cap
 
     choices = policy.options(role, complexity, escalated=escalated)
     if configured:
@@ -73,6 +74,7 @@ def candidates(project, pool, tier, kind, role, configured=None, avoid_providers
     profiles = bt_profiles.load()
     rows, seen, soonest = [], set(), None
     now = time.time()
+    capped = bt_weekly_cap.Exclusions(samples, now)
     load = recent_sessions(now)
     for index, pid in enumerate(pool):
         spec = profiles.get(pid)
@@ -83,6 +85,11 @@ def candidates(project, pool, tier, kind, role, configured=None, avoid_providers
             continue
         seen.add(identity)
         provider = spec['provider']
+        offered = any(p == provider for p, _, _ in choices)  # the owner's weekly cap (D-279): never a candidate
+        if until := capped.skip(pid, provider, agents.account_key(pid, provider), counted=offered):
+            if offered:
+                soonest = until if soonest is None else min(soonest, until)
+            continue
         for priority, (candidate_provider, model, selected_effort) in enumerate(choices):
             if candidate_provider != provider:
                 continue
@@ -131,4 +138,4 @@ def candidates(project, pool, tier, kind, role, configured=None, avoid_providers
         for name in list(row):
             if name.startswith('_'):
                 del row[name]
-    return rows, soonest
+    return capped.routes(rows), soonest
