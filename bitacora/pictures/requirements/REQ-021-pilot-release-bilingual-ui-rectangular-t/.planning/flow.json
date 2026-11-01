@@ -30,30 +30,52 @@
    "via": "web"
   },
   "SP-10": {
-   "at": "2026-11-01T08:17:46-05:00",
+   "at": "2026-11-01T10:15:11-05:00",
    "by": "policy",
-   "digest": "aac73e3893a3ce14",
+   "digest": "2684000c301459c3",
    "history": [
     {
      "at": "2026-10-31T09:56:35-05:00",
      "by": "owner",
      "digest": "61eba9c21617e0d4",
      "via": "conversation"
+    },
+    {
+     "at": "2026-11-01T08:17:46-05:00",
+     "by": "policy",
+     "digest": "aac73e3893a3ce14",
+     "policy": {
+      "evidence": [
+       "RUN.notes/T10.5.manual-observation-a38776b4.md",
+       "RUN.notes/T10.5.manual-observation.md"
+      ],
+      "previous": {
+       "at": "2026-10-31T09:56:35-05:00",
+       "by": "owner",
+       "digest": "61eba9c21617e0d4",
+       "via": "conversation"
+      },
+      "repair": [
+       "T10.451"
+      ],
+      "requested_by": "planner",
+      "rule": "D-241"
+     },
+     "via": "policy"
     }
    ],
    "policy": {
     "evidence": [
-     "RUN.notes/T10.5.manual-observation-a38776b4.md",
-     "RUN.notes/T10.5.manual-observation.md"
+     "RUN.notes/T10.5.manual-observation-r36.md"
     ],
     "previous": {
-     "at": "2026-10-31T09:56:35-05:00",
-     "by": "owner",
-     "digest": "61eba9c21617e0d4",
-     "via": "conversation"
+     "at": "2026-11-01T08:17:46-05:00",
+     "by": "policy",
+     "digest": "aac73e3893a3ce14",
+     "via": "policy"
     },
     "repair": [
-     "T10.451"
+     "T10.452"
     ],
     "requested_by": "planner",
     "rule": "D-241"

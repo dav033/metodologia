@@ -12684,6 +12684,130 @@
       "ui": false
     },
     {
+      "id": "T10.452",
+      "milestone_id": "M3",
+      "title": "Pass the conversation language at every guided-reply call site and prove English replies and card names through the real route",
+      "objective": "Repair only what the third authorized configured-provider observation proved T10.451 left broken (RUN.notes/T10.5.manual-observation-r36.md, candidate b3ccec82 = a38776b4 + T10.451): in an English conversation gemini-3.6-flash answered in English but the customer still saw the Spanish fraseCercanasPorColor sentence, and the six idea cards kept Spanish titles and subtitles. Builds on the accepted T10.451 files (already in the candidate; the graph edge goes to T10.442 only to keep the SP-10 implement chain within six). (1) Language at every call site: in src/lib/ia/guiado/respuesta-guiada.ts sanearRespuestaGuiada calls fraseCercanasPorColor(cercanas) at about lines 371 and 384 without the language although T10.451 put idioma into the context. Make the language a REQUIRED parameter (remove the default \"es\" and the optional idioma in ContextoRespuesta) of fraseCercanasPorColor, fraseCercanasYaDicha and every other phrase builder in that module, pass contexto.idioma at every call site, and pass the request language from src/app/api/asistente-guiado/route.ts wherever it builds the context or calls a builder, so a missing call site fails tsc. (2) Card titles: the r36 substitution (src/lib/ia/guiado/nombres-decoracion-ingles.ts, keyed by decoration id or asistente:<id> and guarded by spanish_source === titulo) changed nothing because the REQ-021 test database table textos_ingles held no rows at all (read-only check by the Planner on 2026-11-01), while data/textos-ingles/ideas.json in the repository holds an English name for these decorations (e.g. asistente:deco-real-09-images-24 \"Pink and gold birthday garland\"). Keep the substitution keyed exactly as SP-9 stores it and prove it with seeded data; record that the shared observation database is not seeded. The r36 code also overwrites tematica (the card subtitle) with the English name, duplicating the title: SP-9 has only name and description for decorations, so the subtitle keeps its own source text when no English text exists for it (SP-9 fallback rule); do not invent English text, do not use the description as a subtitle and do not translate themes with a model. Author scripts/test/test-chat-guiado-idioma-ruta.ts and register only idioma:test-chat-ruta: call the actual exported POST handler of the guided-chat route (or the single function the route itself uses to build the visible reply, extracted so both share it) with a controlled stub provider that emits an English or Spanish model reply plus a catalogue search returning ideas with no exact theme; read the SSE fin payload the client receives; seed an invocation-owned isolated database with the repository's SP-9 texts through the existing textos:sembrar library. Never call fraseCercanasPorColor directly as proof of the visible reply. Include a type-level fixture omitting the language that must fail. Show red on the r36 code and green after. No live provider, paid call, production data, change to the stored brief theme, catalogue search arguments (Spanish), prompt, SP-9 data or generator, or to any other task, criterion, check or gate. T10.5 then reruns unchanged; its manual observation stays NOT_RUN until genuinely re-observed.",
+      "repository": "pictures",
+      "after": [
+        "T10.442"
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 90,
+      "risk": "medium",
+      "coupling": "medium",
+      "confidence": "high",
+      "estimate_rationale": "Agent estimate in minutes: 20 required language parameter and call sites + 15 subtitle mapping + 40 real-route regression with stub provider and seeded isolated database + 15 red/green and type fixture = 90.",
+      "classification_evidence": {
+        "complexity": {
+          "justification": "Two known call sites, one optional field made required and one mapping fix, plus a regression through the existing route handler.",
+          "evidence": [
+            "file:src/lib/ia/guiado/respuesta-guiada.ts",
+            "file:src/app/api/asistente-guiado/route.ts"
+          ]
+        },
+        "scope": {
+          "justification": "The reply module, the route, the T10.451 name mapping and one new regression script.",
+          "evidence": [
+            "file:src/lib/ia/guiado/respuesta-guiada.ts",
+            "task:T10.451"
+          ]
+        },
+        "duration": {
+          "justification": "Twenty, fifteen, forty and fifteen minutes make ninety.",
+          "evidence": [
+            "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind implement -> no comparable samples",
+            "task:T10.451"
+          ]
+        },
+        "risk": {
+          "justification": "The near-colour sentence replaces the model reply for every customer whose theme has no decorations; a wrong language reaches all English customers.",
+          "evidence": [
+            "file:src/lib/ia/guiado/respuesta-guiada.ts",
+            "spec:SPEC.md#requirements"
+          ]
+        },
+        "coupling": {
+          "justification": "Consumes the request language of T10.3, the SP-9 decoration texts and T10.451's dictionaries; T10.5 reruns on the result.",
+          "evidence": [
+            "task:T10.3",
+            "task:T9.1",
+            "task:T10.451"
+          ]
+        },
+        "confidence": {
+          "justification": "The observation names the two call sites and the Planner confirmed the empty English-text table and the committed English names.",
+          "evidence": [
+            "file:src/app/api/asistente-guiado/route.ts",
+            "task:T10.5"
+          ]
+        }
+      },
+      "expected_paths": [
+        "src/lib/ia/guiado/respuesta-guiada.ts",
+        "src/app/api/asistente-guiado/route.ts",
+        "src/lib/ia/guiado/nombres-decoracion-ingles.ts",
+        "scripts/test/test-chat-guiado-idioma-ruta.ts"
+      ],
+      "shared_resources": [
+        "package.json scripts:idioma:test-chat-ruta",
+        "contract:idioma",
+        "contract:textos-ingles"
+      ],
+      "acceptance_criteria": [
+        "Every guided-reply phrase builder and the reply context take the conversation language as a required argument with no default, every call site in respuesta-guiada.ts and the API route passes the request language, and the complete repository passes strict TypeScript without casts, suppressions or relaxed settings.",
+        "Through the real guided-chat API route handler with a controlled stub provider and a catalogue result with ideas but no decoration of the requested theme, the visible reply delivered to the client in an English conversation is the English near-colour sentence built from the EN dictionary entry, and in a Spanish conversation the Spanish one from the ES entry; the expected texts are derived from the dictionary entries, not from the function under test, a fixture call without the language fails type-checking, and the regression fails on the r36 candidate whose call sites omit the language.",
+        "Through the same real route with an isolated database seeded from the repository's SP-9 decoration texts, the ideas returned to an English conversation carry the SP-9 English names of those decoration ids as titles, the subtitle is never a copy of the title (it keeps its own source text when SP-9 has no English text for it), ideas without an SP-9 English name keep their Spanish title, and a Spanish conversation receives every title and subtitle unchanged.",
+        "The T10.451 language regression passes unchanged for the sentence, the already-said detector and the rendered chip, rating link, status and cards.",
+        "The existing guided-reply sanitiser suite passes with every case kept, so Spanish replies, failure-phrase removal and real-option validation behave as before."
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "NODE_OPTIONS=--max-old-space-size=4096 npx --no-install tsc --noEmit --incremental false",
+          "purpose": "Every guided-reply phrase builder and the reply context take the conversation language as a required argument with no default, every call site in respuesta-guiada.ts and the API route passes the request language, and the complete repository passes strict TypeScript without casts, suppressions or relaxed settings.",
+          "category": "static"
+        },
+        {
+          "type": "command",
+          "value": "npm run idioma:test-chat-ruta -- --solo respuesta",
+          "purpose": "Through the real guided-chat API route handler with a controlled stub provider and a catalogue result with ideas but no decoration of the requested theme, the visible reply delivered to the client in an English conversation is the English near-colour sentence built from the EN dictionary entry, and in a Spanish conversation the Spanish one from the ES entry; the expected texts are derived from the dictionary entries, not from the function under test, a fixture call without the language fails type-checking, and the regression fails on the r36 candidate whose call sites omit the language.",
+          "created_by": "T10.452",
+          "category": "regression"
+        },
+        {
+          "type": "command",
+          "value": "npm run idioma:test-chat-ruta -- --solo tarjetas",
+          "purpose": "Through the same real route with an isolated database seeded from the repository's SP-9 decoration texts, the ideas returned to an English conversation carry the SP-9 English names of those decoration ids as titles, the subtitle is never a copy of the title (it keeps its own source text when SP-9 has no English text for it), ideas without an SP-9 English name keep their Spanish title, and a Spanish conversation receives every title and subtitle unchanged.",
+          "created_by": "T10.452",
+          "category": "regression",
+          "requires": [
+            "PICTURES_REQ021_DATABASE_URL"
+          ]
+        },
+        {
+          "type": "command",
+          "value": "npm run idioma:test-chat-respuesta",
+          "purpose": "The T10.451 language regression passes unchanged for the sentence, the already-said detector and the rendered chip, rating link, status and cards.",
+          "created_by": "T10.451",
+          "category": "regression"
+        },
+        {
+          "type": "command",
+          "value": "npx --no-install tsx --conditions=react-server scripts/test/test-respuesta-guiada-sin-fracaso.ts",
+          "purpose": "The existing guided-reply sanitiser suite passes with every case kept, so Spanish replies, failure-phrase removal and real-option validation behave as before.",
+          "category": "regression"
+        }
+      ],
+      "covers": [
+        "R12"
+      ],
+      "kind": "implement",
+      "subplan_id": "SP-10",
+      "ui": false
+    },
+    {
       "id": "T10.5",
       "milestone_id": "M3",
       "title": "Browser end-to-end: external screens and one live AI turn in English",
@@ -12691,7 +12815,8 @@
       "repository": "pictures",
       "after": [
         "T10.45",
-        "T10.451"
+        "T10.451",
+        "T10.452"
       ],
       "complexity": "medium",
       "scope": "small_change",
