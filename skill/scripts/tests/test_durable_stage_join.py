@@ -185,6 +185,97 @@ class JoinLock(unittest.TestCase):
             self.assertNotIn("error", json.loads((rdir / stage_join.PENDING).read_text()))
 
 
+class NoChangeAcceptance(unittest.TestCase):
+    """pictures REQ-021, 2026-10-31: T2.3 was accepted in r32 by an attempt that changed nothing (its work was already in
+    its base: snapshot == base). The join of stage r34 refused it as JOIN_MATERIAL_MISSING and SP-14, confirmed by the
+    owner, never reached the run (D-272). Pure `plan()` on real git, no engine."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        root = Path(self.tmp.name)
+        self.repo, self.state, self.rdir = root / "repo", root / "state", root / "proj" / "requirements" / "REQ-900-x"
+        self.rdir.mkdir(parents=True)
+        self.repo.mkdir()
+        lab_support.git(self.repo, "init", "-q")
+        lab_support.git(self.repo, "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "--allow-empty", "-m", "base")
+        self.base = lab_support.git(self.repo, "rev-parse", "HEAD")
+        tasks = [{"id": "T1", "objective": "already done"}, {"id": "T2", "objective": "new"}]
+        self.old, self.new = self.ref(1, tasks[:1]), self.ref(2, tasks)
+
+    def ref(self, revision: int, tasks: list[dict]) -> RunRef:
+        path = self.rdir / f"PLAN.r{revision}.json"
+        path.write_text(json.dumps({"tasks": tasks}))
+        return RunRef(project="proj", req="REQ-900", plan_id="REQ-900", revision=revision, plan_sha256="0" * 64,
+                      plan_path=path)
+
+    def manifest(self, snapshot: str, *, worktree: str = "/gone/by/d266") -> None:
+        folder = self.state / "attempts-root" / "attempts" / "proj-REQ-900-r1-T1-a1-048af05b" / "handoff"
+        folder.mkdir(parents=True)
+        (folder / "manifest.json").write_text(json.dumps({"status": "captured", "snapshot_sha": snapshot,
+                                                          "base_sha": self.base, "repository": str(self.repo),
+                                                          "worktree": worktree}))
+
+    def plan(self, snapshot: str) -> dict:
+        from bt_contracts.execution import LegacyProgress
+        status = {"summary": {"tasks": {"T1": "completed"}, "results": {"T1": {"snapshot_sha": snapshot,
+                                                                               "verdict_ref": "v1"}}}, "tasks": {}}
+        return stage_join.plan(state_dir=self.state, old=self.old, new=self.new, status=status,
+                               inherited=LegacyProgress())
+
+    def test_an_accepted_task_that_changed_nothing_is_inherited_as_it_is(self):
+        self.manifest(self.base)                     # the attempt's snapshot IS its base; its worktree was reclaimed
+        report = self.plan(self.base)
+        verdicts = {t["task_id"]: t["verdict"] for t in report["tasks"]}
+        self.assertEqual(verdicts, {"T1": "inherit", "T2": "redo"})
+        item = report["tasks"][0]["item"]
+        self.assertEqual((item.snapshot_sha, item.base_sha, item.integrated, item.worktree),
+                         (self.base, self.base, True, None))
+        self.assertEqual(report["redone"], [])
+        progress = stage_join.progress(report)
+        self.assertEqual([t.task_id for t in progress.of("inherit").values()], ["T1"])
+
+    def test_an_accepted_snapshot_whose_commit_does_not_exist_is_still_refused(self):
+        missing = "f" * 40
+        self.manifest(missing)
+        with self.assertRaises(stage_join.JoinRefused) as refused:
+            self.plan(missing)
+        self.assertEqual(refused.exception.code, "JOIN_MATERIAL_MISSING")
+
+    def test_a_task_not_accepted_whose_snapshot_changed_nothing_runs_again(self):
+        self.manifest(self.base)                     # nothing of its own to verify again: no reconcile
+        from bt_contracts.execution import LegacyProgress
+        status = {"summary": {"tasks": {"T1": "blocked"}, "results": {}}, "tasks": {}}
+        report = stage_join.plan(state_dir=self.state, old=self.old, new=self.new, status=status,
+                                 inherited=LegacyProgress())
+        self.assertEqual(report["tasks"][0]["verdict"], "redo")
+
+
+class RefusalRecord(unittest.TestCase):
+    """The last refused join stays readable for the panel (`RUN.join.refused.json`) until a join is not refused."""
+
+    def test_a_refused_join_is_recorded_and_a_later_one_clears_it(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            rdir = Path(tmp) / "proj" / "requirements" / "REQ-900-x"
+            rdir.mkdir(parents=True)
+            run = RunRef(project="proj", req="REQ-900", plan_id="REQ-900", revision=2, plan_sha256="0" * 64,
+                         plan_path=rdir / "PLAN.r2.json")
+            with self.assertRaises(stage_join.JoinRefused):              # no durable owner: NOT_DURABLE
+                stage_join.join(mock.Mock(), rdir, state_dir=Path(tmp), new=run, repositories={}, by="owner")
+            record = stage_join.last_refusal(rdir)
+            self.assertEqual((record["revision"], record["code"], record["by"]), (2, "NOT_DURABLE", "owner"))
+            with self.assertRaises(stage_join.JoinRefused):              # a dry run records nothing new
+                stage_join.join(mock.Mock(), rdir, state_dir=Path(tmp), new=run.model_copy(update={"revision": 3}),
+                                repositories={}, dry_run=True)
+            self.assertEqual(stage_join.last_refusal(rdir)["revision"], 2)
+            bt_run_owner.write(rdir, {"run_id": "proj:REQ-900:r2", "backend": "dbos", "workflow_id": "bt:proj:REQ-900:r2",
+                                      "since": 1.0, "by": "test"}, expect=None)
+            (rdir / "RUN.durable-run.json").write_text(run.model_dump_json())
+            self.assertEqual(stage_join.join(mock.Mock(), rdir, state_dir=Path(tmp), new=run, repositories={})["status"],
+                             "current")
+            self.assertIsNone(stage_join.last_refusal(rdir))
+
+
 class ProgressInput(unittest.TestCase):
     def test_new_progress_fields_travel_only_when_set(self):
         """An engine older than D-149/D-150 refuses unknown input fields: the regression of D-150 caught every upgrade
