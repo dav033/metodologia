@@ -136,6 +136,15 @@ def env_probe(run: dict, task_id: str) -> dict:
     return _port(lambda: probe.check(ref, plan(ref), task_id))
 
 
+@DBOS.step(name="bt.disk_guard", retries_allowed=True, max_attempts=3, interval_seconds=2)
+def disk_guard(run: dict, task_id: str) -> dict:
+    """Free space on the engine's scratch before an agent starts ({} with no guard wired or enough room), D-266."""
+    guard = getattr(engine.ports(), "disk_guard", None)
+    if guard is None:
+        return {}
+    return _port(lambda: guard.check(RunRef.model_validate(run), None, task_id))
+
+
 @DBOS.step(name="bt.unready_ancestors")
 def unready_ancestors(run: dict, task_id: str, states: dict) -> list[str]:
     """The task's ancestors not done in `states` (the run's summary), in plan order: pure over the frozen plan."""
