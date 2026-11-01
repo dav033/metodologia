@@ -216,6 +216,8 @@ def status(ctx: dict, s: dict, shared: dict) -> dict:
         phase = fix["phase_es"] + (f" ({fix['detail']})" if fix.get("detail") else "") if fix else "espera una corrección"
         who = {"redesigning": "Designer", "choosing": "Tú", "approve_contract": "Tú", "reconfirm": "Tú"}.get(
             (fix or {}).get("phase"), "Ejecución")
+        if fix and fix.get("phase") == "joining" and (fix.get("join") or {}).get("stage") is None:
+            who = "Tú"                        # the change is not frozen: «Ejecutar cambios» is the owner's (D-272)
         blockers.append({"who": who, "text": f"Rechazaste la versión {(fix or verified)['version']}: {phase}"})
     if verified.get("decision", {}).get("decision") in ("approved", "rejected"):
         dec = verified["decision"]

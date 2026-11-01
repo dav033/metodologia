@@ -16,6 +16,8 @@ the run of the new revision CONTINUES the current one.
 - Then the current run's workflows are cancelled, `RUN.owner.json` and `RUN.durable-run.json` move to the new run by
   compare-and-swap, and the new run starts. Open owner decisions of the current run end with it (the reconciled task
   asks again if it must).
+- A refused join leaves `RUN.join.refused.json` (when, target revision, code, message, who asked) until a later join of
+  the requirement is not refused: the panel shows why a frozen stage is still waiting to join (D-272).
 - `RUN.join.json` is written BEFORE the cancel, whatever started the join, and removed only once the run pointer moved:
   a join cut between the cancel and the new run's start (the CLI or the web service killed, an engine restart) left the
   run cancelled with nothing to finish it, and no rung noticed (the Solucionador watches runs in ERROR and PENDING tasks).
@@ -25,6 +27,7 @@ the run of the new revision CONTINUES the current one.
 from __future__ import annotations
 
 import contextlib
+import datetime as dt
 import fcntl
 import hashlib
 import json
@@ -47,6 +50,7 @@ LIVE = frozenset({"queued", "running", "verifying", "recovering", "waiting_quota
 DONE = frozenset({"completed", "inherited"})
 PENDING = "RUN.join.json"
 LOCK = "RUN.join.lock"
+REFUSED = "RUN.join.refused.json"
 FINGERPRINT = ("objective", "acceptance_criteria", "verification", "expected_paths", "after", "repository")
 
 
@@ -80,6 +84,24 @@ def _write_pending(rdir: Path, request: dict) -> None:
     os.replace(tmp, target)
 
 
+def note_refusal(rdir: Path, revision: int, code: str, message: str, *, by: str) -> None:
+    """Record the last refused join of the requirement (read by the panel, `bt_verification_correction`; D-272)."""
+    target = Path(rdir) / REFUSED
+    tmp = target.with_name(f".{REFUSED}.{os.getpid()}.tmp")
+    tmp.write_text(json.dumps({"at": dt.datetime.now().astimezone().isoformat(timespec="seconds"), "revision": revision,
+                               "code": code, "message": message[:500], "by": by}, indent=1) + "\n", encoding="utf-8")
+    os.replace(tmp, target)
+
+
+def last_refusal(rdir: Path) -> dict | None:
+    """The last refused join (`note_refusal`), or None when there is none or it is unreadable."""
+    try:
+        data = json.loads((Path(rdir) / REFUSED).read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    return data if isinstance(data, dict) else None
+
+
 def fingerprint(plan_doc: dict, task_id: str) -> str:
     task = next((t for t in plan_doc.get("tasks", ()) if t.get("id") == task_id), None)
     if task is None:
@@ -106,12 +128,18 @@ def _commit_exists(repo: str, sha: str) -> bool:
 
 def _from_manifest(manifest: Path, task_id: str, verdict: str, provenance: str, *, snapshot: str = "",
                    integrated: bool = False) -> LegacyTask | None:
+    """The task's progress from one captured handoff, or None. An accepted task (`integrated`) whose snapshot IS its
+    base is inherited as it is: the attempt changed nothing because its work was already in the base it started from,
+    which is a legitimate acceptance (pictures REQ-021 T2.3 in r32, D-272). The join refused it as JOIN_MATERIAL_MISSING
+    and the confirmed SP-14 could never reach the run. The commit must still exist; the worktree need not (D-266)."""
     try:
         data = json.loads(manifest.read_text(encoding="utf-8"))
     except (OSError, ValueError):
         return None
     sha, base, repo = snapshot or data.get("snapshot_sha"), data.get("base_sha"), data.get("repository", "")
-    if data.get("status") != "captured" or not sha or not base or sha == base or not _commit_exists(repo, sha):
+    if data.get("status") != "captured" or not sha or not base or not _commit_exists(repo, sha):
+        return None
+    if sha == base and not integrated:     # nothing of its own to verify again or continue from: the task runs
         return None
     worktree = data.get("worktree")
     return LegacyTask(task_id=task_id, verdict=verdict, snapshot_sha=sha, base_sha=base, repository=Path(repo),
@@ -204,8 +232,14 @@ def join(client, rdir: Path, *, state_dir: Path, new: RunRef, repositories, sett
         return _join(client, rdir, state_dir=state_dir, new=new, repositories=repositories, settings=settings,
                      confirm=confirm, dry_run=True, by=by, emit=emit)
     with locked(rdir, wait=wait):
-        return _join(client, rdir, state_dir=state_dir, new=new, repositories=repositories, settings=settings,
-                     confirm=confirm, dry_run=False, by=by, emit=emit)
+        try:
+            outcome = _join(client, rdir, state_dir=state_dir, new=new, repositories=repositories, settings=settings,
+                            confirm=confirm, dry_run=False, by=by, emit=emit)
+        except JoinRefused as refused:
+            note_refusal(rdir, new.revision, refused.code, refused.message, by=by)
+            raise
+        (Path(rdir) / REFUSED).unlink(missing_ok=True)          # this join was not refused: the old reason is gone
+        return outcome
 
 
 def _join(client, rdir: Path, *, state_dir: Path, new: RunRef, repositories, settings, confirm: bool, dry_run: bool,

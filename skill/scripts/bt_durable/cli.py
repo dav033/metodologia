@@ -230,11 +230,14 @@ def cmd_join(args) -> int:
     from . import stage_join
     from .adapters.telemetry import JsonlTelemetry
     rdir = requirement_dir(args.project, args.req)
+    new = None
     try:
         new = latest_frozen(rdir, args.project, args.req)
         if not args.dry_run:
             preflight(new, rdir)
     except SystemExit as refused:                       # the stage's plan is refused before anything moves
+        if new is not None and not args.dry_run:        # the panel says why the frozen stage waits (D-272)
+            stage_join.note_refusal(rdir, new.revision, "PLAN_PREFLIGHT", str(refused), by="bt-durable join")
         print(json.dumps({"status": "refused", "code": "PLAN_PREFLIGHT", "message": str(refused)}, ensure_ascii=False))
         return 3
     client = _client()

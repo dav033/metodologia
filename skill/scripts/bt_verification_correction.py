@@ -8,24 +8,34 @@ Owner, 2026-10-31, about pictures REQ-021 SP-14 (version 2 rejected in «Probar�
 phase of its correction in the order of the real pipeline, from data that already exists (no new state file):
 
 - redesign (the subplan's UI contract is not approved, or was approved after the rejection):
-  rediseñando → elige una dirección → aprueba el contrato → reconfirma el subplan → construyendo vN+1;
+  rediseñando → elige una dirección → aprueba el contrato → reconfirma el subplan → por unir a la ejecución →
+  construyendo vN+1;
 - repair (anything else: bounded repair tasks, the Solucionador; pictures REQ-021 SP-3): reparando.
 
 Both end at «vN+1 lista para probar»: once the engine publishes a version above N this returns None, so the views show
 «por probar» with the owner's note, as before. A version re-published at or below N does not end it: after the rejection
 pictures REQ-021's new run revision re-published SP-14 v2 / SP-2 v1 / SP-3 v2 (`outdated`, `retest`) while the
 decisions rejected v2 / v2 / v3 — the panel showed nothing until `in_correction` stopped requiring `state == rejected`.
+«construyendo vN+1» holds only while the run the durable runtime owns runs the stage that holds the reconfirmed subplan
+(its revision ≥ that stage's). Before that the phase is «por unir a la ejecución»: the change is not frozen yet (the owner
+presses «Ejecutar cambios», D-259), or its stage is frozen and the join waits for live attempts or was refused (the
+reason from `RUN.join.json` / `RUN.join.refused.json` goes in the detail). pictures REQ-021 2026-10-31: SP-14 confirmed
+at 19:55:55, stage r34 frozen at 19:56:01, the join refused (JOIN_MATERIAL_MISSING) and the run still in r32, while the
+panel said «Rechazada v2 · construyendo v3» — «sp14 no me sale en ningún lado para aprobar» (D-272). Without a durable
+run, or without a known confirmation time, the phase stays «construyendo» as before.
 Read-only: no lock is taken and nothing is settled or written.
 """
 from __future__ import annotations
 
 import datetime as dt
+import json
 from pathlib import Path
 
 import bt_design_drafts as drafts
 
 REDESIGN = (("redesigning", "rediseñando"), ("choosing", "elige una dirección"), ("approve_contract", "aprueba el contrato"),
-            ("reconfirm", "reconfirma el subplan"), ("building", "construyendo v{next}"),
+            ("reconfirm", "reconfirma el subplan"), ("joining", "por unir a la ejecución"),
+            ("building", "construyendo v{next}"),
             ("ready", "v{next} lista para probar"))
 REPAIR = (("repairing", "reparando"), ("ready", "v{next} lista para probar"))
 
@@ -98,6 +108,72 @@ def _flow(rdir: Path, sid: str) -> dict | None:
     return {"state": "confirmed" if ok else "changed", "confirmed_at": record.get("at", "")}
 
 
+def _running_revision(rdir: Path) -> int | None:
+    """The plan revision of the run the durable runtime owns (`RUN.durable-run.json`), or None for any other run."""
+    try:
+        import bt_run_owner
+        if bt_run_owner.backend(rdir) != "dbos":
+            return None
+        revision = json.loads((Path(rdir) / "RUN.durable-run.json").read_text(encoding="utf-8")).get("revision")
+    except Exception:  # noqa: BLE001 - an unreadable run record only means «no durable run known» here
+        return None
+    return revision if isinstance(revision, int) else None
+
+
+def _join_reason(rdir: Path, holder: int | None) -> tuple[bool, dict | None]:
+    """(a join waits for live attempts, the refusal of the last join) for the stage `holder` (None: any stage)."""
+    def concerns(revision: object) -> bool:
+        return isinstance(revision, int) and (holder is None or revision >= holder)
+    try:
+        pending = json.loads((Path(rdir) / "RUN.join.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        pending = None
+    if isinstance(pending, dict) and concerns((pending.get("run") or {}).get("revision")):
+        if pending.get("error"):
+            code, _, message = str(pending["error"]).partition(": ")
+            return False, {"code": code, "message": message, "at": ""}
+        return True, None
+    try:
+        refused = json.loads((Path(rdir) / "RUN.join.refused.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        refused = None
+    if isinstance(refused, dict) and concerns(refused.get("revision")):
+        return False, {k: str(refused.get(k) or "") for k in ("code", "message", "at")}
+    return False, None
+
+
+def join_state(rdir: Path, sid: str, confirmed: float | None) -> dict | None:
+    """Where the reconfirmed `sid` (confirmed at `confirmed`) stands against the durable run: None while that run holds
+    it, or when that cannot be known (no durable run, no stage, no confirmation time); else {"stage": the frozen
+    revision that holds it or None, "running": the run's revision, "waiting": bool, "refused": {code, message, at} or
+    None}. The holding stage is the first frozen after the confirmation with `sid` in it and not kept as before (D-259)."""
+    running = _running_revision(rdir)
+    if running is None or confirmed is None:
+        return None
+    import bt_plan_adapter
+    stages = bt_plan_adapter.stage_summary(rdir).get("stages") or []
+    if not stages:
+        return None
+    holder = next((s["revision"] for s in stages if sid in s.get("subplans", ()) and sid not in s.get("kept", ())
+                   and _after(s.get("frozen_at"), confirmed)), None)
+    if holder is not None and running >= holder:
+        return None
+    waiting, refused = _join_reason(rdir, holder) if holder is not None else (False, None)
+    return {"stage": holder, "running": running, "waiting": waiting, "refused": refused}
+
+
+def _join_detail(state: dict) -> str:
+    if state["stage"] is None:
+        return f"aprueba la etapa con «Ejecutar cambios»; la ejecución sigue en r{state['running']}"
+    text = f"etapa r{state['stage']} aprobada; la ejecución sigue en r{state['running']}"
+    if state["waiting"]:
+        text += " · se une en cuanto terminen los intentos en curso"
+    if state["refused"]:
+        said = " ".join(f"{state['refused']['code']}: {state['refused']['message']}".split())
+        text += f" · la unión se rechazó: {said[:300]}"
+    return text
+
+
 def _redesign_phase(design: dict, flow: dict | None, since: float | None, approved: object) -> str:
     status = design["status"]
     if status == "choosing" and not design.get("chosen") and not design.get("stale"):
@@ -118,7 +194,8 @@ def correction(rdir: Path, sid: str, *, row: dict | None = None, design: dict | 
     `row` is `sid`'s row of `bt_verification.state` (read when omitted); `design` its draft row (`bt_design_drafts.rows`,
     read lock-free when omitted); `flow` its planning-flow item ({"state", "confirmed_at"}; None = no flow; omitted =
     read); `progress` the run's (completed, total) tasks of the subplan, shown while building. Returns {"id", "version",
-    "next", "path" (redesign | repair), "phase", "phase_es", "label", "steps", "detail", "note", "pending", "at", "retest"}; `retest` is the re-published older version, or None."""
+    "next", "path" (redesign | repair), "phase", "phase_es", "label", "steps", "detail", "note", "pending", "at", "retest", "join"}; `retest` is the re-published older version, or None;
+    `join` is `join_state` while the phase is «por unir a la ejecución», else None."""
     rdir = Path(rdir)
     if row is None:
         import bt_verification
@@ -141,9 +218,14 @@ def correction(rdir: Path, sid: str, *, row: dict | None = None, design: dict | 
         phase, table = _redesign_phase(design, flow, since, approved), REDESIGN
     else:
         phase, table = "repairing", REPAIR
+    joining = None
+    if phase == "building":
+        confirmed = _when(flow.get("confirmed_at")) if flow else _when(approved)
+        joining = join_state(rdir, sid, confirmed)
+        phase = "joining" if joining else phase
     keys = [k for k, _ in table]
     names = {k: label.format(next=upcoming) for k, label in table}
-    detail = ""
+    detail = _join_detail(joining) if joining else ""
     if phase in ("building", "repairing") and progress and progress[1]:
         detail = f"{progress[0]}/{progress[1]} tareas"
     if phase == "repairing" and (said := (row.get("solver") or {}).get("text")):
@@ -158,7 +240,7 @@ def correction(rdir: Path, sid: str, *, row: dict | None = None, design: dict | 
             "steps": [{"key": k, "label": names[k], "state": "done" if keys.index(k) < keys.index(phase) else
                        "now" if k == phase else "todo"} for k in keys],
             "detail": detail, "note": str(dec.get("note") or ""), "pending": str(pending or ""), "at": str(dec.get("at") or ""),
-            "retest": row.get("version") if row.get("state") == "outdated" else None}
+            "retest": row.get("version") if row.get("state") == "outdated" else None, "join": joining}
 
 
 def corrections(rdir: Path, ctx: dict | None = None) -> dict[str, dict]:
