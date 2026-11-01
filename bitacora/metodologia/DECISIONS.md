@@ -3820,3 +3820,5 @@ Solucionador 20261030-100736-d494 integrated merge fff622890f28b8093a9a0afda9c40
   language layer); accounts and plans screens (they exist only on the r35 line); catching up on the line. The ops
   script `e2e-modo-vista` stops at two stale checks in code this change did not touch, 24 PASS before that; not compared
   against the base.
+
+- **Addendum to D-292 (metodologia-97, 2026-11-01 11:0x):** pushed `main` of pictures (`99d53125b..516e3f7ab`, fast-forward) under the owner's standing authorization of 2026-10-19 (push/merge main/Vercel) and his explicit order to integrate the adoption into pictures. Vercel project `demo-decoracion` started a Production build. Rollback point: previous production deployment of `99d53125b` (GitHub deployment 7416103380); redeploy that commit if the new build or its smoke fails.
