@@ -1,6 +1,6 @@
 # SP-15 draft skeleton — adopt metodologia's UI pool as `@bitacora/ui` (D-280)
 
-Status: DRAFT, not in PLAN.json. Owner decision 2026-10-31 relayed by the operator (metodologia D-280). Waiting for
+Status: implemented outside the run by owner order; to record in PLAN as done. Landed on pictures local `main` at `516e3f7ab` (metodologia D-292), not pushed to origin. Draft task ids below are history. Previous status: DRAFT, not in PLAN.json. Owner decision 2026-10-31 relayed by the operator (metodologia D-280). Waiting for
 the exact adoption steps from metodologia (package + sync are being built there). Nothing frozen, no stage change.
 Why outside PLAN.json for now: adding a subplan reopens the skeleton confirmation, which would block the pending
 SP-3 re-confirmation and stage freeze (T3.121 withdrawal).

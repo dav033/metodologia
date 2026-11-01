@@ -3775,3 +3775,48 @@ Solucionador 20261030-100736-d494 integrated merge fff622890f28b8093a9a0afda9c40
   durable_briefs, design_ui_brief, executor test_prompt) OK. `test_continuation` fails identically on main (6 F + 2 E,
   pre-existing, not reached by this change). Branch `ui-pool-default` (e59fefd03), merged as `0d10d7158` with
   `--no-regression` (D-261), smoke ok.
+
+## D-291 — The pool peers `motion >=14` and `components sync` leaves `packages/bitacora-ui/node_modules` alone
+
+- **Context:** the first real adoption (pictures, D-292) found two pool defects. `@bitacora/ui` declared `motion >=12`
+  while every `@animate-ui/react` release peers `motion ^14`, so npm refused the install in a motion 13 app. npm also
+  nests a dependency under `packages/bitacora-ui/node_modules` when the root cannot hoist it (framer-motion 12 next to
+  motion 14), and a sync into a checked-out default branch deleted that folder and counted it as an uncommitted edit.
+- **Decision:** the pool peers `motion >=14`; `bt_ui_sync._write_tree` skips `node_modules`. `themes/pictures.css` is
+  re-imported from pictures' `globals.css`, which now maps its tokens onto every pool role (contrast: 52 problems to 10,
+  all `--input` boundaries pictures already has).
+- **Rule:** the pool's peer ranges are what its components need, not what a project happens to have; the sync owns the
+  package's tracked files only.
+- **Evidence:** `test_ui_sync` (node_modules case), `test_ui_pool`, `test_designer_kit`, `test_real_designer_kit`,
+  `test_mockup_bridge`, `test_theme_layout`, `test_page_components`, `test_integrate` exit 0. Branch `ui-pool-pictures`
+  (9ce594e73), merged as `e9d61b4d7` with `--no-regression` (D-261).
+
+## D-292 — Pictures renders its shared controls from `@bitacora/ui`; the push to `origin/main` waits because it deploys
+
+- **Context:** owner, on D-280: «todo ya, dentro de REQ-021», «gana el pool», «directo»; 2026-11-01: send an implementer
+  to integrate it into pictures. The run `pictures:REQ-021:r35` is executing, so the work happened outside the run and
+  the line picks it up from `main`. The order also said no deploy; every push to pictures `main` creates a Vercel
+  `Production` deployment (GitHub deployments by `vercel[bot]`, for example `99d53125b`).
+- **Decision:** the 7 steps of SP-15 landed on pictures **local** `main` at `516e3f7ab`, not pushed. Checkbox, select,
+  tabs, tooltip, the theme switch, `Ayuda`, the header menu, the selection sheet, the examples dialog and the creativity
+  select are the pool's components, with pictures-only behaviour as thin composition. `shell/*` keep their paths and
+  props as pictures' compositions: they hold product layout, not duplicates, and r35 edits them. `foco-retorno` moved to
+  `src/lib/dialogos` because 18 Radix dialogs still need it; migrating them means rewriting screens r35 owns.
+  `reactbits/*` and `icon-button.css` stay until the owner decides.
+- **Consequences:** visible changes are the pool's: the sheet and dialog overlay blur, the help bubble has no arrow, the
+  creativity check moves to the right. Motion goes from 13 to 14. GSAP and Hugeicons enter the lockfile through the pool
+  but not the client bundle, so `test-reactbits-registro` now checks what pictures imports instead of the lockfile. The
+  pure `posicionAyuda` test became a browser test. r35 meets 10 small conflicts plus one importer
+  (`InicioCliente.tsx`), listed in the REQ-021 handoff note.
+- **Rule:** `test-ui-pool-guardia` (in `npm run gate`): `packages/bitacora-ui` equals `SYNC.json`'s digest, nothing in
+  `src/components/ui` re-declares a pool component, nobody imports the replaced files or Radix packages.
+- **Evidence:** on `feat/ui-pool-adoption` `6006c1196`: `npx tsc --noEmit` clean, `npm run lint` 0 errors (58 warnings),
+  `npm run build` exit 0, `npm run gate` GATE OK; `scripts/test/test-ui-*` plus `test-ayudas-guiada`,
+  `test-ayuda-burbuja-ui`, `test-anadir-repositorios-ui`, `test-panel-ia-componentes` exit 0 (`test-ui-error-contract`
+  with its `--conditions=react-server`). `test-hoja-armado-ui` timed out once in the battery and passed 4 of 4 reruns:
+  flaky under load, cause not established. Browser drive of menu, selector, sheet, checkbox and tabs, light and dark,
+  0 failures; production smoke signed in over `/`, `/asistente`, `/catalogo`, `/admin`, `/3d`, light and dark, 0
+  failures; closed pages against the pre-adoption screenshots differ at most 0.365 %. **Not verified:** EN (main has no
+  language layer); accounts and plans screens (they exist only on the r35 line); catching up on the line. The ops
+  script `e2e-modo-vista` stops at two stale checks in code this change did not touch, 24 PASS before that; not compared
+  against the base.

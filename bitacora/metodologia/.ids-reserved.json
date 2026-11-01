@@ -329,6 +329,11 @@
    "id": "D-291",
    "by": "claude-luis D-20261101-081430-404c: pictures adopts @bitacora/ui; pool fixes found by the adoption (Job A)",
    "at": "2026-11-01T08:39:33"
+  },
+  {
+   "id": "D-292",
+   "by": "implementer D-20261101-081430-404c: pictures adopts @bitacora/ui",
+   "at": "2026-11-01T10:26:59"
   }
  ]
 }

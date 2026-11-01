@@ -1,0 +1,22 @@
+{
+ "request": "pictures:REQ-021:r37:T10.5:T10.5:d1@k1",
+ "state": "done",
+ "kind": "manual",
+ "label": "Comprobación manual",
+ "tone": "lav",
+ "headline": "Falta la observación manual del proveedor de IA configurado en inglés y español.",
+ "origin": "La verificación de integración ya pasó en el intento a1 (`npm run idioma:test-integracion-resto` con código 0, ocho pantallas aprobadas). El bloqueo es el segundo criterio, que exige una observación manual con el proveedor real configurado y figura como NOT_RUN: `MANUAL_EVIDENCE_REQUIRED: manual evidence is missing for: A separate manual local observation using the already configured AI provider...`. El verificador no puede producir esa evidencia y el agente indicó que el fixture no cuenta para ese criterio, por lo que reintentar daría el mismo resultado.",
+ "steps": [
+  "Observar en local, con el proveedor de IA ya configurado, una conversación en inglés (debe recibir respuesta en inglés) y otra en español (debe recibir respuesta en español), sin registrar secretos.",
+  "Registrar en la evidencia de SP-10 (`.evidence/REQ-021/SP-10.integration.json`, criterio manual) el proveedor real usado y el resultado de cada observación, sin texto libre exacto.",
+  "Atestiguar esa observación manual y ejecutar `bitacora.py --project <project> scheduler-op REQ-021 decide T10.5:d1 reverify --reason \"observación manual EN/ES registrada\"`."
+ ],
+ "option": "reverify",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-11-01T10:33:25",
+ "seconds": 10.3
+}
