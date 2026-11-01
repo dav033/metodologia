@@ -87,6 +87,10 @@ class Fake(integ.Services):
         self.calls.append(("refresh_venv",))
         return getattr(self, "venv_error", "")
 
+    def sync_ui(self, live):
+        self.calls.append(("sync_ui",))
+        return ""
+
     def install_problems(self, live):
         self.calls.append(("install_problems",))
         problems = getattr(self, "venv_problems", [])

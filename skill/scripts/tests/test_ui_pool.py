@@ -58,6 +58,13 @@ class Package(unittest.TestCase):
         for line in styles.splitlines():
             if line.startswith("@import"):
                 self.assertRegex(line, r'@import "\./vendor/')
+        # Bencho's triplets come from the theme's triplet roles: no theme colour is written as numbers here
+        for role in set(re.findall(r"var\((--[\w-]+-rgb)\)", styles)):
+            self.assertIn(f"{role}:", theme, role)
+        for triplet in re.findall(r"\b(\d{1,3}),\s*(\d{1,3}),\s*(\d{1,3})\b", styles):
+            self.assertIn(set(triplet), ({"0"}, {"255"}), triplet)
+        for color in re.findall(r"rgba?\(\s*(\d{1,3})[ ,]+(\d{1,3})[ ,]+(\d{1,3})", styles):
+            self.assertIn(set(color), ({"0"}, {"255"}), color)
 
     def test_rewrite_and_registry_keys(self):
         src = Path("/p/src")
@@ -112,6 +119,24 @@ class Themes(unittest.TestCase):
                 self.assertEqual(bt_ui.theme_path("demo"), out)
                 self.assertIsNone(bt_ui.theme_path("../demo"))
                 self.assertEqual(bt_ui.theme_css("nope"), "")
+
+    def test_import_states_the_triplet_roles_through_the_project_aliases(self):
+        css = (":root { --texto: #1c1425; --superficie: #fff; --foreground: var(--texto); --card: var(--superficie);\n"
+               "  --muted: rgb(239 233 248); --primary-foreground: var(--nada, #ffffff); }\n"
+               ":root[data-theme=\"dark\"] { --texto: #f4f5f7; --superficie: #16181f; --muted: oklch(0.3 0 0); }\n")
+        with tempfile.TemporaryDirectory() as tmp:
+            src = Path(tmp) / "globals.css"
+            src.write_text(css, encoding="utf-8")
+            with patch.object(bt_ui, "THEMES", Path(tmp) / "themes"):
+                light, dark = bt_ui.import_theme("demo", src).read_text(encoding="utf-8").split('.dark, [data-theme="dark"]')
+                for line in ("--foreground-rgb: 28, 20, 37;", "--card-rgb: 255, 255, 255;", "--muted-rgb: 239, 233, 248;",
+                             "--primary-foreground-rgb: 255, 255, 255;"):
+                    self.assertIn(line, light)
+                self.assertIn("--foreground-rgb: 244, 245, 247;", dark)   # the light alias, the dark token
+                self.assertIn("--card-rgb: 22, 24, 31;", dark)
+                self.assertNotIn("--muted-rgb", dark)                      # not plain sRGB: no triplet, not a wrong one
+                src.write_text(":root { --texto: #000; }\n", encoding="utf-8")
+                self.assertNotIn(".dark", bt_ui.import_theme("demo", src).read_text(encoding="utf-8"))
 
     def test_pictures_theme_keeps_its_own_tokens_on_the_roles(self):
         text = bt_ui.theme_path("pictures").read_text(encoding="utf-8")

@@ -706,7 +706,7 @@ def _integrate(req: Request, services: Services, note: Callable[[str], None], li
             _ledger_add("Integrated without regression", f"- {dt.datetime.now():%Y-%m-%d %H:%M} · `{merge[:12]}` · "
                         f"{req.title} · {len(paths)} path(s): {', '.join(paths[:6])}" + (" …" if len(paths) > 6 else ""),
                         req.ledger)
-        if any(p.startswith(UI_PATH) for p in paths) and hasattr(services, "sync_ui"):
+        if any(p.startswith(UI_PATH) for p in paths):
             for line in services.sync_ui(Path(req.live)).splitlines():   # the pool reaches projects directly (D-280)
                 note(line)
         if selective:

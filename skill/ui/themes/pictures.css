@@ -80,6 +80,10 @@
   --radius: 0.8rem;
   --ui-font-sans: var(--font-geist-sans, "Geist Variable"), ui-sans-serif, system-ui, sans-serif;
   --ui-font-mono: var(--font-geist-mono, "JetBrains Mono Variable"), ui-monospace, SFMono-Regular, Menlo, monospace;
+  --foreground-rgb: 28, 20, 37;
+  --card-rgb: 255, 255, 255;
+  --muted-rgb: 239, 233, 248;
+  --primary-foreground-rgb: 255, 255, 255;
   color-scheme: light;
 }
 .dark, [data-theme="dark"] {
@@ -135,5 +139,9 @@
   --taller-deco: #f59fc1;
   --taller-valido-fondo: #1f7a55;
   --taller-sobre-valido: #ffffff;
+  --foreground-rgb: 244, 245, 247;
+  --card-rgb: 22, 24, 31;
+  --muted-rgb: 36, 39, 51;
+  --primary-foreground-rgb: 18, 11, 36;
   color-scheme: dark;
 }

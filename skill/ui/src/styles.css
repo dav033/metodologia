@@ -98,8 +98,9 @@
 
 /* Bencho blocks read their own custom properties (blocks/tokens.css upstream). Bencho says «map these to your own theme
    rather than keeping two»: this maps them onto the david-ui roles, scoped to `.bencho` because Bencho's `--card` means
-   a quiet surface, not shadcn's card. Wrap every Bencho block in <div className="bencho">. The *-rgb triplets are the
-   Catppuccin values of the matching roles. */
+   a quiet surface, not shadcn's card. Wrap every Bencho block in <div className="bencho">. The *-rgb triplets come from
+   the theme's triplet roles (`--foreground-rgb`, `--card-rgb`, `--muted-rgb`, `--primary-foreground-rgb`); only the
+   neutral white highlights and the black dark-mode shadow are literal. */
 .bencho {
   --font-ui: var(--font-sans);
   --bg: var(--background); --board: var(--card); --card: var(--muted); --surface: var(--muted);
@@ -110,13 +111,14 @@
   --fill-slab: var(--card); --fill-on: var(--foreground);
   --pane: var(--card); --pick: var(--primary); --signal: var(--primary); --focus: var(--ring);
   --ok: var(--success); --ember: var(--destructive); --wash: 0.06;
-  --ink-rgb: 76, 79, 105; --on-ink: #ffffff; --on-ink-rgb: 255, 255, 255; --fill-on-rgb: 76, 79, 105;
-  --pane-edge: rgb(76 79 105 / .22); --pane-thumb: rgb(76 79 105 / .1); --inlay: rgb(255 255 255 / .55);
-  --inlay-hi: rgb(76 79 105 / .1); --elev-rgb: 255, 255, 255; --glass-rgb: 255, 255, 255; --shadow-rgb: 76, 79, 105;
+  --ink-rgb: var(--foreground-rgb); --on-ink: var(--primary-foreground); --on-ink-rgb: var(--primary-foreground-rgb);
+  --fill-on-rgb: var(--foreground-rgb);
+  --pane-edge: rgba(var(--foreground-rgb), .22); --pane-thumb: rgba(var(--foreground-rgb), .1); --inlay: rgb(255 255 255 / .55);
+  --inlay-hi: rgba(var(--foreground-rgb), .1); --elev-rgb: var(--card-rgb); --glass-rgb: var(--card-rgb);
+  --shadow-rgb: var(--foreground-rgb);
   color: var(--foreground);
 }
 .dark .bencho, [data-theme="dark"] .bencho {
-  --ink-rgb: 205, 214, 244; --on-ink: #11111b; --on-ink-rgb: 17, 17, 27; --fill-on-rgb: 205, 214, 244;
-  --pane-edge: rgb(205 214 244 / .2); --pane-thumb: rgb(205 214 244 / .1); --inlay: rgb(255 255 255 / .08);
-  --inlay-hi: rgb(205 214 244 / .1); --elev-rgb: 38, 38, 55; --glass-rgb: 49, 50, 68; --shadow-rgb: 0, 0, 0; --wash: 0.09;
+  --pane-edge: rgba(var(--foreground-rgb), .2); --pane-thumb: rgba(var(--foreground-rgb), .1); --inlay: rgb(255 255 255 / .08);
+  --inlay-hi: rgba(var(--foreground-rgb), .1); --glass-rgb: var(--muted-rgb); --shadow-rgb: 0, 0, 0; --wash: 0.09;
 }

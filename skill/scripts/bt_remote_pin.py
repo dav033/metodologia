@@ -16,8 +16,8 @@ aaf31a8d6 -> 7e8d4e638). `bt_integrate` now calls this module in its restart pha
 What the listener runs (read from `bitacora.py serve-remote`): `/usr/bin/python3` (stdlib only: no venv, so neither
 `pyproject.toml` nor `uv.lock` matter) importing `skill/scripts/**` lazily (`bt_server` -> `bt_remote_*`, the panel
 routes `bt_remote_panel` proxies, `bt_live_api`, `bt_planstatus`, ...), `/static/` from `skill/assets/`, `skill/templates/`
-(`bt_core.render`), `skill/vendor/` (`bt_diagram`), and `skill/agents/*.md` (briefs of the sessions a panel action
-starts from the copy). Tests, `skill/references/`, `skill/githooks/` and `SKILL.md` are never read by it.
+(`bt_core.render`), `skill/vendor/` (`bt_diagram`), `skill/ui/` (the component pool and project themes behind
+`/ui/`, D-280) and `skill/agents/*.md` (briefs of the sessions a panel action starts from the copy). Tests, `skill/references/`, `skill/githooks/` and `SKILL.md` are never read by it.
 """
 from __future__ import annotations
 
@@ -38,7 +38,7 @@ UNIT_FILE = Path.home() / ".config" / "systemd" / "user" / UNIT
 DROPIN = UNIT_FILE.with_name(UNIT + ".d") / "exec.conf"
 RELEASES = Path.home() / ".local" / "share" / "bitacora-remote"
 KEEP = 3                                       # the current pin, the previous one (rollback) and one more
-RUNS = ("skill/scripts/", "skill/assets/", "skill/templates/", "skill/vendor/", "skill/agents/")
+RUNS = ("skill/scripts/", "skill/assets/", "skill/templates/", "skill/vendor/", "skill/agents/", "skill/ui/")
 ENTRY = "skill/scripts/bitacora.py"
 SHA = re.compile(r"^[0-9a-f]{40}$")
 PINNED = re.compile(r"(?P<prefix>\S*/)(?P<sha>[0-9a-f]{40})(?P<suffix>/skill/scripts/bitacora\.py)")   # <releases>/<sha>

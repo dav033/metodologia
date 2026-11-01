@@ -187,6 +187,44 @@ def _blocks(css: str, selector: re.Pattern) -> dict[str, str]:
     return out
 
 
+# the roles a theme also states as `r, g, b` triplets, for blocks that compose alpha themselves (Bencho, D-280)
+TRIPLET_ROLES = ("--foreground", "--card", "--muted", "--primary-foreground")
+_VAR = re.compile(r"var\(\s*(--[\w-]+)\s*(?:,\s*([^)]*))?\)\Z")
+
+
+def _triplet(value: str, *scopes: dict[str, str], depth: int = 0) -> str | None:
+    """`r, g, b` of a colour value, following `var()` through the scopes (first wins); None when it is not a plain
+    sRGB colour (hex or rgb()) — then the role gets no triplet rather than a wrong one."""
+    value = value.strip()
+    m = _VAR.match(value)
+    if m and depth < 8:
+        name, fallback = m.group(1), m.group(2)
+        for scope in scopes:
+            if name in scope:
+                return _triplet(scope[name], *scopes, depth=depth + 1)
+        return _triplet(fallback, *scopes, depth=depth + 1) if fallback else None
+    hexa = re.fullmatch(r"#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})", value)
+    if hexa:
+        h = hexa.group(1)
+        h = "".join(c * 2 for c in h) if len(h) <= 4 else h
+        return ", ".join(str(int(h[i:i + 2], 16)) for i in (0, 2, 4))
+    rgb = re.fullmatch(r"rgba?\(\s*(\d{1,3})[\s,]+(\d{1,3})[\s,]+(\d{1,3})\s*(?:[,/][^)]*)?\)", value)
+    return ", ".join(rgb.groups()) if rgb else None
+
+
+def _with_triplets(props: dict[str, str], *scopes: dict[str, str]) -> None:
+    """Add `<role>-rgb` for each of TRIPLET_ROLES the theme resolves, unless the project states it."""
+    for role in TRIPLET_ROLES:
+        if f"{role}-rgb" in props:
+            continue
+        for scope in scopes:
+            if role in scope:
+                triplet = _triplet(scope[role], *scopes)
+                if triplet:
+                    props[f"{role}-rgb"] = triplet
+                break
+
+
 def import_theme(project: str, source: Path, mockup_fonts: list[str] | None = None,
                  sans: str = "", mono: str = "") -> Path:
     """Write `themes/<project>.css` from the project's token source (e.g. pictures' `src/app/globals.css`): every
@@ -208,7 +246,10 @@ def import_theme(project: str, source: Path, mockup_fonts: list[str] | None = No
     light.setdefault("--ui-font-sans", sans)
     light.setdefault("--ui-font-mono", mono)
     light.setdefault("color-scheme", "light")
-    dark.setdefault("color-scheme", "dark")
+    _with_triplets(light, light)
+    if dark:                                          # a dark role may be the light alias of a dark token
+        dark.setdefault("color-scheme", "dark")
+        _with_triplets(dark, dark, light)
     blob = Path(source).read_bytes()
 
     def block(selector: str, props: dict[str, str]) -> str:
