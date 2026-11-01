@@ -567,8 +567,11 @@ def workdir(root: Path, project: str, req: str, sid: str, version: int | str) ->
     return base / project / req / f"{sid}-v{version}"
 
 
-def open_local(root: Path, project: str, rdir: Path, sid: str) -> tuple[Path | None, str]:
-    """A detached worktree of exactly the commit the engine published for `sid`, outside every repository."""
+def open_local(root: Path, project: str, rdir: Path, sid: str, *, held: bool = False) -> tuple[Path | None, str]:
+    """A detached worktree of exactly the commit the engine published for `sid`, outside every repository. A copy left
+    at an older publication of the same version moves to the published commit by itself (bt_verify_copy, D-278);
+    `held`: the caller holds the version's lock and has stopped its servers (bt_verify_servers.start)."""
+    import bt_verify_copy
     row = next((r for r in state(rdir)["subplans"] if r["id"] == sid), None)
     if row is None or not row["commit"] or not SHA.fullmatch(str(row["commit"])) or not SAFE_ID.fullmatch(sid):
         return None, f"{sid or 'Ese subplan'} todavía no tiene una versión publicada que abrir."
@@ -577,15 +580,14 @@ def open_local(root: Path, project: str, rdir: Path, sid: str) -> tuple[Path | N
         return None, "No encuentro el commit de esa versión en los repos del proyecto."
     target = workdir(root, project, _req(rdir), sid, row["version"])
     if target.exists():
-        head = _git(target, "rev-parse", "HEAD").stdout.strip()
-        return (target, f"Ya estaba abierto en {target}.") if head == row["commit"] else \
-            (None, f"{target} existe pero no está en el commit publicado; ciérralo primero.")
+        return bt_verify_copy.heal(root, project, rdir, sid, row, target, repo, held=held)
     target.parent.mkdir(parents=True, exist_ok=True)
     _git(repo, "worktree", "prune")                      # a copy deleted by hand must not block opening it again
     done = _git(repo, "worktree", "add", "--detach", str(target), row["commit"])
     if done.returncode != 0:
         return None, "No pude abrir la versión: " + (done.stderr or "").strip()[:200]
-    return target, f"Versión {row['version']} de {sid} abierta en {target}."
+    name = bt_verify_copy.label(row)
+    return target, f"{name[:1].upper()}{name[1:]} de {sid} abierta en {target}."
 
 
 def close_local(root: Path, project: str, rdir: Path, sid: str) -> str:

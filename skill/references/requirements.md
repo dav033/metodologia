@@ -312,6 +312,9 @@ accepted subplan as an immutable version (commit of the integrated tree at that 
 notice, the «Ahora» strip, the run card) and tries it on its own from the Plan tab → *Probar*: the `## Pruebas` rows say
 where, `bitacora.py verify open REQ SP-n` (or the button) opens exactly that commit in a worktree outside the repos, and
 the owner approves or rejects it (`verify approve|reject REQ SP-n --by owner [--note ...]` only when the owner said so).
+A version number stays while its line moves, so a copy can sit at an older publication of the same version: opening or
+«Probar» moves it to the published commit by itself, stopping its stale servers (D-278); only edits the owner made in
+it stop that, listed, until he chooses `verify discard REQ SP-n --by owner` or `verify keep REQ SP-n` (the buttons).
 A decision is pinned to the version it saw: a newer version makes it outdated. The requirement is not finished while any
 subplan is not approved: the review merge refuses (`bt_verification.gate`). Revert is shown as a command with the subplans
 that depend on it; nothing reverts automatically. Only runs that follow the collaborative flow (or whose SPEC has `## Pruebas`) and whose projection reports `subplans` are gated; once seen, the gate is persisted so it cannot fail open. Every subplan needs its own row (an `all` row only supplements; `none` needs a reason).

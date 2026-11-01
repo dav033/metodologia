@@ -366,7 +366,8 @@ def _actions(ctx: dict, row: dict) -> str:
     except Exception:  # noqa: BLE001 - a missing home directory must not break the page
         target = None
     if target is not None and target.exists():
-        opened = (f'<p class="pp-vpath">Abierta en <code>{e(str(target))}</code></p>' + _form(ctx, "verify-close", "Cerrar la copia", sid))
+        opened = (f'<p class="pp-vpath">Abierta en <code>{e(str(target))}</code></p>' + _stale(ctx, row, target)
+                  + _form(ctx, "verify-close", "Cerrar la copia", sid))
     run = ctx.get("_try", "")
     buttons = (_form(ctx, "verify-open", "Abrir esta versión en local", sid) if not opened and not run else "") + \
         _form(ctx, "verify-approve", "Aprobar" if row["state"] != "approved" else "Aprobado ✓", sid, cls="pp-approve",
@@ -382,6 +383,27 @@ def _actions(ctx: dict, row: dict) -> str:
     revert = (f'<details class="pp-vrevert"><summary>Cómo deshacer este subplan</summary>{undo}{warn}'
               f'<p class="pp-meta">Solo se muestra el comando: la web nunca revierte ni toca <code>main</code>.</p></details>')
     return f'<div class="pp-vactions">{note}{opened}<div class="pp-vbuttons">{buttons}</div>{revert}</div>'
+
+
+def _stale(ctx: dict, row: dict, target) -> str:
+    """A copy at an older publication of this version (D-278): it moves by itself, unless it holds the owner's edits."""
+    import bt_verify_copy
+    try:
+        found = bt_verify_copy.stale(target, row)
+    except Exception:  # noqa: BLE001 - an unreadable copy must not break the page
+        found = None
+    if not found:
+        return ""
+    old, now = found["old"][:7] or "¿?", bt_verify_copy.label(row)
+    if not found["edits"]:
+        return (f'<p class="pp-meta">La copia está en el commit {e(old)}, una publicación anterior de la versión '
+                f'{e(str(row["version"]))}; pasa sola a la {e(now)} al abrirla o al pulsar «Probar».</p>')
+    sid = row["id"]
+    return (f'<p class="pp-vwarn">La copia está en el commit {e(old)}, una publicación anterior de la versión '
+            f'{e(str(row["version"]))}, y tiene cambios tuyos: {e(bt_verify_copy.describe(found["edits"]))}. '
+            f'Para probar la {e(now)} elige qué hacer con ellos.</p>'
+            + _form(ctx, "verify-discard", "Descartar los cambios", sid, danger=True)
+            + _form(ctx, "verify-keep", "Guardar la copia aparte", sid))
 
 
 def _named(items: list[dict]) -> str:

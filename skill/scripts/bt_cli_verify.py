@@ -13,8 +13,10 @@ from bt_core import find_req
 
 def register(subparsers: argparse._SubParsersAction) -> None:
     parser = subparsers.add_parser("verify", help="try each finished subplan on its own: status, open, approve, reject")
-    parser.add_argument("action", choices=("status", "open", "close", "approve", "reject", "revert-command", "serve",
-                                           "stop-servers", "storage-state"))
+    parser.add_argument("action", choices=("status", "open", "close", "discard", "keep", "approve", "reject",
+                                           "revert-command", "serve", "stop-servers", "storage-state"),
+                        help="discard/keep: the owner's choice for a copy with edits at an older commit of its version "
+                             "(drop them, or move the copy aside), then open the published commit (D-278)")
     parser.add_argument("req", help="REQ-NNN")
     parser.add_argument("subplan", nargs="?", help="SP-n (every action but status)")
     parser.add_argument("--note", default="", help="why it is rejected (required to reject)")
@@ -45,13 +47,20 @@ def dispatch(args: argparse.Namespace, root: Path, project: str) -> int:
     if args.action in ("approve", "reject") and args.by != "owner":
         raise SystemExit(f"verify {args.action} records the owner's decision: pass --by owner, and only when the "
                          "owner said so")
+    if args.action == "discard" and args.by != "owner":
+        raise SystemExit("verify discard deletes the owner's edits in the copy: pass --by owner, and only when the owner "
+                         "said so")
     if args.action == "open":
         target, msg = verification.open_local(root, project, rdir, args.subplan)
         print(msg)
         return 0 if target else 1
     if args.action in ("serve", "stop-servers", "storage-state"):
         return servers(args, root, project, rdir)
-    if args.action == "close":
+    if args.action in ("discard", "keep"):
+        import bt_verify_copy
+        print((bt_verify_copy.discard if args.action == "discard" else bt_verify_copy.keep_aside)(
+            root, project, rdir, args.subplan))
+    elif args.action == "close":
         print(verification.close_local(root, project, rdir, args.subplan))
     elif args.action == "revert-command":
         print(verification.revert_command(root, project, rdir, args.subplan) or "no revert range found")
