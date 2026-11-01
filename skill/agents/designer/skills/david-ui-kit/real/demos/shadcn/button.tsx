@@ -1,5 +1,5 @@
 import { Loader2, Plus, Trash2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@bitacora/ui/components/ui/button";
 import { Example, Row } from "@kit/demo";
 
 export default function ButtonDemo() {

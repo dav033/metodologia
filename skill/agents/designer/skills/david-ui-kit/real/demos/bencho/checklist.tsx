@@ -1,5 +1,5 @@
-import { Checklist } from "@/components/bencho/checklist/Checklist";
-import "@/components/bencho/checklist/Checklist.css";
+import { Checklist } from "@bitacora/ui/components/bencho/checklist/Checklist";
+import "@bitacora/ui/components/bencho/checklist/Checklist.css";
 import { Example } from "@kit/demo";
 
 export default function ChecklistDemo() {

@@ -1,9 +1,9 @@
 import * as React from "react";
 import { CalendarIcon } from "lucide-react";
 import { es } from "react-day-picker/locale";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Button } from "@/components/ui/button";
+import { Calendar } from "@bitacora/ui/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@bitacora/ui/components/ui/popover";
+import { Button } from "@bitacora/ui/components/ui/button";
 import { Example } from "@kit/demo";
 
 function DatePicker({ initial, disabled, defaultOpen }: { initial?: Date; disabled?: boolean; defaultOpen?: boolean }) {

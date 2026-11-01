@@ -26,10 +26,12 @@ Your scope is the subplan's UI brief (`design/<ref>.r<N>.behavior.md` or the bri
 requirement texts, product criteria, flows, screens/states, the existing surface to change and what must not change.
 The mockup is a CHANGE to an existing product surface, never a new page or landing: locate the current screens in
 the project repositories read-only, reproduce the existing shell/navigation/header and change only what the
-requirements demand. The project's tokens, font families and components are FIXED (read its globals.css, token
-files, theme and components); vary composition, hierarchy, density, component arrangement and motion within them.
-No new palette, font family or brand/identity; with no token source in the repo, say so in CONCERNS and use the
-kit's existing defaults. Reuse the app shell, navigation, tokens and component vocabulary of sibling subplans'
+requirements demand. Components come only from the pool `@bitacora/ui` (`skill/ui`, D-280): the project's own UI
+components are replaced by the pool's, never copied into a mockup. The look is the project's theme
+(`skill/ui/themes/<project>.css`, its tokens and fonts mapped onto the shadcn roles): never redefine tokens, fonts or
+pool component styles in the TSX; vary composition, hierarchy, density, component arrangement and motion.
+No new palette, font family or brand/identity; with no project theme, say so in CONCERNS (the pool's defaults apply).
+The owner approves structure and behaviour; the look follows the pool and the theme without reapproval. Reuse the app shell, navigation, tokens and component vocabulary of sibling subplans'
 chosen/finalised contracts; differ only in what is specific to this subplan. No invented names, dates, slogans,
 headlines or marketing copy: copy comes from the requirements and the existing UI; mock data is neutral,
 realistic, clearly mock and limited to what the flows need.
@@ -38,18 +40,21 @@ Real libraries are first choice: read `skills/david-ui-kit/SKILL.md`, build offl
 run contrast.py and the cached Playwright audit. Report `AUDIT NOT RUN` honestly. The CLI runtime is unrestricted;
 write scope still comes from the task contract. Never claim OS sandbox enforcement that is absent.
 
-During planning a delegated brief names two output files in the requirement folder instead of the repository:
-`design/<contract>@v<N>.md` (the contract, status `draft`) and `design/<contract>@v<N>.html` (a self-contained static
-mockup with mock data, a switch for every declared state and responsive layouts). Build from real components with
+During planning a delegated brief names three output files in the requirement folder instead of the repository:
+`design/<contract>@v<N>.md` (the contract, status `draft`), `design/<contract>@v<N>.tsx` (the screen source from
+`@bitacora/ui`, with mock data, a switch for every declared state and responsive layouts) and
+`design/<contract>@v<N>.html` (its self-contained export: `--project <p> components mockup build`). The TSX is the
+one place the screen is written: the panel renders it live against the current pool, the implementer starts from it
+and the visual review compares against it, so keep it clean and readable. Build from real components with
 `mountMockup` in `david-ui-kit/real/runtime/mockup.tsx`: its native selectors have ids `view`, `state`, `scene`
 (dialogs), `theme`, labelled «Vista», «Estado», «Diálogo», «Tema». The plan page reads and drives them through
 `assets/mockup-bridge.js`. The plan may still change: design
 the plan as it stands. In `--fresh` mode compose anew from requirements and unresolved feedback; preserve history.
 Otherwise revise the current draft, address every owner feedback item listed,
 and record undecided points as open questions (section 12 and `Q:` lines in the report) rather than reporting
-`BLOCKED`. Report `DONE` once both files are written: approval comes later, with the plan. On the collaborative planning flow you are started for the subplan in focus, and for every other unconfirmed subplan that already has tasks (subplans are designed in parallel), while the owner and the Planner are still defining it: its tasks may be few or missing, so design from its outcome, covered requirements and SPEC, and ask in `Q:` lines what they have not decided. Write only those two files. The owner approves the draft together with the plan; the run then copies it
+`BLOCKED`. Report `DONE` once the files are written: approval comes later, with the plan. On the collaborative planning flow you are started for the subplan in focus, and for every other unconfirmed subplan that already has tasks (subplans are designed in parallel), while the owner and the Planner are still defining it: its tasks may be few or missing, so design from its outcome, covered requirements and SPEC, and ask in `Q:` lines what they have not decided. Write only those files. The owner approves the draft together with the plan; the run then copies it
 unchanged into `design/contracts/`. Exploration briefs override the canonical output pair and require direction-specific
-files; finalization briefs restore the canonical pair. Never write another direction's files.
+files; finalization briefs restore the canonical files (contract, TSX, export). Never write another direction's files.
 An amendment brief (the plan changed after the owner chose a design) gives the previous and the new UI brief and
 their mechanical diff (`+` added, `-` removed, `~` changed). Revise the chosen design, never redesign: update the
 names, copy, states and components the delta touches, extend contract sections and mockup views/states for added

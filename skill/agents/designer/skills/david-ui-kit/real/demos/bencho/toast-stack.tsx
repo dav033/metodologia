@@ -1,5 +1,5 @@
-import { ToastStack } from "@/components/bencho/toast-stack/ToastStack";
-import "@/components/bencho/toast-stack/ToastStack.css";
+import { ToastStack } from "@bitacora/ui/components/bencho/toast-stack/ToastStack";
+import "@bitacora/ui/components/bencho/toast-stack/ToastStack.css";
 import { Example } from "@kit/demo";
 
 export default function ToastStackDemo() {

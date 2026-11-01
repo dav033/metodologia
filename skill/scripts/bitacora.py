@@ -157,10 +157,21 @@ def main() -> None:
     p_graph.add_argument("--no-open", action="store_true")
     p_web = sub.add_parser("web", help="start the web server if needed, open the browser, print the URL")
     p_web.add_argument("--no-open", action="store_true")
-    p_comp = sub.add_parser("components", help="the Designer's real component libraries: open the gallery (/components), "
-                            "install the workspace, build the gallery, build a mockup, status")
-    p_comp.add_argument("action", nargs="?", default="open", choices=["open", "install", "build", "status", "mockup"])
-    p_comp.add_argument("rest", nargs="*", help="mockup: build ENTRY.tsx")
+    p_comp = sub.add_parser("components", help="the component pool @bitacora/ui (skill/ui, D-280): open the gallery "
+                            "(/components), install the toolchain, build the gallery, build a mockup, status, sync the "
+                            "pool into a project, import a project theme, build the pool")
+    p_comp.add_argument("action", nargs="?", default="open",
+                        choices=["open", "install", "build", "status", "mockup", "sync", "theme", "pool"])
+    p_comp.add_argument("rest", nargs="*", help="mockup: build ENTRY.tsx · sync: PROJECT · theme: import PROJECT · "
+                        "pool: version|build|import-sources")
+    p_comp.add_argument("--repo", help="sync: the project's repository (default: project.json ui.repo)")
+    p_comp.add_argument("--branch", default="", help="sync: branch to commit on (default: the repo's default branch)")
+    p_comp.add_argument("--push", action="store_true", help="sync: push the branch after committing")
+    p_comp.add_argument("--all", action="store_true", help="sync: every project whose project.json says ui.sync")
+    p_comp.add_argument("--from", dest="source", help="theme import: the project's token source (e.g. src/app/globals.css)")
+    p_comp.add_argument("--mockup-fonts", default="", help="theme import: fontsource packages for mockups, comma-separated")
+    p_comp.add_argument("--sans", default="", help="theme import: value of --ui-font-sans")
+    p_comp.add_argument("--mono", default="", help="theme import: value of --ui-font-mono")
     p_comp.add_argument("--no-open", action="store_true")
     p_comp.add_argument("--force", action="store_true", help="install: redo every step")
     p_comp.add_argument("--only", help="build: comma-separated entry ids")
@@ -230,12 +241,35 @@ def main() -> None:
         if a.cmd == "serve-remote":
             return serve_remote(a.port or REMOTE_PORT)
         return serve(a.port or DEFAULT_PORT)
+    if a.cmd == "components" and a.action in ("sync", "theme", "pool"):
+        import bt_ui
+        if a.action == "pool":
+            sys.exit(bt_ui.main(a.rest))
+        if a.action == "theme":
+            if a.rest[:1] != ["import"] or len(a.rest) != 2 or not a.source:
+                ap.error("usage: components theme import PROJECT --from TOKENS.css [--mockup-fonts a,b] [--sans V] [--mono V]")
+            out = bt_ui.import_theme(a.rest[1], Path(a.source).expanduser(),
+                                     [f.strip() for f in a.mockup_fonts.split(",") if f.strip()], a.sans, a.mono)
+            return print(out)
+        import bt_ui_sync
+        if a.all:
+            bt_ui_sync.sync_all()
+            return
+        if len(a.rest) != 1:
+            ap.error("usage: components sync PROJECT|--all [--repo PATH] [--branch B] [--push]")
+        try:
+            result = bt_ui_sync.sync(a.rest[0], Path(a.repo).expanduser() if a.repo else None, a.branch,
+                                     True if a.push else None)
+        except bt_ui_sync.SyncError as exc:
+            sys.exit(f"sync refused: {exc}")
+        return print(bt_ui_sync.describe(result))
     if a.cmd == "components" and a.action != "open":
         import bt_kit_workspace
         if a.action == "mockup":
             if a.rest[:1] != ["build"] or len(a.rest) != 2 or not a.out:
                 ap.error("usage: components mockup build ENTRY.tsx --out design/<ref>@vN.html")
-            sys.exit(bt_kit_workspace.mockup_build(a.rest[1], a.out, a.title))
+            sys.exit(bt_kit_workspace.mockup_build(a.rest[1], a.out, a.title,
+                                                   slugify(a.project, 60) if a.project else ""))
         argv = [a.action] + (["--force"] if a.force else []) + (["--only", a.only] if a.only else [])
         sys.exit(bt_kit_workspace.main(argv))
     if a.cmd == "components":

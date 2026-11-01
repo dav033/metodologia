@@ -749,3 +749,81 @@
 {"at": "2026-10-31T19:18:57-05:00", "who": "Solucionador", "kind": "flow", "sp": "", "text": "T3.91: la autocuración dejó la decisión para ti; pasa al Solucionador (the agent says it could not run its checks: aces, TypeScript estricto, ESLint focalizado y `git diff --check`. Solo queda modificado ese harness; no hice commit)", "diff": ""}
 {"at": "2026-10-31T19:20:57-05:00", "who": "Designer", "kind": "design", "sp": "SP-14", "text": "planes@v2 · borrador 1 listo", "diff": ""}
 {"at": "2026-10-31T19:55:55-05:00", "who": "Tú", "kind": "flow", "sp": "SP-14", "text": "Confirmaste SP-14 en la web; todos listos", "diff": ""}
+{"at": "2026-10-31T20:27:01-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-11", "text": "SP-11 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T20:27:01-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-12", "text": "SP-12 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T20:27:01-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-5", "text": "SP-5 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T20:27:01-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-7", "text": "SP-7 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T20:27:01-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-8", "text": "SP-8 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T20:27:01-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-9", "text": "SP-9 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T20:40:48-05:00", "who": "Solucionador", "kind": "flow", "sp": "", "text": "T3.91: Solucionador · no pudo resolverlo: pasó 120 min sin escribir result.json; detenido", "diff": ""}
+{"at": "2026-10-31T21:32:34-05:00", "who": "Planner", "kind": "plan", "sp": "SP-3", "text": "Actualizó SP-3 (tareas)", "diff": ""}
+{"at": "2026-10-31T21:32:34-05:00", "who": "Planner", "kind": "doc", "sp": "", "text": "PLAN.md: «M2 — Saved work, Taller essentials, spend per user and the chat tools» cambió", "diff": ""}
+{"at": "2026-10-31T21:45:23-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-2", "text": "SP-2 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T21:46:05-05:00", "who": "Solucionador", "kind": "flow", "sp": "", "text": "CG-4: un conflicto de composición espera una resolución; pasa al Solucionador (the conflict in src/components/cuentas/MenuCuenta.tsx waits for a recorded resolution since 2026-10-31T18:17:29; no retry can settle it)", "diff": ""}
+{"at": "2026-10-31T21:46:05-05:00", "who": "Solucionador", "kind": "flow", "sp": "", "text": "CG-4: un conflicto de composición espera una resolución; pasa al Solucionador (the conflict in src/components/cuentas/MenuCuenta.tsx waits for a recorded resolution since 2026-10-31T19:53:24; no retry can settle it)", "diff": ""}
+{"at": "2026-10-31T21:46:05-05:00", "who": "Solucionador", "kind": "flow", "sp": "", "text": "CG-4: un conflicto de composición espera una resolución; pasa al Solucionador (the conflict in src/components/cuentas/MenuCuenta.tsx waits for a recorded resolution since 2026-10-31T19:53:24; no retry can settle it)", "diff": ""}
+{"at": "2026-10-31T21:46:05-05:00", "who": "Solucionador", "kind": "flow", "sp": "", "text": "CG-4: un conflicto de composición espera una resolución; pasa al Solucionador (the conflict in src/components/cuentas/MenuCuenta.tsx waits for a recorded resolution since 2026-10-31T18:17:29; no retry can settle it)", "diff": ""}
+{"at": "2026-10-31T21:46:05-05:00", "who": "Solucionador", "kind": "flow", "sp": "", "text": "CG-4: el Solucionador empezó (bit-pictures-REQ-021-solver, claude sonnet): the conflict in src/components/cuentas/MenuCuenta.tsx waits for a recorded resolution since 2026-10-31T18:17:29; no retry can settle it", "diff": ""}
+{"at": "2026-10-31T21:47:40-05:00", "who": "Solucionador", "kind": "flow", "sp": "", "text": "CG-4: un conflicto de composición espera una resolución; pasa al Solucionador (the conflict in src/components/cuentas/MenuCuenta.tsx waits for a recorded resolution since 2026-10-31T21:45:34; no retry can settle it)", "diff": ""}
+{"at": "2026-10-31T22:14:21-05:00", "who": "Política", "kind": "flow", "sp": "SP-3", "text": "SP-3 sigue confirmado por la regla D-276: vuelve al contenido confirmado el 2026-10-31 16:02 por la política D-241; lo que cambió después se deshizo y su contenido (tareas, entradas, pruebas y diseño) es exactamente el que se confirmó", "diff": ""}
+{"at": "2026-10-31T22:36:27-05:00", "who": "Ejecución", "kind": "flow", "sp": "SP-14", "text": "Etapa r35 unida: se rehacen T14.2, T14.3, T14.4, T14.5 (confirmado al reconfirmar SP-14 a las 19:55)", "diff": ""}
+{"at": "2026-10-31T22:36:27-05:00", "who": "Solucionador", "kind": "flow", "sp": "", "text": "CG-4: el run del Solucionador pasó a pictures:REQ-021:r35; se le avisó que no responda la decisión anterior", "diff": ""}
+{"at": "2026-10-31T22:36:28-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-4", "text": "SP-4 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T22:36:28-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-5", "text": "SP-5 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T22:36:28-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-6", "text": "SP-6 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T22:36:28-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-7", "text": "SP-7 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T22:36:28-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-8", "text": "SP-8 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T22:36:28-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-9", "text": "SP-9 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T22:36:37-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-4", "text": "SP-4 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T22:36:37-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-5", "text": "SP-5 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T22:36:37-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-6", "text": "SP-6 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T22:36:37-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-7", "text": "SP-7 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T22:36:37-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-8", "text": "SP-8 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T22:36:37-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-9", "text": "SP-9 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T22:48:18-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-4", "text": "SP-4 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T22:48:18-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-6", "text": "SP-6 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T23:08:36-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-4", "text": "SP-4 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T23:08:36-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-6", "text": "SP-6 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T23:11:29-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-4", "text": "SP-4 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T23:11:29-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-6", "text": "SP-6 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T23:24:38-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-11", "text": "SP-11 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T23:24:38-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-12", "text": "SP-12 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T23:24:38-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-5", "text": "SP-5 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T23:24:38-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-7", "text": "SP-7 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T23:24:38-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-8", "text": "SP-8 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T23:24:38-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-9", "text": "SP-9 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T23:32:56-05:00", "who": "Tú", "kind": "verify", "sp": "SP-2", "text": "Aprobaste SP-2 (versión 2)", "diff": ""}
+{"at": "2026-10-31T23:34:23-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-11", "text": "SP-11 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T23:34:23-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-12", "text": "SP-12 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T23:34:23-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-5", "text": "SP-5 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T23:34:23-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-7", "text": "SP-7 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T23:34:23-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-8", "text": "SP-8 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T23:34:23-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-9", "text": "SP-9 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T23:42:19-05:00", "who": "Tú", "kind": "verify", "sp": "SP-4", "text": "Rechazaste SP-4 (versión 2): No se ve una opcion dodne recuperar los proyectos, l toast que me avisa lo de exportacion no se ve nada bien y los modal (2 imágenes)", "diff": ""}
+{"at": "2026-10-31T23:42:29-05:00", "who": "Solucionador", "kind": "flow", "sp": "", "text": "SP-4: rechazaste la versión 2 (P-214); el Solucionador la reproduce en ese commit y pide la reparación («No se ve una opcion dodne recuperar los proyectos, l toast que me avisa lo de exportacion no se ve nada bien y los modales son horribles»)", "diff": ""}
+{"at": "2026-10-31T23:46:10-05:00", "who": "Solucionador", "kind": "flow", "sp": "", "text": "CG-4: Solucionador · no pudo resolverlo: pasó 120 min sin escribir result.json; detenido", "diff": ""}
+{"at": "2026-10-31T23:46:10-05:00", "who": "Solucionador", "kind": "flow", "sp": "", "text": "CG-4: el Solucionador ya lo intentó 3 veces; queda para ti (the conflict in src/components/cuentas/MenuCuenta.tsx waits for a recorded resolution since 2026-10-31T21:45:34; no retry can settle it)", "diff": ""}
+{"at": "2026-10-31T23:46:11-05:00", "who": "Solucionador", "kind": "flow", "sp": "", "text": "SP-4: el Solucionador empezó (bit-pictures-REQ-021-solver, claude sonnet): the owner tried SP-4 version 2 (commit e744aa8f4d) and rejected it with 2 image(s) (paths in its brief): «No se ve una opcion dodne recuperar los proyectos, l t", "diff": ""}
+{"at": "2026-10-31T23:51:50-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-4", "text": "SP-4 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T23:51:50-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-6", "text": "SP-6 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T23:57:12-05:00", "who": "Solucionador", "kind": "flow", "sp": "", "text": "el Solucionador se cerró: SP-4 ya se resolvió (ya no está abierto)", "diff": ""}
+{"at": "2026-10-31T23:58:16-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-11", "text": "SP-11 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T23:58:16-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-12", "text": "SP-12 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T23:58:16-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-5", "text": "SP-5 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T23:58:16-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-7", "text": "SP-7 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T23:58:16-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-8", "text": "SP-8 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T23:58:16-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-9", "text": "SP-9 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T23:58:44-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-4", "text": "SP-4 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-31T23:58:44-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-6", "text": "SP-6 terminó y está listo para probar", "diff": ""}
+{"at": "2026-11-01T00:10:53-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-11", "text": "SP-11 terminó y está listo para probar", "diff": ""}
+{"at": "2026-11-01T00:10:53-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-12", "text": "SP-12 terminó y está listo para probar", "diff": ""}
+{"at": "2026-11-01T00:10:53-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-5", "text": "SP-5 terminó y está listo para probar", "diff": ""}
+{"at": "2026-11-01T00:10:53-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-7", "text": "SP-7 terminó y está listo para probar", "diff": ""}
+{"at": "2026-11-01T00:10:53-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-8", "text": "SP-8 terminó y está listo para probar", "diff": ""}
+{"at": "2026-11-01T00:10:53-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-9", "text": "SP-9 terminó y está listo para probar", "diff": ""}
+{"at": "2026-11-01T00:13:55-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-4", "text": "SP-4 terminó y está listo para probar", "diff": ""}
+{"at": "2026-11-01T00:13:55-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-6", "text": "SP-6 terminó y está listo para probar", "diff": ""}
+{"at": "2026-11-01T00:21:35-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-4", "text": "SP-4 terminó y está listo para probar", "diff": ""}
+{"at": "2026-11-01T00:21:35-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-6", "text": "SP-6 terminó y está listo para probar", "diff": ""}
+{"at": "2026-11-01T00:30:59-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-4", "text": "SP-4 terminó y está listo para probar", "diff": ""}
+{"at": "2026-11-01T00:30:59-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-6", "text": "SP-6 terminó y está listo para probar", "diff": ""}

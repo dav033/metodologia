@@ -1,7 +1,7 @@
 import * as React from "react";
 import { ChevronDown } from "lucide-react";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Button } from "@/components/ui/button";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@bitacora/ui/components/ui/collapsible";
+import { Button } from "@bitacora/ui/components/ui/button";
 import { Example } from "@kit/demo";
 
 export default function CollapsibleDemo() {

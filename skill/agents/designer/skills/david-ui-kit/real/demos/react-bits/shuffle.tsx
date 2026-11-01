@@ -1,4 +1,4 @@
-import Shuffle from "@/components/react-bits/Shuffle";
+import Shuffle from "@bitacora/ui/components/react-bits/Shuffle";
 import { Example } from "@kit/demo";
 import { useMotionProfile } from "@kit/motion";
 

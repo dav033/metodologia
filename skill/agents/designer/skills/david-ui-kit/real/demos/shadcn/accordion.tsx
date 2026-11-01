@@ -1,4 +1,4 @@
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@bitacora/ui/components/ui/accordion";
 import { Example } from "@kit/demo";
 
 export default function AccordionDemo() {

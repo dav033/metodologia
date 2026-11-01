@@ -1,5 +1,5 @@
 import * as React from "react";
-import DotGrid from "@/components/react-bits/DotGrid";
+import DotGrid from "@bitacora/ui/components/react-bits/DotGrid";
 import { Effect } from "@kit/effect";
 import { Example } from "@kit/demo";
 

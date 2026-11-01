@@ -1,0 +1,281 @@
+{
+  "schemaVersion": 1,
+  "check": "REQ-021 SP-3 integration",
+  "status": "blocked",
+  "tree": "2fe45acd81795baa4060aaf45cd7935f5155b487",
+  "blender": {
+    "executable": "/home/david/.local/opt/blender/current/blender",
+    "version": "Blender 4.5.15 LTS"
+  },
+  "perTypeResults": [
+    {
+      "type": "columna",
+      "status": "blocked",
+      "details": "Not executed"
+    },
+    {
+      "type": "arco",
+      "status": "blocked",
+      "details": "Not executed"
+    },
+    {
+      "type": "pared_malla",
+      "status": "blocked",
+      "details": "Not executed"
+    },
+    {
+      "type": "pared_trenzas",
+      "status": "blocked",
+      "details": "Not executed"
+    },
+    {
+      "type": "organico",
+      "status": "blocked",
+      "details": "Not executed"
+    },
+    {
+      "type": "decoracion",
+      "status": "blocked",
+      "details": "Not executed"
+    },
+    {
+      "type": "arco_organico",
+      "status": "blocked",
+      "details": "Not executed"
+    },
+    {
+      "type": "guirnalda",
+      "status": "blocked",
+      "details": "Not executed"
+    },
+    {
+      "type": "escenografia",
+      "status": "blocked",
+      "details": "Not executed"
+    },
+    {
+      "type": "globo",
+      "status": "blocked",
+      "details": "Not executed"
+    },
+    {
+      "type": "forma",
+      "status": "blocked",
+      "details": "Not executed"
+    },
+    {
+      "type": "letras",
+      "status": "blocked",
+      "details": "Not executed"
+    },
+    {
+      "type": "metalizado",
+      "status": "blocked",
+      "details": "Not executed"
+    },
+    {
+      "type": "mural",
+      "status": "blocked",
+      "details": "Not executed"
+    },
+    {
+      "type": "techo",
+      "status": "blocked",
+      "details": "Not executed"
+    },
+    {
+      "type": "arbol_globos",
+      "status": "blocked",
+      "details": "Not executed"
+    },
+    {
+      "type": "modulo",
+      "status": "blocked",
+      "details": "Not executed"
+    },
+    {
+      "type": "mesa-redonda",
+      "status": "blocked",
+      "details": "Not executed"
+    },
+    {
+      "type": "mesa-cuadrada",
+      "status": "blocked",
+      "details": "Not executed"
+    },
+    {
+      "type": "mesa-rectangular",
+      "status": "blocked",
+      "details": "Not executed"
+    },
+    {
+      "type": "mesa-ovalada",
+      "status": "blocked",
+      "details": "Not executed"
+    },
+    {
+      "type": "mesa-coctel",
+      "status": "blocked",
+      "details": "Not executed"
+    },
+    {
+      "type": "mesa-media_luna",
+      "status": "blocked",
+      "details": "Not executed"
+    },
+    {
+      "type": "mesa-serpentina",
+      "status": "blocked",
+      "details": "Not executed"
+    },
+    {
+      "type": "mesa-u",
+      "status": "blocked",
+      "details": "Not executed"
+    },
+    {
+      "type": "mesa-imperial",
+      "status": "blocked",
+      "details": "Not executed"
+    },
+    {
+      "type": "mesa-infantil",
+      "status": "blocked",
+      "details": "Not executed"
+    },
+    {
+      "type": "mesa-barra",
+      "status": "blocked",
+      "details": "Not executed"
+    },
+    {
+      "type": "silla-tiffany",
+      "status": "blocked",
+      "details": "Not executed"
+    },
+    {
+      "type": "silla-crossback",
+      "status": "blocked",
+      "details": "Not executed"
+    },
+    {
+      "type": "silla-ghost",
+      "status": "blocked",
+      "details": "Not executed"
+    },
+    {
+      "type": "silla-plegable",
+      "status": "blocked",
+      "details": "Not executed"
+    },
+    {
+      "type": "silla-moderna",
+      "status": "blocked",
+      "details": "Not executed"
+    },
+    {
+      "type": "silla-banca",
+      "status": "blocked",
+      "details": "Not executed"
+    },
+    {
+      "type": "silla-taburete",
+      "status": "blocked",
+      "details": "Not executed"
+    },
+    {
+      "type": "backing-panel_redondo",
+      "status": "blocked",
+      "details": "Not executed"
+    },
+    {
+      "type": "backing-media_luna",
+      "status": "blocked",
+      "details": "Not executed"
+    },
+    {
+      "type": "backing-arcos_chiara",
+      "status": "blocked",
+      "details": "Not executed"
+    },
+    {
+      "type": "backing-pedestales",
+      "status": "blocked",
+      "details": "Not executed"
+    },
+    {
+      "type": "backing-aro_metalico",
+      "status": "blocked",
+      "details": "Not executed"
+    },
+    {
+      "type": "backing-aro_hexagonal",
+      "status": "blocked",
+      "details": "Not executed"
+    },
+    {
+      "type": "backing-arco_metalico",
+      "status": "blocked",
+      "details": "Not executed"
+    },
+    {
+      "type": "backing-panel_arco_apuntado",
+      "status": "blocked",
+      "details": "Not executed"
+    },
+    {
+      "type": "backing-marco_hexagonal",
+      "status": "blocked",
+      "details": "Not executed"
+    },
+    {
+      "type": "backing-marco_ventana",
+      "status": "blocked",
+      "details": "Not executed"
+    },
+    {
+      "type": "backing-pared_shimmer",
+      "status": "blocked",
+      "details": "Not executed"
+    },
+    {
+      "type": "backing-pedestales_cilindricos",
+      "status": "blocked",
+      "details": "Not executed"
+    },
+    {
+      "type": "backing-panel_dos_niveles",
+      "status": "blocked",
+      "details": "Not executed"
+    },
+    {
+      "type": "forma-caja",
+      "status": "blocked",
+      "details": "Not executed"
+    },
+    {
+      "type": "forma-cilindro",
+      "status": "blocked",
+      "details": "Not executed"
+    },
+    {
+      "type": "forma-panel",
+      "status": "blocked",
+      "details": "Not executed"
+    },
+    {
+      "type": "forma-arco_apuntado",
+      "status": "blocked",
+      "details": "Not executed"
+    },
+    {
+      "type": "sala",
+      "status": "blocked",
+      "details": "Not executed"
+    }
+  ],
+  "knownDefects": [],
+  "blockedReasons": [
+    "PICTURES_REQ021_DATABASE_URL is required to create the SP-1 isolated schema and seeded session."
+  ]
+}

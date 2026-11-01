@@ -1,5 +1,5 @@
 import * as React from "react";
-import Iridescence from "@/components/react-bits/Iridescence";
+import Iridescence from "@bitacora/ui/components/react-bits/Iridescence";
 import { Effect } from "@kit/effect";
 import { Example } from "@kit/demo";
 

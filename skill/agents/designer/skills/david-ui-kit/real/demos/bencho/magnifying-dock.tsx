@@ -1,5 +1,5 @@
-import { GlassDock } from "@/components/bencho/dock/GlassDock";
-import "@/components/bencho/dock/GlassDock.css";
+import { GlassDock } from "@bitacora/ui/components/bencho/dock/GlassDock";
+import "@bitacora/ui/components/bencho/dock/GlassDock.css";
 import { Example } from "@kit/demo";
 
 export default function MagnifyingDockDemo() {

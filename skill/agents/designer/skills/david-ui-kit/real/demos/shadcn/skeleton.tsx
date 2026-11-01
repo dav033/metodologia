@@ -1,4 +1,4 @@
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "@bitacora/ui/components/ui/skeleton";
 import { Example } from "@kit/demo";
 
 export default function SkeletonDemo() {

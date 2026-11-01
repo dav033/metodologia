@@ -1,4 +1,4 @@
-import PixelTransition from "@/components/react-bits/PixelTransition";
+import PixelTransition from "@bitacora/ui/components/react-bits/PixelTransition";
 import { Example, Row, picture } from "@kit/demo";
 
 const front = (label: string, hue: number) => (

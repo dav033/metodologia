@@ -1,7 +1,7 @@
 import * as React from "react";
 import { es } from "react-day-picker/locale";
 import type { DateRange } from "react-day-picker";
-import { Calendar } from "@/components/ui/calendar";
+import { Calendar } from "@bitacora/ui/components/ui/calendar";
 import { Example } from "@kit/demo";
 
 export default function CalendarDemo() {

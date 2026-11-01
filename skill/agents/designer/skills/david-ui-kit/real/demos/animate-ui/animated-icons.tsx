@@ -1,10 +1,10 @@
 import { AnimateIcon } from "@animate-ui/react/icons";
-import { Bell } from "@/components/animate-ui/icons/bell";
-import { Check } from "@/components/animate-ui/icons/check";
-import { Settings } from "@/components/animate-ui/icons/settings";
-import { Heart } from "@/components/animate-ui/icons/heart";
-import { Trash2 } from "@/components/animate-ui/icons/trash-2";
-import { Search } from "@/components/animate-ui/icons/search";
+import { Bell } from "@bitacora/ui/components/animate-ui/icons/bell";
+import { Check } from "@bitacora/ui/components/animate-ui/icons/check";
+import { Settings } from "@bitacora/ui/components/animate-ui/icons/settings";
+import { Heart } from "@bitacora/ui/components/animate-ui/icons/heart";
+import { Trash2 } from "@bitacora/ui/components/animate-ui/icons/trash-2";
+import { Search } from "@bitacora/ui/components/animate-ui/icons/search";
 import { Example, Row } from "@kit/demo";
 
 const icons = [["Avisos", Bell], ["Aprobado", Check], ["Ajustes", Settings], ["Favorito", Heart], ["Eliminar", Trash2], ["Buscar", Search]] as const;

@@ -1,4 +1,4 @@
-import Masonry from "@/components/react-bits/Masonry";
+import Masonry from "@bitacora/ui/components/react-bits/Masonry";
 import { Example, picture } from "@kit/demo";
 import { useMotionProfile } from "@kit/motion";
 

@@ -82,7 +82,8 @@ class RemotePin(unittest.TestCase):
     # ---------------------------------------------------------------------------------------- which changes
     def test_the_paths_the_listener_runs(self):
         for path in ("skill/scripts/bt_remote_api.py", "skill/scripts/bt_durable/deploy/x.sh", "skill/assets/live.js",
-                     "skill/templates/SPEC.md", "skill/vendor/archify/a.js", "skill/agents/solver.md"):
+                     "skill/templates/SPEC.md", "skill/vendor/archify/a.js", "skill/agents/solver.md",
+                     "skill/ui/themes/pictures.css"):
             self.assertTrue(remote_pin.relevant(path), path)
         for path in ("skill/scripts/tests/test_x.py", "skill/references/modules.md", "skill/SKILL.md",
                      "skill/githooks/pre-commit", "pyproject.toml", "uv.lock", "bitacora/x.md", "README.md"):

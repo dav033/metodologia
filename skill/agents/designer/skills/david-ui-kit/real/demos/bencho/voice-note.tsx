@@ -1,5 +1,5 @@
-import { VoiceNote } from "@/components/bencho/voice-note/VoiceNote";
-import "@/components/bencho/voice-note/VoiceNote.css";
+import { VoiceNote } from "@bitacora/ui/components/bencho/voice-note/VoiceNote";
+import "@bitacora/ui/components/bencho/voice-note/VoiceNote.css";
 import { Example } from "@kit/demo";
 
 export default function VoiceNoteDemo() {

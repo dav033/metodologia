@@ -1,5 +1,5 @@
-import { SlideConfirm } from "@/components/bencho/slide-confirm/SlideConfirm";
-import "@/components/bencho/slide-confirm/SlideConfirm.css";
+import { SlideConfirm } from "@bitacora/ui/components/bencho/slide-confirm/SlideConfirm";
+import "@bitacora/ui/components/bencho/slide-confirm/SlideConfirm.css";
 import { Example } from "@kit/demo";
 
 export default function SlideToConfirmDemo() {

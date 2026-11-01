@@ -1,5 +1,5 @@
 import * as React from "react";
-import Aurora from "@/components/react-bits/Aurora";
+import Aurora from "@bitacora/ui/components/react-bits/Aurora";
 import { Effect } from "@kit/effect";
 import { Example } from "@kit/demo";
 

@@ -1,5 +1,5 @@
 import * as React from "react";
-import AnimatedList from "@/components/react-bits/AnimatedList";
+import AnimatedList from "@bitacora/ui/components/react-bits/AnimatedList";
 import { Example } from "@kit/demo";
 import { useMotionProfile } from "@kit/motion";
 

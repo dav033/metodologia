@@ -1,0 +1,29 @@
+
+> demo-decoracion@0.1.0 taller:test-integracion-esenciales
+> tsx scripts/test/test-integracion-taller-esenciales.ts
+
+next build failed (exit 1): 
+<--- Last few GCs --->
+
+[499058:0x39424000]    32130 ms: Mark-Compact 2038.9 (2050.6) -> 2035.3 (2050.9) MB, pooled: 0 MB, 535.82 / 0.00 ms  (average mu = 0.201, current mu = 0.057) allocation failure; scavenge might not succeed
+[499058:0x39424000]    32710 ms: Mark-Compact 2037.4 (2050.9) -> 2035.3 (2053.6) MB, pooled: 0 MB, 575.47 / 0.00 ms  (average mu = 0.108, current mu = 0.007) allocation failure; scavenge might not succeed
+
+FATAL ERROR: Ineffective mark-compacts near heap limit Allocation failed - JavaScript heap out of memory
+----- Native stack trace -----
+
+ 1: 0x931db0  [/home/david/.local/share/fnm/node-versions/v24.21.0/installation/bin/node]
+ 2: 0x75968e node::OOMErrorHandler(char const*, v8::OOMDetails const&) [/home/david/.local/share/fnm/node-versions/v24.21.0/installation/bin/node]
+ 3: 0xc70d60  [/home/david/.local/share/fnm/node-versions/v24.21.0/installation/bin/node]
+ 4: 0xc70e4f  [/home/david/.local/share/fnm/node-versions/v24.21.0/installation/bin/node]
+ 5: 0xf14725  [/home/david/.local/share/fnm/node-versions/v24.21.0/installation/bin/node]
+ 6: 0xf14752  [/home/david/.local/share/fnm/node-versions/v24.21.0/installation/bin/node]
+ 7: 0xf14a4a  [/home/david/.local/share/fnm/node-versions/v24.21.0/installation/bin/node]
+ 8: 0xf2574a  [/home/david/.local/share/fnm/node-versions/v24.21.0/installation/bin/node]
+ 9: 0xf29af0  [/home/david/.local/share/fnm/node-versions/v24.21.0/installation/bin/node]
+10: 0x19c77d1  [/home/david/.local/share/fnm/node-versions/v24.21.0/installation/bin/node]
+Failed to type check.
+
+
+
+1 !== 0
+

@@ -14,6 +14,10 @@ and the repository.
 
 For a subplan task, use the brief's `subplan_id`, `subplan_revision`, `base_sha` and, when UI is in scope, the
 approved Designer contract at `design/contracts/<id>@v<N>.md`. Treat the brief as the source of these values.
+When the brief names an approved screen TSX (`Planning TSX`), the screen is already written (D-280): start from that
+file, keep its `@bitacora/ui` components, layout, copy, views and states, drop only the mockup harness (`@kit/…`
+`mountMockup`/`useMockup` and the view/state selects) and wire real data and logic into it. Never re-create the screen
+with the project's own UI components: the pool wins. The static mockup HTML is the same screen, for looking only.
 
 Before coding:
 - Read the pointers in the brief: the spec, the plan (your task and its "verify"), and the files named.

@@ -224,6 +224,61 @@
    "id": "D-270",
    "by": "metodologia-96: every engine scratch area is reclaimed (legacy executor worktrees, Probar copies, m6-deps cache, test labs off /home)",
    "at": "2026-10-31T19:32:00"
+  },
+  {
+   "id": "D-271",
+   "by": "metodologia-96: a Solucionador session whose triggers were all resolved elsewhere is told and closed instead of running to max_minutes",
+   "at": "2026-10-31T21:04:51"
+  },
+  {
+   "id": "D-272",
+   "by": "metodologia-96: a stage join carries accepted no-change attempts; the correction phase says when a confirmed stage is not joined yet",
+   "at": "2026-10-31T21:14:38"
+  },
+  {
+   "id": "D-273",
+   "by": "metodologia-96: each verifier check sees the attempt's files, not what earlier checks generated",
+   "at": "2026-10-31T21:17:53"
+  },
+  {
+   "id": "D-274",
+   "by": "metodologia-96: integrating metodologia refreshes the remote API pin automatically",
+   "at": "2026-10-31T21:18:01"
+  },
+  {
+   "id": "D-275",
+   "by": "owner: reconfirming a subplan confirms redoing its changed accepted tasks at the durable join; other subplans still ask",
+   "at": "2026-10-31T21:31:02"
+  },
+  {
+   "id": "D-276",
+   "by": "metodologia-96: a subplan whose draft returns to the content of its last confirmation stays confirmed",
+   "at": "2026-10-31T21:56:32"
+  },
+  {
+   "id": "D-277",
+   "by": "metodologia-96: new skill/scripts modules are packaged and the live venv refreshed by the integration; preflight refuses unlisted modules",
+   "at": "2026-10-31T22:16:01"
+  },
+  {
+   "id": "D-278",
+   "by": "metodologia-96: «Probar» moves a clean stale copy to the published commit instead of asking the owner to close it",
+   "at": "2026-10-31T23:24:02"
+  },
+  {
+   "id": "D-279",
+   "by": "owner: an account at >=90% of its weekly quota is excluded from every metodologia route, even when a task or session owns it; the work is rerouted",
+   "at": "2026-10-31T23:45:03"
+  },
+  {
+   "id": "D-280",
+   "by": "owner: one UI component pool in metodologia (@bitacora/ui), per-project themes, direct sync into projects, live-styled mockups, implementers build from the approved TSX",
+   "at": "2026-10-31T23:56:50"
+  },
+  {
+   "id": "D-281",
+   "by": "metodologia-97: the repo pre-commit hook scans the bitácora with its gitleaks config",
+   "at": "2026-11-01T00:31:41"
   }
  ]
 }

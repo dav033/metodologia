@@ -1,0 +1,11 @@
+{
+  "documentLang": "es",
+  "mainLang": "es",
+  "headerLang": null,
+  "accountPopupLang": null,
+  "path": "/cuenta",
+  "viewport": {
+    "width": 360,
+    "height": 800
+  }
+}

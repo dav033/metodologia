@@ -19,8 +19,12 @@ if [ -z "$GL" ] && [ -n "$LOCALAPPDATA" ]; then
   LAD=$(printf '%s' "$LOCALAPPDATA" | sed 's#\\#/#g')
   GL=$(ls "$LAD"/Microsoft/WinGet/Links/gitleaks.exe "$LAD"/Microsoft/WinGet/Packages/Gitleaks.Gitleaks*/gitleaks.exe 2>/dev/null | head -1)
 fi
+# The bitácora's allowlist (hex task/trigger keys in solver files) lives in bitacora/.gitleaks.toml; without -c the
+# hook scanned with the default rules only and refused every bitácora commit that carried those keys.
+CFG=""
+[ -f bitacora/.gitleaks.toml ] && CFG="-c bitacora/.gitleaks.toml"
 if [ -n "$GL" ]; then
-  "$GL" git --pre-commit --staged --redact --no-banner --no-color -v || {
+  "$GL" git $CFG --pre-commit --staged --redact --no-banner --no-color -v || {
     echo "gitleaks: posible secreto en este commit; quítalo y vuelve a intentar."
     exit 1
   }

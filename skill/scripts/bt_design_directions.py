@@ -138,7 +138,7 @@ existing product: same app shell, navigation, tokens, fonts and component vocabu
 {_ledger(rdir, ref)}
 Draw TWO candidate thumbnail HTMLs first at {out['html']}.candidate-1.html and .candidate-2.html.
 These are small visual compositions, not text lists. Choose the stronger candidate, then build the full mockup at
-{out['html']} using entry {out['tsx']}. Write {out['md']} with name, approach (how this direction changes the
+{out['html']} using entry {out['tsx']}. Components only from `@bitacora/ui` (`@bitacora/ui/components/…`); the look is the project theme from the pool: never redefine tokens, fonts or pool component styles in the TSX (D-280). Write {out['md']} with name, approach (how this direction changes the
 existing surface), its interaction/motion detail, why it fits the existing product, eight-axis table, chosen
 thumbnail and honest audit results. Write {out['json']} with this JSON shape:
 {{"name":"...","axes":{{{','.join(json.dumps(k)+':"..."' for k in AXES)}}},
@@ -297,9 +297,11 @@ def choose(project: str, rdir: Path, ref: str, key: str, via: str) -> str:
         brief = f"""Finalise the owner's chosen direction {chosen['name']} ({key}) for {ref}.
 Read SPEC.md, PLAN.json, {Path(rdir) / 'design' / entry['behavior']}, {out['md']} and {out['html']}.
 The owner chose this direction via {via}; preserve its composition and motion. Write ONLY {md} (complete twelve-section
-behavioural and visual contract, draft) and {html}. If source {out['tsx']} exists, rebuild it with the CURRENT offline
-builder into {html}, retaining its visual composition; this incorporates runtime fixes without editing the exploration.
-Otherwise copy its self-contained HTML and explicitly report fallback/toolchain concerns. Change only verified
+behavioural and visual contract, draft), {html.with_suffix('.tsx')} and {html}. If source {out['tsx']} exists, copy it to
+{html.with_suffix('.tsx')} (fixing only verified defects; components only from `@bitacora/ui`, no token or pool-style
+redefinitions: the project theme gives the look, D-280) and rebuild that file with the CURRENT offline builder
+(`--project {project} components mockup build`) into {html}; this incorporates runtime fixes without editing the
+exploration. Otherwise copy its self-contained HTML and explicitly report fallback/toolchain concerns. Change only verified
 behavioural defects. Name components as source:id variant state. Read the Designer's david-ui-kit skill.
 Run contrast.py and the offline audit on {html}. Report the actual RESULT or AUDIT NOT RUN in CONCERNS.
 Do not edit any exploration, history, SPEC, PLAN or production file. Do not approve the contract.

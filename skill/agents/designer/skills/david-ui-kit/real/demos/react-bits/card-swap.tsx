@@ -1,5 +1,5 @@
 import * as React from "react";
-import CardSwap, { Card } from "@/components/react-bits/CardSwap";
+import CardSwap, { Card } from "@bitacora/ui/components/react-bits/CardSwap";
 import { Effect } from "@kit/effect";
 import { Example, picture } from "@kit/demo";
 

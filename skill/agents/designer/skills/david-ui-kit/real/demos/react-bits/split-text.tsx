@@ -1,4 +1,4 @@
-import SplitText from "@/components/react-bits/SplitText";
+import SplitText from "@bitacora/ui/components/react-bits/SplitText";
 import { Example } from "@kit/demo";
 import { useMotionProfile } from "@kit/motion";
 

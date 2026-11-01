@@ -487,3 +487,86 @@ previous main: bec779163d3021896183a3aa95dc88d8f70d42f0
 regression: skipped (D-261: integrate.regression = none)
 rollback: git revert the merge of rejected-phase-2 on main, restart bt-durable.service and bitacora-web.service
 result: merged 2e6ae4e7cfde, restarted bt-durable.service, bitacora-web.service, smoke ok
+
+# integration of An answered decision opens a fresh attempt window; checks-not-run needs an explicit statement (D-269), local restart of engine + web, 2026-10-31 19:58, session metodologia-96
+previous main: 266a3ecd06750d33efec7f678298176a2c3f40ae
+/home/david/bitacora/.state/durable/backups/bt_durable-20261031-195840.dump 53312063 868da0d0dfff66c206f67de13b8dec33f3ac8ca5412098721c7401bf167289f0
+regression: skipped (D-261: integrate.regression = none)
+rollback: git revert the merge of answer-budget on main, restart bt-durable.service and bitacora-web.service
+result: merged 0ae488b26dfe, restarted bt-durable.service, bitacora-web.service, smoke ok
+
+# integration of One disk pass reclaims legacy executor worktrees, Probar copies and the M6 deps cache (D-270), local restart of engine + web, 2026-10-31 20:10, session metodologia-96
+previous main: 0ae488b26dfe8c4e742985b5654fb65e9441ac97
+/home/david/bitacora/.state/durable/backups/bt_durable-20261031-201045.dump 53588440 1e129cb4af6420d9efe54298157b204919f10dbb12cf8b5012e71a9902ccdbce
+regression: skipped (D-261: integrate.regression = none)
+rollback: git revert the merge of scratch-gc-2 on main, restart bt-durable.service and bitacora-web.service
+result: merged 0b2e99c348ab, restarted bt-durable.service, bitacora-web.service, smoke ok
+
+# integration of A Solucionador session whose triggers were resolved elsewhere is told and closed (D-271), local restart of engine + web, 2026-10-31 21:15, session metodologia-96
+previous main: 0b2e99c348ab3c1523b81c2c2711ccde89eaf79c
+/home/david/bitacora/.state/durable/backups/bt_durable-20261031-211506.dump 54710900 89739a615b92c104ce1b643131b7bdfd29b6be3f11b776f173105b3d7883eae4
+regression: skipped (D-261: integrate.regression = none)
+rollback: git revert the merge of solver-resolved on main, restart bt-durable.service and bitacora-web.service
+result: merged 3d5eabc0b782, restarted bt-durable.service, bitacora-web.service, smoke ok
+
+# integration of The integration repins the remote API release copy; failed smoke restores the pin (D-274), local restart of engine + web, 2026-10-31 21:29, session metodologia-96
+previous main: 3d5eabc0b782bae5ff9804f3a5056a4530b3b6d9
+/home/david/bitacora/.state/durable/backups/bt_durable-20261031-212858.dump 54967362 e74fcfe57b94228d68e7ccb32f4ee2f2c5bcd6fcc19026400d2293c701fa5c0c
+regression: skipped (D-261: integrate.regression = none)
+rollback: git revert the merge of remote-pin on main, restart bt-durable.service and bitacora-web.service
+result: merged bcc3858bd782, restarted bt-durable.service, bitacora-web.service, smoke ok
+
+# integration of An accepted no-change attempt joins as it is; panel says when a stage is not joined (D-272), local restart of engine + web + remote API, 2026-10-31 21:33, session metodologia-96
+previous main: bcc3858bd782bc937fc55101541bca4fcbbf404e
+/home/david/bitacora/.state/durable/backups/bt_durable-20261031-213312.dump 54999146 b2ddf2d6741765b82a158bf354516abc5e92283ce9a9c1ca1e14587d145d3f9e
+regression: skipped (D-261: integrate.regression = none)
+rollback: git revert the merge of join-nochange on main, restart bt-durable.service and bitacora-web.service and bitacora-remote-api.service
+remote API pin: 7e8d4e638d7f -> 72d7daf3daa8 (backup /home/david/.config/systemd/user/bitacora-remote-api.service.d/exec.conf.bak-7e8d4e638d7f)
+result: merged 72d7daf3daa8, restarted bt-durable.service, bitacora-web.service, bitacora-remote-api.service, smoke ok
+
+# integration of Reconfirming a subplan confirms redoing its changed accepted tasks; engine joins frozen stages (D-275), local restart of engine + web + remote API, 2026-10-31 21:56, session metodologia-96
+previous main: 72d7daf3daa8f13f459bcb754cf83cba2235b86a
+/home/david/bitacora/.state/durable/backups/bt_durable-20261031-215555.dump 55260693 e912c584e62d64a7966a7131dd3ace5dfc3a65c44c10b8aace237c1ec8de333b
+regression: skipped (D-261: integrate.regression = none)
+rollback: git revert the merge of reconfirm-confirms on main, restart bt-durable.service and bitacora-web.service and bitacora-remote-api.service
+remote API pin: 72d7daf3daa8 -> 90cf2bc95907 (backup /home/david/.config/systemd/user/bitacora-remote-api.service.d/exec.conf.bak-72d7daf3daa8)
+result: merged 90cf2bc95907, restarted bt-durable.service, bitacora-web.service, bitacora-remote-api.service, smoke ok
+
+# integration of Back to content already confirmed re-confirms a subplan by policy (D-276), local restart of engine + web + remote API, 2026-10-31 22:12, session metodologia-96
+previous main: 90cf2bc959071d52fcdf4590dd725b37eb4334d7
+/home/david/bitacora/.state/durable/backups/bt_durable-20261031-221215.dump 55497574 a58ccce9aceade665f20dcd1bfc2268112404a02f19bbcea88b1342957294b34
+regression: skipped (D-261: integrate.regression = none)
+rollback: git revert the merge of confirm-unchanged on main, restart bt-durable.service and bitacora-web.service and bitacora-remote-api.service
+remote API pin: 90cf2bc95907 -> 6b10b27f52bc (backup /home/david/.config/systemd/user/bitacora-remote-api.service.d/exec.conf.bak-90cf2bc95907)
+result: merged 6b10b27f52bc, restarted bt-durable.service, bitacora-web.service, bitacora-remote-api.service, smoke ok
+
+# integration of An attempt worktree starts as the verifier's copy; failing prepared checks name what ran (D-273), local restart of engine + web + remote API, 2026-10-31 22:14, session metodologia-96
+previous main: 6b10b27f52bcd3c872643cc72bc681ca5487672a
+/home/david/bitacora/.state/durable/backups/bt_durable-20261031-221412.dump 55514849 b7ac9d64b77a9758d2796ee6963899da72ab70de1ccea817103ed2ff32f9a203
+regression: skipped (D-261: integrate.regression = none)
+rollback: git revert the merge of check-isolation on main, restart bt-durable.service and bitacora-web.service and bitacora-remote-api.service
+remote API pin: 6b10b27f52bc -> 1140c95668f4 (backup /home/david/.config/systemd/user/bitacora-remote-api.service.d/exec.conf.bak-6b10b27f52bc)
+result: merged 1140c95668f4, restarted bt-durable.service, bitacora-web.service, bitacora-remote-api.service, smoke ok
+
+# integration of Every skill/scripts module is packaged; packaging changes refresh the live venv (D-277), local restart of engine + web + remote API, 2026-10-31 22:24, session metodologia-96
+previous main: 1140c95668f43ce49d3e8496bd9234e281f9a964
+/home/david/bitacora/.state/durable/backups/bt_durable-20261031-222423.dump 55519661 7a23d2f9cfb1bed0e6d58e28eca0b5e0858667b422cddcb340343a3889ebbfbd
+regression: skipped (D-261: integrate.regression = none)
+rollback: git revert the merge of package-modules on main, restart bt-durable.service and bitacora-web.service and bitacora-remote-api.service
+remote API pin: 1140c95668f4 -> ae74773d7c86 (backup /home/david/.config/systemd/user/bitacora-remote-api.service.d/exec.conf.bak-1140c95668f4)
+result: merged ae74773d7c86, restarted bt-durable.service, bitacora-web.service, bitacora-remote-api.service, smoke ok
+
+# integration of Probar moves a stale clean copy to the published commit (D-278), local restart of engine + web + remote API, 2026-10-31 23:34, session metodologia-96
+previous main: ae74773d7c86662bd9e2a913ea9b4c49a8bc6ad7
+/home/david/bitacora/.state/durable/backups/bt_durable-20261031-233422.dump 57728008 6e38abbe804ecb6660af69873db24f9bf81763136fd68a208158951ca69d7658
+regression: skipped (D-261: integrate.regression = none)
+rollback: git revert the merge of probar-stale on main, restart bt-durable.service and bitacora-web.service and bitacora-remote-api.service
+remote API pin: ae74773d7c86 -> 8fc11a051aba (backup /home/david/.config/systemd/user/bitacora-remote-api.service.d/exec.conf.bak-ae74773d7c86)
+result: merged 8fc11a051aba, restarted bt-durable.service, bitacora-web.service, bitacora-remote-api.service, smoke ok
+
+# integration of The repo pre-commit hook scans with the bitácora's gitleaks config (D-281), local restart of no unit, 2026-11-01 00:32, session metodologia-97
+previous main: 13ae648a4d1a205e765d055a288f365c15dd9636
+backup: not needed (no runtime code changed)
+regression: skipped (D-261: integrate.regression = none)
+rollback: git revert the merge of hook-gitleaks-config on main
+result: merged 683b584887fa, restarted nothing, smoke ok

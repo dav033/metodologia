@@ -1,4 +1,4 @@
-import StaggeredMenu from "@/components/react-bits/StaggeredMenu";
+import StaggeredMenu from "@bitacora/ui/components/react-bits/StaggeredMenu";
 import * as React from "react";
 import { Example } from "@kit/demo";
 

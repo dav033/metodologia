@@ -1,5 +1,5 @@
-import { Counter } from "@/components/bencho/rolling-counter/Counter";
-import "@/components/bencho/rolling-counter/Counter.css";
+import { Counter } from "@bitacora/ui/components/bencho/rolling-counter/Counter";
+import "@bitacora/ui/components/bencho/rolling-counter/Counter.css";
 import { Example } from "@kit/demo";
 
 export default function RollingNumberInputDemo() {

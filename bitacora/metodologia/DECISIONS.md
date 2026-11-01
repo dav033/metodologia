@@ -3366,3 +3366,234 @@ Solucionador 20261030-100736-d494 integrated merge fff622890f28b8093a9a0afda9c40
   «Rechazada v3 · reparando». First integration (`bec779163`) showed nothing on live (rows were `outdated` + `retest`;
   escaped defect recorded); fixed in `083c91257` (`OlderVersionRepublished` 3 tests from the live rows; 292 tests OK;
   live read-only: SP-14/SP-2/SP-3 labelled). Opus subagent; integrated with `--no-regression`.
+
+## D-269 — An answered decision opens a fresh attempt window; «checks not run» needs an explicit statement
+
+- **Date:** 2026-10-31 · **Status:** Accepted · **Refines:** D-265 (agent could not run its checks), REQ-030 M5 recovery
+  policy (budget)
+- **Context:** pictures REQ-021 r32 T3.91 ran a1..a10 in one round (k1). `policy.spent` counted every attempt of the
+  round and each owner/healing/Solucionador answer only raised `max_attempts` by one, so once the budget was spent every
+  answer bought exactly one attempt. a10 (after the operator's d6) made real progress — the drag worked, a new assertion
+  failed — and escalated at once with «the task used its attempts» → d7. Healing then left d7 to the owner as «el
+  agente no pudo ejecutar sus checks» because the D-265 pattern matched «La verificación independiente sigue
+  pendiente», although a10 had run and passed every check. Owner: «¿por qué el sistema no lo arregla? hemos tenido
+  muchas veces esta conversación».
+- **Decision:** `policy.spent(since=)` counts attempts, same-signature repeats and consecutive regressions from the
+  task's last answered decision (window `max(budget.max_attempts, extra_attempts)`); tokens, elapsed time and checks
+  that ever passed stay whole-task. New `Budget.max_attempts_total` (20; omitted from dumps at its default so a
+  previous engine still accepts the settings) caps the task (`limit_hit=max_attempts_total`). Gated by
+  `DBOS.patch("bt-task-answer-opens-attempt-window")` before `bt.emit_decision`. `healing.checks_not_run` accepts only
+  explicit cannot-run statements; mentions of the independent verification/audit are dropped first, and «queda
+  pendiente» counts only when the message claims no passing checks.
+- **Rule:** an answer is a new bounded attempt window, never a single attempt; the whole task is still capped.
+  «Independent verification pending» is never evidence that the agent could not run its checks.
+- **Evidence:** `test_durable_control` 29 (4 new), `test_healing_durable_decisions` 10 (2 new, real T3.91 a7/a8
+  positive, a10 negative), new `test_durable_answer_window_upgrade` (previous engine → current: replay intact, new
+  window); durable e2e/upgrade/env_probe/versioning 29 OK. Opus subagent (`c74381495`, branch `answer-budget`);
+  integrated with `--no-regression` (D-261).
+
+## D-270 — One disk pass reclaims what D-266 left: legacy executor worktrees, «Probar» copies, the M6 dependency cache
+
+- **Date:** 2026-10-31 · **Status:** Accepted · **Completes:** D-266 · **Refines:** D-129 (three-day executor
+  retention), D-250 (fast tmp)
+- **Context:** after `/home` reached 100 % the owner asked to fix the origin so it cannot happen again. D-266 covered
+  durable attempt worktrees; a read-only inventory found more growing: legacy executor worktrees (68 GB; the hourly
+  retention timer skipped all 262: 196 `already_absent`, 49 `unknown_ignored_data` from tiny gitignored files, 15
+  orphan `attempt_not_terminal`, 2 `staged_changes_preserved`), «Probar» copies `~/.local/share/bitacora-verify`
+  (23 GB, never collected), `~/.cache/m6-deps` (2.7 GB, never pruned). Escaped from D-266: `service._loop` reset the
+  worktree pass's clock on every 30 s reaper pass, so the engine collection never ran. Test labs used `$TMPDIR` on /home.
+- **Decision:** one engine pass (`bt_durable.gc_scratch`) every `disk_gc.interval_min` (60) plus `bt-durable
+  gc-scratch` (dry run unless `--apply`). Legacy: `retain_run(preserve=True)` removes a checkout once what it holds
+  beyond its snapshot is preserved (ignored data ≤ 32 MB archived; staged/post-capture/uncaptured work committed at
+  `refs/m3/retained/<run>/<dir>`; orphan "running" attempts retired only in superseded runs, supervisor gone, 3 days
+  old); what cannot be preserved is kept and reported; absent checkouts settled once. Probar: superseded versions,
+  versions decided > 3 days ago and closed task copies removed with their sidecars, never while a server, a lock, recent
+  sidecar changes or local edits exist. M6 cache: LRU by `.m6-ready`, live tips' keys and recent entries kept, removed
+  after 14 days unused or over 4 GB. Outside-bitácora folders touched only for the live root or explicit env. Each
+  engine periodic pass keeps its own clock; labs default to `bt_regress.fast_tmp()`.
+- **Rule:** nothing the engine writes grows without a collector; a collector removes only what is regenerable or
+  preserved elsewhere, reports what it keeps and why, and never asks again about what is already gone.
+- **Evidence:** `test_retention` 53 (11 new), `test_durable_gc_scratch` 16 new (`EngineLoop` red on main); affected
+  suites OK. Live read-only dry run: legacy 66 checkouts / 73.4 GB eligible; Probar ≥ 2 superseded copies (4.2 GB);
+  deps 2.84 GB within cap. Opus subagent (`3b55e30aa`, branch `scratch-gc-2`); integrated with `--no-regression`.
+
+## D-271 — A Solucionador session whose triggers were all resolved elsewhere is told once and closed as `superseded`
+
+- **Date:** 2026-10-31 · **Status:** Accepted · **Refines:** REQ-031 (Solucionador supervision), D-251 (vanished
+  sessions), D-253 (routed model)
+- **Context:** pictures REQ-021 r32: session `20261031-184040-40be` (Claude Opus) started at 18:40 for T3.91:d5; d6
+  and d7 were queued to it. The operator answered all three (telemetry `decision_answered`) and T3.91 completed at
+  20:26, yet the session ran until the watchdog stopped it at 20:40 («pasó 120 min sin escribir result.json»).
+  `_supervise` only ended a session on `result.json`, `max_minutes`, a gone terminal or account limits.
+- **Decision:** after each pass queues its new triggers, the Solucionador checks every trigger of the active session
+  with the launch-time "still open" facts plus "the decision's task has not settled". When none is open and none was
+  answered by the session itself, the session is told once (inbox and terminal) what was resolved and by whom, and to
+  write `result.json` with outcome `superseded`; after `solver.resolved_grace_minutes` (5) it is closed as
+  `superseded`, never while its own `bt_integrate` runs; a reopened trigger cancels the close. `superseded` marks its
+  triggers `resolved`, gives back the task's `max_per_task` slot, records the closure in the activity and does not
+  notify the owner.
+- **Rule:** a session never outlives the work it was started for; what someone else resolved is neither the
+  Solucionador's failure nor a spent attempt, and an integration in progress is never cut.
+- **Evidence:** `test_durable_solver` 32 (5 new) and related suites OK. Opus subagent (`0040654ae`, branch
+  `solver-resolved`); integrated with `--no-regression` (D-261).
+
+## D-274 — The integration repins the remote API's release copy itself; a failed smoke puts the previous pin back
+
+- **Date:** 2026-10-31 · **Status:** Accepted · **Refines:** P-144 (the pinned remote listener), D-260 (catch-up)
+- **Context:** `bitacora-remote-api.service` runs a pinned copy (`~/.local/share/bitacora-remote/<sha>`, drop-in
+  `exec.conf`) on purpose (P-144). Every integration left the pin behind and the operator refreshed it by hand
+  (3519eec → aaf31a8d6, then → 7e8d4e638). Owner: «arreglar el origen, no parchar».
+- **Decision:** `bt_integrate` repins in its restart phase (`bt_remote_pin`) when the pinned copy lacks, versus the
+  merge or main, any path the listener loads (`skill/scripts` minus tests, `assets`, `templates`, `vendor`, `agents`):
+  create-only copy (`git archive` into a temp folder, then rename), atomic drop-in rewrite keeping
+  `exec.conf.bak-<sha12>`, `daemon-reload`, restart and smoke with the engine and web (must answer HTTP). A failed smoke
+  restores the previous drop-in before the revert restarts it; a copy that cannot be made keeps the old pin and is
+  reported; a passing smoke prunes copies beyond the newest three (current and previous always kept; only regenerable,
+  unused folders). `--dry-run` shows it; only the CLI on the live checkout owns the pin; a revert repins too.
+- **Rule:** every unit that runs code from main is brought to the integrated commit by the integration that changed it,
+  smoked and rolled back with the others.
+- **Evidence:** `test_integrate_remote_pin` 16 new; `test_integrate` 41, `test_integrate_post_venv` 1,
+  `test_durable_solver` 32 OK; live dry run lists the remote unit and the repin. Opus subagent (`81a6dc411`, branch
+  `remote-pin`); integrated with `--no-regression` (D-261). Closes P-144's manual step.
+
+## D-272 — An accepted no-change attempt joins as it is; «construyendo» only once the run holds the stage
+
+- **Date:** 2026-10-31 · **Status:** Accepted · **Refines:** D-149 (durable stage join), D-268 (correction read model),
+  D-259
+- **Context:** pictures REQ-021: the owner confirmed SP-14 at 19:55:55 (`planes@v2`); stage r34 froze at 19:56:01 but
+  the join refused with `JOIN_MATERIAL_MISSING`: T2.3 had been accepted in r32 by an attempt whose snapshot was its
+  base (`2d45cd50`, the work was already there) and `stage_join._from_manifest` dropped every `snapshot == base`. The
+  run stayed in r32 while the panel said «Rechazada v2 · construyendo v3». Owner: «sp14 no me sale en ningún lado para
+  aprobar». The refusal was persisted nowhere.
+- **Decision:** the join inherits an accepted task whose snapshot equals its base as it is; it still refuses an accepted
+  snapshot whose commit does not exist; a non-accepted no-change snapshot runs again. Every refused join writes
+  `RUN.join.refused.json` (revision, code, message, who), cleared by the next join that is not refused. The D-268 read
+  model adds «por unir a la ejecución» before «construyendo vN+1»; «construyendo» holds only while the durable run's
+  revision is at least that of the first stage frozen after the confirmation that holds the subplan (not `kept`);
+  otherwise the detail says «Ejecutar cambios» is pending, that stage rN waits for live attempts, or why its join was
+  refused.
+- **Rule:** accepted work is never refused for having changed nothing; the panel never says something builds unless
+  the running run holds it, and a refused join is visible where the owner looks.
+- **Evidence:** `test_durable_stage_join` 10 (4 new), `test_verification_correction` 21 (6 new); affected suites OK.
+  Live read-only `plan()` r32→r34: inherit 116 / reconcile 2 / redo 14, T2.3 inherited; next blocker
+  `JOIN_NEEDS_CONFIRM` (T14.2–T14.5, T3.91) → D-275 and the withdrawal of T3.121. Opus subagent (`c90e8af77`, branch
+  `join-nochange`); integrated with `--no-regression` (D-261).
+
+## D-275 — Reconfirming a subplan confirms redoing its changed accepted tasks at the durable join
+
+- **Date:** 2026-10-31 · **Status:** Accepted · **Refines:** D-149 (durable stage join), D-259, D-272
+- **Context:** pictures REQ-021 stage r34 (frozen 19:56:01) changed SP-14's accepted T14.2–T14.5, which the owner had
+  just reconfirmed on the web (19:55:55), and SP-3's T3.91 (only its `after` gained the Solucionador's redundant
+  T3.121, confirmed by policy). The join needed `--confirm`, the web never passed it nor offered a way to give it, and
+  no engine pass joined a frozen stage whose join was refused or never attempted. The owner chose «Reconfirmar =
+  confirmar» (and «Retirar T3.121»).
+- **Decision:** at the durable join a redone task counts as confirmed when its subplan's owner confirmation
+  (`by: owner`) came after the running stage was frozen, the stage holding that confirmation is in the join, and the
+  task is unchanged since that stage (`bt_stage_confirmations`, shared with the D-268 read model). `confirm` is True or
+  the exact tasks the owner saw (`--confirm-tasks`); `JOIN_NEEDS_CONFIRM` lists and records only the rest; the Plan tab
+  shows them with «Confirmar y unir» (owner, loopback, exact list). Result, telemetry and activity say who confirmed
+  each task. The engine's drain also joins a frozen stage a durable run is behind, once per revision, after the CLI's
+  plan checks; a refusal is recorded and not retried.
+- **Rule:** accepted work runs again only with the owner's confirmation, given by reconfirming its own subplan or
+  explicitly for exactly the tasks shown; a frozen stage never waits silently for a join nobody starts.
+- **Evidence:** `test_durable_stage_join` 17 (7 new), `test_stages` 26 (3 new), `test_subplan_control` 13 (2 new) and
+  affected suites OK. Live read-only `plan()` r32→r34: T14.2–T14.5 confirmed by the 19:55 SP-14 reconfirmation.
+  Opus subagent (`9a924587d`, branch `reconfirm-confirms`); integrated with `--no-regression` (D-261).
+
+## D-276 — Back to content already confirmed in that exact form re-confirms a subplan by policy
+
+- **Date:** 2026-10-31 · **Status:** Accepted · **Refines:** D-130 (subplan confirmations), D-241 (bounded repair), D-259
+- **Context:** pictures REQ-021: D-241 re-confirmed SP-3 by policy at 18:10 for the Solucionador's repair T3.121
+  (stages r33/r34). The owner chose «Retirar T3.121»; the Planner removed it and restored `T3.91.after`, so SP-3's digest
+  went back to `2e3b30847869eb63`, the content D-241 confirmed at 16:02 and frozen in r31/r32. Yet `stage freeze`
+  refused `STAGE_SUBPLAN_UNCONFIRMED`, because `flow.json` kept only the latest confirmation, so the owner was asked to
+  reconfirm something they never changed. Owner: «arreglar el origen, no parchar».
+- **Decision:** every subplan record keeps `history` (earlier confirmations with digest, and the owner's rejections via
+  `planning reject REQ SP-n --by owner`). `bt_confirmed_content.restore` re-confirms `by: policy` (rule D-276) a subplan
+  whose current digest equals an earlier confirmation no later owner rejection names, when `confirm` would accept it;
+  record, activity and a planning note say «vuelve al contenido confirmado el <fecha> por <quién>». It runs at stage
+  freeze, plan approval, the Plan tab, `planning status` and the Stop-hook. Pre-D-276 D-241 records derive the replaced
+  confirmation from the frozen stages (recorded as `derived`). A rejected confirmation shows as changed.
+- **Rule:** the owner is never asked to confirm content they (or their standing rule) already confirmed in that exact
+  form; content they never saw in that form, or rejected, always waits for them.
+- **Evidence:** `test_confirmed_content` 7 new; 21 affected suites, 308 tests OK. Live read-only: SP-3's draft digest
+  equals the D-241 confirmation of 16:02:54 (r31/r32); on a copy, `stage freeze` froze r35 with all 13 subplans. Opus
+  subagent (`40246840a`, branch `confirm-unchanged`); integrated with `--no-regression` (D-261).
+
+## D-273 — An attempt worktree starts as the verifier's copy; checks stay isolated and a failing prepared check names what ran first
+
+- **Date:** 2026-10-31 · **Status:** Accepted · **Refines:** M6 process isolation, `sandbox_prepare`, `sandbox_provision`,
+  `bt.prepare`
+- **Context:** pictures REQ-021 r32 T3.91 a2–a4: a full `tsc --noEmit` failed in M6 (`resolverBlender({})`: `NODE_ENV`
+  missing in `ProcessEnv`) and passed in the attempt's worktree; three attempts were spent and the owner was asked. The
+  operator blamed a cross-check leak; wrong — every check starts from a fresh `/workspace` copied from the read-only
+  snapshot. M6's own preparation (`next typegen`) writes the git-ignored `next-env.d.ts`, which the tsconfig includes;
+  the verdict was right (latent r15 code), but the fresh worktree lacked what M6 prepares, so the agent could not
+  reproduce it. Owner: «arreglar el origen, no parchar».
+- **Decision:** (1) `bt.prepare` (implementation only) prepares the allocated worktree as M6 prepares its copy: the
+  lockfile installed with M6's `NPM_CI_ARGS` (skipped when complete), then `sandbox_prepare.detect_steps` with the
+  checks' environment; 900 s in all, first failure stops, never blocks the start; the brief names what ran, that it
+  mirrors the verifier, any failure and any generated file the repo does not ignore; `worktree-prepare.json` keeps a
+  retried step identical. (2) In M6 a failing prepared check ends its stdout with a note naming the preparation steps
+  and the ignored files they leave; a failing preparation step is named. (3) No clean step between checks: isolation
+  already holds, pinned by a test.
+- **Rule:** the agent checks the tree the verifier checks, and a check's outcome never depends on which checks ran
+  before it.
+- **Evidence:** `test_check_isolation` 4 (a shared-workspace mutant fails it); `test_durable_worktree_prepare` 8;
+  `bt_scheduler_quality` 193 and 45 `test_durable_*` modules (289) OK. On the T3.91 snapshot: 11.7 s, and the prepared
+  worktree's `tsc` reproduces the verifier's TS2345. Opus subagent (`9d5aa7841`, `8254be868`, branch
+  `check-isolation`); integrated with `--no-regression` (D-261).
+
+## D-277 — Every skill/scripts module is packaged before it is merged; a packaging change refreshes the live venv before the restart
+
+- **Date:** 2026-10-31 · **Status:** Accepted · **Refines:** D-150, D-240, D-261, `bt_integrate.preflight`
+- **Context:** the r35 stage join on live failed with `ModuleNotFoundError: No module named 'bt_stage_confirmations'`.
+  `pyproject.toml` lists top-level modules by hand in `py-modules` and the live venv's editable finder maps only listed
+  ones; five modules from D-268, D-274, D-275 and D-276 were merged unlisted, invisible to the engine and the CLI.
+  `test_package_modules` would have caught it but the regression is off (D-261) and nothing else checked; nor did
+  anything refresh the live venv after a merge. Owner: «arreglar el origen, no parchar».
+- **Decision:** (1) the five modules are listed; (2) `bt_package_modules` holds the drift check used by both
+  `test_package_modules` and `bt_integrate.preflight`, which refuses — whatever the regression setting — a branch whose
+  tree (main merged in) has an unlisted top-level module, a listed module that no longer exists or an unparsable
+  `pyproject.toml`; (3) a merge that changes `pyproject.toml`/`uv.lock` runs `uv sync --frozen --inexact
+  --reinstall-package bitacora` in the live checkout, and before any restart the live interpreter must find every
+  packaged name under the live checkout (`find_spec`, no module code runs); a failure is a failed smoke (no restart,
+  revert, and the revert refreshes and checks again).
+- **Rule:** a module reaches main only if it is listed, and the live venv imports everything the distribution lists
+  before any unit restarts on it.
+- **Evidence:** `test_integrate_package_modules` 16; `test_integrate` 41, `test_integrate_remote_pin` 16,
+  `test_integrate_post_venv` 1, `test_package_modules` 1, `test_regress_select` 9 (84 OK). Read-only on live: the
+  install check names exactly the unimportable modules. Opus subagent (`ebe465e1d`, `ac429778e`, branch
+  `package-modules`); integrated with `--no-regression` (D-261).
+
+## D-278 — «Probar» moves a copy left at an older publication of its version to the published commit; only the owner's edits stop it
+
+- **Date:** 2026-10-31 · **Status:** Accepted · **Refines:** D-131, D-195, D-270, `bt_verification.open_local`,
+  `bt_verify_servers.start`
+- **Context:** pictures REQ-021 ~23:20: «Probar SP-2» answered «…/SP-2-v2 existe pero no está en el commit publicado;
+  ciérralo primero.» The copy was a clean detached worktree at `6ec74192`, an older publication of SP-2 version 2, with
+  no server; the engine had published version 2 again at a newer commit (a subplan keeps its number while other
+  accepted work lands on its line). The operator closed it by hand. Owner: «arreglar el origen, no parchar».
+- **Decision:** `bt_verify_copy.heal` brings a copy at another commit to the published one under the version's
+  `.lock`: it stops the version's servers (`bt_verify_servers.halt`, same path as stop; `start` passes `held`); refuses
+  when something else uses the copy (D-270 checks, naming the processes) or when git would keep edits (listing the
+  files and offering «Descartar los cambios» — `verify discard --by owner` — or «Guardar la copia aparte» — `verify
+  keep`, `<SP>-v<N>-kept-<sha7>`, never collected); otherwise checks it out detached at the published commit, dropping
+  ignored files when a dependency manifest or lockfile changed and always dropping framework caches; re-adds the
+  worktree if the checkout fails; records the move in the activity. Messages say «versión 2 (commit abc1234)».
+- **Rule:** the owner never manages «Probar» copies; a copy at the wrong commit is the system's to fix, only the
+  owner's own edits wait for their choice.
+- **Evidence:** `test_verify_copy` 8 on real git repos; 16 affected suites, 213 OK. Opus subagent (`db98d3aa2`, branch
+  `probar-stale`); integrated with `--no-regression` (D-261).
+
+## D-281 — The repo pre-commit hook scans with the bitácora's gitleaks config, so its solver-key allowlist applies at commit time
+
+- **Context:** every bitácora commit was refused: the per-pass solver files (`RUN.solver/<pass>/inbox.jsonl`,
+  `triggers.json`) and `state.json` carry hex task/trigger keys that the `generic-api-key` rule mistakes for secrets.
+  The allowlist lived in `bitacora/.gitleaks.toml`, but the repo's `.git/hooks/pre-commit` ran `gitleaks git --staged`
+  without `-c`, so it only used the default rules (the allowlist was read by `bt_secrets.scan_staged`, not the hook).
+- **Decision:** the hook (`skill/githooks/pre-commit`) passes `-c bitacora/.gitleaks.toml` when present; the allowlist
+  covers any `RUN.solver/**/*.json(l)` with `regexTarget = "line"` and keys optionally prefixed `run:kind:`.
+- **Rule:** the same keys outside `RUN.solver/` are still refused. No secret was involved (values are md5 hex).
+- **Evidence:** `test_githook_gitleaks_config` (2 tests, real hook in a temp repo); installed into `.git/hooks`;
+  bitácora commit `13ae648a4`, code merge `683b58488` (`--no-regression`, D-261). Made by metodologia-97 by hand.

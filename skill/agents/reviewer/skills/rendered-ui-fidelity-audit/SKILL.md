@@ -30,6 +30,11 @@ declared breakpoints and states, and browser capture commands it authorizes. Nev
    deviation as `contract_violation`, `unspecified`, `accessibility`, or `regression`. A visual difference on an
    unspecified detail is not a contract violation; do not report aesthetic preference without an approved criterion.
    Distinguish the deviation classification from finding severity and from M6 ledger status.
+   When the brief names the approved screen TSX (D-280), compare the rendered UI against it: the same `@bitacora/ui`
+   components in the same places, with the same views, states and flows; only real data and logic may replace its
+   mock data. A screen re-created with other components (the project's own instead of the pool's) is a
+   `contract_violation` even when it looks alike. The look (colours, fonts, radius) follows the current pool and
+   project theme, so a difference there against an older capture is not a deviation.
    Also check, as `unspecified` or `regression`: the changed screen keeps the existing shell, navigation, header,
    tokens and font families; no invented names, dates, slogans, hero headlines or marketing copy appear that are
    absent from the requirements and the existing UI (this is a checklist item, not automated by the kit).

@@ -1,4 +1,4 @@
-import { Textarea } from "@/components/ui/textarea";
+import { Textarea } from "@bitacora/ui/components/ui/textarea";
 import { Example } from "@kit/demo";
 
 export default function TextareaDemo() {

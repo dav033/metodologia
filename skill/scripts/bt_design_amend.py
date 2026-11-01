@@ -111,7 +111,7 @@ def start(project: str, rdir: Path, ref: str, comments: str, via: str, *, auto: 
             chosen = next(d for d in entry["directions"] if d.get("id") == entry["chosen"])
             import bt_design_directions as directions
             source = Path(rdir) / "design" / entry["amend_source"] if entry.get("amend_source") else \
-                directions.files(rdir, ref, chosen["revision"], chosen["id"])["tsx"]
+                drafts.source_tsx(rdir, ref) or directions.files(rdir, ref, chosen["revision"], chosen["id"])["tsx"]
             md, html = drafts.paths(rdir, ref)
             out["before_md"].write_bytes(md.read_bytes())  # restored if a failing session touched the canonical files
             out["before_html"].write_bytes(html.read_bytes())
@@ -167,8 +167,9 @@ removes something, remove it. Keep composition, navigation, motion, tokens and e
 def _contract_brief(rdir: Path, ref: str, change: dict, out: dict[str, Path], source: Path | None) -> str:
     import bt_design_drafts as drafts
     md, html = drafts.paths(rdir, ref)
-    start = (f"Start {out['tsx']} from a copy of {source}, edit only what the delta needs, and rebuild it with the "
-             f"CURRENT offline builder into {out['html']}." if source else
+    start = (f"Start {out['tsx']} from a copy of {source}, edit only what the delta needs (components only from "
+             f"`@bitacora/ui`, no token or pool-style redefinitions, D-280), and rebuild it with the CURRENT offline "
+             f"builder into {out['html']}." if source else
              f"There is no TSX source: start {out['html']} from a copy of {html} and edit it in place; say so in CONCERNS.")
     return f"""
 AMENDMENT OF THE CHOSEN, FINALISED DESIGN. The output list and previous-draft note above are superseded by this
@@ -213,6 +214,8 @@ def settle(rdir: Path, ref: str, entry: dict) -> None:
     md, html = drafts.paths(rdir, ref)
     md.write_bytes(out["md"].read_bytes())
     html.write_bytes(out["html"].read_bytes())
+    if out["tsx"].is_file():                     # the canonical screen source follows the amendment (D-280)
+        html.with_suffix(".tsx").write_bytes(out["tsx"].read_bytes())
     report = _report(outcome)
     entry["revision"] = int(entry.get("revision") or 0) + 1
     entry.update(status="ready", sha256=drafts._sha(md), mockup=True, error="", failures=0, finished=drafts._now(),

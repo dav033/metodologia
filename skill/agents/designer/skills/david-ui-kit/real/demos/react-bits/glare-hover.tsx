@@ -1,4 +1,4 @@
-import GlareHover from "@/components/react-bits/GlareHover";
+import GlareHover from "@bitacora/ui/components/react-bits/GlareHover";
 import { Example, Row } from "@kit/demo";
 
 export default function GlareHoverDemo() {

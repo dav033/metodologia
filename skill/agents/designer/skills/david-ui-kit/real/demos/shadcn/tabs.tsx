@@ -1,4 +1,4 @@
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@bitacora/ui/components/ui/tabs";
 import { Example } from "@kit/demo";
 
 export default function TabsDemo() {

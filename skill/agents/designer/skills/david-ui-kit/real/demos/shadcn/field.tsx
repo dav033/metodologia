@@ -1,7 +1,7 @@
-import { Checkbox } from "@/components/ui/checkbox";
-import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel, FieldLegend, FieldSet } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@bitacora/ui/components/ui/checkbox";
+import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel, FieldLegend, FieldSet } from "@bitacora/ui/components/ui/field";
+import { Input } from "@bitacora/ui/components/ui/input";
+import { Textarea } from "@bitacora/ui/components/ui/textarea";
 import { Example } from "@kit/demo";
 
 export default function FieldDemo() {

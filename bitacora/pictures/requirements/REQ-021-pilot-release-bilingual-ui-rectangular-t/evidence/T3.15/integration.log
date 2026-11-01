@@ -1,0 +1,5 @@
+
+> demo-decoracion@0.1.0 taller:test-integracion-esenciales
+> tsx scripts/test/test-integracion-taller-esenciales.ts
+
+This module cannot be imported from a Client Component module. It should only be used from a Server Component.

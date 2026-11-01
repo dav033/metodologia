@@ -1,0 +1,8 @@
+
+> @sempertex/agente-core@0.1.0 build
+> tsc -p tsconfig.build.json
+
+
+> @sempertex/happie-package-ia@0.1.0 build
+> tsc -p tsconfig.build.json
+

@@ -1,6 +1,6 @@
 import { toast } from "sonner";
-import { Toaster } from "@/components/ui/sonner";
-import { Button } from "@/components/ui/button";
+import { Toaster } from "@bitacora/ui/components/ui/sonner";
+import { Button } from "@bitacora/ui/components/ui/button";
 import { Example, Row } from "@kit/demo";
 
 export default function ToastDemo() {

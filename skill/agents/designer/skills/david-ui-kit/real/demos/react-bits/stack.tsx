@@ -1,4 +1,4 @@
-import Stack from "@/components/react-bits/Stack";
+import Stack from "@bitacora/ui/components/react-bits/Stack";
 import { Effect } from "@kit/effect";
 import { Example, picture } from "@kit/demo";
 
