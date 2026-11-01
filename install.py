@@ -13,6 +13,8 @@ What it does, with this machine's paths:
   account profiles (bitacora.py profiles list), so each account gets the same skill, hooks and subagents.
   4. Subagent roles for Claude Code, Codex and Antigravity (skill/scripts/install_agents.py)
   5. Rebuilds the local workspace index (where each project's repos are cloned on this machine)
+  8. Linux with systemd: writes the user unit of the component pool watcher (bitacora-ui-watch.service, D-293);
+     installed, not enabled: `systemctl --user enable --now bitacora-ui-watch`
 """
 from __future__ import annotations
 
@@ -258,6 +260,23 @@ def account_dirs() -> tuple[list[Path], list[Path]]:
     return claude, codex
 
 
+def install_unit(source: Path, root: Path, units: Path | None = None) -> str:
+    """Write a user unit shipped in the repo into ~/.config/systemd/user with this machine's repo and bitácora paths.
+    Installed, never enabled or started here (the owner enables it once; `bt_integrate` restarts the live units)."""
+    if not sys.platform.startswith("linux") or not shutil.which("systemctl"):
+        return f"{source.name}: no systemd here (skipped)"
+    units = units or Path(os.environ.get("XDG_CONFIG_HOME", HOME / ".config")) / "systemd" / "user"
+    text = source.read_text(encoding="utf-8").replace("%h/dev/metodologia", REPO.as_posix()) \
+        .replace("%h/bitacora", root.as_posix())
+    target = units / source.name
+    if target.is_file() and target.read_text(encoding="utf-8") == text:
+        return f"{source.name}: up to date"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(text, encoding="utf-8")
+    subprocess.run(["systemctl", "--user", "daemon-reload"], check=False, capture_output=True, timeout=15)
+    return f"{source.name}: installed at {target} (enable: systemctl --user enable --now {source.stem})"
+
+
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--rtk-only", action="store_true",
@@ -373,6 +392,8 @@ def main(argv: list[str] | None = None) -> None:
             else "codegraph: npm install failed (optional, skipped)")
     else:
         say("codegraph: npm not found (optional, skipped)")
+    print("8. user units")
+    say(install_unit(REPO / "skill" / "scripts" / "deploy" / "bitacora-ui-watch.service", root))
     if (REPO / ".git").exists():
         subprocess.run(["git", "-C", str(REPO), "config", "pull.rebase", "true"], check=False)
     print("Done. Missing repos are cloned on demand (launch) or with: bitacora.py --project <p> workspace clone")

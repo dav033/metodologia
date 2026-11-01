@@ -14,7 +14,8 @@ context — often that reader is you, next session. The script handles structure
   project.json     workspace: repos by role (+ optional root) → `bitacora.py workspace add|remove|show|root`;
                    `"ui": {"sync": true, "repo": "<role>"}` opts the project into `@bitacora/ui` (D-280):
                    `bitacora.py components sync <project>` writes the pool into `<repo>/packages/bitacora-ui`;
-                   a new project with a UI gets it from the interview (`components adopt`, D-290)
+                   a new project with a UI gets it from the interview (`components adopt`, D-290);
+                   `components watch [--from <wt>/skill/ui --into <project tree>]` carries pool edits (D-293)
   requirements/REQ-001-<slug>/SPEC.md, PLAN.md, HANDOFF.md, rounds/round-NN.json
   design/contracts/<contract>@vN.md  versioned UI/UX contracts, when the project has UI subplans
   artifacts/                  HTML pages, diagrams, reports, mockups you create for this project

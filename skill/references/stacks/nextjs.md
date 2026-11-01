@@ -83,6 +83,17 @@ a repo without the wiring is «wire @bitacora/ui»:
 - imports are package paths (`@bitacora/ui/components/ui/button`), never the project's `@/` alias.
 - verify: type-check + `next build` pass with one pool component rendered; `packages/bitacora-ui/SYNC.json` exists.
 
+Developing a pool change (D-293): edit `skill/ui` in a metodologia worktree, never the live checkout. Run
+`bitacora.py components watch --from <wt>/skill/ui --into <project worktree>` beside `next dev` in that project
+worktree: each saved change (stable for ~2 s) is written into its `packages/bitacora-ui`, uncommitted, and Next
+reloads. That copy's `SYNC.json` says `"dev": true` and its `pool` is `dev-<digest>`, so the project's guard fails
+on it: never commit or deploy it. A dev write is the only uncommitted content the watcher overwrites; it refuses over
+anyone's edits there. Ctrl-C leaves the files; `components watch --into <project worktree> --restore` puts the
+committed copy back (`components sync <project>` does it on the default branch's worktree). Then integrate the
+metodologia branch: the merge syncs the pool into every opted-in project. The user unit `bitacora-ui-watch.service`
+(installed by `install.py`, enable it with `systemctl --user enable --now bitacora-ui-watch`) runs the default mode
+on the live pool: a change there is synced like the integrate trigger does (same digest: nothing).
+
 ## Testing
 Vitest + Testing Library: integration tests per feature (render the feature's components, mock the network with
 MSW), unit tests for domain logic. Tests colocated (`order-table.test.tsx` next to the file). Playwright for the

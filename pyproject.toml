@@ -265,6 +265,7 @@ py-modules = [
   "bt_kit_workspace",
   "bt_ui",
   "bt_ui_sync",
+  "bt_ui_watch",
   "bt_page_design_directions",
   "bt_server_planning",
   "bt_server_plans",

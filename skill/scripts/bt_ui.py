@@ -46,25 +46,29 @@ _ALIAS = re.compile(r"""(from\s+|import\s+|import\(\s*)(["'])@/([^"']+)\2""")
 
 
 # ------------------------------------------------------------------------------------------------ package
-def package() -> dict:
-    return json.loads((UI / "package.json").read_text(encoding="utf-8"))
+def package(ui: Path | None = None) -> dict:
+    return json.loads((Path(ui or UI) / "package.json").read_text(encoding="utf-8"))
 
 
-def files(project: str | None = None) -> list[Path]:
-    """The distributable files: package.json, LICENSES, `src/**` and, for a project, only its own theme."""
-    out = [UI / "package.json"] + [p for p in sorted(SRC.rglob("*")) if p.is_file() and p.name not in SKIP]
-    if (UI / "LICENSES.md").is_file():
-        out.append(UI / "LICENSES.md")
-    if project and (theme := theme_path(project)):
+def files(project: str | None = None, ui: Path | None = None) -> list[Path]:
+    """The distributable files: package.json, LICENSES, `src/**` and, for a project, only its own theme. `ui` names
+    another copy of the pool (a worktree's `skill/ui`, `components watch --from`); default this checkout's."""
+    ui = Path(ui or UI)
+    src = ui / "src" if ui != UI else SRC
+    out = [ui / "package.json"] + [p for p in sorted(src.rglob("*")) if p.is_file() and p.name not in SKIP]
+    if (ui / "LICENSES.md").is_file():
+        out.append(ui / "LICENSES.md")
+    if project and (theme := theme_path(project, ui)):
         out.append(theme)
     return out
 
 
-def digest(paths: list[Path] | None = None) -> str:
+def digest(paths: list[Path] | None = None, ui: Path | None = None) -> str:
     """12 hex of SHA-256 over every relative path and its bytes: changes with any edit to the pool."""
+    base = Path(ui or UI)
     h = hashlib.sha256()
-    for p in paths if paths is not None else files():
-        h.update(p.relative_to(UI).as_posix().encode() + b"\0" + p.read_bytes() + b"\0")
+    for p in paths if paths is not None else files(ui=ui):
+        h.update(p.relative_to(base).as_posix().encode() + b"\0" + p.read_bytes() + b"\0")
     return h.hexdigest()[:12]
 
 
@@ -120,10 +124,10 @@ def registry_key(spec: str) -> str | None:
 
 
 # ------------------------------------------------------------------------------------------------ themes
-def theme_path(project: str) -> Path | None:
+def theme_path(project: str, ui: Path | None = None) -> Path | None:
     if not _PROJECT.match(project or ""):
         return None
-    path = THEMES / f"{project}.css"
+    path = (Path(ui) / "themes" if ui and Path(ui) != UI else THEMES) / f"{project}.css"
     return path if path.is_file() else None
 
 

@@ -16,9 +16,15 @@ Same pool, same commit: a second sync finds the tree unchanged and commits nothi
 `sync_all` (run by `bt_integrate` after a merge that changes `skill/ui/`) syncs every opted-in project. A new project
 with a UI opts in by default (D-290): `adopt` writes the opt-in and does the first sync, or `first_sync` does it when
 the repository is registered later; projects without the key keep the explicit opt-in.
+
+Development (D-293): `write_dev` puts a pool under development (a worktree's `skill/ui`) into a project working tree
+without committing, so its dev server hot-reloads; its `SYNC.json` says `"dev": true` and its `pool` is not a digest,
+so the project's guard fails on it. A dev write is the only uncommitted content `sync` and `write_dev` overwrite;
+`restore` puts the committed copy back. `bt_ui_watch` (`components watch`) drives both.
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import subprocess
@@ -46,28 +52,72 @@ def _git(repo: Path, *args: str, env: dict | None = None, input_: str | None = N
 
 
 # ------------------------------------------------------------------------------------------------ what is written
-def source_commit() -> str:
+def source_commit(ui: Path | None = None) -> str:
     """The metodologia commit that last changed the pool (stable across unrelated commits, so syncs stay idempotent)."""
     try:
+        if ui is not None and Path(ui) != bt_ui.UI:
+            return _git(Path(ui), "log", "-1", "--format=%H", "--", ".", check=False)
         return _git(REPO_ROOT, "log", "-1", "--format=%H", "--", "skill/ui", check=False)
     except (OSError, SyncError):
         return ""
 
 
-def payload(project: str) -> dict[str, bytes]:
-    """Relative path under `packages/bitacora-ui` → bytes, SYNC.json included."""
-    files = bt_ui.files(project)
+def payload(project: str, ui: Path | None = None, dev: bool = False) -> dict[str, bytes]:
+    """Relative path under `packages/bitacora-ui` → bytes, SYNC.json included. `ui`: another copy of the pool (default
+    this checkout's). `dev`: a development copy (D-293): the stamp's `pool` is `dev-<digest>`, never a digest, so the
+    project's guard (`packages/bitacora-ui` equals `SYNC.json`'s pool) fails on it."""
+    base = Path(ui or bt_ui.UI)
+    files = bt_ui.files(project, ui)
     out = {}
     for f in files:
-        rel = f.relative_to(bt_ui.UI).as_posix()
+        rel = f.relative_to(base).as_posix()
         out[rel] = f.read_bytes()
-    pkg = bt_ui.package()
-    stamp = {"name": pkg["name"], "version": pkg["version"], "pool": bt_ui.digest(files),
-             "theme": f"themes/{project}.css" if bt_ui.theme_path(project) else None,
-             "source": "metodologia skill/ui", "source_commit": source_commit(),
+    pkg = bt_ui.package(ui)
+    pool = bt_ui.digest(files, ui)
+    stamp = {"name": pkg["name"], "version": pkg["version"], "pool": pool,
+             "theme": f"themes/{project}.css" if bt_ui.theme_path(project, ui) else None,
+             "source": "metodologia skill/ui", "source_commit": source_commit(ui),
              "note": "Written by `bitacora.py components sync`; change the pool in metodologia, never this copy (D-280)."}
+    if dev:
+        stamp.update(pool=f"dev-{pool}", dev=True, dev_pool=pool, dev_source=str(base), written=_content_digest(out),
+                     note="DEVELOPMENT COPY written by `bitacora.py components watch --into` (D-293): never commit or "
+                          "deploy it. `components watch --into <this tree> --restore` (or `components sync <project>` "
+                          "on the default branch's worktree) puts the committed copy back.")
     out[STAMP] = (json.dumps(stamp, indent=1, ensure_ascii=False) + "\n").encode()
     return out
+
+
+def _content_digest(data: dict[str, bytes]) -> str:
+    """Digest of a package's files (SYNC.json and node_modules excluded): what a dev write wrote, to tell it from a
+    later hand edit."""
+    h = hashlib.sha256()
+    for rel in sorted(r for r in data if r != STAMP and not _installed(r)):
+        h.update(rel.encode() + b"\0" + data[rel] + b"\0")
+    return h.hexdigest()[:16]
+
+
+def _on_disk(dest: Path) -> dict[str, bytes]:
+    return {p.relative_to(dest).as_posix(): p.read_bytes() for p in sorted(dest.rglob("*"))
+            if p.is_file() and not _installed(p.relative_to(dest).as_posix())} if dest.is_dir() else {}
+
+
+def dev_write(dest: Path) -> dict | None:
+    """The stamp of an intact development copy at `dest` (`packages/bitacora-ui` of a working tree), else None: no
+    stamp, a committed stamp, or files edited since the dev write (someone's work, never overwritten)."""
+    try:
+        stamp = json.loads((Path(dest) / STAMP).read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    if not isinstance(stamp, dict) or stamp.get("dev") is not True:
+        return None
+    return stamp if stamp.get("written") == _content_digest(_on_disk(Path(dest))) else None
+
+
+def _dirty(tree: Path) -> bool:
+    """Uncommitted changes under the package path of a working tree that are not npm's and not an intact dev write."""
+    status = _git(tree, "status", "--porcelain", "--", TARGET).splitlines()
+    foreign = [line for line in status if not _installed(line[3:].strip('"').removeprefix(TARGET + "/"))]
+    return bool(foreign) and dev_write(tree / TARGET) is None
 
 
 def recorded(repo: Path, branch: str) -> dict | None:
@@ -161,8 +211,7 @@ def _write_tree(dest: Path, data: dict[str, bytes]) -> None:
 
 
 def _commit_in_worktree(worktree: Path, data: dict[str, bytes], message: str) -> str | None:
-    status = _git(worktree, "status", "--porcelain", "--", TARGET).splitlines()
-    if [line for line in status if not _installed(line[3:].strip('"').removeprefix(TARGET + "/"))]:
+    if _dirty(worktree):
         raise SyncError(f"{worktree / TARGET} has uncommitted changes: not overwritten (commit or discard them first)")
     _write_tree(worktree / TARGET, data)
     _git(worktree, "add", "-A", "--", TARGET, f":(exclude){TARGET}/node_modules")
@@ -207,7 +256,7 @@ def _commit_plumbing(repo: Path, branch: str, data: dict[str, bytes], message: s
 
 
 def sync(project: str, repo: Path | None = None, branch: str = "", push: bool | None = None,
-         root: Path | None = None) -> dict:
+         root: Path | None = None, ui: Path | None = None) -> dict:
     """Write and commit the pool into `project`'s repository. Returns {"status": "committed"|"unchanged", "commit",
     "branch", "repo", "pool", "pushed"}; raises SyncError when it cannot (nothing half-written is committed)."""
     if not bt_ui._PROJECT.match(project or ""):
@@ -219,7 +268,7 @@ def sync(project: str, repo: Path | None = None, branch: str = "", push: bool | 
     branch = default_branch(repo, branch or cfg.get("branch", ""))
     if not _git(repo, "rev-parse", "--verify", "-q", f"refs/heads/{branch}", check=False):
         raise SyncError(f"{repo}: branch {branch} does not exist")
-    data = payload(project)
+    data = payload(project, ui)
     pool = json.loads(data[STAMP])["pool"]
     message = _message(project, data)
     worktree = _checked_out(repo, branch)
@@ -231,6 +280,55 @@ def sync(project: str, repo: Path | None = None, branch: str = "", push: bool | 
                               check=False)
         result["pushed"] = done.returncode == 0 or (done.stderr or done.stdout).strip()[-300:]
     return result
+
+
+def _work_tree(tree: Path) -> Path:
+    tree = Path(tree).expanduser().resolve()
+    if _git(tree, "rev-parse", "--is-inside-work-tree", check=False) != "true":
+        raise SyncError(f"{tree} is not a git working tree")
+    top = Path(_git(tree, "rev-parse", "--show-toplevel"))
+    if top.resolve() != tree:
+        raise SyncError(f"{tree} is not the top of its working tree ({top})")
+    return tree
+
+
+def check_dev_target(tree: Path) -> Path:
+    """The working tree a dev write may go into; refused when its package path holds someone's uncommitted changes."""
+    tree = _work_tree(tree)
+    if _dirty(tree):
+        raise SyncError(f"{tree / TARGET} has uncommitted changes that are not a previous dev write: not overwritten "
+                        "(commit or discard them first)")
+    return tree
+
+
+def write_dev(project: str, ui: Path, tree: Path) -> dict:
+    """Write the pool at `ui` into `tree/packages/bitacora-ui` WITHOUT committing (D-293): a development copy marked
+    `"dev": true`. Returns {"status": "written"|"unchanged", "pool", "path"}; raises SyncError when refused."""
+    if not bt_ui._PROJECT.match(project or ""):
+        raise SyncError(f"invalid project {project!r}")
+    tree = check_dev_target(tree)
+    data = payload(project, Path(ui), dev=True)
+    dest = tree / TARGET
+    before = _on_disk(dest)
+    _write_tree(dest, data)
+    stamp = json.loads(data[STAMP])
+    return {"status": "unchanged" if before == data else "written", "pool": stamp["dev_pool"], "path": str(dest)}
+
+
+def restore(tree: Path) -> str:
+    """Put the committed `packages/bitacora-ui` of `tree` back over an intact dev write. Returns "restored" or
+    "clean"; raises SyncError over anything else uncommitted (never someone's edit)."""
+    tree = _work_tree(tree)
+    status = [line for line in _git(tree, "status", "--porcelain", "--", TARGET).splitlines()
+              if not _installed(line[3:].strip('"').removeprefix(TARGET + "/"))]
+    if not status:
+        return "clean"
+    if dev_write(tree / TARGET) is None:
+        raise SyncError(f"{tree / TARGET} has uncommitted changes that are not a dev write: not restored")
+    if _git(tree, "ls-tree", "-d", "--name-only", "HEAD", TARGET, check=False):
+        _git(tree, "checkout", "HEAD", "--", TARGET)
+    _git(tree, "clean", "-fdq", "-e", "node_modules", "--", TARGET)
+    return "restored"
 
 
 def adopt(project: str, role: str = "", source: Path | None = None, mockup_fonts: list[str] | None = None,
