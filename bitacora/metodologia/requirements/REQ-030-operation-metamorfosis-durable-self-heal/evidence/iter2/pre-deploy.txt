@@ -585,3 +585,4 @@ previous main: 621bf4d4d3adab08e067bbb99811216ba154e48f
 regression: skipped (D-261: integrate.regression = none)
 rollback: git revert the merge of weekly-cap on main, restart bt-durable.service and bitacora-web.service and bitacora-remote-api.service
 remote API pin: 621bf4d4d3ad -> 5a9713f68b7a (backup /home/david/.config/systemd/user/bitacora-remote-api.service.d/exec.conf.bak-621bf4d4d3ad)
+result: merged 5a9713f68b7a, restarted bt-durable.service, bitacora-web.service, bitacora-remote-api.service, smoke ok
