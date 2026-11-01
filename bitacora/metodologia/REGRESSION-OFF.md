@@ -34,6 +34,8 @@ Owner, 2026-10-31 17:05: until further notice metodologia integrations run no re
 - 2026-11-01 01:45 · `80d1e0d08b6d` · A retry never continues from a snapshot that lost most of its base's files (D-286) · 2 path(s): skill/scripts/bt_scheduler_retry.py, skill/scripts/tests/test_scheduler_recovery_sources.py
 - 2026-11-01 01:46 · `63e43520f47c` · The guard against a gutted snapshot also compares with today's base (D-286) · 2 path(s): skill/scripts/bt_scheduler_retry.py, skill/scripts/tests/test_scheduler_recovery_sources.py
 - 2026-11-01 01:48 · `b45102a58294` · A durable retry never starts from a snapshot that holds under half of its line's files (D-287) · 2 path(s): skill/scripts/bt_durable/adapters/integration.py, skill/scripts/tests/test_durable_line_pin.py
+- 2026-11-01 02:00 · `266388e1978b` · A gutted snapshot never advances a subplan or run line (D-288) · 2 path(s): skill/scripts/bt_durable/adapters/integration.py, skill/scripts/tests/test_durable_line_pin.py
+- 2026-11-01 02:03 · `96b787087814` · A gate task leaves out the subplan lines its base already left out (D-289) · 2 path(s): skill/scripts/bt_durable/adapters/integration.py, skill/scripts/tests/test_durable_line_pin.py
 
 ## Escaped defects
 

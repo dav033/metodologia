@@ -1,0 +1,15 @@
+  ✓ importar el registro no carga ningún repositorio (D-001) (1 ms)
+  ✓ los manifiestos cumplen su esquema y su id es su clave (3 ms)
+  ✓ la tabla de asignación cubre el catálogo y los generadores, sin sobrantes, y casa con el grupo (1 ms)
+  ✓ mobiliario y escenografía son el catálogo en su orden: 26 + 2 generadores y 25 + backing nuevos (2 ms)
+    sempertex: item-biblioteca 582, formato 14, color 90, producto-tienda 620, plan-idea 31, decoracion-guiada 31, modulo 5
+  ✓ Sempertex lista la biblioteca de fábrica en su orden, con el item mismo como carga (12 ms)
+  ✓ cada carga cumple el esquema de su clase y cada clase está declarada en su manifiesto (14280 ms)
+  ✓ el índice de ids locales es inyectivo y las dos formas dan la misma entrada (9 ms)
+  ✓ las piezas de lo de fábrica son de Sempertex o de lo que su manifiesto declara en depende (3 ms)
+    3043 derivados
+  ✓ lo derivado de cada escena es de Sempertex y se resuelve en las dos formas (35619 ms)
+  ✓ repositorio de una pieza y de un item guardado por el usuario (R2) (0 ms)
+  ✓ las comprobaciones muerden: esquema del manifiesto y carga de una clase (2 ms)
+  ✓ un derivado inventado no agranda la memoria del resolutor; uno de verdad la usa una vez (532 ms)
+test-catalogo-repositorios: 12 pruebas ok

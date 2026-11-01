@@ -1,0 +1,4 @@
+
+> demo-decoracion@0.1.0 taller:test-integracion-esenciales
+> tsx --conditions=react-server scripts/test/test-integracion-taller-esenciales.ts
+

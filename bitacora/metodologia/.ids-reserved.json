@@ -309,6 +309,16 @@
    "id": "D-287",
    "by": "metodologia-97: durable retry base never a gutted snapshot (continuation_base)",
    "at": "2026-11-01T01:47:51"
+  },
+  {
+   "id": "D-288",
+   "by": "solver 20261101-015640-eab9: a gutted snapshot never advances a line",
+   "at": "2026-11-01T01:58:40"
+  },
+  {
+   "id": "D-289",
+   "by": "solver 20261101-015640-eab9: gate task leaves out conflicting lines",
+   "at": "2026-11-01T02:01:54"
   }
  ]
 }

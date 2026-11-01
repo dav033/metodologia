@@ -3713,3 +3713,40 @@ Solucionador 20261030-100736-d494 integrated merge fff622890f28b8093a9a0afda9c40
   gutted) and returns the line tip instead, logging it. A real edit is still continued.
 - **Evidence:** `test_durable_line_pin` (new test, 8 OK), line/integrator suites OK; merge `b45102a58`
   (`--no-regression`). D-286's legacy guard stays (same rule, other path).
+
+## D-288 — A gutted snapshot never advances a subplan or run line
+
+- **Context:** D-283..D-287 guarded where a gutted snapshot (an incomplete worktree captured: 1933 of 8564 files) is
+  *continued from*; none guarded where it is *integrated*. The shell descends from the line tip, so `_merge` took the
+  fast-forward branch and moved pictures REQ-021 r35's SP-3 line onto T3.15 a201's snapshot, then a301..a601. D-287
+  compares a snapshot with the line tip, so with the line itself gutted it saw nothing wrong; a501 and a601 audited the
+  shell again and T3.15 ended blocked with F1 (high, «source absent») after its remediation rounds.
+- **Decision:** `GitLineIntegrator.integrate` refuses a snapshot with under half the files of the member's subplan
+  line (the run line when it has none; ≥ 50 files) with a conflict naming the cause, moving no line; `sync` reports it
+  as a conflict and skips it. The retry then starts from the line tip (D-287). The poisoned r35 SP-3 ref was put back
+  at its last whole commit by the Solucionador (`860f035e`, 8564 files).
+- **Consequences:** a half-built worktree can no longer become accepted work through any path (attempt base D-283,
+  retry base D-286/D-287, line D-288). A real edit that deletes most of a tree of ≥ 50 files is refused too; the owner
+  or the plan decides that case.
+- **Rule:** `test_durable_line_pin.test_a_gutted_snapshot_is_never_integrated_into_a_line` (red before the fix).
+- **Source:** solver 20261101-015640-eab9, pictures REQ-021 r35 T3.15.
+- **Evidence:** the test, red without the fix; line/integrator suites in `bt_integrate`'s regression.
+
+## D-289 — A gate task leaves out the subplan lines its base already left out
+
+- **Context:** pictures REQ-021 r35 T94 (gate CG-4). `_caught_up` builds a gate task's base from the composition candidate
+  plus each downstream subplan line (SP-5..SP-12) and leaves out the lines that conflict (D-173); `integrate` then
+  merged the attempt's snapshot into the same lines and refused it for the very same conflict — a gate has no line of
+  its own, so the member rule (D-172: only the task's own line must take it) never applied. Each retry rebuilt an
+  equivalent snapshot, so «the integration conflict keeps coming back» until the owner was asked (decision T94:d1) and
+  the engine opened one recorded-resolution request per file and per attempt (snapshots differ each time, so no
+  resolution is ever reused): ~30 requests, each a Solucionador trigger.
+- **Decision:** in `integrate`, for a task whose home is a gate, a conflict on a subplan line is left out and reported
+  (`left`, the `subplan_line_conflict` telemetry the run already shows for other tasks), like `sync` does; the task is
+  refused with the conflict only when no subplan line at all takes it. The run line keeps its note rule.
+- **Consequences:** a gate's evidence and tests reach the lines that merge cleanly and the gate passes on its own checks;
+  the lines it conflicts with meet the conflict where they are composed later, as for subplan members. A gate that
+  conflicts with every line is still refused.
+- **Rule:** `test_durable_line_pin.test_a_gate_task_leaves_out_the_lines_its_base_left_out` (red before the fix).
+- **Source:** solver 20261101-015640-eab9, pictures REQ-021 r35 T94.
+- **Evidence:** the test, red without the fix; `bt_integrate` regression.

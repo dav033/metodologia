@@ -1,0 +1,5 @@
+
+> demo-decoracion@0.1.0 taller:test-registros-completos
+> tsx scripts/test/test-taller-registros-completos.ts
+
+test-taller-registros-completos: ok (11 mesas, 17 piezas, 7 sillas)

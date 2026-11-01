@@ -1,0 +1,5 @@
+
+> demo-decoracion@0.1.0 taller:test-backing-piloto
+> tsx scripts/test/test-backing-piloto.ts
+
+test-backing-piloto: ok

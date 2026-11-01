@@ -642,3 +642,19 @@ regression: skipped (D-261: integrate.regression = none)
 rollback: git revert the merge of gutted-engine on main, restart bt-durable.service and bitacora-web.service and bitacora-remote-api.service
 remote API pin: 63e43520f47c -> b45102a58294 (backup /home/david/.config/systemd/user/bitacora-remote-api.service.d/exec.conf.bak-63e43520f47c)
 result: merged b45102a58294, restarted bt-durable.service, bitacora-web.service, bitacora-remote-api.service, smoke ok
+
+# integration of A gutted snapshot never advances a subplan or run line (D-288), local restart of engine + web + remote API, 2026-11-01 01:59, session 20261101-015640-eab9
+previous main: c1b96e9a221e70468c38bcf2125450393f9c1256
+/home/david/bitacora/.state/durable/backups/bt_durable-20261101-015852.dump 62509465 1a5f4b10fa600bdc22fa3119a5d503877381d533c913690d8b26637d77d873d3
+regression: skipped (D-261: integrate.regression = none)
+rollback: git revert the merge of solver/20261101-015640-eab9 on main, restart bt-durable.service and bitacora-web.service and bitacora-remote-api.service
+remote API pin: b45102a58294 -> 266388e1978b (backup /home/david/.config/systemd/user/bitacora-remote-api.service.d/exec.conf.bak-b45102a58294)
+result: merged 266388e1978b, restarted bt-durable.service, bitacora-web.service, bitacora-remote-api.service, smoke ok
+
+# integration of A gate task leaves out the subplan lines its base already left out (D-289), local restart of engine + web + remote API, 2026-11-01 02:02, session 20261101-015640-eab9
+previous main: 266388e1978bb20715786aa173633e38a36a36fa
+/home/david/bitacora/.state/durable/backups/bt_durable-20261101-020208.dump 62540074 d4a2aa6e5687630ac78be0805665e59920db7fe480bc7eed389c07b31f20f72d
+regression: skipped (D-261: integrate.regression = none)
+rollback: git revert the merge of solver/20261101-015640-eab9 on main, restart bt-durable.service and bitacora-web.service and bitacora-remote-api.service
+remote API pin: 266388e1978b -> 96b787087814 (backup /home/david/.config/systemd/user/bitacora-remote-api.service.d/exec.conf.bak-266388e1978b)
+result: merged 96b787087814, restarted bt-durable.service, bitacora-web.service, bitacora-remote-api.service, smoke ok

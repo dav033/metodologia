@@ -1,16 +1,10 @@
 {
  "watch": {
-  "T94": {
-   "fp": "031c104c86a85d77",
-   "since": 1793515510.9236224,
-   "epoch": "65bd5c5cb9b84d1e90a4843be5bde3d9",
-   "observed_at": 1793515666.7251022
-  },
-  "T3.15": {
-   "fp": "4e111e3884a6df8d",
-   "since": 1793515635.3391519,
-   "epoch": "65bd5c5cb9b84d1e90a4843be5bde3d9",
-   "observed_at": 1793515666.7251022
+  "T10.5": {
+   "fp": "d1190ee19e4b9b92",
+   "since": 1793517115.381617,
+   "epoch": "827f8b24a58a4595a29c5a296ec24c86",
+   "observed_at": 1793517304.889119
   }
  },
  "tasks": {
@@ -27,7 +21,7 @@
   "CG-4": 4,
   "SP-4": 0,
   "run": 1,
-  "T3.15": 1
+  "T3.15": 2
  },
  "triggers": {
   "pictures:REQ-021:r25:resolution:4378ebb94f72d6922c89d601ee5db484": {
@@ -1720,6 +1714,19 @@
    "status": "asked_owner",
    "at": "2026-11-01T01:31:24",
    "session": "20261101-013124-d75b"
+  },
+  "pictures:REQ-021:r35:T3.15:blocked:9ada44449772f14d": {
+   "kind": "blocked",
+   "key": "pictures:REQ-021:r35:T3.15:blocked:9ada44449772f14d",
+   "run_id": "pictures:REQ-021:r35",
+   "task_id": "T3.15",
+   "request_id": "",
+   "round": null,
+   "reason": "the run holds T3.15 blocked since 2026-11-01T01:51:24 while it goes on, with no decision to answer: 1 blocking finding(s) or problems remain after 4 remediation round(s) (limit 4): audit gate: 1 open blocking finding(s): F1 (high)",
+   "block": "9ada44449772f14d",
+   "status": "fixed",
+   "at": "2026-11-01T01:56:40",
+   "session": "20261101-015640-eab9"
   }
  },
  "sessions": [
@@ -2254,6 +2261,36 @@
    "summary": "Reintenté T3.15 (D-283 ya corregido), pero el reintento a301 hereda el snapshot dañado 3485dbb (1933 de 8564 archivos) y volverá a auditar un árbol incompleto; no integré nada.",
    "question": "El reintento a301 de T3.15 parte del snapshot dañado 3485dbb (sin 6631 archivos) y su integración podría borrarlos de la línea. ¿Autorizas detener a301 y reintentar desde la base limpia 860f035, con un fix en bt_scheduler_retry (no continuar desde un snapshot que perdió la mayoría de los archivos de su base) o con un reinicio manual del snapshot registrado de T3.15? Rama lista sin integrar: solver/20261101-013124-d75b (675e8e13b, cubre worktrees de snapshot).",
    "report": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/RUN.solver/20261101-013124-d75b/REPORT.md"
+  },
+  {
+   "id": "20261101-015640-eab9",
+   "name": "bit-pictures-REQ-021-solver",
+   "status": "fixed",
+   "started": 1793516200.5325623,
+   "started_at": "2026-11-01T01:56:40",
+   "triggers": [
+    "pictures:REQ-021:r35:T3.15:blocked:9ada44449772f14d"
+   ],
+   "queued": [],
+   "restarts": 0,
+   "dir": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/RUN.solver/20261101-015640-eab9",
+   "cwd": "/home/david/.local/share/bitacora-solver/pictures/20261101-015640-eab9",
+   "task": "T3.15",
+   "kind": "blocked",
+   "reason": "the run holds T3.15 blocked since 2026-11-01T01:51:24 while it goes on, with no decision to answer: 1 blocking finding(s) or problems remain after 4 remediation round(s) (limit 4): audit gate: 1 open blocking finding(s): F1 (high)",
+   "session_id": "7306aba7-1a96-4eb5-b668-7d2681f229e3",
+   "provider": "claude",
+   "model": "sonnet",
+   "home": "/home/david/.claude-work",
+   "resolved": {
+    "at": 1793516635.0284586,
+    "what": "T3.15 ya se resolvió (ya no está abierto)"
+   },
+   "ended": 1793516666.817806,
+   "ended_at": "2026-11-01T02:04:26",
+   "summary": "T3.15 auditaba un árbol vacío porque la línea SP-3 avanzó con snapshots dañados: guarda en integrate/sync (D-288), línea restaurada y T3.15 relanzada; T94 (compuerta) ya no falla por líneas que su base dejó fuera (D-289) y su decisión se respondió con reverify.",
+   "question": "",
+   "report": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/RUN.solver/20261101-015640-eab9/REPORT.md"
   }
  ]
 }

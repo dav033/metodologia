@@ -1,11 +1,54 @@
-HEAD=64cfc5d143e54a87cfb7944ee74404af758f61fd
-TREE=a915c8a6449a1ea45f6a61dbd1c7d8a80564bb1e
-PARENT=a7fc2951f38c9ea408f31a09ad689bbc517db0f6
+HEAD f3f5297335a63f7d4e974809d12c509bce54e7a7
+TREE 909ea4ad16e85d431cb1c07e4894297d478ea584
 
-Current-tree matching paths:
+Tracked path coverage
+.verification-snapshot/packages/agente-core/src/ejecutar.ts
+.verification-snapshot/packages/agente-core/src/gemini/chat.ts
+.verification-snapshot/packages/agente-core/src/index.ts
+.verification-snapshot/packages/agente-core/src/rag/rrf.ts
+.verification-snapshot/packages/agente-core/src/retry.ts
+.verification-snapshot/packages/agente-core/src/telemetria.ts
+.verification-snapshot/packages/agente-core/src/tipos.ts
+.verification-snapshot/packages/happie-package-ia/src/cliente.ts
+.verification-snapshot/packages/happie-package-ia/src/config.ts
+.verification-snapshot/packages/happie-package-ia/src/filtros.ts
+.verification-snapshot/packages/happie-package-ia/src/index.ts
+.verification-snapshot/packages/happie-package-ia/src/necesidades.ts
+.verification-snapshot/packages/happie-package-ia/src/recomendador.ts
+.verification-snapshot/packages/happie-package-ia/src/temas.ts
+.verification-snapshot/packages/happie-package-ia/src/tipos-curados.ts
+.verification-snapshot/packages/happie-package-ia/src/tipos.ts
 
-Archived matching paths:
-integration_status=blocked
-per_type=53
-result_statuses=blocked
-result_details=Not executed
+Relevant tracked files
+.verification-snapshot/contracts/domain/v1/golden/motor-guiada/oficial-centro_mesa.json
+.verification-snapshot/contracts/domain/v1/golden/motor-guiada/precio/oficial-centro_mesa.json
+.verification-snapshot/contracts/domain/v1/golden/plan-resolution/23-centro-mesa-repetido-tres-colores.json
+.verification-snapshot/scripts/catalogo/exportar-productos-referenciados.ts
+.verification-snapshot/scripts/dataset/exportar-dataset-fal.ts
+.verification-snapshot/scripts/e2e/humo/pasos-taller.ts
+.verification-snapshot/scripts/lib/precio-tarjeta-taller.ts
+.verification-snapshot/scripts/migrations/028_taller_biblioteca.sql
+.verification-snapshot/scripts/ops/export-chat-contract-schemas.ts
+.verification-snapshot/scripts/ops/export-domain-contract-schemas.ts
+.verification-snapshot/scripts/taller/capturar-renders.ts
+.verification-snapshot/scripts/taller/clasificar-reglas.ts
+.verification-snapshot/scripts/taller/evaluar-busqueda.ts
+.verification-snapshot/scripts/taller/evaluar-rag-local.ts
+.verification-snapshot/scripts/taller/extraer-biblioteca.ts
+.verification-snapshot/scripts/taller/indexar-biblioteca.ts
+.verification-snapshot/scripts/taller/pglite-taller.ts
+.verification-snapshot/scripts/taller/sistemas-busqueda.ts
+.verification-snapshot/scripts/taller/subir-vectores.ts
+.verification-snapshot/scripts/test/fixtures/escenas-guardadas/feedback-taller-1.json
+.verification-snapshot/scripts/test/fixtures/escenas-guardadas/feedback-taller-2.json
+.verification-snapshot/scripts/test/fixtures/escenas-guardadas/feedback-taller-3.json
+.verification-snapshot/scripts/test/fixtures/guardia-prerender/taller3d-prefix-7245991f.tsx.txt
+.verification-snapshot/scripts/test/fixtures/oro-busqueda-taller-holdout.json
+.verification-snapshot/scripts/test/fixtures/oro-busqueda-taller.json
+.verification-snapshot/scripts/test/fixtures/taller-movil/arnes.tsx
+.verification-snapshot/scripts/test/fixtures/taller-reentrada/arnes.tsx
+.verification-snapshot/scripts/test/test-centros-de-mesa.ts
+
+Tracked GLB count: 0
+
+Tracked approval/proposal candidates
