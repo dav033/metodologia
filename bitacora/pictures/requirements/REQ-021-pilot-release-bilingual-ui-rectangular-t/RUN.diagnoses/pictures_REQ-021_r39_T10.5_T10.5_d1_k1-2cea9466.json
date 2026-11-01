@@ -1,0 +1,23 @@
+{
+ "request": "pictures:REQ-021:r39:T10.5:T10.5:d1@k1",
+ "state": "done",
+ "kind": "manual",
+ "label": "Comprobación manual",
+ "tone": "lav",
+ "headline": "Falta la observación manual con el proveedor de IA real; la prueba automática sí pasó.",
+ "origin": "El fallo es de tipo product_decision MANUAL_EVIDENCE_REQUIRED: el criterio de la observación manual (inglés y español con el proveedor configurado) sigue como NOT_RUN. El intento a1 (pictures-REQ-021-r39-T10.5-a1-123d2706) pasó npm run idioma:test-integracion-resto en el candidato d57d841e, con las ocho pantallas y roles y una llamada controlada a buscar_catalogo_rag. Los fallos anteriores r30 a2 y a3 (harness_oracle_failure por el texto 'I found Spanish catalogue options…') son de un candidato previo y no explican este bloqueo. Ningún reintento automático puede producir una observación humana.",
+ "steps": [
+  "Ejecute o pida a un operador que ejecute el chat local con el proveedor ya configurado: una conversación en inglés (debe recibir respuesta en inglés) y otra en español (respuesta en español). No use stubs.",
+  "Registre en la evidencia (.evidence/REQ-021/SP-10.integration.json o el registro manual que use el proyecto) el proveedor real, el resultado de cada conversación y la fecha, sin secretos ni texto libre exacto.",
+  "Confirme la observación como atestada y luego ejecute: bitacora.py --project pictures scheduler-op REQ-021 decide T10.5:d1 reverify --reason \"Observación manual EN/ES registrada\".",
+  "Si la observación no se puede hacer, deje la tarea en parcial con scheduler-op REQ-021 decide T10.5:d1 stop; reintentar no cambia el resultado."
+ ],
+ "option": "reverify",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-11-01T11:49:21",
+ "seconds": 11.4
+}

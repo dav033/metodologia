@@ -1,10 +1,10 @@
 {
  "watch": {
   "T10.5": {
-   "fp": "23dbc5b88ca32d6b",
-   "since": 1793549749.6356146,
+   "fp": "0accba1718bbcbe6",
+   "since": 1793551750.2364182,
    "epoch": "db404df1fbd140528018cca723abebe7",
-   "observed_at": 1793550773.1141725
+   "observed_at": 1793552754.3263867
   }
  },
  "tasks": {
@@ -1772,6 +1772,17 @@
    "reason": "the diagnosis is not enough to answer alone (option stop, confidence media): Falta la observación manual con el proveedor de IA configurado (inglés y español)",
    "status": "limit",
    "at": "2026-11-01T11:15:16"
+  },
+  "pictures:REQ-021:r39:T10.5:T10.5:d1@k1": {
+   "kind": "decision",
+   "key": "pictures:REQ-021:r39:T10.5:T10.5:d1@k1",
+   "run_id": "pictures:REQ-021:r39",
+   "task_id": "T10.5",
+   "request_id": "T10.5:d1",
+   "round": 1,
+   "reason": "the diagnosis is not enough to answer alone (option reverify, confidence media): Falta la observación manual con el proveedor de IA real; la prueba automática sí pasó.",
+   "status": "limit",
+   "at": "2026-11-01T11:49:41"
   }
  },
  "sessions": [
