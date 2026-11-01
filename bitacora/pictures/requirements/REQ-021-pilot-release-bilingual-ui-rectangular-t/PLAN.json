@@ -16492,8 +16492,7 @@
       "objective": "Repair only the confirmed existing table-card drag defect from evidence/owner-rejected/SP-3-v3.md at published4aa221088d69. Restore the established Fondos y muebles mouse/pen drag interaction for every TIPOS_MESA parametric card,including approved additions,without a new screen,control,layout,contract or design. Reuse useArrastreDesdePanel threshold/click suppression and the existing viewer hit-testing/placement pipeline. Drag payload/preview/commit must represent the complete default table-and-attached-chairs set,not a standalone table or detached chair geometry. Reuse the canonical PARTIDA_MESA,sillasDePartida and existing conjunto builder/domain placement rules; do not duplicate the table/chair business logic. Extend the narrow internal drag/group pathway or reuse its existing multi-node item path only if table metadata,parent relationships,capacity and selection are preserved. Build the full new scene once at accepted drop and call the normal history-aware onCambio once; select the table and reuse its existing editor,warning and language/status mechanisms. Preserve click,touch tap,keyboard activation,search/cards/counts,default dimensions/chairs,chair capacity and fixed furniture/library drag. Real pointer release after drag must not create a second set. Invalid/outside drop,Escape,pointer cancellation,insufficient node capacity and cleanup/unmount must create nothing,leave prior selection/history intact and clear ghost/listeners/cursor/orbit state. Use the existing valid drop coordinates/units instead of click default coordinates or a hard-coded floor point. Keep moving an already placed table through the existing useEdicionEscena path,with its chair group attached; test that behavior rather than assuming the reproduction proves it broken. Do not rewrite that movement engine,export,scene schema or permission logic. Own only the four listed producer files and two new regression scripts. Author a pure domain/payload regression and a real Next/WebGL browser harness at /3d using an actual signed-in Master Designer in an invocation-owned isolated REQ021 database/schema and free loopback ports; keep auth bypass off,no production data or paid calls. Browser matrix must use real rendered cards/viewer,real hit-testing and trusted mouse input; Chromium CDP Input.dispatchMouseEvent pointerType=pen is supported by installed playwright-core/types/protocol.d.ts and can exercise the same real pen path. Never invoke creation callbacks,inject scene nodes as the gesture result,force invisible targets or accept component-only synthetic events as placement evidence. Fixture setup may load a controlled scene before the gesture,never substitute it for the gesture. Record per canonical type and pointer modality the default expected table/chair identifiers,accepted drop/world placement,actual exported scene relationships/selection/editor/history and a no-duplicate result. Full matrix also covers click/touch compatibility,invalid drops,capacity/cancellation,existing fixed/library drag and moving the placed set with undo/redo. Keep the focused producer smoke to real rectangular mouse red/green; T3.92 runs the complete matrix once so a production build is not needlessly repeated per criterion. Preserve every accepted task/criterion/check/path/gate and all frozen subplan definitions. No golden regeneration,no new dependency/package script,provider,paid call,owner attestation or UI redesign.",
       "repository": "pictures",
       "after": [
-        "T3.13",
-        "T3.121"
+        "T3.13"
       ],
       "complexity": "medium",
       "scope": "small_change",
@@ -16715,124 +16714,6 @@
         "R9"
       ],
       "kind": "test",
-      "subplan_id": "SP-3",
-      "ui": false
-    },
-    {
-      "id": "T3.121",
-      "milestone_id": "M2",
-      "title": "Repair the Blender harness isolated environment fixtures before table-drag verification",
-      "objective": "Open /home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/RUN.notes/T3.91.history.jsonl before editing. Repair only the two T3.12-owned resolverBlender environment fixtures in scripts/test/test-harness-taller-esenciales.ts:12/14. Exact pre-T3.91 base8ac04102674cedaf454623ad530837bd6c705b92 already fails TS2345 because Next augments NodeJS.ProcessEnv with required NODE_ENV; T3.91 does not own this file. Give each controlled fixture NODE_ENV:\"test\" explicitly: the missing-default-Blender case otherwise has no Blender variable, and the invalid-configured-executable case retains its nonexistent BLENDER_EXECUTABLE under the invocation-owned temporary home. Do not spread process.env or inherit an installed Blender, because the negative oracle must remain isolated. Preserve every existing assertion, scenario, hash mismatch, comparison diagnostic, blocked-evidence precedence, per-type evidence and cleanup. No change to resolverBlender signature, shared ProcessEnv declarations, auth/environment policy, product source, dependencies, package scripts, tsconfig, Next/lint config, approved tasks or gates. No any, casts, ignore/expect-error, skips or suppressions. Run the original harness self-test, workspace build, full strict tsc and focused lint. This producer repair must finish before the unchanged T3.91 checks rerun; T3.91 retains its exact real Next/WebGL browser smoke (whose production build also demonstrated these same type errors), followed by T3.92 and the existing T3.15 audit. Do not claim browser/Blender-export acceptance from the harness self-test. No production data, network download, paid call, owner attestation or UI/design change.",
-      "repository": "pictures",
-      "after": [
-        "T3.13"
-      ],
-      "complexity": "low",
-      "scope": "isolated_fix",
-      "estimated_minutes": 15,
-      "risk": "low",
-      "coupling": "low",
-      "confidence": "high",
-      "estimate_rationale": "Uncalibrated provisional15agent minutes:3fixture inspection/edit,3negative harness regression,9build/types/lint and evidence. History query implement/low/isolated_fix/low/low reports unknown comparable duration,retries,quality and consumption; not human hours or a delivery promise.",
-      "classification_evidence": {
-        "complexity": {
-          "evidence": [
-            "task:T3.12",
-            "task:T3.91",
-            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 8ac04102674cedaf454623ad530837bd6c705b92:scripts/test/test-harness-taller-esenciales.ts -> lines12/14 omit required NODE_ENV in two isolated Blender-negative fixtures",
-            "command:NODE_OPTIONS=--max-old-space-size=4096 npx --no-install tsc --noEmit --incremental false -> exact pre-T3.91 base8ac04102 exit2; TS2345 only at test-harness-taller-esenciales.ts:12,14"
-          ],
-          "justification": "Two explicit test-environment properties repair a reproduced type error without changing runtime behavior."
-        },
-        "scope": {
-          "evidence": [
-            "task:T3.12",
-            "task:T3.91",
-            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 8ac04102674cedaf454623ad530837bd6c705b92:scripts/test/test-harness-taller-esenciales.ts -> lines12/14 omit required NODE_ENV in two isolated Blender-negative fixtures",
-            "command:NODE_OPTIONS=--max-old-space-size=4096 npx --no-install tsc --noEmit --incremental false -> exact pre-T3.91 base8ac04102 exit2; TS2345 only at test-harness-taller-esenciales.ts:12,14"
-          ],
-          "justification": "One inspected self-test file and two fixture inputs; no helper or product edit."
-        },
-        "duration": {
-          "evidence": [
-            "task:T3.12",
-            "task:T3.91",
-            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 8ac04102674cedaf454623ad530837bd6c705b92:scripts/test/test-harness-taller-esenciales.ts -> lines12/14 omit required NODE_ENV in two isolated Blender-negative fixtures",
-            "command:NODE_OPTIONS=--max-old-space-size=4096 npx --no-install tsc --noEmit --incremental false -> exact pre-T3.91 base8ac04102 exit2; TS2345 only at test-harness-taller-esenciales.ts:12,14"
-          ],
-          "justification": "The provisional15agent-minute estimate is uncalibrated; the exact baseline workspace build took2.44s and strict tsc54.18s, but implementation/retry comparability is unknown."
-        },
-        "risk": {
-          "evidence": [
-            "task:T3.12",
-            "task:T3.91",
-            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 8ac04102674cedaf454623ad530837bd6c705b92:scripts/test/test-harness-taller-esenciales.ts -> lines12/14 omit required NODE_ENV in two isolated Blender-negative fixtures",
-            "command:NODE_OPTIONS=--max-old-space-size=4096 npx --no-install tsc --noEmit --incremental false -> exact pre-T3.91 base8ac04102 exit2; TS2345 only at test-harness-taller-esenciales.ts:12,14"
-          ],
-          "justification": "Negative Blender oracles remain isolated; no auth, production or Blender resolver change is authorized."
-        },
-        "coupling": {
-          "evidence": [
-            "task:T3.12",
-            "task:T3.91",
-            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 8ac04102674cedaf454623ad530837bd6c705b92:scripts/test/test-harness-taller-esenciales.ts -> lines12/14 omit required NODE_ENV in two isolated Blender-negative fixtures",
-            "command:NODE_OPTIONS=--max-old-space-size=4096 npx --no-install tsc --noEmit --incremental false -> exact pre-T3.91 base8ac04102 exit2; TS2345 only at test-harness-taller-esenciales.ts:12,14"
-          ],
-          "justification": "Consumes the completed T3.12 harness after its T3.13 checkpoint; only the existing T3.91 waits for this explicit prerequisite."
-        },
-        "confidence": {
-          "evidence": [
-            "task:T3.12",
-            "task:T3.91",
-            "command:git -C /home/david/dev/.pictures-wt/login-redirect show 8ac04102674cedaf454623ad530837bd6c705b92:scripts/test/test-harness-taller-esenciales.ts -> lines12/14 omit required NODE_ENV in two isolated Blender-negative fixtures",
-            "command:NODE_OPTIONS=--max-old-space-size=4096 npx --no-install tsc --noEmit --incremental false -> exact pre-T3.91 base8ac04102 exit2; TS2345 only at test-harness-taller-esenciales.ts:12,14"
-          ],
-          "justification": "Exact baseline reproduction and identical harness blob before/after T3.91 prove both the cause and narrow repair location."
-        }
-      },
-      "expected_paths": [
-        "scripts/test/test-harness-taller-esenciales.ts"
-      ],
-      "shared_resources": [
-        "test-harness:taller-esenciales"
-      ],
-      "acceptance_criteria": [
-        "The original Blender harness self-test passes with explicit NODE_ENV=test in both isolated environment fixtures, preserving the missing-current-symlink and nonexistent configured executable cases as blocked, never passed, plus every existing checksum, comparison-diagnostic and evidence assertion.",
-        "The existing workspace packages build successfully with a 4096MB Node heap before strict repository type verification, without changing build configuration.",
-        "The complete repository passes the original strict TypeScript command after the fixture repair, including both formerly failing Blender environment arguments, with no cast, suppression, optional NODE_ENV or relaxed setting.",
-        "The owned Blender harness self-test file passes focused ESLint without changing lint configuration or adding suppressions."
-      ],
-      "verification": [
-        {
-          "type": "command",
-          "value": "npm run taller:test-harness-esenciales",
-          "purpose": "The original Blender harness self-test passes with explicit NODE_ENV=test in both isolated environment fixtures, preserving the missing-current-symlink and nonexistent configured executable cases as blocked, never passed, plus every existing checksum, comparison-diagnostic and evidence assertion.",
-          "created_by": "T3.12",
-          "category": "regression"
-        },
-        {
-          "type": "command",
-          "value": "NODE_OPTIONS=--max-old-space-size=4096 npm run build --workspaces --if-present",
-          "purpose": "The existing workspace packages build successfully with a 4096MB Node heap before strict repository type verification, without changing build configuration.",
-          "category": "static"
-        },
-        {
-          "type": "command",
-          "value": "NODE_OPTIONS=--max-old-space-size=4096 npx --no-install tsc --noEmit --incremental false",
-          "purpose": "The complete repository passes the original strict TypeScript command after the fixture repair, including both formerly failing Blender environment arguments, with no cast, suppression, optional NODE_ENV or relaxed setting.",
-          "category": "static"
-        },
-        {
-          "type": "command",
-          "value": "npx --no-install eslint scripts/test/test-harness-taller-esenciales.ts",
-          "purpose": "The owned Blender harness self-test file passes focused ESLint without changing lint configuration or adding suppressions.",
-          "category": "static"
-        }
-      ],
-      "covers": [
-        "R11"
-      ],
-      "kind": "implement",
       "subplan_id": "SP-3",
       "ui": false
     }

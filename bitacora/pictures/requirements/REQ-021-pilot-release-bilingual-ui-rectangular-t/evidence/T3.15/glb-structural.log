@@ -1,0 +1,58 @@
+
+> demo-decoracion@0.1.0 taller:test-glb-todos-los-tipos
+> tsx scripts/test/test-glb-todos-los-tipos.ts
+
+[PASS] columna: posición y bounds del visor dentro de 1 mm; colores base dentro de 1/255
+[PASS] arco: posición y bounds del visor dentro de 1 mm; colores base dentro de 1/255
+[PASS] pared_malla: posición y bounds del visor dentro de 1 mm; colores base dentro de 1/255
+[PASS] pared_trenzas: posición y bounds del visor dentro de 1 mm; colores base dentro de 1/255
+[PASS] organico: posición y bounds del visor dentro de 1 mm; colores base dentro de 1/255
+[PASS] decoracion: posición y bounds del visor dentro de 1 mm; colores base dentro de 1/255
+[PASS] arco_organico: posición y bounds del visor dentro de 1 mm; colores base dentro de 1/255
+[PASS] guirnalda: posición y bounds del visor dentro de 1 mm; colores base dentro de 1/255
+[PASS] escenografia: posición y bounds del visor dentro de 1 mm; colores base dentro de 1/255
+[PASS] globo: posición y bounds del visor dentro de 1 mm; colores base dentro de 1/255
+[PASS] forma: posición y bounds del visor dentro de 1 mm; colores base dentro de 1/255
+[PASS] letras: posición y bounds del visor dentro de 1 mm; colores base dentro de 1/255
+[PASS] metalizado: posición y bounds del visor dentro de 1 mm; colores base dentro de 1/255
+[PASS] mural: posición y bounds del visor dentro de 1 mm; colores base dentro de 1/255
+[PASS] techo: posición y bounds del visor dentro de 1 mm; colores base dentro de 1/255
+[PASS] arbol_globos: posición y bounds del visor dentro de 1 mm; colores base dentro de 1/255
+[PASS] modulo: posición y bounds del visor dentro de 1 mm; colores base dentro de 1/255
+[PASS] mesa-redonda: posición y bounds del visor dentro de 1 mm; colores base dentro de 1/255
+[PASS] mesa-cuadrada: posición y bounds del visor dentro de 1 mm; colores base dentro de 1/255
+[PASS] mesa-rectangular: posición y bounds del visor dentro de 1 mm; colores base dentro de 1/255
+[PASS] mesa-ovalada: posición y bounds del visor dentro de 1 mm; colores base dentro de 1/255
+[PASS] mesa-coctel: posición y bounds del visor dentro de 1 mm; colores base dentro de 1/255
+[PASS] mesa-media_luna: posición y bounds del visor dentro de 1 mm; colores base dentro de 1/255
+[PASS] mesa-serpentina: posición y bounds del visor dentro de 1 mm; colores base dentro de 1/255
+[PASS] mesa-u: posición y bounds del visor dentro de 1 mm; colores base dentro de 1/255
+[PASS] mesa-imperial: posición y bounds del visor dentro de 1 mm; colores base dentro de 1/255
+[PASS] mesa-infantil: posición y bounds del visor dentro de 1 mm; colores base dentro de 1/255
+[PASS] mesa-barra: posición y bounds del visor dentro de 1 mm; colores base dentro de 1/255
+[PASS] silla-tiffany: posición y bounds del visor dentro de 1 mm; colores base dentro de 1/255
+[PASS] silla-crossback: posición y bounds del visor dentro de 1 mm; colores base dentro de 1/255
+[PASS] silla-ghost: posición y bounds del visor dentro de 1 mm; colores base dentro de 1/255
+[PASS] silla-plegable: posición y bounds del visor dentro de 1 mm; colores base dentro de 1/255
+[PASS] silla-moderna: posición y bounds del visor dentro de 1 mm; colores base dentro de 1/255
+[PASS] silla-banca: posición y bounds del visor dentro de 1 mm; colores base dentro de 1/255
+[PASS] silla-taburete: posición y bounds del visor dentro de 1 mm; colores base dentro de 1/255
+[PASS] backing-panel_redondo: posición y bounds del visor dentro de 1 mm; colores base dentro de 1/255
+[PASS] backing-media_luna: posición y bounds del visor dentro de 1 mm; colores base dentro de 1/255
+[PASS] backing-arcos_chiara: posición y bounds del visor dentro de 1 mm; colores base dentro de 1/255
+[PASS] backing-pedestales: posición y bounds del visor dentro de 1 mm; colores base dentro de 1/255
+[PASS] backing-aro_metalico: posición y bounds del visor dentro de 1 mm; colores base dentro de 1/255
+[PASS] backing-aro_hexagonal: posición y bounds del visor dentro de 1 mm; colores base dentro de 1/255
+[PASS] backing-arco_metalico: posición y bounds del visor dentro de 1 mm; colores base dentro de 1/255
+[PASS] backing-panel_arco_apuntado: posición y bounds del visor dentro de 1 mm; colores base dentro de 1/255
+[PASS] backing-marco_hexagonal: posición y bounds del visor dentro de 1 mm; colores base dentro de 1/255
+[PASS] backing-marco_ventana: posición y bounds del visor dentro de 1 mm; colores base dentro de 1/255
+[PASS] backing-pared_shimmer: posición y bounds del visor dentro de 1 mm; colores base dentro de 1/255
+[PASS] backing-pedestales_cilindricos: posición y bounds del visor dentro de 1 mm; colores base dentro de 1/255
+[PASS] backing-panel_dos_niveles: posición y bounds del visor dentro de 1 mm; colores base dentro de 1/255
+[PASS] forma-caja: posición y bounds del visor dentro de 1 mm; colores base dentro de 1/255
+[PASS] forma-cilindro: posición y bounds del visor dentro de 1 mm; colores base dentro de 1/255
+[PASS] forma-panel: posición y bounds del visor dentro de 1 mm; colores base dentro de 1/255
+[PASS] forma-arco_apuntado: posición y bounds del visor dentro de 1 mm; colores base dentro de 1/255
+[PASS] sala: posición y bounds del visor dentro de 1 mm; colores base dentro de 1/255
+Exportación Chromium completa: 53 elementos; defectos conocidos registrados: 0.

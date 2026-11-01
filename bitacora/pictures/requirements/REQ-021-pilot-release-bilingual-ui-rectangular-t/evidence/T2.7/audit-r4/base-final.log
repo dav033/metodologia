@@ -1,0 +1,21 @@
+locator.fill: Timeout 30000ms exceeded.
+Call log:
+[2m  - waiting for locator('input').first()[22m
+[2m    - locator resolved to <input checked disabled type="checkbox"/>[22m
+[2m    - fill("Rol visual temporal")[22m
+[2m  - attempting fill action[22m
+[2m    2 × waiting for element to be visible, enabled and editable[22m
+[2m      - element is not enabled[22m
+[2m    - retrying fill action[22m
+[2m    - waiting 20ms[22m
+[2m    2 × waiting for element to be visible, enabled and editable[22m
+[2m      - element is not enabled[22m
+[2m    - retrying fill action[22m
+[2m      - waiting 100ms[22m
+[2m    60 × waiting for element to be visible, enabled and editable[22m
+[2m       - element is not enabled[22m
+[2m     - retrying fill action[22m
+[2m       - waiting 500ms[22m
+
+    at main (/home/david/dev/metodologia/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T2.7/audit-r4/capture-rerun.ts:86:438)
+

@@ -1,0 +1,11 @@
+{
+  "documentLang": "es",
+  "mainLang": null,
+  "headerLang": null,
+  "accountPopupLang": null,
+  "path": "/admin/cuentas",
+  "viewport": {
+    "width": 360,
+    "height": 800
+  }
+}

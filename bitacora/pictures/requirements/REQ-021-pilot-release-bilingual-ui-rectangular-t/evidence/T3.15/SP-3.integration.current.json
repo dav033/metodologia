@@ -1,0 +1,279 @@
+{
+  "schemaVersion": 1,
+  "check": "REQ-021 SP-3 integration",
+  "status": "failed",
+  "tree": "4ec9de3f5f45427904ba00761f5a134a88f7408e",
+  "blender": {
+    "version": "4.5.15 LTS",
+    "executable": "/home/david/.local/opt/blender/current/blender"
+  },
+  "perTypeResults": [
+    {
+      "type": "columna",
+      "status": "failed",
+      "details": "Blender found 10 fixture difference(s): columna.node-4.bounds_m.min.x: expected -0.0890809943562983 m, observed -0.11113518 m; columna.node-4.bounds_m.min.y: expected -0.005739088552139476 m, observed -0.05424723 m; columna.node-4.bounds_m.min.z: expected -0.3784949356378945 m, observed -0.41335863 m; …"
+    },
+    {
+      "type": "arco",
+      "status": "failed",
+      "details": "Blender found 19 fixture difference(s): arco.node-3.bounds_m.min.x: expected -1.3800681903946201 m, observed -1.43841219 m; arco.node-3.bounds_m.min.y: expected 0.3913476315696635 m, observed 0.31920424 m; arco.node-3.bounds_m.min.z: expected -0.4700986524299565 m, observed -0.51206601 m; …"
+    },
+    {
+      "type": "pared_malla",
+      "status": "failed",
+      "details": "Blender found 18 fixture difference(s): pared_malla.node-4.bounds_m.min.x: expected -1.2848357686255434 m, observed -1.34580255 m; pared_malla.node-4.bounds_m.min.y: expected 0.03841759139659781 m, observed -0.02254918 m; pared_malla.node-4.bounds_m.max.x: expected 1.5822559396826879 m, observed 1.64016807 m; …"
+    },
+    {
+      "type": "pared_trenzas",
+      "status": "failed",
+      "details": "Blender found 10 fixture difference(s): pared_trenzas.node-4.bounds_m.min.x: expected -0.0604244758560937 m, observed -0.12503073 m; pared_trenzas.node-4.bounds_m.min.y: expected -0.0037032647502466265 m, observed -0.05139268 m; pared_trenzas.node-4.bounds_m.min.z: expected -0.36064037686381345 m, observed -0.42529714 m; …"
+    },
+    {
+      "type": "organico",
+      "status": "failed",
+      "details": "Blender found 135 fixture difference(s): organico.node-4.bounds_m.min.x: expected -0.917996558564893 m, observed -1.03278756 m; organico.node-4.bounds_m.min.y: expected -0.01677102226841834 m, observed -0.11509935 m; organico.node-4.bounds_m.min.z: expected -0.6463541818925536 m, observed -0.67953837 m; …"
+    },
+    {
+      "type": "decoracion",
+      "status": "failed",
+      "details": "Blender found 21 fixture difference(s): decoracion.node-14.bounds_m.min.x: expected -0.07024246433566537 m, observed -0.08503526 m; decoracion.node-14.bounds_m.min.y: expected 0.0305922324950893 m, observed 0.02860644 m; decoracion.node-14.bounds_m.min.z: expected -0.3682766205816941 m, observed -0.38961518 m; …"
+    },
+    {
+      "type": "arco_organico",
+      "status": "failed",
+      "details": "Blender found 237 fixture difference(s): arco_organico.node-4.bounds_m.min.x: expected -1.5055015646837406 m, observed -1.51776803 m; arco_organico.node-4.bounds_m.min.y: expected -0.014948216648188573 m, observed -0.06527844 m; arco_organico.node-4.bounds_m.min.z: expected -0.6099147843502747 m, observed -0.65995377 m; …"
+    },
+    {
+      "type": "guirnalda",
+      "status": "failed",
+      "details": "Blender found 33 fixture difference(s): guirnalda.node-3.bounds_m.min.x: expected -1.1211084148466375 m, observed -1.18598676 m; guirnalda.node-3.bounds_m.min.y: expected 0.9481461576065636 m, observed 0.88875914 m; guirnalda.node-3.bounds_m.min.z: expected -0.3819954549929373 m, observed -0.40935427 m; …"
+    },
+    {
+      "type": "escenografia",
+      "status": "failed",
+      "details": "Blender found 35 fixture difference(s): escenografia.node-4.bounds_m.min.x: expected -0.7509237412329791 m, observed -0.8487938 m; escenografia.node-4.bounds_m.min.y: expected 0.16092143298455913 m, observed 0.12242024 m; escenografia.node-5.base_color[0].r: expected 1, observed 0.80000001; …"
+    },
+    {
+      "type": "globo",
+      "status": "passed",
+      "details": "T3.11 Chromium fixture imported and compared by Blender."
+    },
+    {
+      "type": "forma",
+      "status": "failed",
+      "details": "Blender found 51 fixture difference(s): forma.node-4.base_color[0].r: expected 0.07036009430885315, observed 1.0; forma.node-4.base_color[0].g: expected 0.4969329833984375, observed 1.0; forma.node-4.base_color[0].b: expected 0.6239603757858276, observed 1.0; …"
+    },
+    {
+      "type": "letras",
+      "status": "failed",
+      "details": "Blender found 4 fixture difference(s): letras.node-4.base_color.count: expected 6, observed 1; letras.node-4.base_color[0].r: expected 0.0003035269910469651, observed 1.0; letras.node-4.base_color[0].g: expected 0.44520118832588196, observed 1.0; …"
+    },
+    {
+      "type": "metalizado",
+      "status": "passed",
+      "details": "T3.11 Chromium fixture imported and compared by Blender."
+    },
+    {
+      "type": "mural",
+      "status": "failed",
+      "details": "Blender found 8 fixture difference(s): mural.node-4.base_color.count: expected 3, observed 1; mural.node-4.base_color[0].r: expected 0, observed 1.0; mural.node-4.base_color[0].g: expected 0.19806931912899017, observed 1.0; …"
+    },
+    {
+      "type": "techo",
+      "status": "failed",
+      "details": "Blender found 11 fixture difference(s): techo.node-13.bounds_m.min.x: expected -0.03537804750356806 m, observed -0.07012083 m; techo.node-13.bounds_m.min.z: expected -0.33900589033893724 m, observed -0.37041262 m; techo.node-13.bounds_m.max.x: expected 0.304251757680464 m, observed 0.32741952 m; …"
+    },
+    {
+      "type": "arbol_globos",
+      "status": "failed",
+      "details": "Blender found 54 fixture difference(s): arbol_globos.node-3.bounds_m.min.x: expected -0.09187344836067321 m, observed -0.10671416 m; arbol_globos.node-3.bounds_m.min.y: expected 0.005732445551600872 m, observed -0.01560726 m; arbol_globos.node-3.bounds_m.min.z: expected -0.3362511048169711 m, observed -0.35115191 m; …"
+    },
+    {
+      "type": "modulo",
+      "status": "failed",
+      "details": "Blender found 6 fixture difference(s): modulo.node-3.bounds_m.min.x: expected -0.12349620876806222 m, observed -0.21408981 m; modulo.node-3.bounds_m.min.y: expected -0.008505427398503629 m, observed -0.07612591 m; modulo.node-3.bounds_m.min.z: expected -0.4236126879626919 m, observed -0.5123266 m; …"
+    },
+    {
+      "type": "mesa-redonda",
+      "status": "passed",
+      "details": "T3.11 Chromium fixture imported and compared by Blender. Browser card workflow also ran."
+    },
+    {
+      "type": "mesa-cuadrada",
+      "status": "passed",
+      "details": "T3.11 Chromium fixture imported and compared by Blender. Browser card workflow also ran."
+    },
+    {
+      "type": "mesa-rectangular",
+      "status": "passed",
+      "details": "T3.11 Chromium fixture imported and compared by Blender. Browser card workflow also ran."
+    },
+    {
+      "type": "mesa-ovalada",
+      "status": "passed",
+      "details": "T3.11 Chromium fixture imported and compared by Blender. Browser card workflow also ran."
+    },
+    {
+      "type": "mesa-coctel",
+      "status": "passed",
+      "details": "T3.11 Chromium fixture imported and compared by Blender. Browser card workflow also ran."
+    },
+    {
+      "type": "mesa-media_luna",
+      "status": "passed",
+      "details": "T3.11 Chromium fixture imported and compared by Blender. Browser card workflow also ran."
+    },
+    {
+      "type": "mesa-serpentina",
+      "status": "passed",
+      "details": "T3.11 Chromium fixture imported and compared by Blender. Browser card workflow also ran."
+    },
+    {
+      "type": "mesa-u",
+      "status": "passed",
+      "details": "T3.11 Chromium fixture imported and compared by Blender. Browser card workflow also ran."
+    },
+    {
+      "type": "mesa-imperial",
+      "status": "passed",
+      "details": "T3.11 Chromium fixture imported and compared by Blender. Browser card workflow also ran."
+    },
+    {
+      "type": "mesa-infantil",
+      "status": "passed",
+      "details": "T3.11 Chromium fixture imported and compared by Blender. Browser card workflow also ran."
+    },
+    {
+      "type": "mesa-barra",
+      "status": "passed",
+      "details": "T3.11 Chromium fixture imported and compared by Blender. Browser card workflow also ran."
+    },
+    {
+      "type": "silla-tiffany",
+      "status": "passed",
+      "details": "T3.11 Chromium fixture imported and compared by Blender."
+    },
+    {
+      "type": "silla-crossback",
+      "status": "passed",
+      "details": "T3.11 Chromium fixture imported and compared by Blender."
+    },
+    {
+      "type": "silla-ghost",
+      "status": "failed",
+      "details": "Blender found 2 fixture difference(s): silla-ghost.node-4.base_color[0].a: expected 0.14, observed 1.0; silla-ghost.node-5.base_color[0].a: expected 0.14, observed 1.0"
+    },
+    {
+      "type": "silla-plegable",
+      "status": "passed",
+      "details": "T3.11 Chromium fixture imported and compared by Blender."
+    },
+    {
+      "type": "silla-moderna",
+      "status": "passed",
+      "details": "T3.11 Chromium fixture imported and compared by Blender."
+    },
+    {
+      "type": "silla-banca",
+      "status": "passed",
+      "details": "T3.11 Chromium fixture imported and compared by Blender."
+    },
+    {
+      "type": "silla-taburete",
+      "status": "passed",
+      "details": "T3.11 Chromium fixture imported and compared by Blender."
+    },
+    {
+      "type": "backing-panel_redondo",
+      "status": "passed",
+      "details": "T3.11 Chromium fixture imported and compared by Blender. Browser card workflow also ran."
+    },
+    {
+      "type": "backing-media_luna",
+      "status": "passed",
+      "details": "T3.11 Chromium fixture imported and compared by Blender. Browser card workflow also ran."
+    },
+    {
+      "type": "backing-arcos_chiara",
+      "status": "passed",
+      "details": "T3.11 Chromium fixture imported and compared by Blender. Browser card workflow also ran."
+    },
+    {
+      "type": "backing-pedestales",
+      "status": "passed",
+      "details": "T3.11 Chromium fixture imported and compared by Blender. Browser card workflow also ran."
+    },
+    {
+      "type": "backing-aro_metalico",
+      "status": "passed",
+      "details": "T3.11 Chromium fixture imported and compared by Blender. Browser card workflow also ran."
+    },
+    {
+      "type": "backing-aro_hexagonal",
+      "status": "passed",
+      "details": "T3.11 Chromium fixture imported and compared by Blender. Browser card workflow also ran."
+    },
+    {
+      "type": "backing-arco_metalico",
+      "status": "passed",
+      "details": "T3.11 Chromium fixture imported and compared by Blender. Browser card workflow also ran."
+    },
+    {
+      "type": "backing-panel_arco_apuntado",
+      "status": "passed",
+      "details": "T3.11 Chromium fixture imported and compared by Blender. Browser card workflow also ran."
+    },
+    {
+      "type": "backing-marco_hexagonal",
+      "status": "passed",
+      "details": "T3.11 Chromium fixture imported and compared by Blender. Browser card workflow also ran."
+    },
+    {
+      "type": "backing-marco_ventana",
+      "status": "passed",
+      "details": "T3.11 Chromium fixture imported and compared by Blender. Browser card workflow also ran."
+    },
+    {
+      "type": "backing-pared_shimmer",
+      "status": "passed",
+      "details": "T3.11 Chromium fixture imported and compared by Blender. Browser card workflow also ran."
+    },
+    {
+      "type": "backing-pedestales_cilindricos",
+      "status": "passed",
+      "details": "T3.11 Chromium fixture imported and compared by Blender. Browser card workflow also ran."
+    },
+    {
+      "type": "backing-panel_dos_niveles",
+      "status": "passed",
+      "details": "T3.11 Chromium fixture imported and compared by Blender. Browser card workflow also ran."
+    },
+    {
+      "type": "forma-caja",
+      "status": "passed",
+      "details": "T3.11 Chromium fixture imported and compared by Blender."
+    },
+    {
+      "type": "forma-cilindro",
+      "status": "passed",
+      "details": "T3.11 Chromium fixture imported and compared by Blender."
+    },
+    {
+      "type": "forma-panel",
+      "status": "passed",
+      "details": "T3.11 Chromium fixture imported and compared by Blender."
+    },
+    {
+      "type": "forma-arco_apuntado",
+      "status": "passed",
+      "details": "T3.11 Chromium fixture imported and compared by Blender."
+    },
+    {
+      "type": "sala",
+      "status": "passed",
+      "details": "T3.11 Chromium fixture imported and compared by Blender."
+    }
+  ],
+  "knownDefects": [],
+  "blockedReasons": []
+}

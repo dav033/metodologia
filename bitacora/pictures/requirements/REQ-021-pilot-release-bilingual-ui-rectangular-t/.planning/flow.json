@@ -66,23 +66,62 @@
    "via": "web"
   },
   "SP-3": {
-   "at": "2026-10-31T18:10:58-05:00",
+   "at": "2026-10-31T22:14:21-05:00",
    "by": "policy",
-   "digest": "c36bdfc891481aa1",
-   "policy": {
-    "evidence": [
-     "RUN.notes/T3.91.history.jsonl"
-    ],
-    "previous": {
+   "digest": "2e3b30847869eb63",
+   "history": [
+    {
      "at": "2026-10-31T16:02:54-05:00",
      "by": "policy",
+     "derived": "D-241 record of 2026-10-31T18:10:58-05:00: the confirmation it replaced was r32",
+     "digest": "2e3b30847869eb63",
+     "policy": {
+      "rule": "D-241"
+     },
      "via": "policy"
     },
-    "repair": [
-     "T3.121"
-    ],
-    "requested_by": "planner",
-    "rule": "D-241"
+    {
+     "at": "2026-10-31T18:10:58-05:00",
+     "by": "policy",
+     "digest": "c36bdfc891481aa1",
+     "policy": {
+      "evidence": [
+       "RUN.notes/T3.91.history.jsonl"
+      ],
+      "previous": {
+       "at": "2026-10-31T16:02:54-05:00",
+       "by": "policy",
+       "via": "policy"
+      },
+      "repair": [
+       "T3.121"
+      ],
+      "requested_by": "planner",
+      "rule": "D-241"
+     },
+     "via": "policy"
+    }
+   ],
+   "policy": {
+    "previous": {
+     "at": "2026-10-31T18:10:58-05:00",
+     "by": "policy",
+     "digest": "c36bdfc891481aa1",
+     "via": "policy"
+    },
+    "reason": "vuelve al contenido confirmado el 2026-10-31 16:02 por la política D-241",
+    "requested_by": "policy",
+    "restores": {
+     "at": "2026-10-31T16:02:54-05:00",
+     "by": "policy",
+     "derived": "D-241 record of 2026-10-31T18:10:58-05:00: the confirmation it replaced was r32",
+     "digest": "2e3b30847869eb63",
+     "policy": {
+      "rule": "D-241"
+     },
+     "via": "policy"
+    },
+    "rule": "D-276"
    },
    "via": "policy"
   },
