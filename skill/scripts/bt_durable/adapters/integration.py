@@ -132,6 +132,10 @@ class GitLineIntegrator:
             tip = self.base_ref(run, task, home=home, lines=lines)
             if not tip or tip == snapshot_sha:
                 return snapshot_sha
+            if self._lost_most(repo, tip, snapshot_sha):
+                LOG.warning("%s: snapshot %s holds under half of the line's files (its worktree was incomplete): the retry "
+                            "starts from the line", task.id, snapshot_sha[:12])
+                return tip
             new, conflict = self._merge(repo, snapshot_sha, tip,
                                         f"{CATCH_UP} {task.id}: {snapshot_sha[:12]} + {home or 'run line'}")
         except RuntimeError as error:               # the line cannot be read or merged: continue as before (D-254)
@@ -141,6 +145,18 @@ class GitLineIntegrator:
             LOG.info("%s: retry base left its line out (%s)", task.id, conflict[:200])
             return snapshot_sha
         return new or snapshot_sha
+
+    GUTTED_MIN_FILES = 50      # a smaller tree proves nothing: a tiny repository may really lose most of its files
+
+    def _lost_most(self, repo: Path, line: str, snapshot: str) -> bool:
+        """Does `snapshot` hold under half the files of `line`? An attempt that ran in a worktree whose checkout was cut
+        short (pictures REQ-021 r35 T3.15 a201: 1933 of 8564 files, an engine restart killed `git worktree add`) captured
+        that shell; every retry that continued from it audited the same shell, and each snapshot became the next base."""
+        def size(rev: str) -> int | None:
+            done = _git(repo, "ls-tree", "-r", "--name-only", rev, check=False)
+            return len(done.stdout.splitlines()) if done.returncode == 0 else None
+        before, after = size(line), size(snapshot)
+        return bool(before and after is not None and before >= self.GUTTED_MIN_FILES and after * 2 < before)
 
     def _run_line(self, run: RunRef, role: str) -> str:
         """The run line's tip, created at the repository's HEAD (and its base pinned) the first time it is needed."""

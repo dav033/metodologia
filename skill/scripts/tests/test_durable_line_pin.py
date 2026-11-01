@@ -137,6 +137,22 @@ class RetryCatchUp(unittest.TestCase):
         self.advance_line("a.txt", "theirs\n")
         self.assertEqual(self.line.continuation_base(RUN, self.task, snapshot), snapshot)
 
+    def test_a_snapshot_that_lost_most_of_the_line_s_files_is_never_the_base(self):
+        """pictures REQ-021 r35 T3.15: a201 ran in a half-built worktree and captured 1933 of 8564 files; a301 and a401
+        continued from it (each snapshot became the next base) and audited the same empty shell."""
+        for index in range(60):
+            (self.repo / f"f{index}.txt").write_text(str(index))
+        git(self.repo, "add", "-A")
+        git(self.repo, "commit", "-q", "-m", "wide")
+        wide = git(self.repo, "rev-parse", "HEAD")
+        git(self.repo, "update-ref", integration.GitLineIntegrator.line_ref(RUN, "app"), wide)
+        git(self.repo, "rm", "-q", "--", *[f"f{index}.txt" for index in range(5, 60)])
+        git(self.repo, "commit", "-q", "-m", "m3 snapshot proj-REQ-900-r1-T2.57-a1-0000aaaa")
+        gutted = git(self.repo, "rev-parse", "HEAD")
+        self.assertEqual(self.line.continuation_base(RUN, self.task, gutted), wide)
+        small = self.commit_on(wide, "src/menu.tsx", "a1\n", "m3 snapshot proj-REQ-900-r1-T2.57-a2-0000bbbb")
+        self.assertNotEqual(self.line.continuation_base(RUN, self.task, small), wide)   # a real edit is still continued
+
     def test_a_snapshot_already_holding_the_line_is_kept(self):
         snapshot = self.commit_on(self.base, "src/menu.tsx", "a1\n", "m3 snapshot proj-REQ-900-r1-T2.57-a1-0000aaaa")
         self.assertEqual(self.line.continuation_base(RUN, self.task, snapshot), snapshot)
