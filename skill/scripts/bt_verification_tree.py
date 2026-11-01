@@ -6,7 +6,8 @@ adds to an earlier subplan when none of its members depends on it (pictures REQ-
 an SP-2 fix showed SP-14's tree with SP-2's old defect). `fold` merges each predecessor's current subplan line tip into
 the version, in plan order, with git's three-way `merge-tree` (objects only, no worktree): a predecessor whose tip is
 already in the version's history, or whose merge changes nothing, is included as it is; a text conflict folds nothing and
-is reported, so «Probar» says the tree lacks that work instead of showing a stale tree silently.
+is reported with every predecessor left out, so «Probar» says the tree lacks that work instead of showing a stale tree
+silently.
 
 The folded commit is deterministic (fixed identity and dates, parents = the version and the predecessors' tips) and kept
 reachable by `refs/bt/try/<project>/<REQ>/r<N>/<role>/<SP>`; a fold whose tree equals the tree that ref already holds
@@ -61,10 +62,11 @@ def predecessors(plan: dict, sid: str) -> list[str]:
 
 
 def fold(repo: Path, commit: str, preds: list[tuple[str, str]], ref: str, resolutions: Path | None = None) -> dict:
-    """{"commit": what the owner tries, "includes": predecessors whose tip is in it, "conflict": {} or {"with", "files"}}.
+    """{"commit": what the owner tries, "includes": predecessors whose tip is in it,
+    "conflict": {} or {"with", "files", "missing"}}.
     A conflict git leaves is settled as the composer settles it (`package.json` by key, a subsumed hunk, a resolution
     recorded under `resolutions`; never a new resolution request); one that stays (or a git failure) folds nothing:
-    `commit` is returned as it is."""
+    `commit` is returned as it is, and `missing` lists the other predecessors it therefore lacks."""
     key = (str(repo), commit, tuple(preds), ref, str(resolutions))
     if key not in _CACHE:
         _CACHE[key] = _fold(Path(repo), commit, preds, ref, resolutions)
@@ -124,10 +126,22 @@ def _fold(repo: Path, commit: str, preds: list[tuple[str, str]], ref: str, resol
     return {"commit": acc, "includes": included, "conflict": {}}
 
 
+def _adds_nothing(repo: Path, commit: str, tip: str) -> bool:
+    merged = _git(repo, "merge-tree", "--write-tree", "--name-only", "--no-messages", commit, tip)
+    return merged.returncode == 0 and merged.stdout.splitlines()[:1] == [_tree(repo, commit)]
+
+
 def _unfolded(repo: Path, commit: str, preds: list[tuple[str, str]], conflict: dict) -> dict:
-    """Nothing folded: the version as it is, with the predecessors its own history already holds."""
-    held = [sid for sid, tip in preds if _git(repo, "merge-base", "--is-ancestor", tip, commit).returncode == 0]
-    return {"commit": commit, "includes": held, "conflict": conflict}
+    """Nothing folded: the version as it is, with the predecessors its own history already holds. Stopping at the first
+    conflict leaves the others out too, so `missing` names them in plan order, besides the one in `with`: their tip is not
+    in its history and merging them would change its tree (pictures REQ-021 r39: SP-9 named SP-2 and lacked six more)."""
+    held, missing = [], []
+    for sid, tip in preds:
+        if _git(repo, "merge-base", "--is-ancestor", tip, commit).returncode == 0:
+            held.append(sid)
+        elif sid != conflict["with"] and not _adds_nothing(repo, commit, tip):
+            missing.append(sid)
+    return {"commit": commit, "includes": held, "conflict": {**conflict, "missing": missing}}
 
 
 def folded(rows: list[dict], lines: dict) -> list[dict]:

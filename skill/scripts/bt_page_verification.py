@@ -410,12 +410,19 @@ def _named(items: list[dict]) -> str:
     return ", ".join(f"{i['id']} v{i['version']}" if i.get("version") else str(i["id"]) for i in items)
 
 
+def _listed(ids: list) -> str:
+    """«SP-1, SP-2 y SP-3»."""
+    ids = [str(i) for i in ids]
+    return " y ".join(filter(None, [", ".join(ids[:-1]), *ids[-1:]]))
+
+
 def _tree_text(row: dict) -> str:
     """Which versions of the subplans it builds on the tried tree holds (D-246)."""
     includes, conflict = row.get("includes") or [], row.get("fold_conflict") or {}
     if conflict:
+        lacks = _listed([conflict.get("with"), *(conflict.get("missing") or [])])
         return ("Es el árbol de este subplan" + (f", con {_named(includes)}" if includes else "") +
-                f", pero sin la versión actual de {conflict.get('with')}.")
+                f", pero sin la versión actual de {lacks}.")
     if not includes:
         return "Es el árbol integrado exactamente al terminar este subplan."
     return (f"Es el árbol de este subplan con la versión actual de los subplanes sobre los que se construye: "
@@ -429,8 +436,13 @@ def _fold_warning(row: dict) -> str:
         return ""
     files = ", ".join(conflict.get("files") or [])
     why = f"choca en {files}" if files else (conflict.get("error") or "git no pudo combinarlos")
-    return (f'<p class="pp-vwarn">Ojo: no pude combinar este subplan con la versión actual de {e(str(conflict.get("with")))} '
-            f'({e(why)}). Lo que abres es el árbol de este subplan sin los cambios recientes de '
+    first = (f'<p class="pp-vwarn">Ojo: no pude combinar este subplan con la versión actual de {e(str(conflict.get("with")))} '
+             f'({e(why)})')
+    missing = conflict.get("missing") or []
+    if missing:                                  # nothing is folded after a conflict: the owner must know all it lacks
+        return (f'{first} y, por eso, tampoco con la de {e(_listed(missing))}. Lo que abres es el árbol de este subplan sin '
+                f'los cambios recientes de todos ellos: puede seguir mostrando un defecto que en alguno ya se arregló.</p>')
+    return (f'{first}. Lo que abres es el árbol de este subplan sin los cambios recientes de '
             f'{e(str(conflict.get("with")))}: puede seguir mostrando un defecto que allí ya se arregló.</p>')
 
 

@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -237,10 +238,66 @@ class LaterSubplanTree(unittest.TestCase):
         self.line("SP-1", fixed)
         row = self.rows()["SP-2"]
         self.assertEqual(row["commit"], clash)                                # its own tree, not a guess
-        self.assertEqual(row["fold_conflict"], {"with": "SP-1", "files": ["one.txt"]})
+        self.assertEqual(row["fold_conflict"], {"with": "SP-1", "files": ["one.txt"], "missing": []})
         self.assertEqual(row["includes"], [])                     # SP-1's current line is not in it
         import bt_page_verification as page
         self.assertIn("pero sin la versión actual de SP-1", page._tree_text(row))
         warning = page._fold_warning(row)
         self.assertIn("no pude combinar este subplan con la versión actual de SP-1", warning)
         self.assertIn("one.txt", warning)
+        self.assertIn("puede seguir mostrando un defecto que allí ya se arregló", warning)    # no other predecessor lacks
+
+    def predecessors_of_six(self) -> dict[str, str]:
+        """SP-6 builds on five subplans in plan order: SP-1 merges cleanly, SP-2 clashes, SP-3 is never reached, SP-4 is in
+        its history and SP-5 only re-seeded SP-4's tree, so merging it changes nothing."""
+        ids = ["SP-1", "SP-2", "SP-3", "SP-4", "SP-5", "SP-6"]
+        tasks = [{"id": f"T{sid[3:]}", "subplan_id": sid, "repository": "app"} for sid in ids]
+        tasks[-1]["after"] = [t["id"] for t in tasks[:-1]]
+        plan = {"subplans": [{"id": sid, "title": sid} for sid in ids], "tasks": tasks}
+        (self.rdir / "PLAN.json").write_text(json.dumps(plan))
+        (self.rdir / "plan-revisions" / "PLAN.r3.json").write_text(json.dumps(plan))
+        held = self.write("held.txt", "held\n", "SP-4", parent=self.one)
+        self.git("commit", "-q", "--allow-empty", "-m", "re-seeded, same tree")
+        tips = {"SP-4": held, "SP-5": self.git("rev-parse", "HEAD"),
+                "SP-6": self.write("clash.txt", "six\n", "SP-6", parent=held),
+                "SP-1": self.write("a.txt", "a\n", "SP-1", parent=self.one),
+                "SP-2": self.write("clash.txt", "two\n", "SP-2", parent=self.one),
+                "SP-3": self.write("c.txt", "c\n", "SP-3", parent=self.one)}
+        for sid, tip in tips.items():
+            self.line(sid, tip)
+        self.states(**{task["id"]: "completed" for task in tasks})
+        return tips
+
+    def test_the_warning_names_every_predecessor_the_tree_lacks_not_only_the_one_that_clashed(self):
+        tips = self.predecessors_of_six()
+        row = self.rows()["SP-6"]
+        self.assertEqual((row["commit"], row["version"]), (tips["SP-6"], 1))  # reporting only: the tried tree is the same
+        self.assertEqual(self.git("for-each-ref", "refs/bt/try/proj/REQ-021/r3/app/SP-6"), "")
+        self.assertEqual(row["fold_conflict"], {"with": "SP-2", "files": ["clash.txt"], "missing": ["SP-1", "SP-3"]})
+        self.assertEqual([item["id"] for item in row["includes"]], ["SP-4"])
+        import bt_page_verification as page
+        self.assertIn("pero sin la versión actual de SP-2, SP-1 y SP-3.", page._tree_text(row))
+        warning = page._fold_warning(row)
+        self.assertIn("con la versión actual de SP-2 (choca en clash.txt) y, por eso, tampoco con la de SP-1 y SP-3.", warning)
+        self.assertIn("sin los cambios recientes de todos ellos", warning)
+        self.assertNotIn("SP-5", warning)                                     # merging it changes nothing: nothing lacks
+
+    def test_every_way_of_not_folding_reports_what_the_tree_lacks(self):
+        import bt_verification_tree as tree
+        tips = self.predecessors_of_six()
+        preds = [(sid, tips[sid]) for sid in ("SP-1", "SP-2", "SP-3", "SP-4")]
+        real = tree._git
+
+        def failing(word: str):
+            def run(repo, *args, env=None):
+                return subprocess.CompletedProcess(args, 128, "", "boom") if word in args else real(repo, *args, env=env)
+            return patch.object(tree, "_git", run)
+
+        with failing(tips["SP-2"]):                                           # git cannot merge SP-2 at all
+            failed = tree.fold(self.repo, tips["SP-6"], preds, "refs/bt/try/failed")
+        self.assertEqual((failed["commit"], failed["conflict"]),
+                         (tips["SP-6"], {"with": "SP-2", "files": [], "error": "boom", "missing": ["SP-1", "SP-3"]}))
+        with failing("commit-tree"):                                          # the folded commit could not be made
+            refused = tree.fold(self.repo, tips["SP-6"], preds, "refs/bt/try/refused")
+        self.assertEqual((refused["commit"], refused["conflict"]),
+                         (tips["SP-6"], {"with": "SP-1", "files": [], "error": "boom", "missing": ["SP-2", "SP-3"]}))
