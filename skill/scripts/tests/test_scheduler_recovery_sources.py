@@ -254,6 +254,10 @@ class ContinuationBases(unittest.TestCase):
         source._directed = lambda task: None
         self.assertEqual(source._plan("T1"), (None, "fresh", gutted))
         self.assertIn("not used", source.notes(SimpleNamespace(task_id="T1", base_ref=base)))
+        # a poisoned snapshot already became the next attempt's base: only today's base shows what was lost
+        source._previous_base = lambda task: gutted
+        self.assertEqual(source._plan("T1"), (None, "fresh", gutted))     # the fallback here is HEAD = `edited`
+        source._previous_base = lambda task: base
         source._handoff = lambda task: edited
         source._same_base = lambda task, previous: True
         self.assertEqual(source._plan("T1"), (edited, "continue", edited))

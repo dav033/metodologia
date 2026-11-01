@@ -193,14 +193,19 @@ class RetryContinuation:
         """Does `snapshot` hold less than half the files of `base`? An attempt that ran in a worktree whose checkout was
         cut short (pictures REQ-021 r35 T3.15 a201: 1933 of 8564 files) captured that shell; a retry that continued from
         it audited the same shell again and its result, a diff against it, would delete the rest from the line."""
-        if not repo or not (isinstance(base, str) and SHA.fullmatch(base) and isinstance(snapshot, str)
+        if not repo or not (isinstance(base, str) and base and not base.startswith("-") and isinstance(snapshot, str)
                             and SHA.fullmatch(snapshot)):
             return False
         before, after = self._tree_size(repo, base), self._tree_size(repo, snapshot)
         return bool(before and after is not None and before >= self.GUTTED_MIN_FILES and after * 2 < before)
 
     def _gutted(self, task_id, snapshot) -> bool:
-        return self._lost_most(self._repo(task_id), self._previous_base(task_id), snapshot)
+        """Against the base the previous attempt started from AND today's base: a poisoned snapshot becomes the next
+        attempt's base (r35 T3.15 a201 -> a301 -> a401 each held the same 1933 files), so only today's base, which the
+        line's earlier integrated work built, still shows what was lost."""
+        repo = self._repo(task_id)
+        today = self.fallback(task_id) if callable(self.fallback) else self.fallback
+        return any(self._lost_most(repo, base, snapshot) for base in (self._previous_base(task_id), today))
 
     def _same_base(self, task_id, previous_base) -> bool:
         """The previous result's base is still the base this task would start from today. A task with no prerequisites
