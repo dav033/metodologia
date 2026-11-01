@@ -127,7 +127,9 @@ def plan_decide(rdir: Path, approve: bool, comments: str, via: str) -> str:
         problem = bt_plan_adapter.publishable_problem(rdir, compatibility_report=compatibility_report)
         if problem:
             raise SystemExit(problem)
+        import bt_confirmed_content
         import bt_planning_flow  # collaborative flow: every subplan confirmed by the owner and unchanged since
+        bt_confirmed_content.restore(rdir)      # or back to content already confirmed in that exact form (D-276)
         missing = bt_planning_flow.approval_problems(rdir)
         if missing:
             raise SystemExit("El plan no se puede aprobar todavía: " + "; ".join(missing))

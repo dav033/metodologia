@@ -284,7 +284,10 @@ Designer build the plan together, in four phases the web Plan tab shows as a ste
    while the Planner continues the remaining draft. Keep approved scope fixed; changing it requires owner
    re-confirmation and another approval, except a bounded repair of a confirmed defect (D-241, `bt_planner.repairs`):
    `stage freeze|run REQ-NNN --repair-evidence <RUN.* files> --by planner|solver` re-confirms it `by: policy`, shown
-   on the Plan tab, and freezes and joins without the owner. Later stages join the same run after live attempts drain, preserving accepted
+   on the Plan tab, and freezes and joins without the owner. A subplan whose draft returns to content already
+   confirmed in that exact form (owner or policy, never rejected since: `planning reject REQ-NNN SP-n --by owner`)
+   is re-confirmed `by: policy` with «vuelve al contenido confirmado el <fecha> por <quién>» (D-276,
+   `bt_confirmed_content`): withdrawing a repair never asks the owner again. Later stages join the same run after live attempts drain, preserving accepted
    unchanged work (a run the durable runtime owns continues in a new run of the stage's revision: `bt-durable join`,
    D-149). `stage freeze` approves without starting; `stage status` lists stages. Tasks and `## Pruebas`
    rows are mandatory for eligibility. Autonomous sessions are superseded by stages; hands-on sessions remain.

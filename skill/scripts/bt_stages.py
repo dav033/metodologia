@@ -268,6 +268,8 @@ def freeze(project: str, rdir: Path, add: list[str], *, repair_evidence: list[st
     from bt_requirements_gate import PLANNING_FILES, require_ready
 
     stage = list(dict.fromkeys([*approved(rdir), *add]))
+    import bt_confirmed_content
+    bt_confirmed_content.restore(rdir)      # content already confirmed in that exact form is confirmed (D-276)
     if repair_evidence is not None:
         repair_reconfirm(rdir, repair_evidence, by)
     _add_second_auditor(rdir, stage, add)
