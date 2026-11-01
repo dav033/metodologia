@@ -80,6 +80,14 @@
      "code": "CHECK_FAILED",
      "round": 1,
      "unchanged": false
+    },
+    "a735edc582940788": {
+     "at": "2026-10-31T18:32:14",
+     "option": "retry_with_note",
+     "request": "pictures:REQ-021:r32:T3.91:T3.91:d4@k1",
+     "code": "CHECK_FAILED",
+     "round": 1,
+     "unchanged": false
     }
    }
   }
@@ -117,7 +125,10 @@
   "pictures:REQ-021:r32:T2.57:T2.57:d4@k1",
   "pictures:REQ-021:r32:T3.91:T3.91:d1@k1",
   "pictures:REQ-021:r32:T3.91:T3.91:d2@k1",
-  "pictures:REQ-021:r32:T3.91:T3.91:d3@k1"
+  "pictures:REQ-021:r32:T3.91:T3.91:d3@k1",
+  "pictures:REQ-021:r32:T3.91:T3.91:d4@k1",
+  "pictures:REQ-021:r32:T3.91:T3.91:d5@k1",
+  "pictures:REQ-021:r32:T3.91:T3.91:d6@k1"
  ],
- "actions": 10
+ "actions": 11
 }

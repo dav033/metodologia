@@ -194,6 +194,21 @@
    "id": "D-264",
    "by": "metodologia-96: bt_integrate --escaped/--post-merge/--revert work without --branch/--title",
    "at": "2026-10-31T18:08:50"
+  },
+  {
+   "id": "D-265",
+   "by": "metodologia-96: agent test resources are probed before an attempt; an unreachable or verifier-divergent agent env stops for the operator instead of blind attempts",
+   "at": "2026-10-31T18:34:39"
+  },
+  {
+   "id": "D-266",
+   "by": "metodologia-96: engine scratch lives on a btrfs subvolume outside /home snapshots; captured attempt worktrees are removed",
+   "at": "2026-10-31T19:04:40"
+  },
+  {
+   "id": "D-267",
+   "by": "metodologia-96: role_route uses the role policy's model and effort for Claude routes (Solucionador ran Opus despite D-253)",
+   "at": "2026-10-31T19:06:56"
   }
  ]
 }

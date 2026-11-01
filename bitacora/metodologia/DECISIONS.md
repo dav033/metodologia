@@ -3270,3 +3270,49 @@ Solucionador 20261030-100736-d494 integrated merge fff622890f28b8093a9a0afda9c40
 - **Rule:** a command documented in a decision must work as written; a flag is required only by the actions that use it.
 - **Evidence:** `test_integrate` `Cli` (+3): 41 tests OK, `test_integrate_post_venv` 1 OK. Built by an Opus subagent
   (branch `escaped-args`, `52d59c8d2`); integrated with `--no-regression` (D-261).
+
+## D-265 — One source per test variable: the verifier's value reaches the agent; a dead test resource stops the start, not an attempt
+
+- **Date:** 2026-10-31 · **Status:** Accepted · **Refines:** D-256 (live resources), D-257 (attempts are told their check
+  environment), D-262 (pre-dispatch gate, healing facts)
+- **Context:** pictures REQ-021 r32 T3.91 a5..a8: `~/.config/metodologia/agent-pictures.env` set
+  `PICTURES_REQ021_DATABASE_URL` to `127.0.0.1:55965/req021_visual` (nothing listening since 10-29) while the verifier
+  got the same key from the owner's environment under `verifier.inherit_env` (`127.0.0.1:55433/req021`, the live
+  `pictures-req021-db-tunnel.service`). The agent could not run the DB-backed browser check and said so; the runtime
+  still retried and healing answered with locator and hit-testing guesses until max_attempts. Owner: «no solo
+  parchees, soluciona el origen del problema, que no pase bajo ninguna circunstancia». Cause: the same resource was
+  configured in two independent places.
+- **Decision:** the checks' environment is the single source (`bt_verifier_env.one_source`, from the policy M6 uses):
+  an attempt gets the verifier's value for every key the checks set explicitly and for every key it would hold anyway
+  that the checks inherit; `execution.agent_env_file` only adds keys the checks lack; names the driver removes are not
+  re-added. A differing agent copy is never used and is reported once (brief «Environment source», telemetry
+  `agent_env_divergent`, activity), names and host:port/db only. Safety net: step `bt.env_probe` after
+  `bt.contract_gate` TCP-probes (2 s; reachable cached 30 s) every network URL the task's checks require (or, with none
+  declared, agent-file and verifier-explicit keys); an unreachable one starts no agent, uses no attempt and opens
+  `AGENT_ENV_UNREACHABLE` naming key, host:port/db and source; `retry` probes again. Healing leaves
+  `checks_not_run` (agent's final message) and `AGENT_ENV_UNREACHABLE` decisions to the owner/Solucionador, evidence
+  first. DBOS patch: `bt-task-probes-agent-env`. Owner files are never rewritten; non-live roots unchanged (D-256).
+- **Rule:** a test variable has one value in every context — what the checks run with; a resource the checks need that
+  does not answer is a decision before any attempt.
+- **Evidence:** `test_durable_agent_env` 12 (+5), `test_durable_env_probe` 9 (new, 2 lab e2e), `test_healing_durable_
+  decisions` 8 (+3), red on main; affected suites (verifier_env, m6_env, control, live_root_isolation, solver,
+  versioning, subplans, e2e, upgrade) OK. Opus subagent (`2a34aff0e`, branch `agent-env-probe`); integrated with
+  `--no-regression` (D-261).
+
+## D-267 — Every role session runs the model its role policy names; no route hard-codes Opus
+
+- **Date:** 2026-10-31 · **Status:** Accepted · **Completes:** D-253 (the Solucionador runs Sonnet high, Terra medium)
+- **Context:** pictures REQ-021 activity 2026-10-31 18:40: «el Solucionador empezó (bit-pictures-REQ-021-solver, claude
+  opus)». D-253 made `Solver._start` pass the routed model, but the route itself was wrong:
+  `bt_agent_terminal.role_route` returned `model: opus, effort: high` for every Claude route — the ranked account, the
+  pinned account (`override`) and the `~/.claude-work` fallback — ignoring the candidate's model/effort; only the Codex
+  branch read them. `start_planner` also hard-coded `--model opus --effort high`.
+- **Decision:** Claude routes carry the ranked route's model/effort, else the role policy's Claude rung
+  (`claude_choice(role)` → `bt_role_policy.native_option(role, "claude")`), also for the pinned and fallback accounts;
+  Opus high remains only for a role the policy does not know. `start_planner` passes the route's `--model`/`--effort`.
+  Planner and Designer still get Opus high because their policy says so.
+- **Rule:** a session's model and effort come from its role policy at the route's origin; no route or launch path
+  substitutes a fixed model (extends D-253's rule from the launcher to the router).
+- **Evidence:** `test_planner_account.RoleRouteModel` 9 new (6 red on main; one drives the real role router for
+  `solver`); planner_account, agent_terminal, role_routing, role_policy, durable_solver and recovery suites: 160 tests
+  OK. Opus subagent (`75217a042`, branch `role-route-model`); integrated with `--no-regression` (D-261).
