@@ -28,7 +28,8 @@ class OwnerAnswer(BaseModel):
 class RunCommand(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
-    kind: Literal["pause", "resume", "retry_task"]
+    # recheck_gates: subplan lines moved outside any task (bt_durable.reconcile): judge the gates against them again
+    kind: Literal["pause", "resume", "retry_task", "recheck_gates"]
     request_id: str = Field(min_length=8, max_length=120)
     task_id: TaskId | None = None
     note: str = Field(default="", max_length=6000)

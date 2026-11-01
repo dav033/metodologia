@@ -162,7 +162,7 @@ class GitSubprocessPort:
         blobs: dict[str, str] = {}
         for path in conflicts:
             ids = [self._blob_id(revision, path) for revision in (base, ours, theirs)]
-            key = hashlib.sha256("\0".join((path, *ids)).encode()).hexdigest()[:32]
+            key = self.request_key(path, base, ours, theirs)
             swapped = hashlib.sha256("\0".join((path, ids[0], ids[2], ids[1])).encode()).hexdigest()[:32]
             resolved = folder / f"{key}.resolved"
             found = next((candidate for candidate in (resolved, folder / f"{swapped}.resolved") if candidate.is_file()), None)
@@ -180,6 +180,35 @@ class GitSubprocessPort:
         if not blobs:
             return tree, conflicts
         return self._with_blobs(tree, blobs), tuple(path for path in conflicts if path not in blobs)
+
+    def request_key(self, path: str, base: str, ours: str, theirs: str) -> str:
+        """The recorded-resolution key of `path` for these three commits: its three blob versions, not the commits, so
+        subplans holding the same versions of the file share one request and one resolution (D-297)."""
+        ids = [self._blob_id(revision, path) for revision in (base, ours, theirs)]
+        return hashlib.sha256("\0".join((path, *ids)).encode()).hexdigest()[:32]
+
+    def virtual_base(self, bases: Sequence[str], depth: int = 0) -> str:
+        """The merge bases merged into one commit, recursively, like git's recursive strategy: package.json by key and the
+        recorded resolutions, and a conflict left between bases keeps git's markers in the virtual base (a later merge of
+        that file then conflicts). pictures REQ-021 r25: gate T93 and SP-7's line had both taken SP-3 and SP-4, three
+        bases, and the same package.json conflict came back on every retry (D-169). It uses the recorded resolutions but
+        asks for none: without them T95's virtual base kept SP-4 x SP-5's markers in dependientes.ts, already resolved
+        for the composer, and conflicted with SP-8's line on every retry (D-174). "" past three levels."""
+        if depth > 3:
+            return ""
+        asking, self.request_resolutions = self.request_resolutions, False
+        try:
+            merged = bases[0]
+            for other in bases[1:]:
+                inner = self._run("merge-base", "--all", merged, other, check=False).stdout.split()
+                base = inner[0] if len(inner) == 1 else self.virtual_base(inner, depth + 1) if inner else ""
+                if not base:
+                    return ""
+                merged = self.commit_tree(self.merge_tree(base, merged, other).tree, (merged, other),
+                                          "bt: virtual merge base")
+            return merged
+        finally:
+            self.request_resolutions = asking
 
     def _blob_id(self, revision: str, path: str) -> str:
         """The blob id of `path` at `revision`, "-" when it is missing. `--verify`: without it git takes a missing

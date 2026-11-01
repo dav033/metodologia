@@ -66,6 +66,15 @@ union of both sides' intent, never dropping either side's change (when they trul
 Then answer the task's decision with `retry`, or `reverify` when the same snapshot only needs to be integrated again.
 If the conflict is one a merge rule should have settled, also fix the rule in metodologia (D-160, D-164, D-172).
 
+### Known case: a subplan's line that cannot take a repair of the subplan it builds on
+
+`bt_durable.reconcile` folds every subplan line with its predecessors' lines on every engine pass (D-297). When a conflict
+stays it opens the same resolution requests, with no task and no decision behind them: your trigger names `SP-x×SP-y`.
+Write `<key>.resolved` for every file of the round, keeping both sides' intent and a file that fits the rest of the merged
+tree. Do not move refs or commit to the project: the next pass combines them and moves the lines, or opens the next round
+in your inbox. A trigger only closes when its `.resolved` exists, whatever `handled` says. When the two sides truly exclude
+each other, ask the owner.
+
 ### Known case: a run that ended with a rejected composition gate
 
 A gate whose composition fails `COMPOSE_TURNS` (3) turns, or whose members conflict, is rejected; when nothing else can

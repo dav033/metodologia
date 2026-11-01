@@ -38,7 +38,7 @@ SHA = re.compile(r"[0-9a-f]{40}")
 SAFE_ID = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]{0,40}")
 NONE_WORDS = {"none", "ninguna", "ninguno", "sin prueba manual", "no aplica", "n/a"}
 STATES_ES = {"waiting": "se está construyendo", "to_test": "por probar", "approved": "aprobado", "rejected": "rechazado",
-             "outdated": "cambió tras tu decisión"}
+             "outdated": "cambió tras tu decisión", "reconciling": "combinándose"}
 KINDS_ES = {"local": "En local", "production": "En producción", "external": "Fuera de tus servidores", "none": "Sin prueba manual"}
 
 
@@ -202,10 +202,18 @@ def durable_versions(rdir: Path) -> list[dict] | None:
             if isinstance(item.get("commit"), str) and SHA.fullmatch(item["commit"]):
                 seen.setdefault(str(sid), []).append((str(item.get("published_at") or ""), item["commit"]))
     lines = _lines(rdir)
-    for sid, (tip, repo) in _built(rdir, lines).items():
+    from bt_durable import reconcile
+    built = _built(rdir, lines)
+    for sid, moves in reconcile.history(rdir).items():            # D-297: a tip offered before its line took the fold
+        for index, move in enumerate(moves):                      # was never stored, but it was this subplan's version
+            repo = built.get(sid, (None, None))[1]
+            last = max(seen.get(sid, []), default=("", ""))[1]
+            if move.get("offered") and repo and move["from"] != last and not (last and _tree(repo, last) == _tree(repo, move["from"])):
+                seen.setdefault(sid, []).append((f"~{index:06d}", move["from"]))
+    for sid, (tip, repo) in built.items():
         last = max(seen.get(sid, []), default=("", ""))[1]
         if tip != last and not (last and _tree(repo, last) == _tree(repo, tip)):
-            seen.setdefault(sid, []).append(("~", tip))           # after every stored publication
+            seen.setdefault(sid, []).append(("~~", tip))          # after every stored publication
     out = []
     for sid, items in sorted(seen.items()):
         commits: list[str] = []
@@ -308,6 +316,15 @@ def applies(rdir: Path) -> bool:
     without them or a PLAN.json caught mid-edit, so the gate never fails open)."""
     return _enrolled(rdir) and (bool(_load(rdir).get("gated")) or _reports_subplans(rdir)) and \
         bool(_plan(rdir).get("subplans") or _load(rdir).get("gated"))
+
+
+def judgeable(row: dict) -> bool:
+    """A tree that lacks a predecessor is not the one to judge while the system is combining it (D-297). With that switched
+    off nobody would ever combine it, so the owner keeps the last word, with the panel's warning."""
+    if not row.get("fold_conflict"):
+        return True
+    from bt_durable import reconcile
+    return not reconcile.enabled()
 
 
 def state(rdir: Path) -> dict:
@@ -423,6 +440,9 @@ def decide(project: str, rdir: Path, sid: str, decision: str, note: str = "", by
         return f"{sid or 'Ese subplan'} no está en el plan."
     if row["state"] == "waiting":
         return f"{sid} todavía se está construyendo: aún no hay una versión que probar."
+    if decision == "approved" and not judgeable(row):         # D-297: not the tree that will ship
+        return (f"{sid} todavía no tiene la versión actual de {row['fold_conflict'].get('with')}: lo que hay no es lo que "
+                "debes juzgar. Se aprueba cuando esté combinado.")
     import bt_rejection_images as images
     accepted: list[dict] = []
     if decision == "rejected" and attachments:

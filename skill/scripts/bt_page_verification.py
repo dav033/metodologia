@@ -21,7 +21,8 @@ import bt_page_correction as correction_view
 import bt_verification as verification
 from bt_pages import inline, purl
 
-PILL = {"waiting": "none", "to_test": "warn", "approved": "ok", "rejected": "bad", "outdated": "warn"}
+PILL = {"waiting": "none", "to_test": "warn", "approved": "ok", "rejected": "bad", "outdated": "warn",
+        "reconciling": "none"}
 KIND_ICON = {"local": "⌂", "production": "◎", "external": "↗", "none": "–"}
 
 
@@ -34,7 +35,10 @@ def _state_pill(state: str) -> str:
 
 
 def _shown(row: dict) -> str:
-    """The state the owner sees: a newer version after his rejection is simply «por probar» again."""
+    """The state the owner sees: a newer version after his rejection is simply «por probar» again; a tree that still lacks
+    a predecessor is not there to judge (D-297)."""
+    if row["state"] in ("to_test", "outdated") and not verification.judgeable(row):
+        return "reconciling"
     return "to_test" if row.get("retest") else row["state"]
 
 
@@ -369,9 +373,10 @@ def _actions(ctx: dict, row: dict) -> str:
         opened = (f'<p class="pp-vpath">Abierta en <code>{e(str(target))}</code></p>' + _stale(ctx, row, target)
                   + _form(ctx, "verify-close", "Cerrar la copia", sid))
     run = ctx.get("_try", "")
-    buttons = (_form(ctx, "verify-open", "Abrir esta versión en local", sid) if not opened and not run else "") + \
+    approve = "" if row["state"] != "approved" and not verification.judgeable(row) else \
         _form(ctx, "verify-approve", "Aprobar" if row["state"] != "approved" else "Aprobado ✓", sid, cls="pp-approve",
-              extra=OVER_REJECTION if row["state"] == "rejected" else "") + \
+              extra=OVER_REJECTION if row["state"] == "rejected" else "")
+    buttons = (_form(ctx, "verify-open", "Abrir esta versión en local", sid) if not opened and not run else "") + approve + \
         f'<details class="pp-vreject"><summary>Rechazar…</summary>{_form(ctx, "verify-reject", "Rechazar con esta nota", sid, note=True, danger=True)}</details>'
     command = verification.revert_command(root, ctx["project"], rdir, sid) if root else ""
     deps = verification.dependents(rdir, sid)
@@ -429,21 +434,53 @@ def _tree_text(row: dict) -> str:
             f"{_named(includes)}.")
 
 
-def _fold_warning(row: dict) -> str:
-    """The tree could not take a predecessor's current work: say so instead of offering a stale tree silently."""
+def _hhmm(stamp: str) -> str:
+    return stamp[11:16] if len(stamp) >= 16 else ""
+
+
+def _who(rdir: Path | None, sid: str, version) -> str:
+    """Who is combining it, from the facts (`bt_durable.reconcile.view`, D-297): never a promise nobody keeps."""
+    from bt_durable import reconcile
+    if rdir is None:
+        return ""
+    try:
+        seen = reconcile.view(rdir, sid)
+    except Exception:  # noqa: BLE001 - an unreadable record must not break the page, and promises nothing
+        seen = {"state": "unattended"}
+    state = seen.get("state")
+    since = _hhmm(str(seen.get("since") or ""))
+    upcoming = f"la versión {version + 1}" if isinstance(version, int) else "una versión nueva"
+    if state == "working":
+        return (f" El Solucionador lo está combinando{f' desde las {since}' if since else ''}; cuando termine aparecerá "
+                f"{upcoming} con todo: pruébala entonces.")
+    if state == "queued":
+        return (f" El sistema ya pidió combinarlo{f' a las {since}' if since else ''} y el Solucionador lo toma en cuanto "
+                f"haya turno; cuando termine aparecerá {upcoming} con todo.")
+    if state == "escalated":
+        question = str(seen.get("question") or "")
+        return (" El Solucionador no pudo combinarlo solo y te lo pasó: necesita tu ayuda."
+                + (f" Lo último que dijo: «{question}»" if question else ""))
+    if state == "off":
+        return " Nadie lo está combinando: el Solucionador está apagado en la configuración."
+    return " La combinación automática todavía no empezó: la hace el motor en su siguiente pasada."
+
+
+def _fold_warning(row: dict, rdir: Path | None = None) -> str:
+    """The tree could not take a predecessor's current work: say so, and who is on it, instead of offering it to judge."""
     conflict = row.get("fold_conflict") or {}
     if not conflict:
         return ""
     files = ", ".join(conflict.get("files") or [])
     why = f"choca en {files}" if files else (conflict.get("error") or "git no pudo combinarlos")
-    first = (f'<p class="pp-vwarn">Ojo: no pude combinar este subplan con la versión actual de {e(str(conflict.get("with")))} '
-             f'({e(why)})')
+    first = (f'<p class="pp-vwarn">Todavía no es lo que debes juzgar: este subplan no se ha podido combinar con la versión '
+             f'actual de {e(str(conflict.get("with")))} ({e(why)})')
+    who = e(_who(rdir, str(row.get("id") or ""), row.get("version")))
     missing = conflict.get("missing") or []
     if missing:                                  # nothing is folded after a conflict: the owner must know all it lacks
         return (f'{first} y, por eso, tampoco con la de {e(_listed(missing))}. Lo que abres es el árbol de este subplan sin '
-                f'los cambios recientes de todos ellos: puede seguir mostrando un defecto que en alguno ya se arregló.</p>')
+                f'los cambios recientes de todos ellos: puede seguir mostrando un defecto que en alguno ya se arregló.{who}</p>')
     return (f'{first}. Lo que abres es el árbol de este subplan sin los cambios recientes de '
-            f'{e(str(conflict.get("with")))}: puede seguir mostrando un defecto que allí ya se arregló.</p>')
+            f'{e(str(conflict.get("with")))}: puede seguir mostrando un defecto que allí ya se arregló.{who}</p>')
 
 
 def panel(ctx: dict, s: dict) -> str:
@@ -467,7 +504,7 @@ def panel(ctx: dict, s: dict) -> str:
         pill += _state_pill("to_test")
     head = (f'<p class="pp-vintro">{pill} Versión {e(str(row["version"]))} · commit '
             f'<code>{e(str(row["commit"])[:10])}</code>. {e(_tree_text(row))}</p>'
-            f'{correction_view.strip(ctx["project"], fix, note=False) if fix else ""}{stale}{_fold_warning(row)}')
+            f'{correction_view.strip(ctx["project"], fix, note=False) if fix else ""}{stale}{_fold_warning(row, rdir)}')
     paths = test_paths(rows)
     ctx["_try"] = run = _servers(ctx, row, paths) if ctx.get("root") else ""
     guide = _guide(ctx, row, ctx.get("_url", ""))
@@ -505,8 +542,9 @@ def chip(rdir: Path) -> str:
         return ""
     import bt_verification_correction as correction
     fixes = correction.corrections(rdir) if any(correction.in_correction(r) for r in st["subplans"]) else {}
-    waiting = st["counts"]["to_test"] + st["counts"]["outdated"] - sum(1 for r in st["subplans"] if r["id"] in fixes
-                                                                       and r["state"] == "outdated")
+    waiting = st["counts"]["to_test"] + st["counts"]["outdated"] - sum(
+        1 for r in st["subplans"] if (r["id"] in fixes and r["state"] == "outdated")
+        or (_shown(r) == "reconciling" and r["id"] not in fixes))     # not there to judge yet (D-297)
     rejected = len(fixes)
     cls = "warn" if waiting else "ok" if st["approved"] == st["total"] else ""
     text = f"por probar {waiting}" if waiting else f"aprobados {st['approved']}/{st['total']}"

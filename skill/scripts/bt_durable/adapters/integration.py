@@ -109,7 +109,7 @@ class GitLineIntegrator:
             line = self._tip(repo, self.subplan_ref(run, task.repository, subplan_id))
             if not line:
                 continue
-            new, conflict = self._merge(repo, tip, line, f"bt: {task.id} starts from {subplan_id}'s line")
+            new, conflict = self._merge(repo, tip, line, f"bt: {task.id} starts from {subplan_id}'s line", ask=False)
             if conflict:
                 LOG.info("%s: base left %s's line out (%s)", task.id, subplan_id, conflict[:200])
                 continue
@@ -137,7 +137,7 @@ class GitLineIntegrator:
                             "starts from the line", task.id, snapshot_sha[:12])
                 return tip
             new, conflict = self._merge(repo, snapshot_sha, tip,
-                                        f"{CATCH_UP} {task.id}: {snapshot_sha[:12]} + {home or 'run line'}")
+                                        f"{CATCH_UP} {task.id}: {snapshot_sha[:12]} + {home or 'run line'}", ask=False)
         except RuntimeError as error:               # the line cannot be read or merged: continue as before (D-254)
             LOG.warning("%s: retry base not caught up (%s)", task.id, str(error)[:200])
             return snapshot_sha
@@ -176,8 +176,12 @@ class GitLineIntegrator:
             return _git(repo, "rev-parse", f"{ref}^{{commit}}").stdout.strip()
         return head
 
-    def _merge(self, repo: Path, tip: str, snapshot: str, message: str) -> tuple[str | None, str]:
-        """(new tip or None when the snapshot is already in, conflict text). Objects only: no ref moves here."""
+    def _merge(self, repo: Path, tip: str, snapshot: str, message: str, ask: bool = True) -> tuple[str | None, str]:
+        """(new tip or None when the snapshot is already in, conflict text). Objects only: no ref moves here. `ask=False`
+        for a merge whose conflict is left out by design: it opens no resolution request, since nothing would wait for
+        the answer and no task could ever be named for it (D-297, pictures REQ-021 r35: T94's base opened 14 requests
+        against SP-5's line at 01:25 that nobody owned once T94 was accepted). The reconciliation of the subplan lines
+        (`bt_durable.reconcile`) asks for what a later subplan really lacks."""
         if _git(repo, "merge-base", "--is-ancestor", snapshot, tip, check=False).returncode == 0:
             return None, ""                              # already integrated (a re-run of this step)
         if _git(repo, "merge-base", "--is-ancestor", tip, snapshot, check=False).returncode == 0:
@@ -188,7 +192,7 @@ class GitLineIntegrator:
             files = [line.split("\t", 1)[-1] for line in merged.stdout.splitlines()[1:] if "\t" in line]
             if not files:                                # git failed without naming a conflicted file: not a conflict
                 raise RuntimeError(f"merge-tree failed: {(merged.stderr or merged.stdout).strip()[:300]}")
-            tree, files = self._settle(repo, tip, snapshot, files)
+            tree, files = self._settle(repo, tip, snapshot, files, ask)
             if files:
                 return None, "conflicts with accepted work in: " + ", ".join(sorted(set(files))[:20])
         elif merged.returncode:
@@ -197,12 +201,13 @@ class GitLineIntegrator:
             tree = merged.stdout.splitlines()[0].strip()
         return _git(repo, "commit-tree", tree, "-p", tip, "-p", snapshot, "-m", message, env=IDENT).stdout.strip(), ""
 
-    def _settle(self, repo: Path, tip: str, snapshot: str, files: list[str]) -> tuple[str, list[str]]:
+    def _settle(self, repo: Path, tip: str, snapshot: str, files: list[str], ask: bool = True) -> tuple[str, list[str]]:
         """Settle the conflicts the composer settles (D-160) the same way on a line: `package.json` merged by key and
         the recorded resolutions in `<state>/composition/resolutions`. pictures REQ-021 r24: gate task T93, built on the
         composed CG-3 candidate, conflicted with SP-11's line on the npm scripts every subplan appends (D-164).
         A criss-cross history (several merge bases) is settled against a virtual base, as git's recursive merge does
-        (D-169). Returns (tree, conflicts left); with no composer the conflicts stay as git found them."""
+        (D-169). Returns (tree, conflicts left); with no composer the conflicts stay as git found them. `ask=False` uses
+        the recorded resolutions and opens no request (D-297)."""
         bases = _git(repo, "merge-base", "--all", tip, snapshot, check=False).stdout.split()
         state_dir = getattr(self.composer, "state_dir", None)
         if not bases or state_dir is None:
@@ -210,37 +215,12 @@ class GitLineIntegrator:
         from bt_composition_adapter import GitSubprocessPort
         root = Path(state_dir) / "composition"
         port = GitSubprocessPort(repo, root / "ws")
-        port.resolutions = root / "resolutions"
-        if len(bases) == 1:
-            base = bases[0]
-        else:
-            quiet = GitSubprocessPort(repo, root / "ws")
-            quiet.resolutions, quiet.request_resolutions = root / "resolutions", False
-            base = self._virtual_base(repo, quiet, bases)
+        port.resolutions, port.request_resolutions = root / "resolutions", ask
+        base = bases[0] if len(bases) == 1 else port.virtual_base(bases)
         if not base:
             return "", files
         result = port.merge_tree(base, tip, snapshot)
         return result.tree, list(result.conflicts)
-
-    def _virtual_base(self, repo: Path, port, bases: list[str], depth: int = 0) -> str:
-        """The merge bases merged into one commit, recursively, like git's recursive strategy: package.json by key and the
-        recorded resolutions, and a conflict left between bases keeps git's markers in the virtual base (a later merge of
-        that file then conflicts). pictures REQ-021 r25: gate T93 and SP-7's line had both taken SP-3 and SP-4, three
-        bases, and the same package.json conflict came back on every retry (D-169). `port` uses the recorded resolutions
-        but asks for none: without them T95's virtual base kept SP-4 × SP-5's markers in dependientes.ts, already resolved
-        for the composer, and conflicted with SP-8's line on every retry (D-174)."""
-        if depth > 3:
-            return ""
-        merged = bases[0]
-        for other in bases[1:]:
-            inner = _git(repo, "merge-base", "--all", merged, other, check=False).stdout.split()
-            base = inner[0] if len(inner) == 1 else self._virtual_base(repo, port, inner, depth + 1) if inner else ""
-            if not base:
-                return ""
-            tree = port.merge_tree(base, merged, other).tree
-            merged = _git(repo, "commit-tree", tree, "-p", merged, "-p", other, "-m", "bt: virtual merge base",
-                          env=IDENT).stdout.strip()
-        return merged
 
     def integrate(self, run: RunRef, task: TaskSpec, snapshot: Snapshot, *, lines: tuple[str, ...] = (),
                   home: str = "") -> tuple[str | None, str, str, dict[str, str]]:
@@ -282,8 +262,11 @@ class GitLineIntegrator:
         # the member's own line exists: only that line (and nothing else) must take it
         own = home if home and not home.startswith("gate:") and any(scope == home for _, _, scope in targets) else ""
         for ref, tip, scope in targets:
+            # only a line whose refusal stops the task asks for a resolution: the others are left out just below
+            ask = (scope == own) if own else (not gate if scope else not member)
             new, conflict = self._merge(repo, tip, snapshot.snapshot_sha,
-                                        f"bt: integrate {task.id} into {run.run_id}" + (f" ({scope})" if scope else ""))
+                                        f"bt: integrate {task.id} into {run.run_id}" + (f" ({scope})" if scope else ""),
+                                        ask=ask)
             if conflict and not scope and member:
                 note = conflict                         # the run line only: left to the composition gates
                 continue
@@ -302,6 +285,8 @@ class GitLineIntegrator:
                 return None, conflict + (f" (line of {scope})" if scope else ""), "", {}
             moves.append((ref, new or tip, tip))
         if gate and left and not any(ref != targets[0][0] for ref, _, _ in moves):
+            ref, tip, _scope = next(t for t in targets if t[2])     # opens the requests a real conflict is worth
+            self._merge(repo, tip, snapshot.snapshot_sha, f"bt: integrate {task.id} into {run.run_id}")
             return None, refused, "", {}                # no subplan line takes the gate's work: a real conflict
         changed = [(ref, new, old) for ref, new, old in moves if new != old]
         if changed:                                     # all lines or none: each `update` checks its old value
@@ -335,7 +320,8 @@ class GitLineIntegrator:
                 if self._lost_most(repo, tip, snapshot):         # an incomplete worktree's shell is never accepted work
                     conflicts[task_id] = "the snapshot holds under half of the line's files (its worktree was incomplete)"
                     continue
-                new, conflict = self._merge(repo, tip, snapshot, f"bt: integrate {task_id} into {run.run_id} ({subplan_id})")
+                new, conflict = self._merge(repo, tip, snapshot, f"bt: integrate {task_id} into {run.run_id} ({subplan_id})",
+                                            ask=False)
                 if conflict:
                     conflicts[task_id] = conflict
                     continue

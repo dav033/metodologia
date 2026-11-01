@@ -9,7 +9,8 @@ becomes a `resolution` trigger for the run whose task conflicts: the run whose o
 or one of its commits, else the run whose rejected composition gate conflicted on that path (its last `gate_composed`
 event in the engine's telemetry: a gate the composer rejects leaves no decision to name it — pictures REQ-021 r25, CG-9,
 2026-10-30 04:38, D-193), else the one run with an open INTEGRATION_CONFLICT decision (with several such runs and no
-match the request waits: guessing could resolve a file for the wrong project).
+match the request waits: guessing could resolve a file for the wrong project). A request `bt_durable.reconcile` opened
+needs none of that: it knows its run and the subplan that waits for it, with no decision to name it (D-297).
 """
 from __future__ import annotations
 
@@ -108,12 +109,21 @@ def target(request: dict, statuses: dict[str, dict],
 
 
 def triggers(folder: Path, statuses: dict[str, dict], now: float, after_seconds: int,
-             telemetry: Path | None = None) -> list[dict]:
+             telemetry: Path | None = None, bound: dict[str, dict] | None = None) -> list[dict]:
+    """`bound`: request key -> {"run_id", "subplan", "with"} from `bt_durable.reconcile`."""
     from .solver import round_of, trigger
     out = []
     requests = open_requests(folder, now, after_seconds)
     rejected = rejected_paths(telemetry, statuses) if requests else {}
     for request in requests:
+        owner = (bound or {}).get(request["key"])
+        if owner:
+            item = trigger("resolution", f"{owner['run_id']}:resolution:{request['key']}", owner["run_id"],
+                           reason=f"{owner['subplan']} builds on {owner['with']} and cannot take its current line: "
+                                  f"{request['path']} needs a recorded resolution; no retry can settle it")
+            item.update(subplan=f"{owner['subplan']}×{owner['with']}", reconcile=True, resolution=request)
+            out.append(item)
+            continue
         found = target(request, statuses, rejected)
         if found is None:
             continue
@@ -144,7 +154,13 @@ def brief(item: dict) -> list[str]:
             "(`git cat-file -p <blob>` in the project's repository)",
             f"- commits: {json.dumps(request.get('commits') or {})}",
             f"- write the final content to: `{request.get('resolved')}`",
-            "- the final content keeps BOTH sides' intent: never drop either side's change; when they truly exclude "
-            "each other, ask the owner. Then answer the task's open decision with `retry` (or `reverify` when the "
-            "same snapshot only needs to be integrated again).",
+            ("- the final content keeps BOTH sides' intent: never drop either side's change; when they truly exclude "
+             "each other, ask the owner. ") + (
+                "This is the reconciliation of a subplan's line with a subplan it builds on (D-297): no task or decision "
+                "waits for it. Do not move any ref and do not commit to the project: once every file of the round has its "
+                "`.resolved` the engine's next pass combines them and moves the lines itself, or opens the next round. The "
+                "resolved file must still fit the rest of the merged tree (imports and names from both sides)."
+                if item.get("reconcile") else
+                "Then answer the task's open decision with `retry` (or `reverify` when the same snapshot only needs to be "
+                "integrated again)."),
             "", "```diff3", diff3, "```"]

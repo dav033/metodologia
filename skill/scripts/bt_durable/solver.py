@@ -154,6 +154,7 @@ class Solver:
             import bt_planning_activity
             record = lambda rdir, text: bt_planning_activity.record(rdir, "Solucionador", text, kind="flow")  # noqa: E731
         self.notify, self.record, self.work = notify, record, Path(work or WORK)
+        self._bound: dict[str, dict] | None = None   # the requests `bt_durable.reconcile` still waits for, this pass
 
     # ------------------------------------------------------------------------------------------------ the pass
     def run_pass(self, escalations: Iterable[dict] = ()) -> list[str]:
@@ -177,8 +178,9 @@ class Solver:
             except Exception as error:  # noqa: BLE001 - a run that cannot be read is tried on the next pass
                 LOG.warning("solver: %s status failed: %s", run.run_id, error)
         from . import resolutions
+        bound = self._reconcile(runs, statuses, by_run)
         for item in resolutions.triggers(self.resolutions, statuses, self.now(), cfg["resolution_after_seconds"],
-                                          telemetry=self.state_dir / "telemetry.jsonl"):
+                                          telemetry=self.state_dir / "telemetry.jsonl", bound=bound):
             by_run.setdefault(item["run_id"], []).append(item)
         for rdir, run in runs:
             state = states[str(rdir)]
@@ -209,6 +211,29 @@ class Solver:
             if json.dumps(states[key], sort_keys=True) != before[key]:
                 save(rdir, states[key])
         return said
+
+    def _reconcile(self, runs, statuses: dict, by_run: dict) -> dict[str, dict]:
+        """Each run's subplan lines take what the subplans they build on hold now (D-297); returns the resolution requests
+        that waits for, by key. One run's failure does not stop the others, and is seen again on the next pass."""
+        from . import reconcile
+        from .adapters.telemetry import JsonlTelemetry
+        self._bound = bound = {}
+        if not reconcile.enabled():
+            return bound
+        telemetry = JsonlTelemetry(self.state_dir / "telemetry.jsonl")
+        for rdir, run in runs:
+            if run.run_id not in statuses:
+                continue
+            try:
+                if not reconcile.wanted(rdir, statuses[run.run_id]):
+                    continue
+                done = reconcile.sweep(self.root, rdir, run, client=self.client, emit=telemetry.emit, now=self.now)
+            except Exception as error:  # noqa: BLE001
+                LOG.warning("reconcile: %s failed: %s", run.run_id, error)
+                continue
+            bound.update(done["bound"])
+            by_run.setdefault(run.run_id, []).extend(reconcile.problems(run, done["pending"]))
+        return bound
 
     @staticmethod
     def _rejections(run, rdir) -> list[dict]:
@@ -252,6 +277,9 @@ class Solver:
                 continue
             if not (self._current(item, tasks, status) if item["kind"] != "owner_rejected" else rejections.current(rdir, item)):
                 item["status"] = "stale"
+                continue
+            if item.get("reconcile") and (item.get("resolution") or {}).get("key") not in (self._bound or {}):
+                item["status"] = "stale"                 # the subplan moved on: nothing waits for this version of the file
                 continue
             if int(counts.get(slot(item), 0)) >= cfg["max_per_task"]:
                 item["status"] = "limit"
@@ -325,7 +353,7 @@ class Solver:
             return [f"{run.run_id}: solver could not start: {error}"]
         for item in items:
             item.update(status="running", session=sid)
-            task = slot(item)
+        for task in {slot(item) for item in items}:      # `max_per_task` counts sessions: a batch of files is one session
             state.setdefault("tasks", {})[task] = int(state["tasks"].get(task, 0)) + 1
         state.setdefault("sessions", []).append(session)
         state["active"] = sid
@@ -650,6 +678,11 @@ class Solver:
                 item["status"] = "resolved" if outcome == "superseded" else outcome
             else:
                 item["status"] = "pending"               # queued in its inbox and not handled: the next session's
+            # a reconciliation is done when its file exists, whatever the session said: 20261101-015640-eab9 listed 30
+            # requests as `handled` and wrote none. Back to the queue, bounded by `max_per_task`, which tells the owner.
+            if item.get("reconcile") and outcome in ("fixed", "answered", "superseded") \
+                    and not Path((item.get("resolution") or {}).get("resolved") or "/").exists():
+                item["status"] = "pending"
         if outcome == "superseded":                      # it did nothing to count: its task keeps its sessions (D-271)
             counts = state.setdefault("tasks", {})
             for key in session.get("triggers", []):

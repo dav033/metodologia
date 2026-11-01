@@ -7,7 +7,8 @@ an SP-2 fix showed SP-14's tree with SP-2's old defect). `fold` merges each pred
 the version, in plan order, with git's three-way `merge-tree` (objects only, no worktree): a predecessor whose tip is
 already in the version's history, or whose merge changes nothing, is included as it is; a text conflict folds nothing and
 is reported with every predecessor left out, so «Probar» says the tree lacks that work instead of showing a stale tree
-silently.
+silently. `bt_durable.reconcile` makes that a passing state: on every engine pass it folds each line itself, opens the
+resolution requests a conflict needs, and moves the line once it folds (D-297), so this read finds nothing left to fold.
 
 The folded commit is deterministic (fixed identity and dates, parents = the version and the predecessors' tips) and kept
 reachable by `refs/bt/try/<project>/<REQ>/r<N>/<role>/<SP>`; a fold whose tree equals the tree that ref already holds
@@ -61,34 +62,54 @@ def predecessors(plan: dict, sid: str) -> list[str]:
     return [s for s in order if s in found]
 
 
-def fold(repo: Path, commit: str, preds: list[tuple[str, str]], ref: str, resolutions: Path | None = None) -> dict:
+def _stamp(resolutions: Path | None) -> int:
+    """Changes with every request or resolution written, so a recorded resolution counts at once (a conflicted fold was
+    memoized for the life of the process, whatever was resolved after it)."""
+    try:
+        return os.stat(resolutions).st_mtime_ns if resolutions else 0
+    except OSError:
+        return 0
+
+
+def fold(repo: Path, commit: str, preds: list[tuple[str, str]], ref: str, resolutions: Path | None = None,
+         request: bool = False) -> dict:
     """{"commit": what the owner tries, "includes": predecessors whose tip is in it,
     "conflict": {} or {"with", "files", "missing"}}.
     A conflict git leaves is settled as the composer settles it (`package.json` by key, a subsumed hunk, a resolution
-    recorded under `resolutions`; never a new resolution request); one that stays (or a git failure) folds nothing:
-    `commit` is returned as it is, and `missing` lists the other predecessors it therefore lacks."""
-    key = (str(repo), commit, tuple(preds), ref, str(resolutions))
+    recorded under `resolutions`); one that stays (or a git failure) folds nothing: `commit` is returned as it is, and
+    `missing` lists the other predecessors it therefore lacks. Reading opens no request; `request=True`
+    (`bt_durable.reconcile`, once per engine pass) opens them and adds their `keys` to the conflict."""
+    key = (str(repo), commit, tuple(preds), ref, str(resolutions), _stamp(resolutions), request)
     if key not in _CACHE:
-        _CACHE[key] = _fold(Path(repo), commit, preds, ref, resolutions)
+        if len(_CACHE) > 4096:                           # every change of a tip or a resolution makes new entries
+            _CACHE.clear()
+        _CACHE[key] = _fold(Path(repo), commit, preds, ref, resolutions, request)
     return _CACHE[key]
 
 
-def _settled(repo: Path, ours: str, theirs: str, resolutions: Path | None) -> tuple[str, list[str]] | None:
-    """(tree, conflicts left) by the composer's merge rules on the single merge base; None when they do not apply."""
+def _settled(repo: Path, ours: str, theirs: str, resolutions: Path | None, request: bool = False) -> dict | None:
+    """{"tree", "files" (conflicts left), "keys" (of their requests)} by the composer's merge rules, against a virtual base
+    when the history is criss-cross (pictures REQ-021 SP-5 x SP-14: 2 merge bases, as `GitLineIntegrator._settle` does);
+    None when they do not apply."""
     bases = _git(repo, "merge-base", "--all", ours, theirs).stdout.split()
-    if len(bases) != 1 or resolutions is None:
+    if not bases or resolutions is None:
         return None
     try:
         from bt_composition_adapter import GitSubprocessPort
         port = GitSubprocessPort(repo, Path(resolutions).parent / "ws")
-        port.resolutions, port.request_resolutions = Path(resolutions), False
-        result = port.merge_tree(bases[0], ours, theirs)
+        port.resolutions, port.request_resolutions = Path(resolutions), request
+        base = bases[0] if len(bases) == 1 else port.virtual_base(bases)
+        if not base:
+            return None
+        result = port.merge_tree(base, ours, theirs)
+        return {"tree": result.tree, "files": list(result.conflicts),
+                "keys": [port.request_key(path, base, ours, theirs) for path in result.conflicts]}
     except Exception:  # noqa: BLE001 - the plain conflict is reported instead
         return None
-    return result.tree, list(result.conflicts)
 
 
-def _fold(repo: Path, commit: str, preds: list[tuple[str, str]], ref: str, resolutions: Path | None) -> dict:
+def _fold(repo: Path, commit: str, preds: list[tuple[str, str]], ref: str, resolutions: Path | None,
+          request: bool = False) -> dict:
     acc, included = commit, []
     for sid, tip in preds:
         if _git(repo, "merge-base", "--is-ancestor", tip, acc).returncode == 0:
@@ -98,11 +119,12 @@ def _fold(repo: Path, commit: str, preds: list[tuple[str, str]], ref: str, resol
         lines = merged.stdout.splitlines()
         tree = lines[0].strip() if merged.returncode == 0 and lines else ""
         if merged.returncode == 1:
-            settled = _settled(repo, acc, tip, resolutions)
-            if settled is None or settled[1]:
-                files = settled[1] if settled else [line for line in lines[1:] if line.strip()]
-                return _unfolded(repo, commit, preds, {"with": sid, "files": files[:20]})
-            tree = settled[0]
+            settled = _settled(repo, acc, tip, resolutions, request)
+            if settled is None or settled["files"]:
+                files = settled["files"] if settled else [line for line in lines[1:] if line.strip()]
+                keys = {"keys": settled["keys"] if settled else []} if request else {}
+                return _unfolded(repo, commit, preds, {"with": sid, "files": files[:20], **keys})
+            tree = settled["tree"]
         if not tree:
             return _unfolded(repo, commit, preds, {"with": sid, "files": [], "error": (merged.stderr or "").strip()[:200]})
         included.append(sid)
@@ -124,6 +146,26 @@ def _fold(repo: Path, commit: str, preds: list[tuple[str, str]], ref: str, resol
             else:
                 _git(repo, "update-ref", ref, acc)       # keeps the commit reachable while it is offered
     return {"commit": acc, "includes": included, "conflict": {}}
+
+
+def holds(repo: Path, commit: str, tip: str, resolutions: Path | None = None) -> bool:
+    """`commit` already has `tip`'s work: it is in its history, or merging it changes nothing, by the composer's rules (a raw
+    merge calls a `package.json` already merged by key a conflict, as for pictures REQ-021 SP-4 and SP-3)."""
+    repo = Path(repo)
+    if _git(repo, "merge-base", "--is-ancestor", tip, commit).returncode == 0:
+        return True
+    merged = _git(repo, "merge-tree", "--write-tree", "--name-only", "--no-messages", commit, tip)
+    if merged.returncode == 0:
+        return merged.stdout.splitlines()[:1] == [_tree(repo, commit)]
+    if merged.returncode != 1:
+        return False
+    settled = _settled(repo, commit, tip, resolutions)
+    return bool(settled) and not settled["files"] and settled["tree"] == _tree(repo, commit)
+
+
+def try_ref(lines: dict, role: str, sid: str) -> str:
+    return (f"refs/bt/try/{_SAFE_REF.sub('-', lines['project'])}/{lines['req']}/r{lines['revision']}/"
+            f"{_SAFE_REF.sub('-', role)}/{_SAFE_REF.sub('-', sid)}")
 
 
 def _adds_nothing(repo: Path, commit: str, tip: str) -> bool:
@@ -162,9 +204,7 @@ def folded(rows: list[dict], lines: dict) -> list[dict]:
             _tip, repo, role = tips[sid]
             preds = [(p, tips[p][0]) for p in predecessors(plan, sid) if p in tips and tips[p][2] == role]
             if preds:
-                ref = (f"refs/bt/try/{_SAFE_REF.sub('-', lines['project'])}/{lines['req']}/r{lines['revision']}/"
-                       f"{_SAFE_REF.sub('-', role)}/{_SAFE_REF.sub('-', sid)}")
-                done = fold(repo, row["commit"], preds, ref, lines.get("resolutions"))
+                done = fold(repo, row["commit"], preds, try_ref(lines, role, sid), lines.get("resolutions"))
                 if done["commit"] != row["commit"]:
                     row["version"], row["commit"] = row["version"] + 1, done["commit"]
                 # folded: each predecessor as the owner tries it (its own predecessors are folded here too); not

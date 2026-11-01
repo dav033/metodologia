@@ -182,9 +182,10 @@ DEFAULTS: dict = {
     # whose state does not move for stuck_minutes (beyond its known waits) is a trigger, and so is a composition
     # resolution request (<state>/durable/composition/resolutions/<key>.json without .resolved) older than
     # resolution_after_seconds; a session whose triggers were all resolved elsewhere (an operator's answer, a settled
-    # task) is told once and closed as `superseded` after resolved_grace_minutes unless it is integrating (D-271)
+    # task) is told once and closed as `superseded` after resolved_grace_minutes unless it is integrating (D-271);
+    # reconcile: each pass folds the subplan lines with the lines they build on and asks for what conflicts (D-297)
     "solver": {"enabled": True, "max_concurrent": 1, "max_per_task": 3, "max_minutes": 120, "stuck_minutes": 45,
-               "resolution_after_seconds": 120, "resolved_grace_minutes": 5},
+               "resolution_after_seconds": 120, "resolved_grace_minutes": 5, "reconcile": True},
     # images the owner attaches to a rejection in «Probar» (bt_rejection_images, D-258): at most max_images per
     # rejection, max_image_mb each and max_total_mb together; anything else is refused and nothing is recorded
     "rejections": {"max_images": 8, "max_image_mb": 10, "max_total_mb": 30},

@@ -243,7 +243,7 @@ class LaterSubplanTree(unittest.TestCase):
         import bt_page_verification as page
         self.assertIn("pero sin la versión actual de SP-1", page._tree_text(row))
         warning = page._fold_warning(row)
-        self.assertIn("no pude combinar este subplan con la versión actual de SP-1", warning)
+        self.assertIn("no se ha podido combinar con la versión actual de SP-1", warning)
         self.assertIn("one.txt", warning)
         self.assertIn("puede seguir mostrando un defecto que allí ya se arregló", warning)    # no other predecessor lacks
 
