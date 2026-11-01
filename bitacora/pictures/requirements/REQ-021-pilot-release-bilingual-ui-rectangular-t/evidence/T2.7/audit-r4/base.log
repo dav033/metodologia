@@ -1,0 +1,6 @@
+locator.fill: Timeout 30000ms exceeded.
+Call log:
+[2m  - waiting for getByLabel('Buscar por nombre o correo', { exact: true })[22m
+
+    at main (/home/david/dev/metodologia/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T2.7/audit-r4/capture-rerun.ts:74:86)
+

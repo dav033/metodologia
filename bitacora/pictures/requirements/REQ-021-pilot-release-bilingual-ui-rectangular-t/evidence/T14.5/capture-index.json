@@ -1,0 +1,4208 @@
+{
+  "candidate": "12ce74acf8a1c4adc1cabcd79de91cb2c69ea45f",
+  "contract": "planes@v2",
+  "contract_sha256": "612e6e93763b9f2b04927713d70a20a55845c78477c77d6c8d6924a8d422a151",
+  "origin": "http://127.0.0.1:3215",
+  "browser": "Playwright + Chromium /usr/bin/chromium",
+  "status": "CAPTURED_WITH_AUTH_BLOCKER",
+  "captures": [
+    {
+      "id": "r12ce74-v1-phone-es-light-default",
+      "view": "V1 signed-out /planes",
+      "viewport": "390x844",
+      "language": "es",
+      "theme": "light",
+      "state": "default",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-phone-es-light-default.png"
+    },
+    {
+      "id": "r12ce74-v1-phone-es-dark-default",
+      "view": "V1 signed-out /planes",
+      "viewport": "390x844",
+      "language": "es",
+      "theme": "dark",
+      "state": "default",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-phone-es-dark-default.png"
+    },
+    {
+      "id": "r12ce74-v1-phone-en-light-default",
+      "view": "V1 signed-out /planes",
+      "viewport": "390x844",
+      "language": "en",
+      "theme": "light",
+      "state": "default",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-phone-en-light-default.png"
+    },
+    {
+      "id": "r12ce74-v1-phone-en-dark-default",
+      "view": "V1 signed-out /planes",
+      "viewport": "390x844",
+      "language": "en",
+      "theme": "dark",
+      "state": "default",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-phone-en-dark-default.png"
+    },
+    {
+      "id": "r12ce74-v1-tablet-es-light-default",
+      "view": "V1 signed-out /planes",
+      "viewport": "768x1024",
+      "language": "es",
+      "theme": "light",
+      "state": "default",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-tablet-es-light-default.png"
+    },
+    {
+      "id": "r12ce74-v1-tablet-es-dark-default",
+      "view": "V1 signed-out /planes",
+      "viewport": "768x1024",
+      "language": "es",
+      "theme": "dark",
+      "state": "default",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-tablet-es-dark-default.png"
+    },
+    {
+      "id": "r12ce74-v1-tablet-en-light-default",
+      "view": "V1 signed-out /planes",
+      "viewport": "768x1024",
+      "language": "en",
+      "theme": "light",
+      "state": "default",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-tablet-en-light-default.png"
+    },
+    {
+      "id": "r12ce74-v1-tablet-en-dark-default",
+      "view": "V1 signed-out /planes",
+      "viewport": "768x1024",
+      "language": "en",
+      "theme": "dark",
+      "state": "default",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-tablet-en-dark-default.png"
+    },
+    {
+      "id": "r12ce74-v1-desktop-es-light-default",
+      "view": "V1 signed-out /planes",
+      "viewport": "1280x900",
+      "language": "es",
+      "theme": "light",
+      "state": "default",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-desktop-es-light-default.png"
+    },
+    {
+      "id": "r12ce74-v1-desktop-es-dark-default",
+      "view": "V1 signed-out /planes",
+      "viewport": "1280x900",
+      "language": "es",
+      "theme": "dark",
+      "state": "default",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-desktop-es-dark-default.png"
+    },
+    {
+      "id": "r12ce74-v1-desktop-en-light-default",
+      "view": "V1 signed-out /planes",
+      "viewport": "1280x900",
+      "language": "en",
+      "theme": "light",
+      "state": "default",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-desktop-en-light-default.png"
+    },
+    {
+      "id": "r12ce74-v1-desktop-en-dark-default",
+      "view": "V1 signed-out /planes",
+      "viewport": "1280x900",
+      "language": "en",
+      "theme": "dark",
+      "state": "default",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-desktop-en-dark-default.png"
+    },
+    {
+      "id": "r12ce74-v3-phone-es-legacy",
+      "view": "V3 legacy /planes?vista=seleccionar",
+      "viewport": "390x844",
+      "language": "es",
+      "theme": "light",
+      "state": "legacy query",
+      "url": "http://127.0.0.1:3215/planes?vista=seleccionar",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v3-phone-es-legacy.png"
+    },
+    {
+      "id": "r12ce74-v3-phone-en-legacy",
+      "view": "V3 legacy /planes?vista=seleccionar",
+      "viewport": "390x844",
+      "language": "en",
+      "theme": "light",
+      "state": "legacy query",
+      "url": "http://127.0.0.1:3215/planes?vista=seleccionar",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v3-phone-en-legacy.png"
+    },
+    {
+      "id": "r12ce74-v3-tablet-es-legacy",
+      "view": "V3 legacy /planes?vista=seleccionar",
+      "viewport": "768x1024",
+      "language": "es",
+      "theme": "light",
+      "state": "legacy query",
+      "url": "http://127.0.0.1:3215/planes?vista=seleccionar",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v3-tablet-es-legacy.png"
+    },
+    {
+      "id": "r12ce74-v3-tablet-en-legacy",
+      "view": "V3 legacy /planes?vista=seleccionar",
+      "viewport": "768x1024",
+      "language": "en",
+      "theme": "light",
+      "state": "legacy query",
+      "url": "http://127.0.0.1:3215/planes?vista=seleccionar",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v3-tablet-en-legacy.png"
+    },
+    {
+      "id": "r12ce74-v3-desktop-es-legacy",
+      "view": "V3 legacy /planes?vista=seleccionar",
+      "viewport": "1280x900",
+      "language": "es",
+      "theme": "light",
+      "state": "legacy query",
+      "url": "http://127.0.0.1:3215/planes?vista=seleccionar",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v3-desktop-es-legacy.png"
+    },
+    {
+      "id": "r12ce74-v3-desktop-en-legacy",
+      "view": "V3 legacy /planes?vista=seleccionar",
+      "viewport": "1280x900",
+      "language": "en",
+      "theme": "light",
+      "state": "legacy query",
+      "url": "http://127.0.0.1:3215/planes?vista=seleccionar",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v3-desktop-en-legacy.png"
+    },
+    {
+      "id": "r12ce74-v1-phone-es-reduced-motion",
+      "view": "V1 signed-out /planes",
+      "viewport": "390x844",
+      "language": "es",
+      "theme": "light",
+      "state": "prefers-reduced-motion + ?still=1",
+      "url": "http://127.0.0.1:3215/planes?still=1",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-phone-es-reduced-motion.png"
+    },
+    {
+      "id": "r12ce74-v1-phone-en-reduced-motion",
+      "view": "V1 signed-out /planes",
+      "viewport": "390x844",
+      "language": "en",
+      "theme": "light",
+      "state": "prefers-reduced-motion + ?still=1",
+      "url": "http://127.0.0.1:3215/planes?still=1",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-phone-en-reduced-motion.png"
+    },
+    {
+      "id": "r12ce74-v1-tablet-es-reduced-motion",
+      "view": "V1 signed-out /planes",
+      "viewport": "768x1024",
+      "language": "es",
+      "theme": "light",
+      "state": "prefers-reduced-motion + ?still=1",
+      "url": "http://127.0.0.1:3215/planes?still=1",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-tablet-es-reduced-motion.png"
+    },
+    {
+      "id": "r12ce74-v1-tablet-en-reduced-motion",
+      "view": "V1 signed-out /planes",
+      "viewport": "768x1024",
+      "language": "en",
+      "theme": "light",
+      "state": "prefers-reduced-motion + ?still=1",
+      "url": "http://127.0.0.1:3215/planes?still=1",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-tablet-en-reduced-motion.png"
+    },
+    {
+      "id": "r12ce74-v1-desktop-es-reduced-motion",
+      "view": "V1 signed-out /planes",
+      "viewport": "1280x900",
+      "language": "es",
+      "theme": "light",
+      "state": "prefers-reduced-motion + ?still=1",
+      "url": "http://127.0.0.1:3215/planes?still=1",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-desktop-es-reduced-motion.png"
+    },
+    {
+      "id": "r12ce74-v1-desktop-en-reduced-motion",
+      "view": "V1 signed-out /planes",
+      "viewport": "1280x900",
+      "language": "en",
+      "theme": "light",
+      "state": "prefers-reduced-motion + ?still=1",
+      "url": "http://127.0.0.1:3215/planes?still=1",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-desktop-en-reduced-motion.png"
+    },
+    {
+      "id": "r12ce74-v1-phone-es-language-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "390x844",
+      "language": "es",
+      "theme": "light",
+      "state": "language-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-phone-es-language-focus.png"
+    },
+    {
+      "id": "r12ce74-v1-phone-es-back-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "390x844",
+      "language": "es",
+      "theme": "light",
+      "state": "back-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-phone-es-back-focus.png"
+    },
+    {
+      "id": "r12ce74-v1-phone-es-card-1-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "390x844",
+      "language": "es",
+      "theme": "light",
+      "state": "card-1-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-phone-es-card-1-focus.png"
+    },
+    {
+      "id": "r12ce74-v1-phone-es-card-2-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "390x844",
+      "language": "es",
+      "theme": "light",
+      "state": "card-2-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-phone-es-card-2-focus.png"
+    },
+    {
+      "id": "r12ce74-v1-phone-es-card-3-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "390x844",
+      "language": "es",
+      "theme": "light",
+      "state": "card-3-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-phone-es-card-3-focus.png"
+    },
+    {
+      "id": "r12ce74-v1-phone-es-card-4-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "390x844",
+      "language": "es",
+      "theme": "light",
+      "state": "card-4-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-phone-es-card-4-focus.png"
+    },
+    {
+      "id": "r12ce74-v1-phone-es-card-hover",
+      "view": "V1 signed-out /planes",
+      "viewport": "390x844",
+      "language": "es",
+      "theme": "light",
+      "state": "card button hover",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-phone-es-card-hover.png"
+    },
+    {
+      "id": "r12ce74-v1-phone-es-card-pointer-active",
+      "view": "V1 signed-out /planes",
+      "viewport": "390x844",
+      "language": "es",
+      "theme": "light",
+      "state": "card button pointer active",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-phone-es-card-pointer-active.png"
+    },
+    {
+      "id": "r12ce74-v1-phone-es-card-enter-active",
+      "view": "V1 signed-out /planes",
+      "viewport": "390x844",
+      "language": "es",
+      "theme": "light",
+      "state": "card button Enter active",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-phone-es-card-enter-active.png"
+    },
+    {
+      "id": "r12ce74-v1-phone-es-card-space-active",
+      "view": "V1 signed-out /planes",
+      "viewport": "390x844",
+      "language": "es",
+      "theme": "light",
+      "state": "card button Space active",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-phone-es-card-space-active.png"
+    },
+    {
+      "id": "r12ce74-v1-phone-en-language-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "390x844",
+      "language": "en",
+      "theme": "light",
+      "state": "language-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-phone-en-language-focus.png"
+    },
+    {
+      "id": "r12ce74-v1-phone-en-back-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "390x844",
+      "language": "en",
+      "theme": "light",
+      "state": "back-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-phone-en-back-focus.png"
+    },
+    {
+      "id": "r12ce74-v1-phone-en-card-1-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "390x844",
+      "language": "en",
+      "theme": "light",
+      "state": "card-1-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-phone-en-card-1-focus.png"
+    },
+    {
+      "id": "r12ce74-v1-phone-en-card-2-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "390x844",
+      "language": "en",
+      "theme": "light",
+      "state": "card-2-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-phone-en-card-2-focus.png"
+    },
+    {
+      "id": "r12ce74-v1-phone-en-card-3-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "390x844",
+      "language": "en",
+      "theme": "light",
+      "state": "card-3-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-phone-en-card-3-focus.png"
+    },
+    {
+      "id": "r12ce74-v1-phone-en-card-4-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "390x844",
+      "language": "en",
+      "theme": "light",
+      "state": "card-4-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-phone-en-card-4-focus.png"
+    },
+    {
+      "id": "r12ce74-v1-phone-en-card-hover",
+      "view": "V1 signed-out /planes",
+      "viewport": "390x844",
+      "language": "en",
+      "theme": "light",
+      "state": "card button hover",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-phone-en-card-hover.png"
+    },
+    {
+      "id": "r12ce74-v1-phone-en-card-pointer-active",
+      "view": "V1 signed-out /planes",
+      "viewport": "390x844",
+      "language": "en",
+      "theme": "light",
+      "state": "card button pointer active",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-phone-en-card-pointer-active.png"
+    },
+    {
+      "id": "r12ce74-v1-phone-en-card-enter-active",
+      "view": "V1 signed-out /planes",
+      "viewport": "390x844",
+      "language": "en",
+      "theme": "light",
+      "state": "card button Enter active",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-phone-en-card-enter-active.png"
+    },
+    {
+      "id": "r12ce74-v1-phone-en-card-space-active",
+      "view": "V1 signed-out /planes",
+      "viewport": "390x844",
+      "language": "en",
+      "theme": "light",
+      "state": "card button Space active",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-phone-en-card-space-active.png"
+    },
+    {
+      "id": "r12ce74-v1-tablet-es-language-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "768x1024",
+      "language": "es",
+      "theme": "light",
+      "state": "language-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-tablet-es-language-focus.png"
+    },
+    {
+      "id": "r12ce74-v1-tablet-es-back-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "768x1024",
+      "language": "es",
+      "theme": "light",
+      "state": "back-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-tablet-es-back-focus.png"
+    },
+    {
+      "id": "r12ce74-v1-tablet-es-card-1-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "768x1024",
+      "language": "es",
+      "theme": "light",
+      "state": "card-1-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-tablet-es-card-1-focus.png"
+    },
+    {
+      "id": "r12ce74-v1-tablet-es-card-2-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "768x1024",
+      "language": "es",
+      "theme": "light",
+      "state": "card-2-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-tablet-es-card-2-focus.png"
+    },
+    {
+      "id": "r12ce74-v1-tablet-es-card-3-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "768x1024",
+      "language": "es",
+      "theme": "light",
+      "state": "card-3-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-tablet-es-card-3-focus.png"
+    },
+    {
+      "id": "r12ce74-v1-tablet-es-card-4-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "768x1024",
+      "language": "es",
+      "theme": "light",
+      "state": "card-4-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-tablet-es-card-4-focus.png"
+    },
+    {
+      "id": "r12ce74-v1-tablet-es-card-hover",
+      "view": "V1 signed-out /planes",
+      "viewport": "768x1024",
+      "language": "es",
+      "theme": "light",
+      "state": "card button hover",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-tablet-es-card-hover.png"
+    },
+    {
+      "id": "r12ce74-v1-tablet-es-card-pointer-active",
+      "view": "V1 signed-out /planes",
+      "viewport": "768x1024",
+      "language": "es",
+      "theme": "light",
+      "state": "card button pointer active",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-tablet-es-card-pointer-active.png"
+    },
+    {
+      "id": "r12ce74-v1-tablet-es-card-enter-active",
+      "view": "V1 signed-out /planes",
+      "viewport": "768x1024",
+      "language": "es",
+      "theme": "light",
+      "state": "card button Enter active",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-tablet-es-card-enter-active.png"
+    },
+    {
+      "id": "r12ce74-v1-tablet-es-card-space-active",
+      "view": "V1 signed-out /planes",
+      "viewport": "768x1024",
+      "language": "es",
+      "theme": "light",
+      "state": "card button Space active",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-tablet-es-card-space-active.png"
+    },
+    {
+      "id": "r12ce74-v1-tablet-en-language-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "768x1024",
+      "language": "en",
+      "theme": "light",
+      "state": "language-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-tablet-en-language-focus.png"
+    },
+    {
+      "id": "r12ce74-v1-tablet-en-back-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "768x1024",
+      "language": "en",
+      "theme": "light",
+      "state": "back-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-tablet-en-back-focus.png"
+    },
+    {
+      "id": "r12ce74-v1-tablet-en-card-1-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "768x1024",
+      "language": "en",
+      "theme": "light",
+      "state": "card-1-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-tablet-en-card-1-focus.png"
+    },
+    {
+      "id": "r12ce74-v1-tablet-en-card-2-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "768x1024",
+      "language": "en",
+      "theme": "light",
+      "state": "card-2-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-tablet-en-card-2-focus.png"
+    },
+    {
+      "id": "r12ce74-v1-tablet-en-card-3-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "768x1024",
+      "language": "en",
+      "theme": "light",
+      "state": "card-3-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-tablet-en-card-3-focus.png"
+    },
+    {
+      "id": "r12ce74-v1-tablet-en-card-4-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "768x1024",
+      "language": "en",
+      "theme": "light",
+      "state": "card-4-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-tablet-en-card-4-focus.png"
+    },
+    {
+      "id": "r12ce74-v1-tablet-en-card-hover",
+      "view": "V1 signed-out /planes",
+      "viewport": "768x1024",
+      "language": "en",
+      "theme": "light",
+      "state": "card button hover",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-tablet-en-card-hover.png"
+    },
+    {
+      "id": "r12ce74-v1-tablet-en-card-pointer-active",
+      "view": "V1 signed-out /planes",
+      "viewport": "768x1024",
+      "language": "en",
+      "theme": "light",
+      "state": "card button pointer active",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-tablet-en-card-pointer-active.png"
+    },
+    {
+      "id": "r12ce74-v1-tablet-en-card-enter-active",
+      "view": "V1 signed-out /planes",
+      "viewport": "768x1024",
+      "language": "en",
+      "theme": "light",
+      "state": "card button Enter active",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-tablet-en-card-enter-active.png"
+    },
+    {
+      "id": "r12ce74-v1-tablet-en-card-space-active",
+      "view": "V1 signed-out /planes",
+      "viewport": "768x1024",
+      "language": "en",
+      "theme": "light",
+      "state": "card button Space active",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-tablet-en-card-space-active.png"
+    },
+    {
+      "id": "r12ce74-v1-desktop-es-language-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "1280x900",
+      "language": "es",
+      "theme": "light",
+      "state": "language-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-desktop-es-language-focus.png"
+    },
+    {
+      "id": "r12ce74-v1-desktop-es-back-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "1280x900",
+      "language": "es",
+      "theme": "light",
+      "state": "back-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-desktop-es-back-focus.png"
+    },
+    {
+      "id": "r12ce74-v1-desktop-es-card-1-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "1280x900",
+      "language": "es",
+      "theme": "light",
+      "state": "card-1-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-desktop-es-card-1-focus.png"
+    },
+    {
+      "id": "r12ce74-v1-desktop-es-card-2-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "1280x900",
+      "language": "es",
+      "theme": "light",
+      "state": "card-2-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-desktop-es-card-2-focus.png"
+    },
+    {
+      "id": "r12ce74-v1-desktop-es-card-3-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "1280x900",
+      "language": "es",
+      "theme": "light",
+      "state": "card-3-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-desktop-es-card-3-focus.png"
+    },
+    {
+      "id": "r12ce74-v1-desktop-es-card-4-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "1280x900",
+      "language": "es",
+      "theme": "light",
+      "state": "card-4-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-desktop-es-card-4-focus.png"
+    },
+    {
+      "id": "r12ce74-v1-desktop-es-card-hover",
+      "view": "V1 signed-out /planes",
+      "viewport": "1280x900",
+      "language": "es",
+      "theme": "light",
+      "state": "card button hover",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-desktop-es-card-hover.png"
+    },
+    {
+      "id": "r12ce74-v1-desktop-es-card-pointer-active",
+      "view": "V1 signed-out /planes",
+      "viewport": "1280x900",
+      "language": "es",
+      "theme": "light",
+      "state": "card button pointer active",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-desktop-es-card-pointer-active.png"
+    },
+    {
+      "id": "r12ce74-v1-desktop-es-card-enter-active",
+      "view": "V1 signed-out /planes",
+      "viewport": "1280x900",
+      "language": "es",
+      "theme": "light",
+      "state": "card button Enter active",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-desktop-es-card-enter-active.png"
+    },
+    {
+      "id": "r12ce74-v1-desktop-es-card-space-active",
+      "view": "V1 signed-out /planes",
+      "viewport": "1280x900",
+      "language": "es",
+      "theme": "light",
+      "state": "card button Space active",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-desktop-es-card-space-active.png"
+    },
+    {
+      "id": "r12ce74-v1-desktop-en-language-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "1280x900",
+      "language": "en",
+      "theme": "light",
+      "state": "language-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-desktop-en-language-focus.png"
+    },
+    {
+      "id": "r12ce74-v1-desktop-en-back-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "1280x900",
+      "language": "en",
+      "theme": "light",
+      "state": "back-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-desktop-en-back-focus.png"
+    },
+    {
+      "id": "r12ce74-v1-desktop-en-card-1-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "1280x900",
+      "language": "en",
+      "theme": "light",
+      "state": "card-1-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-desktop-en-card-1-focus.png"
+    },
+    {
+      "id": "r12ce74-v1-desktop-en-card-2-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "1280x900",
+      "language": "en",
+      "theme": "light",
+      "state": "card-2-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-desktop-en-card-2-focus.png"
+    },
+    {
+      "id": "r12ce74-v1-desktop-en-card-3-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "1280x900",
+      "language": "en",
+      "theme": "light",
+      "state": "card-3-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-desktop-en-card-3-focus.png"
+    },
+    {
+      "id": "r12ce74-v1-desktop-en-card-4-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "1280x900",
+      "language": "en",
+      "theme": "light",
+      "state": "card-4-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-desktop-en-card-4-focus.png"
+    },
+    {
+      "id": "r12ce74-v1-desktop-en-card-hover",
+      "view": "V1 signed-out /planes",
+      "viewport": "1280x900",
+      "language": "en",
+      "theme": "light",
+      "state": "card button hover",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-desktop-en-card-hover.png"
+    },
+    {
+      "id": "r12ce74-v1-desktop-en-card-pointer-active",
+      "view": "V1 signed-out /planes",
+      "viewport": "1280x900",
+      "language": "en",
+      "theme": "light",
+      "state": "card button pointer active",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-desktop-en-card-pointer-active.png"
+    },
+    {
+      "id": "r12ce74-v1-desktop-en-card-enter-active",
+      "view": "V1 signed-out /planes",
+      "viewport": "1280x900",
+      "language": "en",
+      "theme": "light",
+      "state": "card button Enter active",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-desktop-en-card-enter-active.png"
+    },
+    {
+      "id": "r12ce74-v1-desktop-en-card-space-active",
+      "view": "V1 signed-out /planes",
+      "viewport": "1280x900",
+      "language": "en",
+      "theme": "light",
+      "state": "card button Space active",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-desktop-en-card-space-active.png"
+    },
+    {
+      "id": "r12ce74-v4-phone-es-light-default",
+      "view": "V4 /login plans entry",
+      "viewport": "390x844",
+      "language": "es",
+      "theme": "light",
+      "state": "default",
+      "url": "http://127.0.0.1:3215/login",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v4-phone-es-light-default.png"
+    },
+    {
+      "id": "r12ce74-v4-phone-es-light-focus",
+      "view": "V4 /login plans entry",
+      "viewport": "390x844",
+      "language": "es",
+      "theme": "light",
+      "state": "plans link keyboard focus",
+      "url": "http://127.0.0.1:3215/login",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v4-phone-es-light-focus.png"
+    },
+    {
+      "id": "r12ce74-v4-phone-es-light-hover",
+      "view": "V4 /login plans entry",
+      "viewport": "390x844",
+      "language": "es",
+      "theme": "light",
+      "state": "plans link hover",
+      "url": "http://127.0.0.1:3215/login",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v4-phone-es-light-hover.png"
+    },
+    {
+      "id": "r12ce74-v4-phone-es-dark-default",
+      "view": "V4 /login plans entry",
+      "viewport": "390x844",
+      "language": "es",
+      "theme": "dark",
+      "state": "default",
+      "url": "http://127.0.0.1:3215/login",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v4-phone-es-dark-default.png"
+    },
+    {
+      "id": "r12ce74-v4-phone-es-dark-focus",
+      "view": "V4 /login plans entry",
+      "viewport": "390x844",
+      "language": "es",
+      "theme": "dark",
+      "state": "plans link keyboard focus",
+      "url": "http://127.0.0.1:3215/login",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v4-phone-es-dark-focus.png"
+    },
+    {
+      "id": "r12ce74-v4-phone-es-dark-hover",
+      "view": "V4 /login plans entry",
+      "viewport": "390x844",
+      "language": "es",
+      "theme": "dark",
+      "state": "plans link hover",
+      "url": "http://127.0.0.1:3215/login",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v4-phone-es-dark-hover.png"
+    },
+    {
+      "id": "r12ce74-v4-phone-en-light-default",
+      "view": "V4 /login plans entry",
+      "viewport": "390x844",
+      "language": "en",
+      "theme": "light",
+      "state": "default",
+      "url": "http://127.0.0.1:3215/login",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v4-phone-en-light-default.png"
+    },
+    {
+      "id": "r12ce74-v4-phone-en-light-focus",
+      "view": "V4 /login plans entry",
+      "viewport": "390x844",
+      "language": "en",
+      "theme": "light",
+      "state": "plans link keyboard focus",
+      "url": "http://127.0.0.1:3215/login",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v4-phone-en-light-focus.png"
+    },
+    {
+      "id": "r12ce74-v4-phone-en-light-hover",
+      "view": "V4 /login plans entry",
+      "viewport": "390x844",
+      "language": "en",
+      "theme": "light",
+      "state": "plans link hover",
+      "url": "http://127.0.0.1:3215/login",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v4-phone-en-light-hover.png"
+    },
+    {
+      "id": "r12ce74-v4-phone-en-dark-default",
+      "view": "V4 /login plans entry",
+      "viewport": "390x844",
+      "language": "en",
+      "theme": "dark",
+      "state": "default",
+      "url": "http://127.0.0.1:3215/login",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v4-phone-en-dark-default.png"
+    },
+    {
+      "id": "r12ce74-v4-phone-en-dark-focus",
+      "view": "V4 /login plans entry",
+      "viewport": "390x844",
+      "language": "en",
+      "theme": "dark",
+      "state": "plans link keyboard focus",
+      "url": "http://127.0.0.1:3215/login",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v4-phone-en-dark-focus.png"
+    },
+    {
+      "id": "r12ce74-v4-phone-en-dark-hover",
+      "view": "V4 /login plans entry",
+      "viewport": "390x844",
+      "language": "en",
+      "theme": "dark",
+      "state": "plans link hover",
+      "url": "http://127.0.0.1:3215/login",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v4-phone-en-dark-hover.png"
+    },
+    {
+      "id": "r12ce74-v4-tablet-es-light-default",
+      "view": "V4 /login plans entry",
+      "viewport": "768x1024",
+      "language": "es",
+      "theme": "light",
+      "state": "default",
+      "url": "http://127.0.0.1:3215/login",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v4-tablet-es-light-default.png"
+    },
+    {
+      "id": "r12ce74-v4-tablet-es-light-focus",
+      "view": "V4 /login plans entry",
+      "viewport": "768x1024",
+      "language": "es",
+      "theme": "light",
+      "state": "plans link keyboard focus",
+      "url": "http://127.0.0.1:3215/login",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v4-tablet-es-light-focus.png"
+    },
+    {
+      "id": "r12ce74-v4-tablet-es-light-hover",
+      "view": "V4 /login plans entry",
+      "viewport": "768x1024",
+      "language": "es",
+      "theme": "light",
+      "state": "plans link hover",
+      "url": "http://127.0.0.1:3215/login",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v4-tablet-es-light-hover.png"
+    },
+    {
+      "id": "r12ce74-v4-tablet-es-dark-default",
+      "view": "V4 /login plans entry",
+      "viewport": "768x1024",
+      "language": "es",
+      "theme": "dark",
+      "state": "default",
+      "url": "http://127.0.0.1:3215/login",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v4-tablet-es-dark-default.png"
+    },
+    {
+      "id": "r12ce74-v4-tablet-es-dark-focus",
+      "view": "V4 /login plans entry",
+      "viewport": "768x1024",
+      "language": "es",
+      "theme": "dark",
+      "state": "plans link keyboard focus",
+      "url": "http://127.0.0.1:3215/login",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v4-tablet-es-dark-focus.png"
+    },
+    {
+      "id": "r12ce74-v4-tablet-es-dark-hover",
+      "view": "V4 /login plans entry",
+      "viewport": "768x1024",
+      "language": "es",
+      "theme": "dark",
+      "state": "plans link hover",
+      "url": "http://127.0.0.1:3215/login",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v4-tablet-es-dark-hover.png"
+    },
+    {
+      "id": "r12ce74-v4-tablet-en-light-default",
+      "view": "V4 /login plans entry",
+      "viewport": "768x1024",
+      "language": "en",
+      "theme": "light",
+      "state": "default",
+      "url": "http://127.0.0.1:3215/login",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v4-tablet-en-light-default.png"
+    },
+    {
+      "id": "r12ce74-v4-tablet-en-light-focus",
+      "view": "V4 /login plans entry",
+      "viewport": "768x1024",
+      "language": "en",
+      "theme": "light",
+      "state": "plans link keyboard focus",
+      "url": "http://127.0.0.1:3215/login",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v4-tablet-en-light-focus.png"
+    },
+    {
+      "id": "r12ce74-v4-tablet-en-light-hover",
+      "view": "V4 /login plans entry",
+      "viewport": "768x1024",
+      "language": "en",
+      "theme": "light",
+      "state": "plans link hover",
+      "url": "http://127.0.0.1:3215/login",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v4-tablet-en-light-hover.png"
+    },
+    {
+      "id": "r12ce74-v4-tablet-en-dark-default",
+      "view": "V4 /login plans entry",
+      "viewport": "768x1024",
+      "language": "en",
+      "theme": "dark",
+      "state": "default",
+      "url": "http://127.0.0.1:3215/login",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v4-tablet-en-dark-default.png"
+    },
+    {
+      "id": "r12ce74-v4-tablet-en-dark-focus",
+      "view": "V4 /login plans entry",
+      "viewport": "768x1024",
+      "language": "en",
+      "theme": "dark",
+      "state": "plans link keyboard focus",
+      "url": "http://127.0.0.1:3215/login",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v4-tablet-en-dark-focus.png"
+    },
+    {
+      "id": "r12ce74-v4-tablet-en-dark-hover",
+      "view": "V4 /login plans entry",
+      "viewport": "768x1024",
+      "language": "en",
+      "theme": "dark",
+      "state": "plans link hover",
+      "url": "http://127.0.0.1:3215/login",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v4-tablet-en-dark-hover.png"
+    },
+    {
+      "id": "r12ce74-v4-desktop-es-light-default",
+      "view": "V4 /login plans entry",
+      "viewport": "1280x900",
+      "language": "es",
+      "theme": "light",
+      "state": "default",
+      "url": "http://127.0.0.1:3215/login",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v4-desktop-es-light-default.png"
+    },
+    {
+      "id": "r12ce74-v4-desktop-es-light-focus",
+      "view": "V4 /login plans entry",
+      "viewport": "1280x900",
+      "language": "es",
+      "theme": "light",
+      "state": "plans link keyboard focus",
+      "url": "http://127.0.0.1:3215/login",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v4-desktop-es-light-focus.png"
+    },
+    {
+      "id": "r12ce74-v4-desktop-es-light-hover",
+      "view": "V4 /login plans entry",
+      "viewport": "1280x900",
+      "language": "es",
+      "theme": "light",
+      "state": "plans link hover",
+      "url": "http://127.0.0.1:3215/login",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v4-desktop-es-light-hover.png"
+    },
+    {
+      "id": "r12ce74-v4-desktop-es-dark-default",
+      "view": "V4 /login plans entry",
+      "viewport": "1280x900",
+      "language": "es",
+      "theme": "dark",
+      "state": "default",
+      "url": "http://127.0.0.1:3215/login",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v4-desktop-es-dark-default.png"
+    },
+    {
+      "id": "r12ce74-v4-desktop-es-dark-focus",
+      "view": "V4 /login plans entry",
+      "viewport": "1280x900",
+      "language": "es",
+      "theme": "dark",
+      "state": "plans link keyboard focus",
+      "url": "http://127.0.0.1:3215/login",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v4-desktop-es-dark-focus.png"
+    },
+    {
+      "id": "r12ce74-v4-desktop-es-dark-hover",
+      "view": "V4 /login plans entry",
+      "viewport": "1280x900",
+      "language": "es",
+      "theme": "dark",
+      "state": "plans link hover",
+      "url": "http://127.0.0.1:3215/login",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v4-desktop-es-dark-hover.png"
+    },
+    {
+      "id": "r12ce74-v4-desktop-en-light-default",
+      "view": "V4 /login plans entry",
+      "viewport": "1280x900",
+      "language": "en",
+      "theme": "light",
+      "state": "default",
+      "url": "http://127.0.0.1:3215/login",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v4-desktop-en-light-default.png"
+    },
+    {
+      "id": "r12ce74-v4-desktop-en-light-focus",
+      "view": "V4 /login plans entry",
+      "viewport": "1280x900",
+      "language": "en",
+      "theme": "light",
+      "state": "plans link keyboard focus",
+      "url": "http://127.0.0.1:3215/login",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v4-desktop-en-light-focus.png"
+    },
+    {
+      "id": "r12ce74-v4-desktop-en-light-hover",
+      "view": "V4 /login plans entry",
+      "viewport": "1280x900",
+      "language": "en",
+      "theme": "light",
+      "state": "plans link hover",
+      "url": "http://127.0.0.1:3215/login",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v4-desktop-en-light-hover.png"
+    },
+    {
+      "id": "r12ce74-v4-desktop-en-dark-default",
+      "view": "V4 /login plans entry",
+      "viewport": "1280x900",
+      "language": "en",
+      "theme": "dark",
+      "state": "default",
+      "url": "http://127.0.0.1:3215/login",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v4-desktop-en-dark-default.png"
+    },
+    {
+      "id": "r12ce74-v4-desktop-en-dark-focus",
+      "view": "V4 /login plans entry",
+      "viewport": "1280x900",
+      "language": "en",
+      "theme": "dark",
+      "state": "plans link keyboard focus",
+      "url": "http://127.0.0.1:3215/login",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v4-desktop-en-dark-focus.png"
+    },
+    {
+      "id": "r12ce74-v4-desktop-en-dark-hover",
+      "view": "V4 /login plans entry",
+      "viewport": "1280x900",
+      "language": "en",
+      "theme": "dark",
+      "state": "plans link hover",
+      "url": "http://127.0.0.1:3215/login",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v4-desktop-en-dark-hover.png"
+    },
+    {
+      "id": "r12ce74-v1-phone360-es-light-default",
+      "view": "V1 signed-out /planes",
+      "viewport": "360x780",
+      "language": "es",
+      "theme": "light",
+      "state": "default",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-phone360-es-light-default.png"
+    },
+    {
+      "id": "r12ce74-v1-phone360-es-dark-default",
+      "view": "V1 signed-out /planes",
+      "viewport": "360x780",
+      "language": "es",
+      "theme": "dark",
+      "state": "default",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-phone360-es-dark-default.png"
+    },
+    {
+      "id": "r12ce74-v1-phone360-en-light-default",
+      "view": "V1 signed-out /planes",
+      "viewport": "360x780",
+      "language": "en",
+      "theme": "light",
+      "state": "default",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-phone360-en-light-default.png"
+    },
+    {
+      "id": "r12ce74-v1-phone360-en-dark-default",
+      "view": "V1 signed-out /planes",
+      "viewport": "360x780",
+      "language": "en",
+      "theme": "dark",
+      "state": "default",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-phone360-en-dark-default.png"
+    },
+    {
+      "id": "r12ce74-v3-phone360-es-legacy",
+      "view": "V3 legacy /planes?vista=seleccionar",
+      "viewport": "360x780",
+      "language": "es",
+      "theme": "light",
+      "state": "legacy query",
+      "url": "http://127.0.0.1:3215/planes?vista=seleccionar",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v3-phone360-es-legacy.png"
+    },
+    {
+      "id": "r12ce74-v1-phone360-es-reduced-motion",
+      "view": "V1 signed-out /planes",
+      "viewport": "360x780",
+      "language": "es",
+      "theme": "light",
+      "state": "prefers-reduced-motion + ?still=1",
+      "url": "http://127.0.0.1:3215/planes?still=1",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-phone360-es-reduced-motion.png"
+    },
+    {
+      "id": "r12ce74-v1-phone360-es-language-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "360x780",
+      "language": "es",
+      "theme": "light",
+      "state": "language-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-phone360-es-language-focus.png"
+    },
+    {
+      "id": "r12ce74-v1-phone360-es-back-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "360x780",
+      "language": "es",
+      "theme": "light",
+      "state": "back-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-phone360-es-back-focus.png"
+    },
+    {
+      "id": "r12ce74-v1-phone360-es-card-1-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "360x780",
+      "language": "es",
+      "theme": "light",
+      "state": "card-1-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-phone360-es-card-1-focus.png"
+    },
+    {
+      "id": "r12ce74-v1-phone360-es-card-2-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "360x780",
+      "language": "es",
+      "theme": "light",
+      "state": "card-2-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-phone360-es-card-2-focus.png"
+    },
+    {
+      "id": "r12ce74-v1-phone360-es-card-3-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "360x780",
+      "language": "es",
+      "theme": "light",
+      "state": "card-3-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-phone360-es-card-3-focus.png"
+    },
+    {
+      "id": "r12ce74-v1-phone360-es-card-4-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "360x780",
+      "language": "es",
+      "theme": "light",
+      "state": "card-4-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-phone360-es-card-4-focus.png"
+    },
+    {
+      "id": "r12ce74-v1-phone360-es-card-hover",
+      "view": "V1 signed-out /planes",
+      "viewport": "360x780",
+      "language": "es",
+      "theme": "light",
+      "state": "card button hover",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-phone360-es-card-hover.png"
+    },
+    {
+      "id": "r12ce74-v1-phone360-es-card-pointer-active",
+      "view": "V1 signed-out /planes",
+      "viewport": "360x780",
+      "language": "es",
+      "theme": "light",
+      "state": "card button pointer active",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-phone360-es-card-pointer-active.png"
+    },
+    {
+      "id": "r12ce74-v1-phone360-es-card-enter-active",
+      "view": "V1 signed-out /planes",
+      "viewport": "360x780",
+      "language": "es",
+      "theme": "light",
+      "state": "card button Enter active",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-phone360-es-card-enter-active.png"
+    },
+    {
+      "id": "r12ce74-v1-phone360-es-card-space-active",
+      "view": "V1 signed-out /planes",
+      "viewport": "360x780",
+      "language": "es",
+      "theme": "light",
+      "state": "card button Space active",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-phone360-es-card-space-active.png"
+    },
+    {
+      "id": "r12ce74-v3-phone360-en-legacy",
+      "view": "V3 legacy /planes?vista=seleccionar",
+      "viewport": "360x780",
+      "language": "en",
+      "theme": "light",
+      "state": "legacy query",
+      "url": "http://127.0.0.1:3215/planes?vista=seleccionar",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v3-phone360-en-legacy.png"
+    },
+    {
+      "id": "r12ce74-v1-phone360-en-reduced-motion",
+      "view": "V1 signed-out /planes",
+      "viewport": "360x780",
+      "language": "en",
+      "theme": "light",
+      "state": "prefers-reduced-motion + ?still=1",
+      "url": "http://127.0.0.1:3215/planes?still=1",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-phone360-en-reduced-motion.png"
+    },
+    {
+      "id": "r12ce74-v1-phone360-en-language-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "360x780",
+      "language": "en",
+      "theme": "light",
+      "state": "language-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-phone360-en-language-focus.png"
+    },
+    {
+      "id": "r12ce74-v1-phone360-en-back-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "360x780",
+      "language": "en",
+      "theme": "light",
+      "state": "back-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-phone360-en-back-focus.png"
+    },
+    {
+      "id": "r12ce74-v1-phone360-en-card-1-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "360x780",
+      "language": "en",
+      "theme": "light",
+      "state": "card-1-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-phone360-en-card-1-focus.png"
+    },
+    {
+      "id": "r12ce74-v1-phone360-en-card-2-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "360x780",
+      "language": "en",
+      "theme": "light",
+      "state": "card-2-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-phone360-en-card-2-focus.png"
+    },
+    {
+      "id": "r12ce74-v1-phone360-en-card-3-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "360x780",
+      "language": "en",
+      "theme": "light",
+      "state": "card-3-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-phone360-en-card-3-focus.png"
+    },
+    {
+      "id": "r12ce74-v1-phone360-en-card-4-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "360x780",
+      "language": "en",
+      "theme": "light",
+      "state": "card-4-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-phone360-en-card-4-focus.png"
+    },
+    {
+      "id": "r12ce74-v1-phone360-en-card-hover",
+      "view": "V1 signed-out /planes",
+      "viewport": "360x780",
+      "language": "en",
+      "theme": "light",
+      "state": "card button hover",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-phone360-en-card-hover.png"
+    },
+    {
+      "id": "r12ce74-v1-phone360-en-card-pointer-active",
+      "view": "V1 signed-out /planes",
+      "viewport": "360x780",
+      "language": "en",
+      "theme": "light",
+      "state": "card button pointer active",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-phone360-en-card-pointer-active.png"
+    },
+    {
+      "id": "r12ce74-v1-phone360-en-card-enter-active",
+      "view": "V1 signed-out /planes",
+      "viewport": "360x780",
+      "language": "en",
+      "theme": "light",
+      "state": "card button Enter active",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-phone360-en-card-enter-active.png"
+    },
+    {
+      "id": "r12ce74-v1-phone360-en-card-space-active",
+      "view": "V1 signed-out /planes",
+      "viewport": "360x780",
+      "language": "en",
+      "theme": "light",
+      "state": "card button Space active",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-phone360-en-card-space-active.png"
+    },
+    {
+      "id": "r12ce74-v4-phone360-es-light-default",
+      "view": "V4 /login plans entry",
+      "viewport": "360x780",
+      "language": "es",
+      "theme": "light",
+      "state": "default",
+      "url": "http://127.0.0.1:3215/login",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v4-phone360-es-light-default.png"
+    },
+    {
+      "id": "r12ce74-v4-phone360-es-light-focus",
+      "view": "V4 /login plans entry",
+      "viewport": "360x780",
+      "language": "es",
+      "theme": "light",
+      "state": "plans link keyboard focus",
+      "url": "http://127.0.0.1:3215/login",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v4-phone360-es-light-focus.png"
+    },
+    {
+      "id": "r12ce74-v4-phone360-es-light-hover",
+      "view": "V4 /login plans entry",
+      "viewport": "360x780",
+      "language": "es",
+      "theme": "light",
+      "state": "plans link hover",
+      "url": "http://127.0.0.1:3215/login",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v4-phone360-es-light-hover.png"
+    },
+    {
+      "id": "r12ce74-v4-phone360-es-dark-default",
+      "view": "V4 /login plans entry",
+      "viewport": "360x780",
+      "language": "es",
+      "theme": "dark",
+      "state": "default",
+      "url": "http://127.0.0.1:3215/login",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v4-phone360-es-dark-default.png"
+    },
+    {
+      "id": "r12ce74-v4-phone360-es-dark-focus",
+      "view": "V4 /login plans entry",
+      "viewport": "360x780",
+      "language": "es",
+      "theme": "dark",
+      "state": "plans link keyboard focus",
+      "url": "http://127.0.0.1:3215/login",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v4-phone360-es-dark-focus.png"
+    },
+    {
+      "id": "r12ce74-v4-phone360-es-dark-hover",
+      "view": "V4 /login plans entry",
+      "viewport": "360x780",
+      "language": "es",
+      "theme": "dark",
+      "state": "plans link hover",
+      "url": "http://127.0.0.1:3215/login",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v4-phone360-es-dark-hover.png"
+    },
+    {
+      "id": "r12ce74-v4-phone360-en-light-default",
+      "view": "V4 /login plans entry",
+      "viewport": "360x780",
+      "language": "en",
+      "theme": "light",
+      "state": "default",
+      "url": "http://127.0.0.1:3215/login",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v4-phone360-en-light-default.png"
+    },
+    {
+      "id": "r12ce74-v4-phone360-en-light-focus",
+      "view": "V4 /login plans entry",
+      "viewport": "360x780",
+      "language": "en",
+      "theme": "light",
+      "state": "plans link keyboard focus",
+      "url": "http://127.0.0.1:3215/login",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v4-phone360-en-light-focus.png"
+    },
+    {
+      "id": "r12ce74-v4-phone360-en-light-hover",
+      "view": "V4 /login plans entry",
+      "viewport": "360x780",
+      "language": "en",
+      "theme": "light",
+      "state": "plans link hover",
+      "url": "http://127.0.0.1:3215/login",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v4-phone360-en-light-hover.png"
+    },
+    {
+      "id": "r12ce74-v4-phone360-en-dark-default",
+      "view": "V4 /login plans entry",
+      "viewport": "360x780",
+      "language": "en",
+      "theme": "dark",
+      "state": "default",
+      "url": "http://127.0.0.1:3215/login",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v4-phone360-en-dark-default.png"
+    },
+    {
+      "id": "r12ce74-v4-phone360-en-dark-focus",
+      "view": "V4 /login plans entry",
+      "viewport": "360x780",
+      "language": "en",
+      "theme": "dark",
+      "state": "plans link keyboard focus",
+      "url": "http://127.0.0.1:3215/login",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v4-phone360-en-dark-focus.png"
+    },
+    {
+      "id": "r12ce74-v4-phone360-en-dark-hover",
+      "view": "V4 /login plans entry",
+      "viewport": "360x780",
+      "language": "en",
+      "theme": "dark",
+      "state": "plans link hover",
+      "url": "http://127.0.0.1:3215/login",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v4-phone360-en-dark-hover.png"
+    },
+    {
+      "id": "r12ce74-v3-phone360-es-dark-legacy",
+      "view": "V3 legacy /planes?vista=seleccionar",
+      "viewport": "360x780",
+      "language": "es",
+      "theme": "dark",
+      "state": "legacy query",
+      "url": "http://127.0.0.1:3215/planes?vista=seleccionar",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v3-phone360-es-dark-legacy.png"
+    },
+    {
+      "id": "r12ce74-v1-phone360-es-dark-language-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "360x780",
+      "language": "es",
+      "theme": "dark",
+      "state": "language-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-phone360-es-dark-language-focus.png"
+    },
+    {
+      "id": "r12ce74-v1-phone360-es-dark-back-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "360x780",
+      "language": "es",
+      "theme": "dark",
+      "state": "back-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-phone360-es-dark-back-focus.png"
+    },
+    {
+      "id": "r12ce74-v1-phone360-es-dark-card-1-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "360x780",
+      "language": "es",
+      "theme": "dark",
+      "state": "card-1-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-phone360-es-dark-card-1-focus.png"
+    },
+    {
+      "id": "r12ce74-v1-phone360-es-dark-card-2-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "360x780",
+      "language": "es",
+      "theme": "dark",
+      "state": "card-2-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-phone360-es-dark-card-2-focus.png"
+    },
+    {
+      "id": "r12ce74-v1-phone360-es-dark-card-3-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "360x780",
+      "language": "es",
+      "theme": "dark",
+      "state": "card-3-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-phone360-es-dark-card-3-focus.png"
+    },
+    {
+      "id": "r12ce74-v1-phone360-es-dark-card-4-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "360x780",
+      "language": "es",
+      "theme": "dark",
+      "state": "card-4-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-phone360-es-dark-card-4-focus.png"
+    },
+    {
+      "id": "r12ce74-v3-phone360-en-dark-legacy",
+      "view": "V3 legacy /planes?vista=seleccionar",
+      "viewport": "360x780",
+      "language": "en",
+      "theme": "dark",
+      "state": "legacy query",
+      "url": "http://127.0.0.1:3215/planes?vista=seleccionar",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v3-phone360-en-dark-legacy.png"
+    },
+    {
+      "id": "r12ce74-v1-phone360-en-dark-language-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "360x780",
+      "language": "en",
+      "theme": "dark",
+      "state": "language-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-phone360-en-dark-language-focus.png"
+    },
+    {
+      "id": "r12ce74-v1-phone360-en-dark-back-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "360x780",
+      "language": "en",
+      "theme": "dark",
+      "state": "back-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-phone360-en-dark-back-focus.png"
+    },
+    {
+      "id": "r12ce74-v1-phone360-en-dark-card-1-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "360x780",
+      "language": "en",
+      "theme": "dark",
+      "state": "card-1-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-phone360-en-dark-card-1-focus.png"
+    },
+    {
+      "id": "r12ce74-v1-phone360-en-dark-card-2-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "360x780",
+      "language": "en",
+      "theme": "dark",
+      "state": "card-2-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-phone360-en-dark-card-2-focus.png"
+    },
+    {
+      "id": "r12ce74-v1-phone360-en-dark-card-3-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "360x780",
+      "language": "en",
+      "theme": "dark",
+      "state": "card-3-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-phone360-en-dark-card-3-focus.png"
+    },
+    {
+      "id": "r12ce74-v1-phone360-en-dark-card-4-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "360x780",
+      "language": "en",
+      "theme": "dark",
+      "state": "card-4-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-phone360-en-dark-card-4-focus.png"
+    },
+    {
+      "id": "r12ce74-v3-phone390-es-dark-legacy",
+      "view": "V3 legacy /planes?vista=seleccionar",
+      "viewport": "390x844",
+      "language": "es",
+      "theme": "dark",
+      "state": "legacy query",
+      "url": "http://127.0.0.1:3215/planes?vista=seleccionar",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v3-phone390-es-dark-legacy.png"
+    },
+    {
+      "id": "r12ce74-v1-phone390-es-dark-language-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "390x844",
+      "language": "es",
+      "theme": "dark",
+      "state": "language-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-phone390-es-dark-language-focus.png"
+    },
+    {
+      "id": "r12ce74-v1-phone390-es-dark-back-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "390x844",
+      "language": "es",
+      "theme": "dark",
+      "state": "back-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-phone390-es-dark-back-focus.png"
+    },
+    {
+      "id": "r12ce74-v1-phone390-es-dark-card-1-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "390x844",
+      "language": "es",
+      "theme": "dark",
+      "state": "card-1-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-phone390-es-dark-card-1-focus.png"
+    },
+    {
+      "id": "r12ce74-v1-phone390-es-dark-card-2-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "390x844",
+      "language": "es",
+      "theme": "dark",
+      "state": "card-2-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-phone390-es-dark-card-2-focus.png"
+    },
+    {
+      "id": "r12ce74-v1-phone390-es-dark-card-3-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "390x844",
+      "language": "es",
+      "theme": "dark",
+      "state": "card-3-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-phone390-es-dark-card-3-focus.png"
+    },
+    {
+      "id": "r12ce74-v1-phone390-es-dark-card-4-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "390x844",
+      "language": "es",
+      "theme": "dark",
+      "state": "card-4-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-phone390-es-dark-card-4-focus.png"
+    },
+    {
+      "id": "r12ce74-v3-phone390-en-dark-legacy",
+      "view": "V3 legacy /planes?vista=seleccionar",
+      "viewport": "390x844",
+      "language": "en",
+      "theme": "dark",
+      "state": "legacy query",
+      "url": "http://127.0.0.1:3215/planes?vista=seleccionar",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v3-phone390-en-dark-legacy.png"
+    },
+    {
+      "id": "r12ce74-v1-phone390-en-dark-language-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "390x844",
+      "language": "en",
+      "theme": "dark",
+      "state": "language-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-phone390-en-dark-language-focus.png"
+    },
+    {
+      "id": "r12ce74-v1-phone390-en-dark-back-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "390x844",
+      "language": "en",
+      "theme": "dark",
+      "state": "back-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-phone390-en-dark-back-focus.png"
+    },
+    {
+      "id": "r12ce74-v1-phone390-en-dark-card-1-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "390x844",
+      "language": "en",
+      "theme": "dark",
+      "state": "card-1-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-phone390-en-dark-card-1-focus.png"
+    },
+    {
+      "id": "r12ce74-v1-phone390-en-dark-card-2-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "390x844",
+      "language": "en",
+      "theme": "dark",
+      "state": "card-2-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-phone390-en-dark-card-2-focus.png"
+    },
+    {
+      "id": "r12ce74-v1-phone390-en-dark-card-3-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "390x844",
+      "language": "en",
+      "theme": "dark",
+      "state": "card-3-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-phone390-en-dark-card-3-focus.png"
+    },
+    {
+      "id": "r12ce74-v1-phone390-en-dark-card-4-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "390x844",
+      "language": "en",
+      "theme": "dark",
+      "state": "card-4-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-phone390-en-dark-card-4-focus.png"
+    },
+    {
+      "id": "r12ce74-v3-tablet-es-dark-legacy",
+      "view": "V3 legacy /planes?vista=seleccionar",
+      "viewport": "768x1024",
+      "language": "es",
+      "theme": "dark",
+      "state": "legacy query",
+      "url": "http://127.0.0.1:3215/planes?vista=seleccionar",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v3-tablet-es-dark-legacy.png"
+    },
+    {
+      "id": "r12ce74-v1-tablet-es-dark-language-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "768x1024",
+      "language": "es",
+      "theme": "dark",
+      "state": "language-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-tablet-es-dark-language-focus.png"
+    },
+    {
+      "id": "r12ce74-v1-tablet-es-dark-back-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "768x1024",
+      "language": "es",
+      "theme": "dark",
+      "state": "back-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-tablet-es-dark-back-focus.png"
+    },
+    {
+      "id": "r12ce74-v1-tablet-es-dark-card-1-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "768x1024",
+      "language": "es",
+      "theme": "dark",
+      "state": "card-1-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-tablet-es-dark-card-1-focus.png"
+    },
+    {
+      "id": "r12ce74-v1-tablet-es-dark-card-2-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "768x1024",
+      "language": "es",
+      "theme": "dark",
+      "state": "card-2-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-tablet-es-dark-card-2-focus.png"
+    },
+    {
+      "id": "r12ce74-v1-tablet-es-dark-card-3-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "768x1024",
+      "language": "es",
+      "theme": "dark",
+      "state": "card-3-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-tablet-es-dark-card-3-focus.png"
+    },
+    {
+      "id": "r12ce74-v1-tablet-es-dark-card-4-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "768x1024",
+      "language": "es",
+      "theme": "dark",
+      "state": "card-4-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-tablet-es-dark-card-4-focus.png"
+    },
+    {
+      "id": "r12ce74-v3-tablet-en-dark-legacy",
+      "view": "V3 legacy /planes?vista=seleccionar",
+      "viewport": "768x1024",
+      "language": "en",
+      "theme": "dark",
+      "state": "legacy query",
+      "url": "http://127.0.0.1:3215/planes?vista=seleccionar",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v3-tablet-en-dark-legacy.png"
+    },
+    {
+      "id": "r12ce74-v1-tablet-en-dark-language-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "768x1024",
+      "language": "en",
+      "theme": "dark",
+      "state": "language-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-tablet-en-dark-language-focus.png"
+    },
+    {
+      "id": "r12ce74-v1-tablet-en-dark-back-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "768x1024",
+      "language": "en",
+      "theme": "dark",
+      "state": "back-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-tablet-en-dark-back-focus.png"
+    },
+    {
+      "id": "r12ce74-v1-tablet-en-dark-card-1-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "768x1024",
+      "language": "en",
+      "theme": "dark",
+      "state": "card-1-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-tablet-en-dark-card-1-focus.png"
+    },
+    {
+      "id": "r12ce74-v1-tablet-en-dark-card-2-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "768x1024",
+      "language": "en",
+      "theme": "dark",
+      "state": "card-2-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-tablet-en-dark-card-2-focus.png"
+    },
+    {
+      "id": "r12ce74-v1-tablet-en-dark-card-3-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "768x1024",
+      "language": "en",
+      "theme": "dark",
+      "state": "card-3-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-tablet-en-dark-card-3-focus.png"
+    },
+    {
+      "id": "r12ce74-v1-tablet-en-dark-card-4-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "768x1024",
+      "language": "en",
+      "theme": "dark",
+      "state": "card-4-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-tablet-en-dark-card-4-focus.png"
+    },
+    {
+      "id": "r12ce74-v3-desktop-es-dark-legacy",
+      "view": "V3 legacy /planes?vista=seleccionar",
+      "viewport": "1280x900",
+      "language": "es",
+      "theme": "dark",
+      "state": "legacy query",
+      "url": "http://127.0.0.1:3215/planes?vista=seleccionar",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v3-desktop-es-dark-legacy.png"
+    },
+    {
+      "id": "r12ce74-v1-desktop-es-dark-language-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "1280x900",
+      "language": "es",
+      "theme": "dark",
+      "state": "language-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-desktop-es-dark-language-focus.png"
+    },
+    {
+      "id": "r12ce74-v1-desktop-es-dark-back-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "1280x900",
+      "language": "es",
+      "theme": "dark",
+      "state": "back-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-desktop-es-dark-back-focus.png"
+    },
+    {
+      "id": "r12ce74-v1-desktop-es-dark-card-1-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "1280x900",
+      "language": "es",
+      "theme": "dark",
+      "state": "card-1-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-desktop-es-dark-card-1-focus.png"
+    },
+    {
+      "id": "r12ce74-v1-desktop-es-dark-card-2-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "1280x900",
+      "language": "es",
+      "theme": "dark",
+      "state": "card-2-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-desktop-es-dark-card-2-focus.png"
+    },
+    {
+      "id": "r12ce74-v1-desktop-es-dark-card-3-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "1280x900",
+      "language": "es",
+      "theme": "dark",
+      "state": "card-3-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-desktop-es-dark-card-3-focus.png"
+    },
+    {
+      "id": "r12ce74-v1-desktop-es-dark-card-4-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "1280x900",
+      "language": "es",
+      "theme": "dark",
+      "state": "card-4-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-desktop-es-dark-card-4-focus.png"
+    },
+    {
+      "id": "r12ce74-v3-desktop-en-dark-legacy",
+      "view": "V3 legacy /planes?vista=seleccionar",
+      "viewport": "1280x900",
+      "language": "en",
+      "theme": "dark",
+      "state": "legacy query",
+      "url": "http://127.0.0.1:3215/planes?vista=seleccionar",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v3-desktop-en-dark-legacy.png"
+    },
+    {
+      "id": "r12ce74-v1-desktop-en-dark-language-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "1280x900",
+      "language": "en",
+      "theme": "dark",
+      "state": "language-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-desktop-en-dark-language-focus.png"
+    },
+    {
+      "id": "r12ce74-v1-desktop-en-dark-back-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "1280x900",
+      "language": "en",
+      "theme": "dark",
+      "state": "back-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-desktop-en-dark-back-focus.png"
+    },
+    {
+      "id": "r12ce74-v1-desktop-en-dark-card-1-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "1280x900",
+      "language": "en",
+      "theme": "dark",
+      "state": "card-1-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-desktop-en-dark-card-1-focus.png"
+    },
+    {
+      "id": "r12ce74-v1-desktop-en-dark-card-2-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "1280x900",
+      "language": "en",
+      "theme": "dark",
+      "state": "card-2-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-desktop-en-dark-card-2-focus.png"
+    },
+    {
+      "id": "r12ce74-v1-desktop-en-dark-card-3-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "1280x900",
+      "language": "en",
+      "theme": "dark",
+      "state": "card-3-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-desktop-en-dark-card-3-focus.png"
+    },
+    {
+      "id": "r12ce74-v1-desktop-en-dark-card-4-focus",
+      "view": "V1 signed-out /planes",
+      "viewport": "1280x900",
+      "language": "en",
+      "theme": "dark",
+      "state": "card-4-focus",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-desktop-en-dark-card-4-focus.png"
+    },
+    {
+      "id": "r12ce74-v1-phone390-es-light-default-no-preference",
+      "view": "V1 signed-out /planes",
+      "viewport": "390x844",
+      "language": "es",
+      "theme": "light",
+      "state": "default baseline; prefers-reduced-motion=no-preference",
+      "url": "http://127.0.0.1:3215/planes",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-phone390-es-light-default-no-preference.png"
+    },
+    {
+      "id": "r12ce74-v1-phone390-es-light-still-query-no-preference",
+      "view": "V1 signed-out /planes",
+      "viewport": "390x844",
+      "language": "es",
+      "theme": "light",
+      "state": "?still=1; prefers-reduced-motion=no-preference",
+      "url": "http://127.0.0.1:3215/planes?still=1",
+      "file": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/T14.5/r12ce74-v1-phone390-es-light-still-query-no-preference.png"
+    }
+  ],
+  "coverage_gaps": [
+    {
+      "views": [
+        "V2 signed-in /planes",
+        "V5 open account menu"
+      ],
+      "viewports": [
+        "390x844",
+        "768x1024",
+        "1280x900"
+      ],
+      "locales": [
+        "es",
+        "en"
+      ],
+      "states": [
+        "signed-in default",
+        "account menu open",
+        "menu keyboard states"
+      ],
+      "reason": "No genuine signed-in session was available; no mock authentication was created."
+    }
+  ],
+  "prior_capture_files_excluded": true,
+  "observations": [
+    {
+      "view": "V1 signed-out /planes",
+      "viewport": {
+        "width": 360,
+        "height": 780,
+        "scrollWidth": 360
+      },
+      "language": "es",
+      "cardProbe": [
+        {
+          "id": "plan-entusiasta",
+          "toolRows": 3,
+          "controls": 1,
+          "children": 3,
+          "lastChild": {
+            "tag": "DIV",
+            "className": "comparador-planes-module__17B1-q__cardFoot"
+          },
+          "cardRect": {
+            "x": 20,
+            "y": 221.6875,
+            "width": 320,
+            "height": 341.78125,
+            "right": 340,
+            "bottom": 563.46875
+          },
+          "buttonRect": {
+            "x": 41,
+            "y": 498.46875,
+            "width": 278,
+            "height": 44,
+            "right": 319,
+            "bottom": 542.46875
+          },
+          "animation": {
+            "animationName": "comparador-planes-module__17B1-q__card-drop",
+            "animationDuration": "0.3s",
+            "transitionProperty": "all",
+            "transitionDuration": "0s"
+          },
+          "buttonStyle": {
+            "animationName": "none",
+            "animationDuration": "0s",
+            "transitionProperty": "background-color, transform",
+            "transitionDuration": "0.18s, 0.09s"
+          }
+        },
+        {
+          "id": "plan-designer",
+          "toolRows": 3,
+          "controls": 1,
+          "children": 3,
+          "lastChild": {
+            "tag": "DIV",
+            "className": "comparador-planes-module__17B1-q__cardFoot"
+          },
+          "cardRect": {
+            "x": 20,
+            "y": 575.46875,
+            "width": 320,
+            "height": 362.96875,
+            "right": 340,
+            "bottom": 938.4375
+          },
+          "buttonRect": {
+            "x": 41,
+            "y": 873.4375,
+            "width": 278,
+            "height": 44,
+            "right": 319,
+            "bottom": 917.4375
+          },
+          "animation": {
+            "animationName": "comparador-planes-module__17B1-q__card-drop",
+            "animationDuration": "0.3s",
+            "transitionProperty": "all",
+            "transitionDuration": "0s"
+          },
+          "buttonStyle": {
+            "animationName": "none",
+            "animationDuration": "0s",
+            "transitionProperty": "background-color, transform",
+            "transitionDuration": "0.18s, 0.09s"
+          }
+        },
+        {
+          "id": "plan-designer_plus",
+          "toolRows": 7,
+          "controls": 1,
+          "children": 3,
+          "lastChild": {
+            "tag": "DIV",
+            "className": "comparador-planes-module__17B1-q__cardFoot"
+          },
+          "cardRect": {
+            "x": 20,
+            "y": 950.4375,
+            "width": 320,
+            "height": 568.328125,
+            "right": 340,
+            "bottom": 1518.765625
+          },
+          "buttonRect": {
+            "x": 41,
+            "y": 1453.765625,
+            "width": 278,
+            "height": 44,
+            "right": 319,
+            "bottom": 1497.765625
+          },
+          "animation": {
+            "animationName": "comparador-planes-module__17B1-q__card-drop",
+            "animationDuration": "0.3s",
+            "transitionProperty": "all",
+            "transitionDuration": "0s"
+          },
+          "buttonStyle": {
+            "animationName": "none",
+            "animationDuration": "0s",
+            "transitionProperty": "background-color, transform",
+            "transitionDuration": "0.18s, 0.09s"
+          }
+        },
+        {
+          "id": "plan-master_designer",
+          "toolRows": 8,
+          "controls": 1,
+          "children": 3,
+          "lastChild": {
+            "tag": "DIV",
+            "className": "comparador-planes-module__17B1-q__cardFoot"
+          },
+          "cardRect": {
+            "x": 20,
+            "y": 1530.765625,
+            "width": 320,
+            "height": 600.625,
+            "right": 340,
+            "bottom": 2131.390625
+          },
+          "buttonRect": {
+            "x": 41,
+            "y": 2066.390625,
+            "width": 278,
+            "height": 44,
+            "right": 319,
+            "bottom": 2110.390625
+          },
+          "animation": {
+            "animationName": "comparador-planes-module__17B1-q__card-drop",
+            "animationDuration": "0.3s",
+            "transitionProperty": "all",
+            "transitionDuration": "0s"
+          },
+          "buttonStyle": {
+            "animationName": "none",
+            "animationDuration": "0s",
+            "transitionProperty": "background-color, transform",
+            "transitionDuration": "0.18s, 0.09s"
+          }
+        }
+      ],
+      "mainRect": {
+        "x": 20,
+        "y": 0,
+        "width": 320,
+        "height": 2216.390625,
+        "right": 340,
+        "bottom": 2216.390625
+      },
+      "pageMarkupSha256": "6f04a7f1147508e01080736d564868c9a5337fd1e7bb86c2645969ad989da62d",
+      "interactionDeltas": [
+        {
+          "method": "pointer",
+          "urlBefore": "http://127.0.0.1:3215/planes",
+          "urlAfter": "http://127.0.0.1:3215/planes",
+          "focusBefore": "Escoger: Entusiasta",
+          "focusAfter": "Escoger: Entusiasta",
+          "statusCountBefore": 0,
+          "statusCountAfter": 0,
+          "markupShaBefore": "6f04a7f1147508e01080736d564868c9a5337fd1e7bb86c2645969ad989da62d",
+          "markupShaAfter": "6f04a7f1147508e01080736d564868c9a5337fd1e7bb86c2645969ad989da62d"
+        },
+        {
+          "method": "Enter",
+          "urlBefore": "http://127.0.0.1:3215/planes",
+          "urlAfter": "http://127.0.0.1:3215/planes",
+          "focusBefore": "Escoger: Entusiasta",
+          "focusAfter": "Escoger: Entusiasta",
+          "statusCountBefore": 0,
+          "statusCountAfter": 0,
+          "markupShaBefore": "6f04a7f1147508e01080736d564868c9a5337fd1e7bb86c2645969ad989da62d",
+          "markupShaAfter": "6f04a7f1147508e01080736d564868c9a5337fd1e7bb86c2645969ad989da62d"
+        },
+        {
+          "method": "Space",
+          "urlBefore": "http://127.0.0.1:3215/planes",
+          "urlAfter": "http://127.0.0.1:3215/planes",
+          "focusBefore": "Escoger: Entusiasta",
+          "focusAfter": "Escoger: Entusiasta",
+          "statusCountBefore": 0,
+          "statusCountAfter": 0,
+          "markupShaBefore": "6f04a7f1147508e01080736d564868c9a5337fd1e7bb86c2645969ad989da62d",
+          "markupShaAfter": "6f04a7f1147508e01080736d564868c9a5337fd1e7bb86c2645969ad989da62d"
+        }
+      ]
+    },
+    {
+      "view": "V1 signed-out /planes",
+      "viewport": {
+        "width": 360,
+        "height": 780,
+        "scrollWidth": 360
+      },
+      "language": "en",
+      "cardProbe": [
+        {
+          "id": "plan-entusiasta",
+          "toolRows": 3,
+          "controls": 1,
+          "children": 3,
+          "lastChild": {
+            "tag": "DIV",
+            "className": "comparador-planes-module__17B1-q__cardFoot"
+          },
+          "cardRect": {
+            "x": 20,
+            "y": 271.6875,
+            "width": 320,
+            "height": 341.78125,
+            "right": 340,
+            "bottom": 613.46875
+          },
+          "buttonRect": {
+            "x": 41,
+            "y": 548.46875,
+            "width": 278,
+            "height": 44,
+            "right": 319,
+            "bottom": 592.46875
+          },
+          "animation": {
+            "animationName": "comparador-planes-module__17B1-q__card-drop",
+            "animationDuration": "0.3s",
+            "transitionProperty": "all",
+            "transitionDuration": "0s"
+          },
+          "buttonStyle": {
+            "animationName": "none",
+            "animationDuration": "0s",
+            "transitionProperty": "background-color, transform",
+            "transitionDuration": "0.18s, 0.09s"
+          }
+        },
+        {
+          "id": "plan-designer",
+          "toolRows": 3,
+          "controls": 1,
+          "children": 3,
+          "lastChild": {
+            "tag": "DIV",
+            "className": "comparador-planes-module__17B1-q__cardFoot"
+          },
+          "cardRect": {
+            "x": 20,
+            "y": 625.46875,
+            "width": 320,
+            "height": 362.96875,
+            "right": 340,
+            "bottom": 988.4375
+          },
+          "buttonRect": {
+            "x": 41,
+            "y": 923.4375,
+            "width": 278,
+            "height": 44,
+            "right": 319,
+            "bottom": 967.4375
+          },
+          "animation": {
+            "animationName": "comparador-planes-module__17B1-q__card-drop",
+            "animationDuration": "0.3s",
+            "transitionProperty": "all",
+            "transitionDuration": "0s"
+          },
+          "buttonStyle": {
+            "animationName": "none",
+            "animationDuration": "0s",
+            "transitionProperty": "background-color, transform",
+            "transitionDuration": "0.18s, 0.09s"
+          }
+        },
+        {
+          "id": "plan-designer_plus",
+          "toolRows": 7,
+          "controls": 1,
+          "children": 3,
+          "lastChild": {
+            "tag": "DIV",
+            "className": "comparador-planes-module__17B1-q__cardFoot"
+          },
+          "cardRect": {
+            "x": 20,
+            "y": 1000.4375,
+            "width": 320,
+            "height": 568.328125,
+            "right": 340,
+            "bottom": 1568.765625
+          },
+          "buttonRect": {
+            "x": 41,
+            "y": 1503.765625,
+            "width": 278,
+            "height": 44,
+            "right": 319,
+            "bottom": 1547.765625
+          },
+          "animation": {
+            "animationName": "comparador-planes-module__17B1-q__card-drop",
+            "animationDuration": "0.3s",
+            "transitionProperty": "all",
+            "transitionDuration": "0s"
+          },
+          "buttonStyle": {
+            "animationName": "none",
+            "animationDuration": "0s",
+            "transitionProperty": "background-color, transform",
+            "transitionDuration": "0.18s, 0.09s"
+          }
+        },
+        {
+          "id": "plan-master_designer",
+          "toolRows": 8,
+          "controls": 1,
+          "children": 3,
+          "lastChild": {
+            "tag": "DIV",
+            "className": "comparador-planes-module__17B1-q__cardFoot"
+          },
+          "cardRect": {
+            "x": 20,
+            "y": 1580.765625,
+            "width": 320,
+            "height": 600.625,
+            "right": 340,
+            "bottom": 2181.390625
+          },
+          "buttonRect": {
+            "x": 41,
+            "y": 2116.390625,
+            "width": 278,
+            "height": 44,
+            "right": 319,
+            "bottom": 2160.390625
+          },
+          "animation": {
+            "animationName": "comparador-planes-module__17B1-q__card-drop",
+            "animationDuration": "0.3s",
+            "transitionProperty": "all",
+            "transitionDuration": "0s"
+          },
+          "buttonStyle": {
+            "animationName": "none",
+            "animationDuration": "0s",
+            "transitionProperty": "background-color, transform",
+            "transitionDuration": "0.18s, 0.09s"
+          }
+        }
+      ],
+      "mainRect": {
+        "x": 20,
+        "y": 0,
+        "width": 320,
+        "height": 2266.390625,
+        "right": 340,
+        "bottom": 2266.390625
+      },
+      "pageMarkupSha256": "1e5888717d566cdae5220abc2ddbead9b225ba644c1ad5113d9a53b302ec4dc8",
+      "interactionDeltas": [
+        {
+          "method": "pointer",
+          "urlBefore": "http://127.0.0.1:3215/planes",
+          "urlAfter": "http://127.0.0.1:3215/planes",
+          "focusBefore": "Choose: Enthusiast",
+          "focusAfter": "Choose: Enthusiast",
+          "statusCountBefore": 0,
+          "statusCountAfter": 0,
+          "markupShaBefore": "1e5888717d566cdae5220abc2ddbead9b225ba644c1ad5113d9a53b302ec4dc8",
+          "markupShaAfter": "1e5888717d566cdae5220abc2ddbead9b225ba644c1ad5113d9a53b302ec4dc8"
+        },
+        {
+          "method": "Enter",
+          "urlBefore": "http://127.0.0.1:3215/planes",
+          "urlAfter": "http://127.0.0.1:3215/planes",
+          "focusBefore": "Choose: Enthusiast",
+          "focusAfter": "Choose: Enthusiast",
+          "statusCountBefore": 0,
+          "statusCountAfter": 0,
+          "markupShaBefore": "1e5888717d566cdae5220abc2ddbead9b225ba644c1ad5113d9a53b302ec4dc8",
+          "markupShaAfter": "1e5888717d566cdae5220abc2ddbead9b225ba644c1ad5113d9a53b302ec4dc8"
+        },
+        {
+          "method": "Space",
+          "urlBefore": "http://127.0.0.1:3215/planes",
+          "urlAfter": "http://127.0.0.1:3215/planes",
+          "focusBefore": "Choose: Enthusiast",
+          "focusAfter": "Choose: Enthusiast",
+          "statusCountBefore": 0,
+          "statusCountAfter": 0,
+          "markupShaBefore": "1e5888717d566cdae5220abc2ddbead9b225ba644c1ad5113d9a53b302ec4dc8",
+          "markupShaAfter": "1e5888717d566cdae5220abc2ddbead9b225ba644c1ad5113d9a53b302ec4dc8"
+        }
+      ]
+    },
+    {
+      "view": "V1 signed-out /planes",
+      "viewport": {
+        "width": 390,
+        "height": 844,
+        "scrollWidth": 390
+      },
+      "language": "es",
+      "cardProbe": [
+        {
+          "id": "plan-entusiasta",
+          "toolRows": 3,
+          "controls": 1,
+          "children": 3,
+          "lastChild": {
+            "tag": "DIV",
+            "className": "comparador-planes-module__17B1-q__cardFoot"
+          },
+          "cardRect": {
+            "x": 20,
+            "y": 221.6875,
+            "width": 350,
+            "height": 341.78125,
+            "right": 370,
+            "bottom": 563.46875
+          },
+          "buttonRect": {
+            "x": 41,
+            "y": 498.46875,
+            "width": 308,
+            "height": 44,
+            "right": 349,
+            "bottom": 542.46875
+          },
+          "animation": {
+            "animationName": "comparador-planes-module__17B1-q__card-drop",
+            "animationDuration": "0.3s",
+            "transitionProperty": "all",
+            "transitionDuration": "0s"
+          },
+          "buttonStyle": {
+            "animationName": "none",
+            "animationDuration": "0s",
+            "transitionProperty": "background-color, transform",
+            "transitionDuration": "0.18s, 0.09s"
+          }
+        },
+        {
+          "id": "plan-designer",
+          "toolRows": 3,
+          "controls": 1,
+          "children": 3,
+          "lastChild": {
+            "tag": "DIV",
+            "className": "comparador-planes-module__17B1-q__cardFoot"
+          },
+          "cardRect": {
+            "x": 20,
+            "y": 575.46875,
+            "width": 350,
+            "height": 362.96875,
+            "right": 370,
+            "bottom": 938.4375
+          },
+          "buttonRect": {
+            "x": 41,
+            "y": 873.4375,
+            "width": 308,
+            "height": 44,
+            "right": 349,
+            "bottom": 917.4375
+          },
+          "animation": {
+            "animationName": "comparador-planes-module__17B1-q__card-drop",
+            "animationDuration": "0.3s",
+            "transitionProperty": "all",
+            "transitionDuration": "0s"
+          },
+          "buttonStyle": {
+            "animationName": "none",
+            "animationDuration": "0s",
+            "transitionProperty": "background-color, transform",
+            "transitionDuration": "0.18s, 0.09s"
+          }
+        },
+        {
+          "id": "plan-designer_plus",
+          "toolRows": 7,
+          "controls": 1,
+          "children": 3,
+          "lastChild": {
+            "tag": "DIV",
+            "className": "comparador-planes-module__17B1-q__cardFoot"
+          },
+          "cardRect": {
+            "x": 20,
+            "y": 950.4375,
+            "width": 350,
+            "height": 568.328125,
+            "right": 370,
+            "bottom": 1518.765625
+          },
+          "buttonRect": {
+            "x": 41,
+            "y": 1453.765625,
+            "width": 308,
+            "height": 44,
+            "right": 349,
+            "bottom": 1497.765625
+          },
+          "animation": {
+            "animationName": "comparador-planes-module__17B1-q__card-drop",
+            "animationDuration": "0.3s",
+            "transitionProperty": "all",
+            "transitionDuration": "0s"
+          },
+          "buttonStyle": {
+            "animationName": "none",
+            "animationDuration": "0s",
+            "transitionProperty": "background-color, transform",
+            "transitionDuration": "0.18s, 0.09s"
+          }
+        },
+        {
+          "id": "plan-master_designer",
+          "toolRows": 8,
+          "controls": 1,
+          "children": 3,
+          "lastChild": {
+            "tag": "DIV",
+            "className": "comparador-planes-module__17B1-q__cardFoot"
+          },
+          "cardRect": {
+            "x": 20,
+            "y": 1530.765625,
+            "width": 350,
+            "height": 600.625,
+            "right": 370,
+            "bottom": 2131.390625
+          },
+          "buttonRect": {
+            "x": 41,
+            "y": 2066.390625,
+            "width": 308,
+            "height": 44,
+            "right": 349,
+            "bottom": 2110.390625
+          },
+          "animation": {
+            "animationName": "comparador-planes-module__17B1-q__card-drop",
+            "animationDuration": "0.3s",
+            "transitionProperty": "all",
+            "transitionDuration": "0s"
+          },
+          "buttonStyle": {
+            "animationName": "none",
+            "animationDuration": "0s",
+            "transitionProperty": "background-color, transform",
+            "transitionDuration": "0.18s, 0.09s"
+          }
+        }
+      ],
+      "mainRect": {
+        "x": 20,
+        "y": 0,
+        "width": 350,
+        "height": 2216.390625,
+        "right": 370,
+        "bottom": 2216.390625
+      },
+      "pageMarkupSha256": "6f04a7f1147508e01080736d564868c9a5337fd1e7bb86c2645969ad989da62d",
+      "interactionDeltas": [
+        {
+          "method": "pointer",
+          "urlBefore": "http://127.0.0.1:3215/planes",
+          "urlAfter": "http://127.0.0.1:3215/planes",
+          "focusBefore": "Escoger: Entusiasta",
+          "focusAfter": "Escoger: Entusiasta",
+          "statusCountBefore": 0,
+          "statusCountAfter": 0,
+          "markupShaBefore": "6f04a7f1147508e01080736d564868c9a5337fd1e7bb86c2645969ad989da62d",
+          "markupShaAfter": "6f04a7f1147508e01080736d564868c9a5337fd1e7bb86c2645969ad989da62d"
+        },
+        {
+          "method": "Enter",
+          "urlBefore": "http://127.0.0.1:3215/planes",
+          "urlAfter": "http://127.0.0.1:3215/planes",
+          "focusBefore": "Escoger: Entusiasta",
+          "focusAfter": "Escoger: Entusiasta",
+          "statusCountBefore": 0,
+          "statusCountAfter": 0,
+          "markupShaBefore": "6f04a7f1147508e01080736d564868c9a5337fd1e7bb86c2645969ad989da62d",
+          "markupShaAfter": "6f04a7f1147508e01080736d564868c9a5337fd1e7bb86c2645969ad989da62d"
+        },
+        {
+          "method": "Space",
+          "urlBefore": "http://127.0.0.1:3215/planes",
+          "urlAfter": "http://127.0.0.1:3215/planes",
+          "focusBefore": "Escoger: Entusiasta",
+          "focusAfter": "Escoger: Entusiasta",
+          "statusCountBefore": 0,
+          "statusCountAfter": 0,
+          "markupShaBefore": "6f04a7f1147508e01080736d564868c9a5337fd1e7bb86c2645969ad989da62d",
+          "markupShaAfter": "6f04a7f1147508e01080736d564868c9a5337fd1e7bb86c2645969ad989da62d"
+        }
+      ]
+    },
+    {
+      "view": "V1 signed-out /planes",
+      "viewport": {
+        "width": 390,
+        "height": 844,
+        "scrollWidth": 390
+      },
+      "language": "en",
+      "cardProbe": [
+        {
+          "id": "plan-entusiasta",
+          "toolRows": 3,
+          "controls": 1,
+          "children": 3,
+          "lastChild": {
+            "tag": "DIV",
+            "className": "comparador-planes-module__17B1-q__cardFoot"
+          },
+          "cardRect": {
+            "x": 20,
+            "y": 221.6875,
+            "width": 350,
+            "height": 341.78125,
+            "right": 370,
+            "bottom": 563.46875
+          },
+          "buttonRect": {
+            "x": 41,
+            "y": 498.46875,
+            "width": 308,
+            "height": 44,
+            "right": 349,
+            "bottom": 542.46875
+          },
+          "animation": {
+            "animationName": "comparador-planes-module__17B1-q__card-drop",
+            "animationDuration": "0.3s",
+            "transitionProperty": "all",
+            "transitionDuration": "0s"
+          },
+          "buttonStyle": {
+            "animationName": "none",
+            "animationDuration": "0s",
+            "transitionProperty": "background-color, transform",
+            "transitionDuration": "0.18s, 0.09s"
+          }
+        },
+        {
+          "id": "plan-designer",
+          "toolRows": 3,
+          "controls": 1,
+          "children": 3,
+          "lastChild": {
+            "tag": "DIV",
+            "className": "comparador-planes-module__17B1-q__cardFoot"
+          },
+          "cardRect": {
+            "x": 20,
+            "y": 575.46875,
+            "width": 350,
+            "height": 362.96875,
+            "right": 370,
+            "bottom": 938.4375
+          },
+          "buttonRect": {
+            "x": 41,
+            "y": 873.4375,
+            "width": 308,
+            "height": 44,
+            "right": 349,
+            "bottom": 917.4375
+          },
+          "animation": {
+            "animationName": "comparador-planes-module__17B1-q__card-drop",
+            "animationDuration": "0.3s",
+            "transitionProperty": "all",
+            "transitionDuration": "0s"
+          },
+          "buttonStyle": {
+            "animationName": "none",
+            "animationDuration": "0s",
+            "transitionProperty": "background-color, transform",
+            "transitionDuration": "0.18s, 0.09s"
+          }
+        },
+        {
+          "id": "plan-designer_plus",
+          "toolRows": 7,
+          "controls": 1,
+          "children": 3,
+          "lastChild": {
+            "tag": "DIV",
+            "className": "comparador-planes-module__17B1-q__cardFoot"
+          },
+          "cardRect": {
+            "x": 20,
+            "y": 950.4375,
+            "width": 350,
+            "height": 568.328125,
+            "right": 370,
+            "bottom": 1518.765625
+          },
+          "buttonRect": {
+            "x": 41,
+            "y": 1453.765625,
+            "width": 308,
+            "height": 44,
+            "right": 349,
+            "bottom": 1497.765625
+          },
+          "animation": {
+            "animationName": "comparador-planes-module__17B1-q__card-drop",
+            "animationDuration": "0.3s",
+            "transitionProperty": "all",
+            "transitionDuration": "0s"
+          },
+          "buttonStyle": {
+            "animationName": "none",
+            "animationDuration": "0s",
+            "transitionProperty": "background-color, transform",
+            "transitionDuration": "0.18s, 0.09s"
+          }
+        },
+        {
+          "id": "plan-master_designer",
+          "toolRows": 8,
+          "controls": 1,
+          "children": 3,
+          "lastChild": {
+            "tag": "DIV",
+            "className": "comparador-planes-module__17B1-q__cardFoot"
+          },
+          "cardRect": {
+            "x": 20,
+            "y": 1530.765625,
+            "width": 350,
+            "height": 600.625,
+            "right": 370,
+            "bottom": 2131.390625
+          },
+          "buttonRect": {
+            "x": 41,
+            "y": 2066.390625,
+            "width": 308,
+            "height": 44,
+            "right": 349,
+            "bottom": 2110.390625
+          },
+          "animation": {
+            "animationName": "comparador-planes-module__17B1-q__card-drop",
+            "animationDuration": "0.3s",
+            "transitionProperty": "all",
+            "transitionDuration": "0s"
+          },
+          "buttonStyle": {
+            "animationName": "none",
+            "animationDuration": "0s",
+            "transitionProperty": "background-color, transform",
+            "transitionDuration": "0.18s, 0.09s"
+          }
+        }
+      ],
+      "mainRect": {
+        "x": 20,
+        "y": 0,
+        "width": 350,
+        "height": 2216.390625,
+        "right": 370,
+        "bottom": 2216.390625
+      },
+      "pageMarkupSha256": "1e5888717d566cdae5220abc2ddbead9b225ba644c1ad5113d9a53b302ec4dc8",
+      "interactionDeltas": [
+        {
+          "method": "pointer",
+          "urlBefore": "http://127.0.0.1:3215/planes",
+          "urlAfter": "http://127.0.0.1:3215/planes",
+          "focusBefore": "Choose: Enthusiast",
+          "focusAfter": "Choose: Enthusiast",
+          "statusCountBefore": 0,
+          "statusCountAfter": 0,
+          "markupShaBefore": "1e5888717d566cdae5220abc2ddbead9b225ba644c1ad5113d9a53b302ec4dc8",
+          "markupShaAfter": "1e5888717d566cdae5220abc2ddbead9b225ba644c1ad5113d9a53b302ec4dc8"
+        },
+        {
+          "method": "Enter",
+          "urlBefore": "http://127.0.0.1:3215/planes",
+          "urlAfter": "http://127.0.0.1:3215/planes",
+          "focusBefore": "Choose: Enthusiast",
+          "focusAfter": "Choose: Enthusiast",
+          "statusCountBefore": 0,
+          "statusCountAfter": 0,
+          "markupShaBefore": "1e5888717d566cdae5220abc2ddbead9b225ba644c1ad5113d9a53b302ec4dc8",
+          "markupShaAfter": "1e5888717d566cdae5220abc2ddbead9b225ba644c1ad5113d9a53b302ec4dc8"
+        },
+        {
+          "method": "Space",
+          "urlBefore": "http://127.0.0.1:3215/planes",
+          "urlAfter": "http://127.0.0.1:3215/planes",
+          "focusBefore": "Choose: Enthusiast",
+          "focusAfter": "Choose: Enthusiast",
+          "statusCountBefore": 0,
+          "statusCountAfter": 0,
+          "markupShaBefore": "1e5888717d566cdae5220abc2ddbead9b225ba644c1ad5113d9a53b302ec4dc8",
+          "markupShaAfter": "1e5888717d566cdae5220abc2ddbead9b225ba644c1ad5113d9a53b302ec4dc8"
+        }
+      ]
+    },
+    {
+      "view": "V1 signed-out /planes",
+      "viewport": {
+        "width": 768,
+        "height": 1024,
+        "scrollWidth": 768
+      },
+      "language": "es",
+      "cardProbe": [
+        {
+          "id": "plan-entusiasta",
+          "toolRows": 3,
+          "controls": 1,
+          "children": 3,
+          "lastChild": {
+            "tag": "DIV",
+            "className": "comparador-planes-module__17B1-q__cardFoot"
+          },
+          "cardRect": {
+            "x": 24,
+            "y": 201.6875,
+            "width": 352,
+            "height": 379.96875,
+            "right": 376,
+            "bottom": 581.65625
+          },
+          "buttonRect": {
+            "x": 49,
+            "y": 512.65625,
+            "width": 302,
+            "height": 44,
+            "right": 351,
+            "bottom": 556.65625
+          },
+          "animation": {
+            "animationName": "comparador-planes-module__17B1-q__card-drop",
+            "animationDuration": "0.3s",
+            "transitionProperty": "all",
+            "transitionDuration": "0s"
+          },
+          "buttonStyle": {
+            "animationName": "none",
+            "animationDuration": "0s",
+            "transitionProperty": "background-color, transform",
+            "transitionDuration": "0.18s, 0.09s"
+          }
+        },
+        {
+          "id": "plan-designer",
+          "toolRows": 3,
+          "controls": 1,
+          "children": 3,
+          "lastChild": {
+            "tag": "DIV",
+            "className": "comparador-planes-module__17B1-q__cardFoot"
+          },
+          "cardRect": {
+            "x": 392,
+            "y": 201.6875,
+            "width": 352,
+            "height": 379.96875,
+            "right": 744,
+            "bottom": 581.65625
+          },
+          "buttonRect": {
+            "x": 417,
+            "y": 512.65625,
+            "width": 302,
+            "height": 44,
+            "right": 719,
+            "bottom": 556.65625
+          },
+          "animation": {
+            "animationName": "comparador-planes-module__17B1-q__card-drop",
+            "animationDuration": "0.3s",
+            "transitionProperty": "all",
+            "transitionDuration": "0s"
+          },
+          "buttonStyle": {
+            "animationName": "none",
+            "animationDuration": "0s",
+            "transitionProperty": "background-color, transform",
+            "transitionDuration": "0.18s, 0.09s"
+          }
+        },
+        {
+          "id": "plan-designer_plus",
+          "toolRows": 7,
+          "controls": 1,
+          "children": 3,
+          "lastChild": {
+            "tag": "DIV",
+            "className": "comparador-planes-module__17B1-q__cardFoot"
+          },
+          "cardRect": {
+            "x": 24,
+            "y": 597.65625,
+            "width": 352,
+            "height": 617.625,
+            "right": 376,
+            "bottom": 1215.28125
+          },
+          "buttonRect": {
+            "x": 49,
+            "y": 1146.28125,
+            "width": 302,
+            "height": 44,
+            "right": 351,
+            "bottom": 1190.28125
+          },
+          "animation": {
+            "animationName": "comparador-planes-module__17B1-q__card-drop",
+            "animationDuration": "0.3s",
+            "transitionProperty": "all",
+            "transitionDuration": "0s"
+          },
+          "buttonStyle": {
+            "animationName": "none",
+            "animationDuration": "0s",
+            "transitionProperty": "background-color, transform",
+            "transitionDuration": "0.18s, 0.09s"
+          }
+        },
+        {
+          "id": "plan-master_designer",
+          "toolRows": 8,
+          "controls": 1,
+          "children": 3,
+          "lastChild": {
+            "tag": "DIV",
+            "className": "comparador-planes-module__17B1-q__cardFoot"
+          },
+          "cardRect": {
+            "x": 392,
+            "y": 597.65625,
+            "width": 352,
+            "height": 617.625,
+            "right": 744,
+            "bottom": 1215.28125
+          },
+          "buttonRect": {
+            "x": 417,
+            "y": 1146.28125,
+            "width": 302,
+            "height": 44,
+            "right": 719,
+            "bottom": 1190.28125
+          },
+          "animation": {
+            "animationName": "comparador-planes-module__17B1-q__card-drop",
+            "animationDuration": "0.3s",
+            "transitionProperty": "all",
+            "transitionDuration": "0s"
+          },
+          "buttonStyle": {
+            "animationName": "none",
+            "animationDuration": "0s",
+            "transitionProperty": "background-color, transform",
+            "transitionDuration": "0.18s, 0.09s"
+          }
+        }
+      ],
+      "mainRect": {
+        "x": 24,
+        "y": 0,
+        "width": 720,
+        "height": 1300.28125,
+        "right": 744,
+        "bottom": 1300.28125
+      },
+      "pageMarkupSha256": "6f04a7f1147508e01080736d564868c9a5337fd1e7bb86c2645969ad989da62d",
+      "interactionDeltas": [
+        {
+          "method": "pointer",
+          "urlBefore": "http://127.0.0.1:3215/planes",
+          "urlAfter": "http://127.0.0.1:3215/planes",
+          "focusBefore": "Escoger: Entusiasta",
+          "focusAfter": "Escoger: Entusiasta",
+          "statusCountBefore": 0,
+          "statusCountAfter": 0,
+          "markupShaBefore": "6f04a7f1147508e01080736d564868c9a5337fd1e7bb86c2645969ad989da62d",
+          "markupShaAfter": "6f04a7f1147508e01080736d564868c9a5337fd1e7bb86c2645969ad989da62d"
+        },
+        {
+          "method": "Enter",
+          "urlBefore": "http://127.0.0.1:3215/planes",
+          "urlAfter": "http://127.0.0.1:3215/planes",
+          "focusBefore": "Escoger: Entusiasta",
+          "focusAfter": "Escoger: Entusiasta",
+          "statusCountBefore": 0,
+          "statusCountAfter": 0,
+          "markupShaBefore": "6f04a7f1147508e01080736d564868c9a5337fd1e7bb86c2645969ad989da62d",
+          "markupShaAfter": "6f04a7f1147508e01080736d564868c9a5337fd1e7bb86c2645969ad989da62d"
+        },
+        {
+          "method": "Space",
+          "urlBefore": "http://127.0.0.1:3215/planes",
+          "urlAfter": "http://127.0.0.1:3215/planes",
+          "focusBefore": "Escoger: Entusiasta",
+          "focusAfter": "Escoger: Entusiasta",
+          "statusCountBefore": 0,
+          "statusCountAfter": 0,
+          "markupShaBefore": "6f04a7f1147508e01080736d564868c9a5337fd1e7bb86c2645969ad989da62d",
+          "markupShaAfter": "6f04a7f1147508e01080736d564868c9a5337fd1e7bb86c2645969ad989da62d"
+        }
+      ]
+    },
+    {
+      "view": "V1 signed-out /planes",
+      "viewport": {
+        "width": 768,
+        "height": 1024,
+        "scrollWidth": 768
+      },
+      "language": "en",
+      "cardProbe": [
+        {
+          "id": "plan-entusiasta",
+          "toolRows": 3,
+          "controls": 1,
+          "children": 3,
+          "lastChild": {
+            "tag": "DIV",
+            "className": "comparador-planes-module__17B1-q__cardFoot"
+          },
+          "cardRect": {
+            "x": 24,
+            "y": 201.6875,
+            "width": 352,
+            "height": 379.96875,
+            "right": 376,
+            "bottom": 581.65625
+          },
+          "buttonRect": {
+            "x": 49,
+            "y": 512.65625,
+            "width": 302,
+            "height": 44,
+            "right": 351,
+            "bottom": 556.65625
+          },
+          "animation": {
+            "animationName": "comparador-planes-module__17B1-q__card-drop",
+            "animationDuration": "0.3s",
+            "transitionProperty": "all",
+            "transitionDuration": "0s"
+          },
+          "buttonStyle": {
+            "animationName": "none",
+            "animationDuration": "0s",
+            "transitionProperty": "background-color, transform",
+            "transitionDuration": "0.18s, 0.09s"
+          }
+        },
+        {
+          "id": "plan-designer",
+          "toolRows": 3,
+          "controls": 1,
+          "children": 3,
+          "lastChild": {
+            "tag": "DIV",
+            "className": "comparador-planes-module__17B1-q__cardFoot"
+          },
+          "cardRect": {
+            "x": 392,
+            "y": 201.6875,
+            "width": 352,
+            "height": 379.96875,
+            "right": 744,
+            "bottom": 581.65625
+          },
+          "buttonRect": {
+            "x": 417,
+            "y": 512.65625,
+            "width": 302,
+            "height": 44,
+            "right": 719,
+            "bottom": 556.65625
+          },
+          "animation": {
+            "animationName": "comparador-planes-module__17B1-q__card-drop",
+            "animationDuration": "0.3s",
+            "transitionProperty": "all",
+            "transitionDuration": "0s"
+          },
+          "buttonStyle": {
+            "animationName": "none",
+            "animationDuration": "0s",
+            "transitionProperty": "background-color, transform",
+            "transitionDuration": "0.18s, 0.09s"
+          }
+        },
+        {
+          "id": "plan-designer_plus",
+          "toolRows": 7,
+          "controls": 1,
+          "children": 3,
+          "lastChild": {
+            "tag": "DIV",
+            "className": "comparador-planes-module__17B1-q__cardFoot"
+          },
+          "cardRect": {
+            "x": 24,
+            "y": 597.65625,
+            "width": 352,
+            "height": 617.625,
+            "right": 376,
+            "bottom": 1215.28125
+          },
+          "buttonRect": {
+            "x": 49,
+            "y": 1146.28125,
+            "width": 302,
+            "height": 44,
+            "right": 351,
+            "bottom": 1190.28125
+          },
+          "animation": {
+            "animationName": "comparador-planes-module__17B1-q__card-drop",
+            "animationDuration": "0.3s",
+            "transitionProperty": "all",
+            "transitionDuration": "0s"
+          },
+          "buttonStyle": {
+            "animationName": "none",
+            "animationDuration": "0s",
+            "transitionProperty": "background-color, transform",
+            "transitionDuration": "0.18s, 0.09s"
+          }
+        },
+        {
+          "id": "plan-master_designer",
+          "toolRows": 8,
+          "controls": 1,
+          "children": 3,
+          "lastChild": {
+            "tag": "DIV",
+            "className": "comparador-planes-module__17B1-q__cardFoot"
+          },
+          "cardRect": {
+            "x": 392,
+            "y": 597.65625,
+            "width": 352,
+            "height": 617.625,
+            "right": 744,
+            "bottom": 1215.28125
+          },
+          "buttonRect": {
+            "x": 417,
+            "y": 1146.28125,
+            "width": 302,
+            "height": 44,
+            "right": 719,
+            "bottom": 1190.28125
+          },
+          "animation": {
+            "animationName": "comparador-planes-module__17B1-q__card-drop",
+            "animationDuration": "0.3s",
+            "transitionProperty": "all",
+            "transitionDuration": "0s"
+          },
+          "buttonStyle": {
+            "animationName": "none",
+            "animationDuration": "0s",
+            "transitionProperty": "background-color, transform",
+            "transitionDuration": "0.18s, 0.09s"
+          }
+        }
+      ],
+      "mainRect": {
+        "x": 24,
+        "y": 0,
+        "width": 720,
+        "height": 1300.28125,
+        "right": 744,
+        "bottom": 1300.28125
+      },
+      "pageMarkupSha256": "1e5888717d566cdae5220abc2ddbead9b225ba644c1ad5113d9a53b302ec4dc8",
+      "interactionDeltas": [
+        {
+          "method": "pointer",
+          "urlBefore": "http://127.0.0.1:3215/planes",
+          "urlAfter": "http://127.0.0.1:3215/planes",
+          "focusBefore": "Choose: Enthusiast",
+          "focusAfter": "Choose: Enthusiast",
+          "statusCountBefore": 0,
+          "statusCountAfter": 0,
+          "markupShaBefore": "1e5888717d566cdae5220abc2ddbead9b225ba644c1ad5113d9a53b302ec4dc8",
+          "markupShaAfter": "1e5888717d566cdae5220abc2ddbead9b225ba644c1ad5113d9a53b302ec4dc8"
+        },
+        {
+          "method": "Enter",
+          "urlBefore": "http://127.0.0.1:3215/planes",
+          "urlAfter": "http://127.0.0.1:3215/planes",
+          "focusBefore": "Choose: Enthusiast",
+          "focusAfter": "Choose: Enthusiast",
+          "statusCountBefore": 0,
+          "statusCountAfter": 0,
+          "markupShaBefore": "1e5888717d566cdae5220abc2ddbead9b225ba644c1ad5113d9a53b302ec4dc8",
+          "markupShaAfter": "1e5888717d566cdae5220abc2ddbead9b225ba644c1ad5113d9a53b302ec4dc8"
+        },
+        {
+          "method": "Space",
+          "urlBefore": "http://127.0.0.1:3215/planes",
+          "urlAfter": "http://127.0.0.1:3215/planes",
+          "focusBefore": "Choose: Enthusiast",
+          "focusAfter": "Choose: Enthusiast",
+          "statusCountBefore": 0,
+          "statusCountAfter": 0,
+          "markupShaBefore": "1e5888717d566cdae5220abc2ddbead9b225ba644c1ad5113d9a53b302ec4dc8",
+          "markupShaAfter": "1e5888717d566cdae5220abc2ddbead9b225ba644c1ad5113d9a53b302ec4dc8"
+        }
+      ]
+    },
+    {
+      "view": "V1 signed-out /planes",
+      "viewport": {
+        "width": 1280,
+        "height": 900,
+        "scrollWidth": 1280
+      },
+      "language": "es",
+      "cardProbe": [
+        {
+          "id": "plan-entusiasta",
+          "toolRows": 3,
+          "controls": 1,
+          "children": 3,
+          "lastChild": {
+            "tag": "DIV",
+            "className": "comparador-planes-module__17B1-q__cardFoot"
+          },
+          "cardRect": {
+            "x": 24,
+            "y": 201.6875,
+            "width": 296,
+            "height": 637.921875,
+            "right": 320,
+            "bottom": 839.609375
+          },
+          "buttonRect": {
+            "x": 49,
+            "y": 770.609375,
+            "width": 246,
+            "height": 44,
+            "right": 295,
+            "bottom": 814.609375
+          },
+          "animation": {
+            "animationName": "comparador-planes-module__17B1-q__card-drop",
+            "animationDuration": "0.3s",
+            "transitionProperty": "all",
+            "transitionDuration": "0s"
+          },
+          "buttonStyle": {
+            "animationName": "none",
+            "animationDuration": "0s",
+            "transitionProperty": "background-color, transform",
+            "transitionDuration": "0.18s, 0.09s"
+          }
+        },
+        {
+          "id": "plan-designer",
+          "toolRows": 3,
+          "controls": 1,
+          "children": 3,
+          "lastChild": {
+            "tag": "DIV",
+            "className": "comparador-planes-module__17B1-q__cardFoot"
+          },
+          "cardRect": {
+            "x": 336,
+            "y": 201.6875,
+            "width": 296,
+            "height": 637.921875,
+            "right": 632,
+            "bottom": 839.609375
+          },
+          "buttonRect": {
+            "x": 361,
+            "y": 770.609375,
+            "width": 246,
+            "height": 44,
+            "right": 607,
+            "bottom": 814.609375
+          },
+          "animation": {
+            "animationName": "comparador-planes-module__17B1-q__card-drop",
+            "animationDuration": "0.3s",
+            "transitionProperty": "all",
+            "transitionDuration": "0s"
+          },
+          "buttonStyle": {
+            "animationName": "none",
+            "animationDuration": "0s",
+            "transitionProperty": "background-color, transform",
+            "transitionDuration": "0.18s, 0.09s"
+          }
+        },
+        {
+          "id": "plan-designer_plus",
+          "toolRows": 7,
+          "controls": 1,
+          "children": 3,
+          "lastChild": {
+            "tag": "DIV",
+            "className": "comparador-planes-module__17B1-q__cardFoot"
+          },
+          "cardRect": {
+            "x": 648,
+            "y": 201.6875,
+            "width": 296,
+            "height": 637.921875,
+            "right": 944,
+            "bottom": 839.609375
+          },
+          "buttonRect": {
+            "x": 673,
+            "y": 770.609375,
+            "width": 246,
+            "height": 44,
+            "right": 919,
+            "bottom": 814.609375
+          },
+          "animation": {
+            "animationName": "comparador-planes-module__17B1-q__card-drop",
+            "animationDuration": "0.3s",
+            "transitionProperty": "all",
+            "transitionDuration": "0s"
+          },
+          "buttonStyle": {
+            "animationName": "none",
+            "animationDuration": "0s",
+            "transitionProperty": "background-color, transform",
+            "transitionDuration": "0.18s, 0.09s"
+          }
+        },
+        {
+          "id": "plan-master_designer",
+          "toolRows": 8,
+          "controls": 1,
+          "children": 3,
+          "lastChild": {
+            "tag": "DIV",
+            "className": "comparador-planes-module__17B1-q__cardFoot"
+          },
+          "cardRect": {
+            "x": 960,
+            "y": 201.6875,
+            "width": 296,
+            "height": 637.921875,
+            "right": 1256,
+            "bottom": 839.609375
+          },
+          "buttonRect": {
+            "x": 985,
+            "y": 770.609375,
+            "width": 246,
+            "height": 44,
+            "right": 1231,
+            "bottom": 814.609375
+          },
+          "animation": {
+            "animationName": "comparador-planes-module__17B1-q__card-drop",
+            "animationDuration": "0.3s",
+            "transitionProperty": "all",
+            "transitionDuration": "0s"
+          },
+          "buttonStyle": {
+            "animationName": "none",
+            "animationDuration": "0s",
+            "transitionProperty": "background-color, transform",
+            "transitionDuration": "0.18s, 0.09s"
+          }
+        }
+      ],
+      "mainRect": {
+        "x": 24,
+        "y": 0,
+        "width": 1232,
+        "height": 924.609375,
+        "right": 1256,
+        "bottom": 924.609375
+      },
+      "pageMarkupSha256": "6f04a7f1147508e01080736d564868c9a5337fd1e7bb86c2645969ad989da62d",
+      "interactionDeltas": [
+        {
+          "method": "pointer",
+          "urlBefore": "http://127.0.0.1:3215/planes",
+          "urlAfter": "http://127.0.0.1:3215/planes",
+          "focusBefore": "Escoger: Entusiasta",
+          "focusAfter": "Escoger: Entusiasta",
+          "statusCountBefore": 0,
+          "statusCountAfter": 0,
+          "markupShaBefore": "6f04a7f1147508e01080736d564868c9a5337fd1e7bb86c2645969ad989da62d",
+          "markupShaAfter": "6f04a7f1147508e01080736d564868c9a5337fd1e7bb86c2645969ad989da62d"
+        },
+        {
+          "method": "Enter",
+          "urlBefore": "http://127.0.0.1:3215/planes",
+          "urlAfter": "http://127.0.0.1:3215/planes",
+          "focusBefore": "Escoger: Entusiasta",
+          "focusAfter": "Escoger: Entusiasta",
+          "statusCountBefore": 0,
+          "statusCountAfter": 0,
+          "markupShaBefore": "6f04a7f1147508e01080736d564868c9a5337fd1e7bb86c2645969ad989da62d",
+          "markupShaAfter": "6f04a7f1147508e01080736d564868c9a5337fd1e7bb86c2645969ad989da62d"
+        },
+        {
+          "method": "Space",
+          "urlBefore": "http://127.0.0.1:3215/planes",
+          "urlAfter": "http://127.0.0.1:3215/planes",
+          "focusBefore": "Escoger: Entusiasta",
+          "focusAfter": "Escoger: Entusiasta",
+          "statusCountBefore": 0,
+          "statusCountAfter": 0,
+          "markupShaBefore": "6f04a7f1147508e01080736d564868c9a5337fd1e7bb86c2645969ad989da62d",
+          "markupShaAfter": "6f04a7f1147508e01080736d564868c9a5337fd1e7bb86c2645969ad989da62d"
+        }
+      ]
+    },
+    {
+      "view": "V1 signed-out /planes",
+      "viewport": {
+        "width": 1280,
+        "height": 900,
+        "scrollWidth": 1280
+      },
+      "language": "en",
+      "cardProbe": [
+        {
+          "id": "plan-entusiasta",
+          "toolRows": 3,
+          "controls": 1,
+          "children": 3,
+          "lastChild": {
+            "tag": "DIV",
+            "className": "comparador-planes-module__17B1-q__cardFoot"
+          },
+          "cardRect": {
+            "x": 24,
+            "y": 201.6875,
+            "width": 296,
+            "height": 617.625,
+            "right": 320,
+            "bottom": 819.3125
+          },
+          "buttonRect": {
+            "x": 49,
+            "y": 750.3125,
+            "width": 246,
+            "height": 44,
+            "right": 295,
+            "bottom": 794.3125
+          },
+          "animation": {
+            "animationName": "comparador-planes-module__17B1-q__card-drop",
+            "animationDuration": "0.3s",
+            "transitionProperty": "all",
+            "transitionDuration": "0s"
+          },
+          "buttonStyle": {
+            "animationName": "none",
+            "animationDuration": "0s",
+            "transitionProperty": "background-color, transform",
+            "transitionDuration": "0.18s, 0.09s"
+          }
+        },
+        {
+          "id": "plan-designer",
+          "toolRows": 3,
+          "controls": 1,
+          "children": 3,
+          "lastChild": {
+            "tag": "DIV",
+            "className": "comparador-planes-module__17B1-q__cardFoot"
+          },
+          "cardRect": {
+            "x": 336,
+            "y": 201.6875,
+            "width": 296,
+            "height": 617.625,
+            "right": 632,
+            "bottom": 819.3125
+          },
+          "buttonRect": {
+            "x": 361,
+            "y": 750.3125,
+            "width": 246,
+            "height": 44,
+            "right": 607,
+            "bottom": 794.3125
+          },
+          "animation": {
+            "animationName": "comparador-planes-module__17B1-q__card-drop",
+            "animationDuration": "0.3s",
+            "transitionProperty": "all",
+            "transitionDuration": "0s"
+          },
+          "buttonStyle": {
+            "animationName": "none",
+            "animationDuration": "0s",
+            "transitionProperty": "background-color, transform",
+            "transitionDuration": "0.18s, 0.09s"
+          }
+        },
+        {
+          "id": "plan-designer_plus",
+          "toolRows": 7,
+          "controls": 1,
+          "children": 3,
+          "lastChild": {
+            "tag": "DIV",
+            "className": "comparador-planes-module__17B1-q__cardFoot"
+          },
+          "cardRect": {
+            "x": 648,
+            "y": 201.6875,
+            "width": 296,
+            "height": 617.625,
+            "right": 944,
+            "bottom": 819.3125
+          },
+          "buttonRect": {
+            "x": 673,
+            "y": 750.3125,
+            "width": 246,
+            "height": 44,
+            "right": 919,
+            "bottom": 794.3125
+          },
+          "animation": {
+            "animationName": "comparador-planes-module__17B1-q__card-drop",
+            "animationDuration": "0.3s",
+            "transitionProperty": "all",
+            "transitionDuration": "0s"
+          },
+          "buttonStyle": {
+            "animationName": "none",
+            "animationDuration": "0s",
+            "transitionProperty": "background-color, transform",
+            "transitionDuration": "0.18s, 0.09s"
+          }
+        },
+        {
+          "id": "plan-master_designer",
+          "toolRows": 8,
+          "controls": 1,
+          "children": 3,
+          "lastChild": {
+            "tag": "DIV",
+            "className": "comparador-planes-module__17B1-q__cardFoot"
+          },
+          "cardRect": {
+            "x": 960,
+            "y": 201.6875,
+            "width": 296,
+            "height": 617.625,
+            "right": 1256,
+            "bottom": 819.3125
+          },
+          "buttonRect": {
+            "x": 985,
+            "y": 750.3125,
+            "width": 246,
+            "height": 44,
+            "right": 1231,
+            "bottom": 794.3125
+          },
+          "animation": {
+            "animationName": "comparador-planes-module__17B1-q__card-drop",
+            "animationDuration": "0.3s",
+            "transitionProperty": "all",
+            "transitionDuration": "0s"
+          },
+          "buttonStyle": {
+            "animationName": "none",
+            "animationDuration": "0s",
+            "transitionProperty": "background-color, transform",
+            "transitionDuration": "0.18s, 0.09s"
+          }
+        }
+      ],
+      "mainRect": {
+        "x": 24,
+        "y": 0,
+        "width": 1232,
+        "height": 904.3125,
+        "right": 1256,
+        "bottom": 904.3125
+      },
+      "pageMarkupSha256": "1e5888717d566cdae5220abc2ddbead9b225ba644c1ad5113d9a53b302ec4dc8",
+      "interactionDeltas": [
+        {
+          "method": "pointer",
+          "urlBefore": "http://127.0.0.1:3215/planes",
+          "urlAfter": "http://127.0.0.1:3215/planes",
+          "focusBefore": "Choose: Enthusiast",
+          "focusAfter": "Choose: Enthusiast",
+          "statusCountBefore": 0,
+          "statusCountAfter": 0,
+          "markupShaBefore": "1e5888717d566cdae5220abc2ddbead9b225ba644c1ad5113d9a53b302ec4dc8",
+          "markupShaAfter": "1e5888717d566cdae5220abc2ddbead9b225ba644c1ad5113d9a53b302ec4dc8"
+        },
+        {
+          "method": "Enter",
+          "urlBefore": "http://127.0.0.1:3215/planes",
+          "urlAfter": "http://127.0.0.1:3215/planes",
+          "focusBefore": "Choose: Enthusiast",
+          "focusAfter": "Choose: Enthusiast",
+          "statusCountBefore": 0,
+          "statusCountAfter": 0,
+          "markupShaBefore": "1e5888717d566cdae5220abc2ddbead9b225ba644c1ad5113d9a53b302ec4dc8",
+          "markupShaAfter": "1e5888717d566cdae5220abc2ddbead9b225ba644c1ad5113d9a53b302ec4dc8"
+        },
+        {
+          "method": "Space",
+          "urlBefore": "http://127.0.0.1:3215/planes",
+          "urlAfter": "http://127.0.0.1:3215/planes",
+          "focusBefore": "Choose: Enthusiast",
+          "focusAfter": "Choose: Enthusiast",
+          "statusCountBefore": 0,
+          "statusCountAfter": 0,
+          "markupShaBefore": "1e5888717d566cdae5220abc2ddbead9b225ba644c1ad5113d9a53b302ec4dc8",
+          "markupShaAfter": "1e5888717d566cdae5220abc2ddbead9b225ba644c1ad5113d9a53b302ec4dc8"
+        }
+      ]
+    }
+  ],
+  "reducedMotionObservations": [
+    {
+      "viewport": "phone360",
+      "language": "es",
+      "values": [
+        {
+          "id": "plan-entusiasta",
+          "animationName": "none",
+          "animationDuration": "0s",
+          "transitionDuration": "0s"
+        },
+        {
+          "id": "plan-designer",
+          "animationName": "none",
+          "animationDuration": "0s",
+          "transitionDuration": "0s"
+        },
+        {
+          "id": "plan-designer_plus",
+          "animationName": "none",
+          "animationDuration": "0s",
+          "transitionDuration": "0s"
+        },
+        {
+          "id": "plan-master_designer",
+          "animationName": "none",
+          "animationDuration": "0s",
+          "transitionDuration": "0s"
+        }
+      ]
+    },
+    {
+      "viewport": "phone360",
+      "language": "en",
+      "values": [
+        {
+          "id": "plan-entusiasta",
+          "animationName": "none",
+          "animationDuration": "0s",
+          "transitionDuration": "0s"
+        },
+        {
+          "id": "plan-designer",
+          "animationName": "none",
+          "animationDuration": "0s",
+          "transitionDuration": "0s"
+        },
+        {
+          "id": "plan-designer_plus",
+          "animationName": "none",
+          "animationDuration": "0s",
+          "transitionDuration": "0s"
+        },
+        {
+          "id": "plan-master_designer",
+          "animationName": "none",
+          "animationDuration": "0s",
+          "transitionDuration": "0s"
+        }
+      ]
+    },
+    {
+      "viewport": "phone390",
+      "language": "es",
+      "values": [
+        {
+          "id": "plan-entusiasta",
+          "animationName": "none",
+          "animationDuration": "0s",
+          "transitionDuration": "0s"
+        },
+        {
+          "id": "plan-designer",
+          "animationName": "none",
+          "animationDuration": "0s",
+          "transitionDuration": "0s"
+        },
+        {
+          "id": "plan-designer_plus",
+          "animationName": "none",
+          "animationDuration": "0s",
+          "transitionDuration": "0s"
+        },
+        {
+          "id": "plan-master_designer",
+          "animationName": "none",
+          "animationDuration": "0s",
+          "transitionDuration": "0s"
+        }
+      ]
+    },
+    {
+      "viewport": "phone390",
+      "language": "en",
+      "values": [
+        {
+          "id": "plan-entusiasta",
+          "animationName": "none",
+          "animationDuration": "0s",
+          "transitionDuration": "0s"
+        },
+        {
+          "id": "plan-designer",
+          "animationName": "none",
+          "animationDuration": "0s",
+          "transitionDuration": "0s"
+        },
+        {
+          "id": "plan-designer_plus",
+          "animationName": "none",
+          "animationDuration": "0s",
+          "transitionDuration": "0s"
+        },
+        {
+          "id": "plan-master_designer",
+          "animationName": "none",
+          "animationDuration": "0s",
+          "transitionDuration": "0s"
+        }
+      ]
+    },
+    {
+      "viewport": "tablet",
+      "language": "es",
+      "values": [
+        {
+          "id": "plan-entusiasta",
+          "animationName": "none",
+          "animationDuration": "0s",
+          "transitionDuration": "0s"
+        },
+        {
+          "id": "plan-designer",
+          "animationName": "none",
+          "animationDuration": "0s",
+          "transitionDuration": "0s"
+        },
+        {
+          "id": "plan-designer_plus",
+          "animationName": "none",
+          "animationDuration": "0s",
+          "transitionDuration": "0s"
+        },
+        {
+          "id": "plan-master_designer",
+          "animationName": "none",
+          "animationDuration": "0s",
+          "transitionDuration": "0s"
+        }
+      ]
+    },
+    {
+      "viewport": "tablet",
+      "language": "en",
+      "values": [
+        {
+          "id": "plan-entusiasta",
+          "animationName": "none",
+          "animationDuration": "0s",
+          "transitionDuration": "0s"
+        },
+        {
+          "id": "plan-designer",
+          "animationName": "none",
+          "animationDuration": "0s",
+          "transitionDuration": "0s"
+        },
+        {
+          "id": "plan-designer_plus",
+          "animationName": "none",
+          "animationDuration": "0s",
+          "transitionDuration": "0s"
+        },
+        {
+          "id": "plan-master_designer",
+          "animationName": "none",
+          "animationDuration": "0s",
+          "transitionDuration": "0s"
+        }
+      ]
+    },
+    {
+      "viewport": "desktop",
+      "language": "es",
+      "values": [
+        {
+          "id": "plan-entusiasta",
+          "animationName": "none",
+          "animationDuration": "0s",
+          "transitionDuration": "0s"
+        },
+        {
+          "id": "plan-designer",
+          "animationName": "none",
+          "animationDuration": "0s",
+          "transitionDuration": "0s"
+        },
+        {
+          "id": "plan-designer_plus",
+          "animationName": "none",
+          "animationDuration": "0s",
+          "transitionDuration": "0s"
+        },
+        {
+          "id": "plan-master_designer",
+          "animationName": "none",
+          "animationDuration": "0s",
+          "transitionDuration": "0s"
+        }
+      ]
+    },
+    {
+      "viewport": "desktop",
+      "language": "en",
+      "values": [
+        {
+          "id": "plan-entusiasta",
+          "animationName": "none",
+          "animationDuration": "0s",
+          "transitionDuration": "0s"
+        },
+        {
+          "id": "plan-designer",
+          "animationName": "none",
+          "animationDuration": "0s",
+          "transitionDuration": "0s"
+        },
+        {
+          "id": "plan-designer_plus",
+          "animationName": "none",
+          "animationDuration": "0s",
+          "transitionDuration": "0s"
+        },
+        {
+          "id": "plan-master_designer",
+          "animationName": "none",
+          "animationDuration": "0s",
+          "transitionDuration": "0s"
+        }
+      ]
+    }
+  ],
+  "stillQueryNoPreference": [
+    {
+      "id": "r12ce74-v1-phone390-es-light-default-no-preference",
+      "url": "http://127.0.0.1:3215/planes",
+      "viewport": "390x844",
+      "language": "es",
+      "theme": "light",
+      "media": "prefers-reduced-motion: no-preference",
+      "computedCardAndButtonStyles": [
+        {
+          "id": "plan-entusiasta",
+          "cardAnimationName": "comparador-planes-module__17B1-q__card-drop",
+          "cardAnimationDuration": "0.3s",
+          "cardTransitionProperty": "all",
+          "cardTransitionDuration": "0s",
+          "buttonTransitionProperty": "background-color, transform",
+          "buttonTransitionDuration": "0.18s, 0.09s"
+        },
+        {
+          "id": "plan-designer",
+          "cardAnimationName": "comparador-planes-module__17B1-q__card-drop",
+          "cardAnimationDuration": "0.3s",
+          "cardTransitionProperty": "all",
+          "cardTransitionDuration": "0s",
+          "buttonTransitionProperty": "background-color, transform",
+          "buttonTransitionDuration": "0.18s, 0.09s"
+        },
+        {
+          "id": "plan-designer_plus",
+          "cardAnimationName": "comparador-planes-module__17B1-q__card-drop",
+          "cardAnimationDuration": "0.3s",
+          "cardTransitionProperty": "all",
+          "cardTransitionDuration": "0s",
+          "buttonTransitionProperty": "background-color, transform",
+          "buttonTransitionDuration": "0.18s, 0.09s"
+        },
+        {
+          "id": "plan-master_designer",
+          "cardAnimationName": "comparador-planes-module__17B1-q__card-drop",
+          "cardAnimationDuration": "0.3s",
+          "cardTransitionProperty": "all",
+          "cardTransitionDuration": "0s",
+          "buttonTransitionProperty": "background-color, transform",
+          "buttonTransitionDuration": "0.18s, 0.09s"
+        }
+      ]
+    },
+    {
+      "id": "r12ce74-v1-phone390-es-light-still-query-no-preference",
+      "url": "http://127.0.0.1:3215/planes?still=1",
+      "viewport": "390x844",
+      "language": "es",
+      "theme": "light",
+      "media": "prefers-reduced-motion: no-preference",
+      "computedCardAndButtonStyles": [
+        {
+          "id": "plan-entusiasta",
+          "cardAnimationName": "comparador-planes-module__17B1-q__card-drop",
+          "cardAnimationDuration": "0.3s",
+          "cardTransitionProperty": "all",
+          "cardTransitionDuration": "0s",
+          "buttonTransitionProperty": "background-color, transform",
+          "buttonTransitionDuration": "0.18s, 0.09s"
+        },
+        {
+          "id": "plan-designer",
+          "cardAnimationName": "comparador-planes-module__17B1-q__card-drop",
+          "cardAnimationDuration": "0.3s",
+          "cardTransitionProperty": "all",
+          "cardTransitionDuration": "0s",
+          "buttonTransitionProperty": "background-color, transform",
+          "buttonTransitionDuration": "0.18s, 0.09s"
+        },
+        {
+          "id": "plan-designer_plus",
+          "cardAnimationName": "comparador-planes-module__17B1-q__card-drop",
+          "cardAnimationDuration": "0.3s",
+          "cardTransitionProperty": "all",
+          "cardTransitionDuration": "0s",
+          "buttonTransitionProperty": "background-color, transform",
+          "buttonTransitionDuration": "0.18s, 0.09s"
+        },
+        {
+          "id": "plan-master_designer",
+          "cardAnimationName": "comparador-planes-module__17B1-q__card-drop",
+          "cardAnimationDuration": "0.3s",
+          "cardTransitionProperty": "all",
+          "cardTransitionDuration": "0s",
+          "buttonTransitionProperty": "background-color, transform",
+          "buttonTransitionDuration": "0.18s, 0.09s"
+        }
+      ]
+    }
+  ]
+}

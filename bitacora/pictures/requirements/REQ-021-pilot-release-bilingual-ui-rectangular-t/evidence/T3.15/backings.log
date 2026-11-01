@@ -1,0 +1,5 @@
+
+> demo-decoracion@0.1.0 taller:test-backing-nuevos
+> tsx scripts/test/test-backing-nuevos.ts
+
+test-backing-nuevos: ok (6 muebles)

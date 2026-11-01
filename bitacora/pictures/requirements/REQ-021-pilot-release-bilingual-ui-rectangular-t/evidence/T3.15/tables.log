@@ -1,0 +1,16 @@
+
+> demo-decoracion@0.1.0 taller:test-mesas-nuevas
+> tsx scripts/test/test-taller-mesas-nuevas.ts
+
+Taller: mesas paramétricas nuevas aprobadas:
+  ✓ la lista implementada coincide con la aprobación y conserva los ocho tipos existentes
+  ✓ imperial: registros tipados, valores de la propuesta y límites de la mesa construida
+  ✓ imperial: distribución por el contorno, capacidad, separación y lista sin precios
+  ✓ imperial: herramientas de escena aceptan la mesa y coinciden con la edición determinista
+  ✓ infantil: registros tipados, valores de la propuesta y límites de la mesa construida
+  ✓ infantil: distribución por el contorno, capacidad, separación y lista sin precios
+  ✓ infantil: herramientas de escena aceptan la mesa y coinciden con la edición determinista
+  ✓ barra: registros tipados, valores de la propuesta y límites de la mesa construida
+  ✓ barra: distribución por el contorno, capacidad, separación y lista sin precios
+  ✓ barra: herramientas de escena aceptan la mesa y coinciden con la edición determinista
+test-taller-mesas-nuevas: ok (10 pruebas; 3 tipos aprobados; 8 existentes conservados)
