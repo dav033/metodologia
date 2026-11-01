@@ -84,7 +84,7 @@ class AreaReport:
 def legacy_executor(root: Path, *, apply: bool, archive_max_bytes: int, limit: int | None, sizes: bool,
                     emit: Callable[..., None] | None = None) -> list[dict]:
     """Every legacy executor run under `root`: `retain_run(preserve=True)`, superseded runs known."""
-    from bt_scheduler_executor.retention import retain_run, superseded_runs
+    from bt_scheduler_executor_adapter import retain_run, superseded_runs   # the executor module has one door
 
     from .scratch import size_of
     rows: list[dict] = []

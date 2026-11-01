@@ -490,7 +490,7 @@ def execution_notes(rdir: Path, ref: str) -> str:
             hashlib.sha256(frozen.read_bytes()).hexdigest() != record.get("sha256"):
         return ""
     return (f"Planning draft: {frozen.as_posix()}" + (f"\nPlanning mockup: {html.as_posix()}" if html.is_file() else "")
-            + (f"\nPlanning TSX: {tsx.as_posix()}" if tsx.is_file() else ""))
+            + (f"\nPlanning TSX: {tsx.as_posix()}\nPlanning UI pool: @bitacora/ui" if tsx.is_file() else ""))
 
 
 def follow_project(root: Path, project: str) -> list[str]:
