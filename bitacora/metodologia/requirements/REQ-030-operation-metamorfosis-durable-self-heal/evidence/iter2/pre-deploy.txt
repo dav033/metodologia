@@ -594,3 +594,11 @@ regression: skipped (D-261: integrate.regression = none)
 rollback: git revert the merge of solver-trust on main, restart bt-durable.service and bitacora-web.service and bitacora-remote-api.service
 remote API pin: 5a9713f68b7a -> b9e80f90a690 (backup /home/david/.config/systemd/user/bitacora-remote-api.service.d/exec.conf.bak-5a9713f68b7a)
 result: merged b9e80f90a690, restarted bt-durable.service, bitacora-web.service, bitacora-remote-api.service, smoke ok
+
+# integration of An allocation killed mid-checkout is rebuilt instead of handing the agent a half-empty worktree (D-283), local restart of engine + web + remote API, 2026-11-01 01:33, session metodologia-97
+previous main: a277486948d3eb9e89c541ee4e76e20aa6fba151
+/home/david/bitacora/.state/durable/backups/bt_durable-20261101-013343.dump 60909116 2a95c7f406bcdf6b8aef30f6f0a937b61af29bc6b849825fb98073260b200bd5
+regression: skipped (D-261: integrate.regression = none)
+rollback: git revert the merge of alloc-interrupted on main, restart bt-durable.service and bitacora-web.service and bitacora-remote-api.service
+remote API pin: b9e80f90a690 -> 00c3b93c8eae (backup /home/david/.config/systemd/user/bitacora-remote-api.service.d/exec.conf.bak-b9e80f90a690)
+result: merged 00c3b93c8eae, restarted bt-durable.service, bitacora-web.service, bitacora-remote-api.service, smoke ok

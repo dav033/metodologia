@@ -2,9 +2,9 @@
  "watch": {
   "T94": {
    "fp": "0bf2d15bee551ca3",
-   "since": 1793514367.6598933,
-   "epoch": "66b598ed39f34a3cb50347b9afcf7a6c",
-   "observed_at": 1793514430.7100482
+   "since": 1793514432.6821606,
+   "epoch": "71a6fd42caea4b49a273a0908f029cd7",
+   "observed_at": 1793514811.091287
   }
  },
  "tasks": {
@@ -20,7 +20,8 @@
   "T3.91": 1,
   "CG-4": 4,
   "SP-4": 0,
-  "run": 1
+  "run": 1,
+  "T3.15": 1
  },
  "triggers": {
   "pictures:REQ-021:r25:resolution:4378ebb94f72d6922c89d601ee5db484": {
@@ -1700,6 +1701,19 @@
    "status": "answered",
    "at": "2026-11-01T00:46:04",
    "session": "20261101-004604-27e4"
+  },
+  "pictures:REQ-021:r35:T3.15:blocked:366499d7c41fad72": {
+   "kind": "blocked",
+   "key": "pictures:REQ-021:r35:T3.15:blocked:366499d7c41fad72",
+   "run_id": "pictures:REQ-021:r35",
+   "task_id": "T3.15",
+   "request_id": "",
+   "round": null,
+   "reason": "the run holds T3.15 blocked since 2026-11-01T01:26:07 while it goes on, with no decision to answer: 0 blocking finding(s) or problems remain after 2 remediation round(s) (limit 2): audit gate: no open blocking finding",
+   "block": "366499d7c41fad72",
+   "status": "running",
+   "at": "2026-11-01T01:31:24",
+   "session": "20261101-013124-d75b"
   }
  },
  "sessions": [
@@ -2204,6 +2218,27 @@
    "summary": "CG-4 desbloqueado: resolví el conflicto de MenuCuenta.tsx (SP-2 ya incluía el enlace de SP-14) y reabrí el run; sin cambios en metodologia. T3.15 sigue bloqueada por auditoría que cambió .verification-snapshot (origen sin encontrar).",
    "question": "",
    "report": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/RUN.solver/20261101-004604-27e4/REPORT.md"
+  },
+  {
+   "id": "20261101-013124-d75b",
+   "name": "bit-pictures-REQ-021-solver",
+   "status": "running",
+   "started": 1793514684.398761,
+   "started_at": "2026-11-01T01:31:24",
+   "triggers": [
+    "pictures:REQ-021:r35:T3.15:blocked:366499d7c41fad72"
+   ],
+   "queued": [],
+   "restarts": 0,
+   "dir": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/RUN.solver/20261101-013124-d75b",
+   "cwd": "/home/david/.local/share/bitacora-solver/pictures/20261101-013124-d75b",
+   "task": "T3.15",
+   "kind": "blocked",
+   "reason": "the run holds T3.15 blocked since 2026-11-01T01:26:07 while it goes on, with no decision to answer: 0 blocking finding(s) or problems remain after 2 remediation round(s) (limit 2): audit gate: no open blocking finding",
+   "session_id": "21a72125-2d10-4cb2-afb9-f3775cabcea8",
+   "provider": "claude",
+   "model": "sonnet",
+   "home": "/home/david/.claude-work"
   }
  ],
  "held": {
@@ -2211,5 +2246,6 @@
    "fp": "366499d7c41fad72",
    "since": 1793514367.659977
   }
- }
+ },
+ "active": "20261101-013124-d75b"
 }

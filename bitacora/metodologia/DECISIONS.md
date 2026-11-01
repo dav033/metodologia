@@ -3656,3 +3656,20 @@ Solucionador 20261030-100736-d494 integrated merge fff622890f28b8093a9a0afda9c40
 - **Rule:** an account that still asks the owner keeps asking; nothing is written if the record is unreadable.
 - **Evidence:** `test_agent_trust_folder` (4); `test_agent_terminal` 20, `test_durable_solver` 32, `test_agents`,
   `test_agent_health` OK; merge `b9e80f90a` (`--no-regression`, D-261). Made by metodologia-97 by hand.
+
+## D-283 — An attempt worktree whose allocation was interrupted is rebuilt, never reused half checked out
+
+- **Context:** pictures REQ-021 r35 T3.15 a201 (audit): the engine was restarted at 00:39:52 by an integration while
+  `git worktree add` ran; systemd SIGKILLed the git processes. The resumed `GitWorkspaces.allocate` found the
+  directory existing and registered, journaled `allocated` and handed it over. The agent saw every tracked file as a
+  staged deletion («the tracked project sources are absent from the material checkout»), audited a shell, and the audit
+  gate rejected it for «changed 6632 file(s) it did not declare» → T3.15 blocked after round 2, run blocked.
+  `worktree-prepare.json` was empty for the same reason (no lockfile).
+- **Decision:** `allocate` reads the journal first: when the attempt's last stage is `allocating` (no `allocated`), the
+  worktree directory is discarded (`worktree remove --force`, rmtree, prune) and created again from the same branch/base.
+  No agent has run in it (the agent starts only after `allocated`), so nothing is lost; a finished allocation is reused
+  untouched.
+- **Rule:** an allocation is complete only when its `allocated` row exists. Not covered: other git children killed by an
+  engine restart (proposal: stop the engine only between allocations, or `KillMode=mixed` plus recovery for each).
+- **Evidence:** `test_executor_interrupted_allocation` (2; red without the fix); executor/scratch/gc suites OK;
+  merge `00c3b93c8` (`--no-regression`, D-261). By metodologia-97. T3.15 itself must be retried (`retry-task`) once.

@@ -1,0 +1,14 @@
+[
+ {
+  "kind": "blocked",
+  "key": "pictures:REQ-021:r35:T3.15:blocked:366499d7c41fad72",
+  "run_id": "pictures:REQ-021:r35",
+  "task_id": "T3.15",
+  "request_id": "",
+  "round": null,
+  "reason": "the run holds T3.15 blocked since 2026-11-01T01:26:07 while it goes on, with no decision to answer: 0 blocking finding(s) or problems remain after 2 remediation round(s) (limit 2): audit gate: no open blocking finding",
+  "block": "366499d7c41fad72",
+  "status": "pending",
+  "at": "2026-11-01T01:31:24"
+ }
+]

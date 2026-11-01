@@ -284,6 +284,11 @@
    "id": "D-282",
    "by": "metodologia-97: Claude sessions started in a new working folder accept its trust questions on unattended accounts",
    "at": "2026-11-01T01:27:25"
+  },
+  {
+   "id": "D-283",
+   "by": "metodologia-97: an interrupted worktree allocation is rebuilt, never reused half checked out",
+   "at": "2026-11-01T01:33:33"
   }
  ]
 }
