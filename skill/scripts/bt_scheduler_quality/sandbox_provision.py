@@ -6,6 +6,9 @@ installing (REQ-027, T18.1). The verifier provisions what the lockfile pins: `np
 scratch directory holding only `package.json` and `package-lock.json`, cached per content hash, then mounted read-only like
 any other dependency tree. Offline, so nothing is fetched; without install scripts, so no package code runs on the host.
 Failure is not an error: the check then fails on its own and says why.
+
+Each use touches the entry's `.m6-ready` marker, so its mtime is the entry's last use: `bt_durable.gc_deps` (D-270)
+prunes the cache by it.
 """
 from __future__ import annotations
 
@@ -36,7 +39,19 @@ def key_of(package_root: Path) -> str | None:
         lock = (package_root / "package-lock.json").read_bytes()
     except OSError:
         return None
+    return key_of_bytes(manifest, lock)
+
+
+def key_of_bytes(manifest: bytes, lock: bytes) -> str:
+    """The cache key of a manifest and its lockfile (also computed from a commit's blobs by the cache's GC)."""
     return hashlib.sha256(len(manifest).to_bytes(8, "big") + manifest + lock).hexdigest()[:32]
+
+
+def _used(target: Path) -> None:
+    try:
+        os.utime(target / READY)
+    except OSError:
+        pass
 
 
 def provision(package_root: Path, *, root: Path | None = None, run=subprocess.run) -> Path | None:
@@ -48,6 +63,7 @@ def provision(package_root: Path, *, root: Path | None = None, run=subprocess.ru
     base = Path(root) if root is not None else cache_root()
     target = base / key
     if (target / READY).is_file() and (target / "node_modules").is_dir():
+        _used(target)
         return (target / "node_modules").resolve()
     try:
         base.mkdir(parents=True, exist_ok=True)

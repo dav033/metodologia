@@ -405,5 +405,5 @@ def describe(found: dict) -> str:
     biggest = "; ".join(f"{item['what']}: {item['count']}" for item in found.get("consumers") or ())
     return (f"{CODE}: {free / GB:.2f} GB free on {found.get('path')} (below execution.min_free_gb = "
             f"{threshold / GB:g} GB)" + (f"; engine scratch: {biggest}" if biggest else "")
-            + ". Free space (`uv run bt-durable gc-worktrees --apply` removes the worktrees of settled attempts), "
-              "then retry")
+            + ". Free space (`uv run bt-durable gc-worktrees --apply` removes the worktrees of settled attempts, "
+              "`gc-scratch --apply` the legacy worktrees, «Probar» copies and M6 dependency cache), then retry")

@@ -295,6 +295,35 @@ Until D-266 nothing removed a worktree: on 2026-10-31 ~480 of them (each with `n
   returns `NEEDS_REVIEW DISK_LOW` (environment decision with `reverify`). Free space, then answer `retry`/`reverify`;
   healing leaves `DISK_LOW` to the owner.
 
+**The rest of the scratch (D-270).** Every `disk_gc.interval_min` (60; the first pass that long after a start) a second
+background pass (`gc_scratch.py`, `disk_gc.enabled`) reclaims three places D-266 left growing; `uv run bt-durable
+gc-scratch` is the same pass as a dry run (per area: counts, allocated GB, why each item is kept; `--area`, `--json`,
+`--no-size`), `--apply` removes and records it in the telemetry (`disk_gc_removed`, `disk_gc_failed`, `disk_gc_area`).
+
+- `legacy_executor` — `<state>/executor/<run>/ws/worktrees` (`bt_scheduler_executor.retention`, `preserve=True`). A
+  checkout is retired once everything it holds beyond its snapshot is preserved: unknown ignored data (reports, local
+  data files) up to `disk_gc.legacy_archive_mb` goes into `attempts/<dirname>/retained-ignored.tar.gz`; staged content,
+  edits or commits after the capture, or a checkout never captured become one commit under
+  `refs/m3/retained/<run>/<dirname>` (tree = the checkout, parents HEAD and the staged tree). An attempt the ledger still
+  calls live is retired only in a run a later revision superseded, with its supervisor gone and untouched for three
+  days. Kept and reported: ignored data over the cap, locked/unregistered worktrees, submodules, a moved snapshot ref, a
+  process inside, the executor's lock held. Absent checkouts are settled in `retention-index.json` and never inspected
+  again. At most `disk_gc.legacy_limit` removals per pass. `bt-workspace-retention.timer` keeps its old fail-closed rules
+  (`retention_cli` without `--preserve`); the engine pass supersedes it.
+- `verify_copies` — «Probar» copies (`gc_verify.py`). Removed: a subplan version a newer published version superseded,
+  a version the owner decided more than `disk_gc.verify_grace_days` ago, a task copy whose manual decision closed (after
+  the grace). Kept: a running server (its `BITACORA_VERIFY_ID` mark, a process inside, its tmux session), a held
+  `.lock`, sidecars touched within the hour, edits or new files git would keep, the latest undecided version, unknown
+  names. Sidecars go with their copy.
+- `deps_cache` — M6's `npm ci` per lockfile (`gc_deps.py`; each use touches `.m6-ready`). Kept: keys of the lockfiles in
+  live runs' current tips (`refs/bt/line|subplan/…/r<rev>/…` of non-terminal projections) and entries used in the last
+  `disk_gc.deps_min_idle_hours`; removed least recently used first when unused for `disk_gc.deps_cache_max_age_days` or
+  while the cache exceeds `disk_gc.deps_cache_max_gb`.
+
+The two folders outside the bitácora are only touched for the live bitácora or when `BITACORA_VERIFY_DIR` /
+`M6_DEPS_CACHE` names them. Test labs default to a tmpfs (`durable_support.lab_dir`: `BT_LAB_DIR`, else
+`bt_regress.fast_tmp()`), not `$TMPDIR` on /home.
+
 **Snapshots.** Snapper takes hourly/daily snapshots of `@home`, so everything the engine writes and deletes under
 `/home` stays pinned until those snapshots expire: deleting 190 worktrees freed 481 MB. A btrfs subvolume nested inside
 `@home` is not part of `@home`'s snapshots. Make the scratch one, IN PLACE (same path: no recorded path changes, no
@@ -375,7 +404,7 @@ such guard: `_enqueue` turns a child's failure into an `internal_error` fact.
 | an integration conflict has a recorded resolution | `reverify` observes integration again for that verification profile (`bt-task-reverify-reintegrates`, D-221); replay keeps the same child ID, and older histories retain their recorded ID |
 | a check is `BLOCKED_ENV CHECK_UNSUPPORTED` | M6 refuses inline code (`python3 -c …`): put the check in a script of the repository |
 | `SANDBOX_UNAVAILABLE` | `bwrap` missing or an invalid sandbox environment (duplicate variables are now resolved policy-first) |
-| `DISK_LOW` / «No space left on device» | `uv run bt-durable gc-worktrees` (dry run), then `--apply`; old snapper snapshots of `/home` pin deleted blocks; see «Disk space» |
+| `DISK_LOW` / «No space left on device» | `uv run bt-durable gc-worktrees` and `gc-scratch` (dry runs), then `--apply`; old snapper snapshots of `/home` pin deleted blocks; see «Disk space» |
 | an agent seems stuck | `python -m bt_supervisor show <attempt key>`; `systemctl --user status bt-att-*` |
 | the engine does not start | `journalctl --user -u bt-durable`; the state directory must be private (0700) |
 | metrics | `python -m bt_durable.bench durable <state>/durable/telemetry.jsonl` |

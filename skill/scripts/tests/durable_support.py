@@ -34,6 +34,22 @@ CHECKS = {
 }
 
 
+def lab_dir() -> str | None:
+    """Where labs and test temp folders go: `BT_LAB_DIR` (bt_regress sets it), else a tmpfs with room
+    (`bt_regress.fast_tmp`: /tmp, then $XDG_RUNTIME_DIR; `BT_REGRESS_TMPDIR` overrides it), else the inherited TMPDIR.
+    D-270: TMPDIR is `~/.local/tmp` on /home, whose hourly snapper snapshots kept every deleted lab's blocks."""
+    chosen = os.environ.get("BT_LAB_DIR")
+    if chosen:
+        return chosen
+    if str(SCRIPTS) not in sys.path:
+        sys.path.insert(0, str(SCRIPTS))
+    try:
+        import bt_regress
+        return bt_regress.fast_tmp()
+    except Exception:  # noqa: BLE001 - no fast tmp: the inherited TMPDIR
+        return None
+
+
 REAL_AUDIT_POLICY = {"audit_ledger_required": True, "audit_read_only": True}   # bt_config's defaults
 
 
@@ -103,7 +119,7 @@ def gate(gid, members, task_id):
 
 class Lab:
     def __init__(self, root: Path | None = None, *, backend: str = "auto"):
-        self.root = Path(root or tempfile.mkdtemp(prefix="bt-durable-lab-", dir=os.environ.get("BT_LAB_DIR") or None))
+        self.root = Path(root or tempfile.mkdtemp(prefix="bt-durable-lab-", dir=lab_dir()))
         self.backend = backend
         self.bitacora = self.root / "bitacora"
         (self.bitacora / "proj").mkdir(parents=True, exist_ok=True)

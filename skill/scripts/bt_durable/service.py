@@ -201,7 +201,9 @@ def serve(cfg: EngineConfig, ports: Ports, *, reap_seconds: float = 30.0, projec
     unrecorded step runs again after recovery, and its port is idempotent for its identifiers.
 
     Every `gc_seconds` (the first time `gc_seconds` after the start) a background pass removes the worktrees of
-    attempts nothing needs any more (`bt_durable.scratch`, D-266; `execution.worktree_gc`)."""
+    attempts nothing needs any more (`bt_durable.scratch`, D-266; `execution.worktree_gc`); every
+    `disk_gc.interval_min` another reclaims the legacy executor worktrees, the «Probar» copies and the M6 dependency
+    cache (`bt_durable.gc_scratch`, D-270)."""
     if exit_process is None:
         exit_process = stop is None
     stop = stop or threading.Event()
@@ -248,7 +250,8 @@ def _loop(cfg: EngineConfig, ports: Ports, stop: threading.Event, *, reap_second
     write_marker(marker or cfg.state_dir / "engine.json")
     projector = EngineProjector(DBOS)
     tick = max(0.2, min(reap_seconds, project_seconds))
-    last_reap = last_gc = time.monotonic()
+    last_reap = last_gc = last_disk = time.monotonic()
+    disk_seconds = _disk_interval()
     try:
         while True:
             try:
@@ -258,7 +261,9 @@ def _loop(cfg: EngineConfig, ports: Ports, stop: threading.Event, *, reap_second
             if stop.wait(tick):
                 break
             if time.monotonic() - last_reap >= reap_seconds:
-                last_reap = last_gc = time.monotonic()
+                # only the reaper's own clock: resetting `last_gc` here too (D-266) kept the worktree pass, every
+                # 600 s, from ever running behind a reaper every 30 s (D-270)
+                last_reap = time.monotonic()
                 try:
                     reap_once()
                 except Exception as error:  # noqa: BLE001
@@ -281,6 +286,12 @@ def _loop(cfg: EngineConfig, ports: Ports, stop: threading.Event, *, reap_second
                     collect_worktrees(cfg, ports)
                 except Exception as error:  # noqa: BLE001 - the worktrees wait for the next pass
                     LOG.warning("worktree collection pass failed: %s", error)
+            if time.monotonic() - last_disk >= disk_seconds:
+                last_disk = time.monotonic()
+                try:
+                    collect_disk(cfg, ports)
+                except Exception as error:  # noqa: BLE001 - the next pass tries again
+                    LOG.warning("disk pass failed: %s", error)
     finally:
         if stop.is_set():                           # a signal, not a failure: recorded before DBOS goes (D-181)
             try:
@@ -320,6 +331,23 @@ def collect_worktrees(cfg: EngineConfig, ports: Ports, *, wait: bool = False) ->
 
 
 _gc_thread: threading.Thread | None = None
+
+
+def _disk_interval() -> float:
+    from . import gc_scratch
+    try:
+        return gc_scratch.interval_seconds()
+    except Exception:  # noqa: BLE001 - unreadable settings: the default cadence
+        return 3600.0
+
+
+def collect_disk(cfg: EngineConfig, ports: Ports, *, wait: bool = False) -> threading.Thread | None:
+    """One background pass over the legacy executor worktrees, the «Probar» copies and the M6 dependency cache
+    (bt_durable.gc_scratch, D-270; `disk_gc.*`). Every `disk_gc.interval_min`, the first one that long after a start."""
+    import bt_core
+
+    from . import gc_scratch
+    return gc_scratch.start_background(cfg.state_dir, Path(bt_core.ROOT), ports.telemetry.emit, wait=wait)
 
 
 def _drain_joins(cfg: EngineConfig, ports: Ports) -> None:

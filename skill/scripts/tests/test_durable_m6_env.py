@@ -15,6 +15,9 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent))
+sys.path.insert(0, str(HERE))
+
+from durable_support import lab_dir
 
 from bt_durable.adapters.m6 import sandbox_policy
 from bt_scheduler_quality.policy import CheckSpec, QualityPolicy
@@ -32,7 +35,7 @@ class CheckEnvironment(unittest.TestCase):
     def setUp(self):
         self.policy = QualityPolicy(environment=(("EXPLICIT_SETTING", "from-the-env-file"),),
                                     ambient_environment=INHERITED, secret_values=(DB_URL,), toolchain=False)
-        self.snapshot = Path(tempfile.mkdtemp(prefix="bt-m6-env-", dir=os.environ.get("BT_LAB_DIR") or None))
+        self.snapshot = Path(tempfile.mkdtemp(prefix="bt-m6-env-", dir=lab_dir()))
         (self.snapshot / "README.md").write_text("snapshot\n")
 
     def environment_seen(self, policy: QualityPolicy) -> dict[str, str]:
