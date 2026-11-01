@@ -197,6 +197,32 @@ def _keys(name: str, *keys: str) -> bool:
     return _run("send-keys", "-t", f"={name}:", *keys).returncode == 0
 
 
+def trust_folder(config_dir: str, cwd: Path) -> bool:
+    """Accept, for `cwd`, the two first-run questions Claude Code asks about a folder it has not seen («do you trust
+    this folder?» and «allow external CLAUDE.md imports?»). The Solucionador works in a new folder every session, so
+    on a Claude account it sat on the first question until someone pressed a key (38 min at r35). Only for accounts
+    that already run unattended (`unattended`): the owner's bypass-permissions consent is what makes these questions
+    pointless; an account that still asks the owner keeps asking. Returns True when the record was written."""
+    if not unattended(config_dir):
+        return False
+    base = Path(config_dir) if config_dir else Path.home()
+    path = base / ".claude.json"
+    try:
+        data = json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
+        entry = data.setdefault("projects", {}).setdefault(str(Path(cwd).resolve()), {})
+        want = {"hasTrustDialogAccepted": True, "hasClaudeMdExternalIncludesApproved": True,
+                "hasClaudeMdExternalIncludesWarningShown": True}
+        if all(entry.get(k) is v for k, v in want.items()):
+            return False
+        entry.update(want)
+        tmp = path.with_name(f"{path.name}.{os.getpid()}.tmp")
+        tmp.write_text(json.dumps(data, indent=2), encoding="utf-8")
+        os.replace(tmp, path)   # a running Claude rewrites this file too: swap it whole, never half-written
+        return True
+    except (OSError, UnicodeError, ValueError, AttributeError):
+        return False
+
+
 def start(name: str, cwd: Path, command: str, env: dict[str, str] | None = None, *, scope: str = "") -> None:
     """Run `command` (a shell line) in a new detached session; the shell stays open when the agent exits.
 
@@ -207,6 +233,8 @@ def start(name: str, cwd: Path, command: str, env: dict[str, str] | None = None,
         raise ValueError("nombre de sesión no válido")
     if exists(name):
         raise RuntimeError(f"La sesión {name} ya existe.")
+    if re.match(r"\s*claude\s", command):
+        trust_folder((env or {}).get("CLAUDE_CONFIG_DIR", ""), cwd)
     args = ["new-session", "-d", "-s", name, "-c", str(cwd), "-x", "200", "-y", "50"]
     role = name.rsplit("-", 1)[-1] if name.startswith("bit-") else ""
     for key, value in {**({"BITACORA_AGENT_ROLE": role} if role else {}), **(env or {})}.items():   # D-237
