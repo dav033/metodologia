@@ -13786,11 +13786,292 @@
   "planes@v2": {
    "attempt": 4,
    "auto_runs": 1,
+   "before": null,
+   "before_html": null,
    "behavior": "planes@v2.r4.behavior.md",
-   "chosen": null,
-   "comparison": null,
+   "chosen": "c",
+   "comparison": {
+    "directions": [
+     {
+      "density": 155,
+      "evidence": {
+       "layout": [
+        {
+         "ok": true,
+         "selector": ".deck"
+        },
+        {
+         "ok": true,
+         "selector": ".plan-card"
+        },
+        {
+         "ok": true,
+         "selector": ".plan-id"
+        },
+        {
+         "ok": true,
+         "selector": ".card-foot"
+        }
+       ],
+       "motion": [
+        {
+         "ok": true,
+         "selector": ".plan-card"
+        },
+        {
+         "ok": true,
+         "selector": ".tools li"
+        },
+        {
+         "ok": true,
+         "selector": ".idioma select"
+        },
+        {
+         "ok": true,
+         "selector": ".back"
+        }
+       ],
+       "navigation": [
+        {
+         "ok": true,
+         "selector": ".heading-row .back"
+        },
+        {
+         "ok": true,
+         "selector": ".idioma select"
+        },
+        {
+         "ok": true,
+         "selector": ".choose"
+        }
+       ],
+       "typography": [
+        {
+         "ok": true,
+         "selector": ".price .amount"
+        },
+        {
+         "ok": true,
+         "selector": ".plan-id h2"
+        },
+        {
+         "ok": true,
+         "selector": ".tools-heading"
+        }
+       ]
+      },
+      "fonts": [
+       "\"Geist Mono\", monospace",
+       "Geist, ui-sans-serif, system-ui, sans-serif"
+      ],
+      "id": "planes@v2.r4.dir-c.html",
+      "motion": [
+       "@keyframes lang-settle { \n  0% { transform: scale(0.92); }\n  60% { transform: scale(1.04); }\n  100% { transform: none; }\n}",
+       "@keyframes card-drop { \n  0% { opacity: 0.4; transform: translateY(18px) scale(0.97); }\n  100% { opacity: 1; transform: none; }\n}",
+       "@keyframes row-in { \n  0% { opacity: 0.4; transform: translateY(-6px); }\n  100% { opacity: 1; transform: none; }\n}",
+       "{\"duration\":460,\"easing\":\"linear\",\"frames\":[\"composite,computedOffset,easing,offset,opacity,transform\",\"composite,computedOffset,easing,offset,opacity,transform\"]}",
+       "{\"duration\":460,\"easing\":\"linear\",\"frames\":[\"composite,computedOffset,easing,offset,opacity,transform\",\"composite,computedOffset,easing,offset,opacity,transform\"]}",
+       "{\"duration\":460,\"easing\":\"linear\",\"frames\":[\"composite,computedOffset,easing,offset,opacity,transform\",\"composite,computedOffset,easing,offset,opacity,transform\"]}",
+       "{\"duration\":460,\"easing\":\"linear\",\"frames\":[\"composite,computedOffset,easing,offset,opacity,transform\",\"composite,computedOffset,easing,offset,opacity,transform\"]}",
+       "{\"duration\":460,\"easing\":\"linear\",\"frames\":[\"composite,computedOffset,easing,offset,opacity,transform\",\"composite,computedOffset,easing,offset,opacity,transform\"]}",
+       "{\"duration\":460,\"easing\":\"linear\",\"frames\":[\"composite,computedOffset,easing,offset,opacity,transform\",\"composite,computedOffset,easing,offset,opacity,transform\"]}",
+       "{\"duration\":460,\"easing\":\"linear\",\"frames\":[\"composite,computedOffset,easing,offset,opacity,transform\",\"composite,computedOffset,easing,offset,opacity,transform\"]}",
+       "{\"duration\":460,\"easing\":\"linear\",\"frames\":[\"composite,computedOffset,easing,offset,opacity,transform\",\"composite,computedOffset,easing,offset,opacity,transform\"]}",
+       "{\"duration\":460,\"easing\":\"linear\",\"frames\":[\"composite,computedOffset,easing,offset,opacity,transform\",\"composite,computedOffset,easing,offset,opacity,transform\"]}",
+       "{\"duration\":460,\"easing\":\"linear\",\"frames\":[\"composite,computedOffset,easing,offset,opacity,transform\",\"composite,computedOffset,easing,offset,opacity,transform\"]}",
+       "{\"duration\":460,\"easing\":\"linear\",\"frames\":[\"composite,computedOffset,easing,offset,opacity,transform\",\"composite,computedOffset,easing,offset,opacity,transform\"]}",
+       "{\"duration\":460,\"easing\":\"linear\",\"frames\":[\"composite,computedOffset,easing,offset,opacity,transform\",\"composite,computedOffset,easing,offset,opacity,transform\"]}",
+       "{\"duration\":460,\"easing\":\"linear\",\"frames\":[\"composite,computedOffset,easing,offset,opacity,transform\",\"composite,computedOffset,easing,offset,opacity,transform\"]}",
+       "{\"duration\":460,\"easing\":\"linear\",\"frames\":[\"composite,computedOffset,easing,offset,opacity,transform\",\"composite,computedOffset,easing,offset,opacity,transform\"]}",
+       "{\"duration\":460,\"easing\":\"linear\",\"frames\":[\"composite,computedOffset,easing,offset,opacity,transform\",\"composite,computedOffset,easing,offset,opacity,transform\"]}",
+       "{\"duration\":460,\"easing\":\"linear\",\"frames\":[\"composite,computedOffset,easing,offset,opacity,transform\",\"composite,computedOffset,easing,offset,opacity,transform\"]}",
+       "{\"duration\":460,\"easing\":\"linear\",\"frames\":[\"composite,computedOffset,easing,offset,opacity,transform\",\"composite,computedOffset,easing,offset,opacity,transform\"]}",
+       "{\"duration\":460,\"easing\":\"linear\",\"frames\":[\"composite,computedOffset,easing,offset,opacity,transform\",\"composite,computedOffset,easing,offset,opacity,transform\"]}",
+       "{\"duration\":460,\"easing\":\"linear\",\"frames\":[\"composite,computedOffset,easing,offset,opacity,transform\",\"composite,computedOffset,easing,offset,opacity,transform\"]}",
+       "{\"duration\":460,\"easing\":\"linear\",\"frames\":[\"composite,computedOffset,easing,offset,opacity,transform\",\"composite,computedOffset,easing,offset,opacity,transform\"]}",
+       "{\"duration\":460,\"easing\":\"linear\",\"frames\":[\"composite,computedOffset,easing,offset,opacity,transform\",\"composite,computedOffset,easing,offset,opacity,transform\"]}",
+       "{\"duration\":460,\"easing\":\"linear\",\"frames\":[\"composite,computedOffset,easing,offset,opacity,transform\",\"composite,computedOffset,easing,offset,opacity,transform\"]}",
+       "{\"duration\":460,\"easing\":\"linear\",\"frames\":[\"composite,computedOffset,easing,offset,opacity,transform\",\"composite,computedOffset,easing,offset,opacity,transform\"]}",
+       "{\"duration\":460,\"easing\":\"linear\",\"frames\":[\"composite,computedOffset,easing,offset,opacity,transform\",\"composite,computedOffset,easing,offset,opacity,transform\"]}",
+       "{\"duration\":460,\"easing\":\"linear\",\"frames\":[\"composite,computedOffset,easing,offset,opacity,transform\",\"composite,computedOffset,easing,offset,opacity,transform\"]}"
+      ],
+      "nav": [],
+      "shape": [
+       "MAIN:0:1:12:12",
+       "DIV:0:1:12:12",
+       "MAIN:0:1:12:12",
+       "HEADER:0:2:12:1",
+       "DIV:0:2:2:0",
+       "SPAN:0:2:0:0",
+       "I:0:2:0:0",
+       "SPAN:1:2:1:0",
+       "SPAN:1:2:1:0",
+       "LABEL:11:2:1:1",
+       "SPAN:11:2:0:0",
+       "SELECT:11:2:1:1",
+       "DIV:0:3:12:1",
+       "H1:0:3:1:0",
+       "A:11:3:1:1",
+       "svg:11:3:0:0",
+       "path:11:3:0:0",
+       "P:0:3:12:0",
+       "DIV:0:4:12:8",
+       "ARTICLE:0:4:3:8",
+       "DIV:0:4:2:1",
+       "H2:0:4:2:0",
+       "P:0:5:2:1",
+       "SPAN:0:5:1:1",
+       "SPAN:0:5:1:0",
+       "H3:0:6:2:0",
+       "UL:0:6:2:1",
+       "LI:0:6:2:0",
+       "svg:0:6:0:0",
+       "path:0:6:0:0",
+       "SPAN:1:6:2:0",
+       "LI:0:7:2:0",
+       "svg:0:7:0:0",
+       "path:0:7:0:0",
+       "SPAN:1:7:2:0",
+       "LI:0:7:2:0",
+       "svg:0:7:0:0",
+       "path:0:7:0:0",
+       "SPAN:1:7:2:0",
+       "DIV:0:11:2:1",
+       "BUTTON:0:11:2:1",
+       "ARTICLE:3:4:3:8",
+       "DIV:3:4:2:1",
+       "H2:3:4:2:0",
+       "P:3:5:2:1",
+       "SPAN:3:5:1:1",
+       "SPAN:3:5:1:0",
+       "SPAN:4:5:1:0",
+       "H3:3:6:2:0",
+       "UL:3:6:2:2",
+       "LI:3:6:2:1",
+       "svg:3:6:0:0",
+       "path:3:6:0:0",
+       "SPAN:4:6:2:1",
+       "LI:3:7:2:0",
+       "svg:3:7:0:0",
+       "path:3:7:0:0",
+       "SPAN:4:7:2:0",
+       "LI:3:7:2:0",
+       "svg:3:7:0:0",
+       "path:3:7:0:0",
+       "SPAN:4:7:2:0",
+       "DIV:3:11:2:1",
+       "BUTTON:3:11:2:1",
+       "ARTICLE:6:4:3:8",
+       "DIV:6:5:2:1",
+       "H2:6:5:2:0",
+       "P:6:5:2:1",
+       "SPAN:6:5:1:1",
+       "SPAN:6:5:1:0",
+       "SPAN:7:5:1:0",
+       "H3:6:6:2:0",
+       "UL:6:6:2:4",
+       "LI:6:6:2:1",
+       "svg:6:6:0:0",
+       "path:6:6:0:0",
+       "SPAN:7:6:2:1",
+       "LI:6:7:2:0",
+       "svg:6:7:0:0",
+       "path:6:7:0:0",
+       "SPAN:7:7:2:0",
+       "LI:6:7:2:0",
+       "svg:6:8:0:0",
+       "path:6:8:0:0",
+       "SPAN:7:8:2:0",
+       "LI:6:8:2:0",
+       "svg:6:8:0:0",
+       "path:6:8:0:0",
+       "SPAN:7:8:2:0",
+       "LI:6:8:2:1",
+       "svg:6:8:0:0",
+       "path:6:8:0:0",
+       "SPAN:7:8:2:0",
+       "SMALL:7:9:2:0",
+       "LI:6:9:2:1",
+       "svg:6:9:0:0",
+       "path:6:9:0:0",
+       "SPAN:7:9:2:0",
+       "SMALL:7:9:2:0",
+       "LI:6:10:2:1",
+       "svg:6:10:0:0",
+       "path:6:10:0:0",
+       "SPAN:7:10:2:0",
+       "SMALL:7:10:2:0",
+       "DIV:6:11:2:1",
+       "BUTTON:6:11:2:1",
+       "ARTICLE:9:4:3:8",
+       "DIV:9:5:2:1",
+       "H2:9:5:2:0",
+       "P:9:5:2:1",
+       "SPAN:9:5:1:1",
+       "SPAN:9:5:1:0",
+       "SPAN:10:5:1:0",
+       "H3:9:6:2:0",
+       "UL:9:6:2:4",
+       "LI:9:6:2:1",
+       "svg:9:6:0:0",
+       "path:9:7:0:0",
+       "SPAN:9:6:2:1",
+       "LI:9:7:2:0",
+       "svg:9:7:0:0",
+       "path:9:7:0:0",
+       "SPAN:9:7:2:0",
+       "LI:9:7:2:0",
+       "svg:9:8:0:0",
+       "path:9:8:0:0",
+       "SPAN:9:8:2:0",
+       "LI:9:8:2:0",
+       "svg:9:8:0:0",
+       "path:9:8:0:0",
+       "SPAN:9:8:2:0",
+       "LI:9:8:2:1",
+       "svg:9:8:0:0",
+       "path:9:8:0:0",
+       "SPAN:9:8:2:0",
+       "SMALL:9:9:2:0",
+       "LI:9:9:2:1",
+       "svg:9:9:0:0",
+       "path:9:9:0:0",
+       "SPAN:9:9:2:0",
+       "SMALL:9:9:2:0",
+       "LI:9:10:2:1",
+       "svg:9:10:0:0",
+       "path:9:10:0:0",
+       "SPAN:9:10:2:0",
+       "SMALL:9:10:2:0",
+       "LI:9:10:2:0",
+       "svg:9:10:0:0",
+       "path:9:10:0:0",
+       "SPAN:9:10:2:0",
+       "DIV:9:11:2:1",
+       "BUTTON:9:11:2:1",
+       "FOOTER:0:12:12:0",
+       "SPAN:0:12:1:0",
+       "SPAN:6:12:5:0"
+      ],
+      "sizes": [
+       "12px",
+       "13px",
+       "14px",
+       "15px",
+       "18px",
+       "24px",
+       "30px"
+      ]
+     }
+    ],
+    "evidence_ok": true,
+    "missing_evidence": [],
+    "ok": true,
+    "pairs": [],
+    "schema_version": 1
+   },
    "continuation_choice": null,
-   "delegation": "D-20261031-191328-11d9",
+   "delegation": "D-20261031-191648-3597",
    "digest": "1ac576917ce9b7e9",
    "direction_history": [
     {
@@ -15272,13 +15553,27 @@
    ],
    "directions": [
     {
+     "axes": {
+      "colour": "Pictures globals.css tokens in both themes: surface and border for cards, accent for checks, button and focus, warning for unavailable markers; no highlighted card.",
+      "components": "Native language select, back link, ruled cards and Check list, shadcn Button in each card foot with no handler (focusable, plan in accessible name), cuentas-admin@v2 menu and login plans link; no catalogue skeleton or retry.",
+      "concept": "Four informational peer cards; each ends with the owner-requested Escoger / Choose button at the very bottom of the card, purely visual: pressing it only plays the press motion and does nothing else.",
+      "density": "Comfortable: 24px card padding (20px phone), 16px gap between cards (12px phone), 6px tool row rhythm, 96px identity block, at least 20px above the bottom button; full cumulative lists always expanded; row-equal card heights.",
+      "layout": "Published ComparadorPlanes shell (masthead, H1 + back link, administrator line, footer) with the comparison tabs and «Ir a un plan» rail removed; four separate peer cards in catalogue order stretched to their grid row (align-items:stretch, flex column), identity blocks of equal height so every price sits on one shared line, and a card foot pushed to the bottom (margin-top:auto) so every Escoger button sits on one shared bottom line; 4 columns ≥1100px, 2×2 at 640–1099px, one column below 640px.",
+      "motion": "Tactile press/settle grammar shared with cuentas-admin@v2 dir C: cards drop and settle (translateY 18px, scale .97 → rest, cubic-bezier(.34,1.42,.64,1), 460ms, 70ms stagger in catalogue order), tool rows follow at 35ms; changing Idioma presses the select (scale .92 → 1.04 → 1) and rolls each price vertically (old out up, new in from below on the profile spring) while lists re-settle with no delay; back link compresses to .96 and its chevron nudges −3px; the inert card button compresses to .97 on press (90ms) with no other feedback; reduced motion/Quieto swaps instantly.",
+      "navigation": "Existing back link to /login for both session states, language select and unchanged account menu; the card button navigates nowhere; no origin tracking, tabs, index or summary.",
+      "typography": "Product Geist scale: H1 24/600, plan name 18/600, price 30/600 tabular figures with 13px «COP / mes» unit (26px on phones), 12px «Herramientas incluidas» label, 14px tool rows, 12px «aún no disponible» marker."
+     },
      "delegation": "D-20261031-191328-11d9",
      "id": "c",
      "iterated_from": 3,
+     "json_sha256": "289806de7983b3283933485dfda765081f9e880d278aaa65fb072da0672e3fa8",
      "name": "Cartas al pie — direct manipulation of the existing /planes page",
+     "note_sha256": "4bf593a6c7bf889558036565afb0a04694a87973aeab31f2a0dcddeb27b08256",
      "revision": 4,
      "seed": "Direct manipulation: the same product shell with in-place editing, progressive disclosure and tactile press/settle feedback on the changed controls.",
-     "status": "drafting"
+     "sha256": "7863880fa664f572704dad6daacba354e9255ac1f67b46ea32f232be3ed0be99",
+     "status": "ready",
+     "tsx_sha256": "25989111fb13227a36e08907f6b3dd36f8bd1fcfa23010ea89b0a9c9c4be4dda"
     }
    ],
    "error": "",
@@ -15301,6 +15596,7 @@
      "when": "2026-10-31T18:27:13-05:00"
     },
     {
+     "consumed": "D-20261031-191328-11d9",
      "direction": "c",
      "id": "72adb8defcd26671",
      "text": "el boton tieneq eu estar abajo del todo",
@@ -15311,35 +15607,13 @@
    "feedback_batch": [
     "72adb8defcd26671"
    ],
-   "finished": "2026-10-31T18:40:33-05:00",
+   "finished": "2026-10-31T19:15:37-05:00",
    "fresh": false,
-   "iterate_from": {
-    "axes": {
-     "colour": "Pictures globals.css tokens in both themes: surface and border for cards, accent for checks, button and focus, warning for unavailable markers; no highlighted card.",
-     "components": "Native language select, back link, ruled cards and Check list, shadcn Button per card with no handler (focusable, plan in accessible name), cuentas-admin@v2 menu and login plans link; no catalogue skeleton or retry.",
-     "concept": "Four informational peer cards; each carries the owner-requested Escoger / Choose button, which is purely visual: pressing it only plays the press motion and does nothing else.",
-     "density": "Comfortable: 24px card padding (20px phone), 16px gap between cards (12px phone), 6px tool row rhythm, 96px identity block; full cumulative lists always expanded.",
-     "layout": "Published ComparadorPlanes shell (masthead, H1 + back link, administrator line, footer) with the comparison tabs and «Ir a un plan» rail removed; four separate peer cards in catalogue order at natural height (align-items:start), identity blocks of equal height so every price sits on one shared line; 4 columns ≥1100px, 2×2 at 640–1099px, one column below 640px.",
-     "motion": "Tactile press/settle grammar shared with cuentas-admin@v2 dir C: cards drop and settle (translateY 18px, scale .97 → rest, cubic-bezier(.34,1.42,.64,1), 460ms, 70ms stagger in catalogue order), tool rows follow at 35ms; changing Idioma presses the select (scale .92 → 1.04 → 1) and rolls each price vertically (old out up, new in from below on the profile spring) while lists re-settle with no delay; back link compresses to .96 and its chevron nudges −3px; the inert card button compresses to .97 on press (90ms) with no other feedback; reduced motion/Quieto swaps instantly.",
-     "navigation": "Existing back link to /login for both session states, language select and unchanged account menu; the card button navigates nowhere; no origin tracking, tabs, index or summary.",
-     "typography": "Product Geist scale: H1 24/600, plan name 18/600, price 30/600 tabular figures with 13px «COP / mes» unit (26px on phones), 12px «Herramientas incluidas» label, 14px tool rows, 12px «aún no disponible» marker."
-    },
-    "delegation": "D-20261031-182717-2bf8",
-    "id": "c",
-    "iterated_from": 2,
-    "json_sha256": "f40b14c99a07128b6f1d2b2db02056b57009b7695c201cc14244d294ec788613",
-    "name": "Cartas al pie — direct manipulation of the existing /planes page",
-    "note_sha256": "dbb8ffaf9b0fef0cef83c6f32c5bb7b4a3509715fc89229c8ccd572bea08cfe8",
-    "revision": 3,
-    "seed": "Direct manipulation: the same product shell with in-place editing, progressive disclosure and tactile press/settle feedback on the changed controls.",
-    "sha256": "3bb6504e1291a58e90ba25bc3f45e51ba199c80b9385f140d09864f9f2d5d957",
-    "status": "ready",
-    "tsx_sha256": "5b07cb12cebaa96fc3e5328ed9924d32e7c609f3d8aa056467ea03ac72d46bae"
-   },
-   "phase": "explore",
+   "phase": "finalise",
    "plan_delta": "",
    "reason": "iterate",
-   "started": "2026-10-31T19:13:24-05:00",
+   "selected_sha256": "7863880fa664f572704dad6daacba354e9255ac1f67b46ea32f232be3ed0be99",
+   "started": "2026-10-31T19:16:48-05:00",
    "status": "drafting",
    "subplan_id": "SP-14",
    "ui_digest": "d855281cffbf411a"

@@ -743,3 +743,5 @@
 {"at": "2026-10-31T18:44:56-05:00", "who": "Solucionador", "kind": "flow", "sp": "", "text": "T3.91: la autocuración dejó la decisión para ti; pasa al Solucionador (healing's repair limit is reached)", "diff": ""}
 {"at": "2026-10-31T19:13:24-05:00", "who": "Tú → Designer", "kind": "feedback", "sp": "SP-14", "text": "planes@v2 · C: el boton tieneq eu estar abajo del todo", "diff": ""}
 {"at": "2026-10-31T19:13:28-05:00", "who": "Designer", "kind": "design", "sp": "SP-14", "text": "planes@v2: iterando dirección C · Cartas al pie — direct manipulation of the existing /planes page", "diff": ""}
+{"at": "2026-10-31T19:15:41-05:00", "who": "Designer", "kind": "design", "sp": "SP-14", "text": "planes@v2: dirección C iterada", "diff": ""}
+{"at": "2026-10-31T19:16:48-05:00", "who": "Tú → Designer", "kind": "design", "sp": "SP-14", "text": "planes@v2: elegida dirección C · Cartas al pie — direct manipulation of the existing /planes page", "diff": ""}
