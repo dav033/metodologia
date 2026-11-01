@@ -3597,3 +3597,28 @@ Solucionador 20261030-100736-d494 integrated merge fff622890f28b8093a9a0afda9c40
 - **Rule:** the same keys outside `RUN.solver/` are still refused. No secret was involved (values are md5 hex).
 - **Evidence:** `test_githook_gitleaks_config` (2 tests, real hook in a temp repo); installed into `.git/hooks`;
   bitácora commit `13ae648a4`, code merge `683b58488` (`--no-regression`, D-261). Made by metodologia-97 by hand.
+
+## D-280 — One UI component pool, `@bitacora/ui`: projects keep only their theme, the pool reaches them directly, mockups render live and implementers start from the approved TSX
+
+- **Date:** 2026-11-01 · **Status:** Accepted · **Refines:** D-135, the david-ui-kit, `bt_integrate`, Designer/Implementer
+  briefs
+- **Context:** the Designer kit's components lived in an untracked workspace and each project copied its own; mockups
+  froze a look that drifted from the product, and implementers rebuilt screens from prose. Owner: «un solo pool»,
+  «gana el pool», «Directo», «Todo ya, dentro de REQ-021».
+- **Decision:** the pool is the package `@bitacora/ui` in `skill/ui/` (shadcn/ui on Base UI, Animate UI, Bencho, React
+  Bits; `src/styles.css` structure only, `src/theme.css` default roles, vendored CSS with `LICENSES.md`). Each project
+  has `skill/ui/themes/<project>.css` (`components theme import <p> --from <tokens.css>`), mapping its tokens onto the
+  shadcn roles plus the triplet roles Bencho composes alpha from. `components sync <p>|--all` writes the package into
+  `<repo>/packages/bitacora-ui` (+ `SYNC.json`) and commits only that path on the default branch, for projects that
+  opt in with `"ui": {"sync": true, "repo": "<role>"}` in `project.json`; `bt_integrate` runs `sync --all` after a
+  passing smoke of a merge that changes `skill/ui/`. A mockup with a TSX source renders live at view time against
+  `/ui/<digest>/bitacora-ui.{js,css}` and `/ui/theme/<p>.css` (CSP allows only `/ui/`; also on the remote allow-list).
+  Designers write `design/<ref>.tsx` from the pool; approval freezes it as `approved.tsx`; the executor brief says
+  «Planning TSX: START FROM IT» and the visual review compares against it.
+- **Rule:** components come only from the pool; a project changes its look through its theme, never a local copy of a
+  component; the synced copy in a project is not edited there. Approval covers structure; pool and theme may restyle
+  an approved mockup without reapproval.
+- **Evidence:** `test_ui_pool` 15, `test_ui_sync` 8; 48 affected suites, 642 tests OK (the first run caught
+  `test_remote_panel`: `/ui/` lacked a production counterpart, fixed). Branch `ui-pool`; integrated with
+  `--no-regression` (D-261). Left: no file watcher (integration trigger only); pictures not opted in yet — its
+  adoption is a REQ-021 subplan; gateway/Vercel do not proxy `/ui/` (nor `/components`) yet.

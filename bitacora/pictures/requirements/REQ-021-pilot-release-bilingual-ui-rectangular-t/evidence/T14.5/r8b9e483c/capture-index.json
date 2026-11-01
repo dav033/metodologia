@@ -1,0 +1,3901 @@
+{
+  "schema": "visual-capture-index/1",
+  "contract": "planes@v2",
+  "contractSha256": "612e6e93763b9f2b04927713d70a20a55845c78477c77d6c8d6924a8d422a151",
+  "candidateRevision": "8b9e483c12d53feac20a5ac5e95b8d2d33e20da8",
+  "appOrigin": "http://127.0.0.1:3215",
+  "browser": "Playwright Chromium (/usr/bin/chromium)",
+  "stateApplicability": {
+    "loadingEmptyCatalogueErrorRetry": "inapplicable per planes@v2 §8",
+    "disabledValidationSuccessPermissionDenied": "inapplicable per planes@v2 §8",
+    "offlineStale": "inapplicable per planes@v2 §8",
+    "signedInV2V5": "blocked: no genuine signed-in session was provisioned; no mock authentication created"
+  },
+  "captures": [
+    {
+      "id": "8b9e483-v1-phone390-es-light-default",
+      "file": "8b9e483-v1-phone390-es-light-default.png",
+      "route": "/planes",
+      "viewport": "390x844",
+      "locale": "es",
+      "theme": "light",
+      "state": "default",
+      "httpStatus": 200
+    },
+    {
+      "id": "8b9e483-v3-phone390-es-light-legacy",
+      "file": "8b9e483-v3-phone390-es-light-legacy.png",
+      "route": "/planes?vista=seleccionar",
+      "viewport": "390x844",
+      "locale": "es",
+      "theme": "light",
+      "state": "legacy",
+      "httpStatus": 200
+    },
+    {
+      "id": "8b9e483-v4-phone390-es-light-entry",
+      "file": "8b9e483-v4-phone390-es-light-entry.png",
+      "route": "/login",
+      "viewport": "390x844",
+      "locale": "es",
+      "theme": "light",
+      "state": "entry",
+      "httpStatus": 200
+    },
+    {
+      "id": "8b9e483-v1-phone390-es-light-reduced-motion",
+      "file": "8b9e483-v1-phone390-es-light-reduced-motion.png",
+      "route": "/planes",
+      "viewport": "390x844",
+      "locale": "es",
+      "theme": "light",
+      "state": "reduced-motion",
+      "httpStatus": 200
+    },
+    {
+      "id": "8b9e483-v1-phone390-es-light-still-query-no-preference",
+      "file": "8b9e483-v1-phone390-es-light-still-query-no-preference.png",
+      "route": "/planes?still=1",
+      "viewport": "390x844",
+      "locale": "es",
+      "theme": "light",
+      "state": "still-query-no-preference",
+      "httpStatus": 200
+    },
+    {
+      "id": "8b9e483-v1-phone390-es-light-keyboard-focus-1",
+      "file": "8b9e483-v1-phone390-es-light-keyboard-focus-1.png",
+      "route": "/planes",
+      "viewport": "390x844",
+      "locale": "es",
+      "theme": "light",
+      "state": "keyboard-focus-1",
+      "focusedElement": "SELECT"
+    },
+    {
+      "id": "8b9e483-v1-phone390-es-light-keyboard-focus-2",
+      "file": "8b9e483-v1-phone390-es-light-keyboard-focus-2.png",
+      "route": "/planes",
+      "viewport": "390x844",
+      "locale": "es",
+      "theme": "light",
+      "state": "keyboard-focus-2",
+      "focusedElement": "A"
+    },
+    {
+      "id": "8b9e483-v1-phone390-es-light-keyboard-focus-3",
+      "file": "8b9e483-v1-phone390-es-light-keyboard-focus-3.png",
+      "route": "/planes",
+      "viewport": "390x844",
+      "locale": "es",
+      "theme": "light",
+      "state": "keyboard-focus-3",
+      "focusedElement": "BUTTON"
+    },
+    {
+      "id": "8b9e483-v1-phone390-es-light-keyboard-focus-4",
+      "file": "8b9e483-v1-phone390-es-light-keyboard-focus-4.png",
+      "route": "/planes",
+      "viewport": "390x844",
+      "locale": "es",
+      "theme": "light",
+      "state": "keyboard-focus-4",
+      "focusedElement": "BUTTON"
+    },
+    {
+      "id": "8b9e483-v1-phone390-es-light-keyboard-focus-5",
+      "file": "8b9e483-v1-phone390-es-light-keyboard-focus-5.png",
+      "route": "/planes",
+      "viewport": "390x844",
+      "locale": "es",
+      "theme": "light",
+      "state": "keyboard-focus-5",
+      "focusedElement": "BUTTON"
+    },
+    {
+      "id": "8b9e483-v1-phone390-es-light-keyboard-focus-6",
+      "file": "8b9e483-v1-phone390-es-light-keyboard-focus-6.png",
+      "route": "/planes",
+      "viewport": "390x844",
+      "locale": "es",
+      "theme": "light",
+      "state": "keyboard-focus-6",
+      "focusedElement": "BUTTON"
+    },
+    {
+      "id": "8b9e483-v1-phone390-es-light-button-hover",
+      "file": "8b9e483-v1-phone390-es-light-button-hover.png",
+      "route": "/planes",
+      "viewport": "390x844",
+      "locale": "es",
+      "theme": "light",
+      "state": "button-hover"
+    },
+    {
+      "id": "8b9e483-v1-phone390-es-light-button-active",
+      "file": "8b9e483-v1-phone390-es-light-button-active.png",
+      "route": "/planes",
+      "viewport": "390x844",
+      "locale": "es",
+      "theme": "light",
+      "state": "button-active"
+    },
+    {
+      "id": "8b9e483-v1-phone390-es-light-language-changed",
+      "file": "8b9e483-v1-phone390-es-light-language-changed.png",
+      "route": "/planes",
+      "viewport": "390x844",
+      "locale": "es",
+      "theme": "light",
+      "state": "language-changed"
+    },
+    {
+      "id": "8b9e483-v4-phone390-es-light-plans-link-focus",
+      "file": "8b9e483-v4-phone390-es-light-plans-link-focus.png",
+      "route": "/login",
+      "viewport": "390x844",
+      "locale": "es",
+      "theme": "light",
+      "state": "plans-link-focus"
+    },
+    {
+      "id": "8b9e483-v1-phone390-es-dark-default",
+      "file": "8b9e483-v1-phone390-es-dark-default.png",
+      "route": "/planes",
+      "viewport": "390x844",
+      "locale": "es",
+      "theme": "dark",
+      "state": "default",
+      "httpStatus": 200
+    },
+    {
+      "id": "8b9e483-v3-phone390-es-dark-legacy",
+      "file": "8b9e483-v3-phone390-es-dark-legacy.png",
+      "route": "/planes?vista=seleccionar",
+      "viewport": "390x844",
+      "locale": "es",
+      "theme": "dark",
+      "state": "legacy",
+      "httpStatus": 200
+    },
+    {
+      "id": "8b9e483-v4-phone390-es-dark-entry",
+      "file": "8b9e483-v4-phone390-es-dark-entry.png",
+      "route": "/login",
+      "viewport": "390x844",
+      "locale": "es",
+      "theme": "dark",
+      "state": "entry",
+      "httpStatus": 200
+    },
+    {
+      "id": "8b9e483-v1-phone390-es-dark-reduced-motion",
+      "file": "8b9e483-v1-phone390-es-dark-reduced-motion.png",
+      "route": "/planes",
+      "viewport": "390x844",
+      "locale": "es",
+      "theme": "dark",
+      "state": "reduced-motion",
+      "httpStatus": 200
+    },
+    {
+      "id": "8b9e483-v1-phone390-es-dark-still-query-no-preference",
+      "file": "8b9e483-v1-phone390-es-dark-still-query-no-preference.png",
+      "route": "/planes?still=1",
+      "viewport": "390x844",
+      "locale": "es",
+      "theme": "dark",
+      "state": "still-query-no-preference",
+      "httpStatus": 200
+    },
+    {
+      "id": "8b9e483-v1-phone390-es-dark-keyboard-focus-1",
+      "file": "8b9e483-v1-phone390-es-dark-keyboard-focus-1.png",
+      "route": "/planes",
+      "viewport": "390x844",
+      "locale": "es",
+      "theme": "dark",
+      "state": "keyboard-focus-1",
+      "focusedElement": "SELECT"
+    },
+    {
+      "id": "8b9e483-v1-phone390-es-dark-keyboard-focus-2",
+      "file": "8b9e483-v1-phone390-es-dark-keyboard-focus-2.png",
+      "route": "/planes",
+      "viewport": "390x844",
+      "locale": "es",
+      "theme": "dark",
+      "state": "keyboard-focus-2",
+      "focusedElement": "A"
+    },
+    {
+      "id": "8b9e483-v1-phone390-es-dark-keyboard-focus-3",
+      "file": "8b9e483-v1-phone390-es-dark-keyboard-focus-3.png",
+      "route": "/planes",
+      "viewport": "390x844",
+      "locale": "es",
+      "theme": "dark",
+      "state": "keyboard-focus-3",
+      "focusedElement": "BUTTON"
+    },
+    {
+      "id": "8b9e483-v1-phone390-es-dark-keyboard-focus-4",
+      "file": "8b9e483-v1-phone390-es-dark-keyboard-focus-4.png",
+      "route": "/planes",
+      "viewport": "390x844",
+      "locale": "es",
+      "theme": "dark",
+      "state": "keyboard-focus-4",
+      "focusedElement": "BUTTON"
+    },
+    {
+      "id": "8b9e483-v1-phone390-es-dark-keyboard-focus-5",
+      "file": "8b9e483-v1-phone390-es-dark-keyboard-focus-5.png",
+      "route": "/planes",
+      "viewport": "390x844",
+      "locale": "es",
+      "theme": "dark",
+      "state": "keyboard-focus-5",
+      "focusedElement": "BUTTON"
+    },
+    {
+      "id": "8b9e483-v1-phone390-es-dark-keyboard-focus-6",
+      "file": "8b9e483-v1-phone390-es-dark-keyboard-focus-6.png",
+      "route": "/planes",
+      "viewport": "390x844",
+      "locale": "es",
+      "theme": "dark",
+      "state": "keyboard-focus-6",
+      "focusedElement": "BUTTON"
+    },
+    {
+      "id": "8b9e483-v1-phone390-es-dark-button-hover",
+      "file": "8b9e483-v1-phone390-es-dark-button-hover.png",
+      "route": "/planes",
+      "viewport": "390x844",
+      "locale": "es",
+      "theme": "dark",
+      "state": "button-hover"
+    },
+    {
+      "id": "8b9e483-v1-phone390-es-dark-button-active",
+      "file": "8b9e483-v1-phone390-es-dark-button-active.png",
+      "route": "/planes",
+      "viewport": "390x844",
+      "locale": "es",
+      "theme": "dark",
+      "state": "button-active"
+    },
+    {
+      "id": "8b9e483-v1-phone390-es-dark-language-changed",
+      "file": "8b9e483-v1-phone390-es-dark-language-changed.png",
+      "route": "/planes",
+      "viewport": "390x844",
+      "locale": "es",
+      "theme": "dark",
+      "state": "language-changed"
+    },
+    {
+      "id": "8b9e483-v4-phone390-es-dark-plans-link-focus",
+      "file": "8b9e483-v4-phone390-es-dark-plans-link-focus.png",
+      "route": "/login",
+      "viewport": "390x844",
+      "locale": "es",
+      "theme": "dark",
+      "state": "plans-link-focus"
+    },
+    {
+      "id": "8b9e483-v1-phone390-en-light-default",
+      "file": "8b9e483-v1-phone390-en-light-default.png",
+      "route": "/planes",
+      "viewport": "390x844",
+      "locale": "en",
+      "theme": "light",
+      "state": "default",
+      "httpStatus": 200
+    },
+    {
+      "id": "8b9e483-v3-phone390-en-light-legacy",
+      "file": "8b9e483-v3-phone390-en-light-legacy.png",
+      "route": "/planes?vista=seleccionar",
+      "viewport": "390x844",
+      "locale": "en",
+      "theme": "light",
+      "state": "legacy",
+      "httpStatus": 200
+    },
+    {
+      "id": "8b9e483-v4-phone390-en-light-entry",
+      "file": "8b9e483-v4-phone390-en-light-entry.png",
+      "route": "/login",
+      "viewport": "390x844",
+      "locale": "en",
+      "theme": "light",
+      "state": "entry",
+      "httpStatus": 200
+    },
+    {
+      "id": "8b9e483-v1-phone390-en-light-reduced-motion",
+      "file": "8b9e483-v1-phone390-en-light-reduced-motion.png",
+      "route": "/planes",
+      "viewport": "390x844",
+      "locale": "en",
+      "theme": "light",
+      "state": "reduced-motion",
+      "httpStatus": 200
+    },
+    {
+      "id": "8b9e483-v1-phone390-en-light-still-query-no-preference",
+      "file": "8b9e483-v1-phone390-en-light-still-query-no-preference.png",
+      "route": "/planes?still=1",
+      "viewport": "390x844",
+      "locale": "en",
+      "theme": "light",
+      "state": "still-query-no-preference",
+      "httpStatus": 200
+    },
+    {
+      "id": "8b9e483-v1-phone390-en-light-keyboard-focus-1",
+      "file": "8b9e483-v1-phone390-en-light-keyboard-focus-1.png",
+      "route": "/planes",
+      "viewport": "390x844",
+      "locale": "en",
+      "theme": "light",
+      "state": "keyboard-focus-1",
+      "focusedElement": "SELECT"
+    },
+    {
+      "id": "8b9e483-v1-phone390-en-light-keyboard-focus-2",
+      "file": "8b9e483-v1-phone390-en-light-keyboard-focus-2.png",
+      "route": "/planes",
+      "viewport": "390x844",
+      "locale": "en",
+      "theme": "light",
+      "state": "keyboard-focus-2",
+      "focusedElement": "A"
+    },
+    {
+      "id": "8b9e483-v1-phone390-en-light-keyboard-focus-3",
+      "file": "8b9e483-v1-phone390-en-light-keyboard-focus-3.png",
+      "route": "/planes",
+      "viewport": "390x844",
+      "locale": "en",
+      "theme": "light",
+      "state": "keyboard-focus-3",
+      "focusedElement": "BUTTON"
+    },
+    {
+      "id": "8b9e483-v1-phone390-en-light-keyboard-focus-4",
+      "file": "8b9e483-v1-phone390-en-light-keyboard-focus-4.png",
+      "route": "/planes",
+      "viewport": "390x844",
+      "locale": "en",
+      "theme": "light",
+      "state": "keyboard-focus-4",
+      "focusedElement": "BUTTON"
+    },
+    {
+      "id": "8b9e483-v1-phone390-en-light-keyboard-focus-5",
+      "file": "8b9e483-v1-phone390-en-light-keyboard-focus-5.png",
+      "route": "/planes",
+      "viewport": "390x844",
+      "locale": "en",
+      "theme": "light",
+      "state": "keyboard-focus-5",
+      "focusedElement": "BUTTON"
+    },
+    {
+      "id": "8b9e483-v1-phone390-en-light-keyboard-focus-6",
+      "file": "8b9e483-v1-phone390-en-light-keyboard-focus-6.png",
+      "route": "/planes",
+      "viewport": "390x844",
+      "locale": "en",
+      "theme": "light",
+      "state": "keyboard-focus-6",
+      "focusedElement": "BUTTON"
+    },
+    {
+      "id": "8b9e483-v1-phone390-en-light-button-hover",
+      "file": "8b9e483-v1-phone390-en-light-button-hover.png",
+      "route": "/planes",
+      "viewport": "390x844",
+      "locale": "en",
+      "theme": "light",
+      "state": "button-hover"
+    },
+    {
+      "id": "8b9e483-v1-phone390-en-light-button-active",
+      "file": "8b9e483-v1-phone390-en-light-button-active.png",
+      "route": "/planes",
+      "viewport": "390x844",
+      "locale": "en",
+      "theme": "light",
+      "state": "button-active"
+    },
+    {
+      "id": "8b9e483-v1-phone390-en-light-language-changed",
+      "file": "8b9e483-v1-phone390-en-light-language-changed.png",
+      "route": "/planes",
+      "viewport": "390x844",
+      "locale": "en",
+      "theme": "light",
+      "state": "language-changed"
+    },
+    {
+      "id": "8b9e483-v4-phone390-en-light-plans-link-focus",
+      "file": "8b9e483-v4-phone390-en-light-plans-link-focus.png",
+      "route": "/login",
+      "viewport": "390x844",
+      "locale": "en",
+      "theme": "light",
+      "state": "plans-link-focus"
+    },
+    {
+      "id": "8b9e483-v1-phone390-en-dark-default",
+      "file": "8b9e483-v1-phone390-en-dark-default.png",
+      "route": "/planes",
+      "viewport": "390x844",
+      "locale": "en",
+      "theme": "dark",
+      "state": "default",
+      "httpStatus": 200
+    },
+    {
+      "id": "8b9e483-v3-phone390-en-dark-legacy",
+      "file": "8b9e483-v3-phone390-en-dark-legacy.png",
+      "route": "/planes?vista=seleccionar",
+      "viewport": "390x844",
+      "locale": "en",
+      "theme": "dark",
+      "state": "legacy",
+      "httpStatus": 200
+    },
+    {
+      "id": "8b9e483-v4-phone390-en-dark-entry",
+      "file": "8b9e483-v4-phone390-en-dark-entry.png",
+      "route": "/login",
+      "viewport": "390x844",
+      "locale": "en",
+      "theme": "dark",
+      "state": "entry",
+      "httpStatus": 200
+    },
+    {
+      "id": "8b9e483-v1-phone390-en-dark-reduced-motion",
+      "file": "8b9e483-v1-phone390-en-dark-reduced-motion.png",
+      "route": "/planes",
+      "viewport": "390x844",
+      "locale": "en",
+      "theme": "dark",
+      "state": "reduced-motion",
+      "httpStatus": 200
+    },
+    {
+      "id": "8b9e483-v1-phone390-en-dark-still-query-no-preference",
+      "file": "8b9e483-v1-phone390-en-dark-still-query-no-preference.png",
+      "route": "/planes?still=1",
+      "viewport": "390x844",
+      "locale": "en",
+      "theme": "dark",
+      "state": "still-query-no-preference",
+      "httpStatus": 200
+    },
+    {
+      "id": "8b9e483-v1-phone390-en-dark-keyboard-focus-1",
+      "file": "8b9e483-v1-phone390-en-dark-keyboard-focus-1.png",
+      "route": "/planes",
+      "viewport": "390x844",
+      "locale": "en",
+      "theme": "dark",
+      "state": "keyboard-focus-1",
+      "focusedElement": "SELECT"
+    },
+    {
+      "id": "8b9e483-v1-phone390-en-dark-keyboard-focus-2",
+      "file": "8b9e483-v1-phone390-en-dark-keyboard-focus-2.png",
+      "route": "/planes",
+      "viewport": "390x844",
+      "locale": "en",
+      "theme": "dark",
+      "state": "keyboard-focus-2",
+      "focusedElement": "A"
+    },
+    {
+      "id": "8b9e483-v1-phone390-en-dark-keyboard-focus-3",
+      "file": "8b9e483-v1-phone390-en-dark-keyboard-focus-3.png",
+      "route": "/planes",
+      "viewport": "390x844",
+      "locale": "en",
+      "theme": "dark",
+      "state": "keyboard-focus-3",
+      "focusedElement": "BUTTON"
+    },
+    {
+      "id": "8b9e483-v1-phone390-en-dark-keyboard-focus-4",
+      "file": "8b9e483-v1-phone390-en-dark-keyboard-focus-4.png",
+      "route": "/planes",
+      "viewport": "390x844",
+      "locale": "en",
+      "theme": "dark",
+      "state": "keyboard-focus-4",
+      "focusedElement": "BUTTON"
+    },
+    {
+      "id": "8b9e483-v1-phone390-en-dark-keyboard-focus-5",
+      "file": "8b9e483-v1-phone390-en-dark-keyboard-focus-5.png",
+      "route": "/planes",
+      "viewport": "390x844",
+      "locale": "en",
+      "theme": "dark",
+      "state": "keyboard-focus-5",
+      "focusedElement": "BUTTON"
+    },
+    {
+      "id": "8b9e483-v1-phone390-en-dark-keyboard-focus-6",
+      "file": "8b9e483-v1-phone390-en-dark-keyboard-focus-6.png",
+      "route": "/planes",
+      "viewport": "390x844",
+      "locale": "en",
+      "theme": "dark",
+      "state": "keyboard-focus-6",
+      "focusedElement": "BUTTON"
+    },
+    {
+      "id": "8b9e483-v1-phone390-en-dark-button-hover",
+      "file": "8b9e483-v1-phone390-en-dark-button-hover.png",
+      "route": "/planes",
+      "viewport": "390x844",
+      "locale": "en",
+      "theme": "dark",
+      "state": "button-hover"
+    },
+    {
+      "id": "8b9e483-v1-phone390-en-dark-button-active",
+      "file": "8b9e483-v1-phone390-en-dark-button-active.png",
+      "route": "/planes",
+      "viewport": "390x844",
+      "locale": "en",
+      "theme": "dark",
+      "state": "button-active"
+    },
+    {
+      "id": "8b9e483-v1-phone390-en-dark-language-changed",
+      "file": "8b9e483-v1-phone390-en-dark-language-changed.png",
+      "route": "/planes",
+      "viewport": "390x844",
+      "locale": "en",
+      "theme": "dark",
+      "state": "language-changed"
+    },
+    {
+      "id": "8b9e483-v4-phone390-en-dark-plans-link-focus",
+      "file": "8b9e483-v4-phone390-en-dark-plans-link-focus.png",
+      "route": "/login",
+      "viewport": "390x844",
+      "locale": "en",
+      "theme": "dark",
+      "state": "plans-link-focus"
+    },
+    {
+      "id": "8b9e483-v1-tablet768-es-light-default",
+      "file": "8b9e483-v1-tablet768-es-light-default.png",
+      "route": "/planes",
+      "viewport": "768x1024",
+      "locale": "es",
+      "theme": "light",
+      "state": "default",
+      "httpStatus": 200
+    },
+    {
+      "id": "8b9e483-v3-tablet768-es-light-legacy",
+      "file": "8b9e483-v3-tablet768-es-light-legacy.png",
+      "route": "/planes?vista=seleccionar",
+      "viewport": "768x1024",
+      "locale": "es",
+      "theme": "light",
+      "state": "legacy",
+      "httpStatus": 200
+    },
+    {
+      "id": "8b9e483-v4-tablet768-es-light-entry",
+      "file": "8b9e483-v4-tablet768-es-light-entry.png",
+      "route": "/login",
+      "viewport": "768x1024",
+      "locale": "es",
+      "theme": "light",
+      "state": "entry",
+      "httpStatus": 200
+    },
+    {
+      "id": "8b9e483-v1-tablet768-es-light-reduced-motion",
+      "file": "8b9e483-v1-tablet768-es-light-reduced-motion.png",
+      "route": "/planes",
+      "viewport": "768x1024",
+      "locale": "es",
+      "theme": "light",
+      "state": "reduced-motion",
+      "httpStatus": 200
+    },
+    {
+      "id": "8b9e483-v1-tablet768-es-light-still-query-no-preference",
+      "file": "8b9e483-v1-tablet768-es-light-still-query-no-preference.png",
+      "route": "/planes?still=1",
+      "viewport": "768x1024",
+      "locale": "es",
+      "theme": "light",
+      "state": "still-query-no-preference",
+      "httpStatus": 200
+    },
+    {
+      "id": "8b9e483-v1-tablet768-es-light-keyboard-focus-1",
+      "file": "8b9e483-v1-tablet768-es-light-keyboard-focus-1.png",
+      "route": "/planes",
+      "viewport": "768x1024",
+      "locale": "es",
+      "theme": "light",
+      "state": "keyboard-focus-1",
+      "focusedElement": "SELECT"
+    },
+    {
+      "id": "8b9e483-v1-tablet768-es-light-keyboard-focus-2",
+      "file": "8b9e483-v1-tablet768-es-light-keyboard-focus-2.png",
+      "route": "/planes",
+      "viewport": "768x1024",
+      "locale": "es",
+      "theme": "light",
+      "state": "keyboard-focus-2",
+      "focusedElement": "A"
+    },
+    {
+      "id": "8b9e483-v1-tablet768-es-light-keyboard-focus-3",
+      "file": "8b9e483-v1-tablet768-es-light-keyboard-focus-3.png",
+      "route": "/planes",
+      "viewport": "768x1024",
+      "locale": "es",
+      "theme": "light",
+      "state": "keyboard-focus-3",
+      "focusedElement": "BUTTON"
+    },
+    {
+      "id": "8b9e483-v1-tablet768-es-light-keyboard-focus-4",
+      "file": "8b9e483-v1-tablet768-es-light-keyboard-focus-4.png",
+      "route": "/planes",
+      "viewport": "768x1024",
+      "locale": "es",
+      "theme": "light",
+      "state": "keyboard-focus-4",
+      "focusedElement": "BUTTON"
+    },
+    {
+      "id": "8b9e483-v1-tablet768-es-light-keyboard-focus-5",
+      "file": "8b9e483-v1-tablet768-es-light-keyboard-focus-5.png",
+      "route": "/planes",
+      "viewport": "768x1024",
+      "locale": "es",
+      "theme": "light",
+      "state": "keyboard-focus-5",
+      "focusedElement": "BUTTON"
+    },
+    {
+      "id": "8b9e483-v1-tablet768-es-light-keyboard-focus-6",
+      "file": "8b9e483-v1-tablet768-es-light-keyboard-focus-6.png",
+      "route": "/planes",
+      "viewport": "768x1024",
+      "locale": "es",
+      "theme": "light",
+      "state": "keyboard-focus-6",
+      "focusedElement": "BUTTON"
+    },
+    {
+      "id": "8b9e483-v1-tablet768-es-light-button-hover",
+      "file": "8b9e483-v1-tablet768-es-light-button-hover.png",
+      "route": "/planes",
+      "viewport": "768x1024",
+      "locale": "es",
+      "theme": "light",
+      "state": "button-hover"
+    },
+    {
+      "id": "8b9e483-v1-tablet768-es-light-button-active",
+      "file": "8b9e483-v1-tablet768-es-light-button-active.png",
+      "route": "/planes",
+      "viewport": "768x1024",
+      "locale": "es",
+      "theme": "light",
+      "state": "button-active"
+    },
+    {
+      "id": "8b9e483-v1-tablet768-es-light-language-changed",
+      "file": "8b9e483-v1-tablet768-es-light-language-changed.png",
+      "route": "/planes",
+      "viewport": "768x1024",
+      "locale": "es",
+      "theme": "light",
+      "state": "language-changed"
+    },
+    {
+      "id": "8b9e483-v4-tablet768-es-light-plans-link-focus",
+      "file": "8b9e483-v4-tablet768-es-light-plans-link-focus.png",
+      "route": "/login",
+      "viewport": "768x1024",
+      "locale": "es",
+      "theme": "light",
+      "state": "plans-link-focus"
+    },
+    {
+      "id": "8b9e483-v1-tablet768-es-dark-default",
+      "file": "8b9e483-v1-tablet768-es-dark-default.png",
+      "route": "/planes",
+      "viewport": "768x1024",
+      "locale": "es",
+      "theme": "dark",
+      "state": "default",
+      "httpStatus": 200
+    },
+    {
+      "id": "8b9e483-v3-tablet768-es-dark-legacy",
+      "file": "8b9e483-v3-tablet768-es-dark-legacy.png",
+      "route": "/planes?vista=seleccionar",
+      "viewport": "768x1024",
+      "locale": "es",
+      "theme": "dark",
+      "state": "legacy",
+      "httpStatus": 200
+    },
+    {
+      "id": "8b9e483-v4-tablet768-es-dark-entry",
+      "file": "8b9e483-v4-tablet768-es-dark-entry.png",
+      "route": "/login",
+      "viewport": "768x1024",
+      "locale": "es",
+      "theme": "dark",
+      "state": "entry",
+      "httpStatus": 200
+    },
+    {
+      "id": "8b9e483-v1-tablet768-es-dark-reduced-motion",
+      "file": "8b9e483-v1-tablet768-es-dark-reduced-motion.png",
+      "route": "/planes",
+      "viewport": "768x1024",
+      "locale": "es",
+      "theme": "dark",
+      "state": "reduced-motion",
+      "httpStatus": 200
+    },
+    {
+      "id": "8b9e483-v1-tablet768-es-dark-still-query-no-preference",
+      "file": "8b9e483-v1-tablet768-es-dark-still-query-no-preference.png",
+      "route": "/planes?still=1",
+      "viewport": "768x1024",
+      "locale": "es",
+      "theme": "dark",
+      "state": "still-query-no-preference",
+      "httpStatus": 200
+    },
+    {
+      "id": "8b9e483-v1-tablet768-es-dark-keyboard-focus-1",
+      "file": "8b9e483-v1-tablet768-es-dark-keyboard-focus-1.png",
+      "route": "/planes",
+      "viewport": "768x1024",
+      "locale": "es",
+      "theme": "dark",
+      "state": "keyboard-focus-1",
+      "focusedElement": "SELECT"
+    },
+    {
+      "id": "8b9e483-v1-tablet768-es-dark-keyboard-focus-2",
+      "file": "8b9e483-v1-tablet768-es-dark-keyboard-focus-2.png",
+      "route": "/planes",
+      "viewport": "768x1024",
+      "locale": "es",
+      "theme": "dark",
+      "state": "keyboard-focus-2",
+      "focusedElement": "A"
+    },
+    {
+      "id": "8b9e483-v1-tablet768-es-dark-keyboard-focus-3",
+      "file": "8b9e483-v1-tablet768-es-dark-keyboard-focus-3.png",
+      "route": "/planes",
+      "viewport": "768x1024",
+      "locale": "es",
+      "theme": "dark",
+      "state": "keyboard-focus-3",
+      "focusedElement": "BUTTON"
+    },
+    {
+      "id": "8b9e483-v1-tablet768-es-dark-keyboard-focus-4",
+      "file": "8b9e483-v1-tablet768-es-dark-keyboard-focus-4.png",
+      "route": "/planes",
+      "viewport": "768x1024",
+      "locale": "es",
+      "theme": "dark",
+      "state": "keyboard-focus-4",
+      "focusedElement": "BUTTON"
+    },
+    {
+      "id": "8b9e483-v1-tablet768-es-dark-keyboard-focus-5",
+      "file": "8b9e483-v1-tablet768-es-dark-keyboard-focus-5.png",
+      "route": "/planes",
+      "viewport": "768x1024",
+      "locale": "es",
+      "theme": "dark",
+      "state": "keyboard-focus-5",
+      "focusedElement": "BUTTON"
+    },
+    {
+      "id": "8b9e483-v1-tablet768-es-dark-keyboard-focus-6",
+      "file": "8b9e483-v1-tablet768-es-dark-keyboard-focus-6.png",
+      "route": "/planes",
+      "viewport": "768x1024",
+      "locale": "es",
+      "theme": "dark",
+      "state": "keyboard-focus-6",
+      "focusedElement": "BUTTON"
+    },
+    {
+      "id": "8b9e483-v1-tablet768-es-dark-button-hover",
+      "file": "8b9e483-v1-tablet768-es-dark-button-hover.png",
+      "route": "/planes",
+      "viewport": "768x1024",
+      "locale": "es",
+      "theme": "dark",
+      "state": "button-hover"
+    },
+    {
+      "id": "8b9e483-v1-tablet768-es-dark-button-active",
+      "file": "8b9e483-v1-tablet768-es-dark-button-active.png",
+      "route": "/planes",
+      "viewport": "768x1024",
+      "locale": "es",
+      "theme": "dark",
+      "state": "button-active"
+    },
+    {
+      "id": "8b9e483-v1-tablet768-es-dark-language-changed",
+      "file": "8b9e483-v1-tablet768-es-dark-language-changed.png",
+      "route": "/planes",
+      "viewport": "768x1024",
+      "locale": "es",
+      "theme": "dark",
+      "state": "language-changed"
+    },
+    {
+      "id": "8b9e483-v4-tablet768-es-dark-plans-link-focus",
+      "file": "8b9e483-v4-tablet768-es-dark-plans-link-focus.png",
+      "route": "/login",
+      "viewport": "768x1024",
+      "locale": "es",
+      "theme": "dark",
+      "state": "plans-link-focus"
+    },
+    {
+      "id": "8b9e483-v1-tablet768-en-light-default",
+      "file": "8b9e483-v1-tablet768-en-light-default.png",
+      "route": "/planes",
+      "viewport": "768x1024",
+      "locale": "en",
+      "theme": "light",
+      "state": "default",
+      "httpStatus": 200
+    },
+    {
+      "id": "8b9e483-v3-tablet768-en-light-legacy",
+      "file": "8b9e483-v3-tablet768-en-light-legacy.png",
+      "route": "/planes?vista=seleccionar",
+      "viewport": "768x1024",
+      "locale": "en",
+      "theme": "light",
+      "state": "legacy",
+      "httpStatus": 200
+    },
+    {
+      "id": "8b9e483-v4-tablet768-en-light-entry",
+      "file": "8b9e483-v4-tablet768-en-light-entry.png",
+      "route": "/login",
+      "viewport": "768x1024",
+      "locale": "en",
+      "theme": "light",
+      "state": "entry",
+      "httpStatus": 200
+    },
+    {
+      "id": "8b9e483-v1-tablet768-en-light-reduced-motion",
+      "file": "8b9e483-v1-tablet768-en-light-reduced-motion.png",
+      "route": "/planes",
+      "viewport": "768x1024",
+      "locale": "en",
+      "theme": "light",
+      "state": "reduced-motion",
+      "httpStatus": 200
+    },
+    {
+      "id": "8b9e483-v1-tablet768-en-light-still-query-no-preference",
+      "file": "8b9e483-v1-tablet768-en-light-still-query-no-preference.png",
+      "route": "/planes?still=1",
+      "viewport": "768x1024",
+      "locale": "en",
+      "theme": "light",
+      "state": "still-query-no-preference",
+      "httpStatus": 200
+    },
+    {
+      "id": "8b9e483-v1-tablet768-en-light-keyboard-focus-1",
+      "file": "8b9e483-v1-tablet768-en-light-keyboard-focus-1.png",
+      "route": "/planes",
+      "viewport": "768x1024",
+      "locale": "en",
+      "theme": "light",
+      "state": "keyboard-focus-1",
+      "focusedElement": "SELECT"
+    },
+    {
+      "id": "8b9e483-v1-tablet768-en-light-keyboard-focus-2",
+      "file": "8b9e483-v1-tablet768-en-light-keyboard-focus-2.png",
+      "route": "/planes",
+      "viewport": "768x1024",
+      "locale": "en",
+      "theme": "light",
+      "state": "keyboard-focus-2",
+      "focusedElement": "A"
+    },
+    {
+      "id": "8b9e483-v1-tablet768-en-light-keyboard-focus-3",
+      "file": "8b9e483-v1-tablet768-en-light-keyboard-focus-3.png",
+      "route": "/planes",
+      "viewport": "768x1024",
+      "locale": "en",
+      "theme": "light",
+      "state": "keyboard-focus-3",
+      "focusedElement": "BUTTON"
+    },
+    {
+      "id": "8b9e483-v1-tablet768-en-light-keyboard-focus-4",
+      "file": "8b9e483-v1-tablet768-en-light-keyboard-focus-4.png",
+      "route": "/planes",
+      "viewport": "768x1024",
+      "locale": "en",
+      "theme": "light",
+      "state": "keyboard-focus-4",
+      "focusedElement": "BUTTON"
+    },
+    {
+      "id": "8b9e483-v1-tablet768-en-light-keyboard-focus-5",
+      "file": "8b9e483-v1-tablet768-en-light-keyboard-focus-5.png",
+      "route": "/planes",
+      "viewport": "768x1024",
+      "locale": "en",
+      "theme": "light",
+      "state": "keyboard-focus-5",
+      "focusedElement": "BUTTON"
+    },
+    {
+      "id": "8b9e483-v1-tablet768-en-light-keyboard-focus-6",
+      "file": "8b9e483-v1-tablet768-en-light-keyboard-focus-6.png",
+      "route": "/planes",
+      "viewport": "768x1024",
+      "locale": "en",
+      "theme": "light",
+      "state": "keyboard-focus-6",
+      "focusedElement": "BUTTON"
+    },
+    {
+      "id": "8b9e483-v1-tablet768-en-light-button-hover",
+      "file": "8b9e483-v1-tablet768-en-light-button-hover.png",
+      "route": "/planes",
+      "viewport": "768x1024",
+      "locale": "en",
+      "theme": "light",
+      "state": "button-hover"
+    },
+    {
+      "id": "8b9e483-v1-tablet768-en-light-button-active",
+      "file": "8b9e483-v1-tablet768-en-light-button-active.png",
+      "route": "/planes",
+      "viewport": "768x1024",
+      "locale": "en",
+      "theme": "light",
+      "state": "button-active"
+    },
+    {
+      "id": "8b9e483-v1-tablet768-en-light-language-changed",
+      "file": "8b9e483-v1-tablet768-en-light-language-changed.png",
+      "route": "/planes",
+      "viewport": "768x1024",
+      "locale": "en",
+      "theme": "light",
+      "state": "language-changed"
+    },
+    {
+      "id": "8b9e483-v4-tablet768-en-light-plans-link-focus",
+      "file": "8b9e483-v4-tablet768-en-light-plans-link-focus.png",
+      "route": "/login",
+      "viewport": "768x1024",
+      "locale": "en",
+      "theme": "light",
+      "state": "plans-link-focus"
+    },
+    {
+      "id": "8b9e483-v1-tablet768-en-dark-default",
+      "file": "8b9e483-v1-tablet768-en-dark-default.png",
+      "route": "/planes",
+      "viewport": "768x1024",
+      "locale": "en",
+      "theme": "dark",
+      "state": "default",
+      "httpStatus": 200
+    },
+    {
+      "id": "8b9e483-v3-tablet768-en-dark-legacy",
+      "file": "8b9e483-v3-tablet768-en-dark-legacy.png",
+      "route": "/planes?vista=seleccionar",
+      "viewport": "768x1024",
+      "locale": "en",
+      "theme": "dark",
+      "state": "legacy",
+      "httpStatus": 200
+    },
+    {
+      "id": "8b9e483-v4-tablet768-en-dark-entry",
+      "file": "8b9e483-v4-tablet768-en-dark-entry.png",
+      "route": "/login",
+      "viewport": "768x1024",
+      "locale": "en",
+      "theme": "dark",
+      "state": "entry",
+      "httpStatus": 200
+    },
+    {
+      "id": "8b9e483-v1-tablet768-en-dark-reduced-motion",
+      "file": "8b9e483-v1-tablet768-en-dark-reduced-motion.png",
+      "route": "/planes",
+      "viewport": "768x1024",
+      "locale": "en",
+      "theme": "dark",
+      "state": "reduced-motion",
+      "httpStatus": 200
+    },
+    {
+      "id": "8b9e483-v1-tablet768-en-dark-still-query-no-preference",
+      "file": "8b9e483-v1-tablet768-en-dark-still-query-no-preference.png",
+      "route": "/planes?still=1",
+      "viewport": "768x1024",
+      "locale": "en",
+      "theme": "dark",
+      "state": "still-query-no-preference",
+      "httpStatus": 200
+    },
+    {
+      "id": "8b9e483-v1-tablet768-en-dark-keyboard-focus-1",
+      "file": "8b9e483-v1-tablet768-en-dark-keyboard-focus-1.png",
+      "route": "/planes",
+      "viewport": "768x1024",
+      "locale": "en",
+      "theme": "dark",
+      "state": "keyboard-focus-1",
+      "focusedElement": "SELECT"
+    },
+    {
+      "id": "8b9e483-v1-tablet768-en-dark-keyboard-focus-2",
+      "file": "8b9e483-v1-tablet768-en-dark-keyboard-focus-2.png",
+      "route": "/planes",
+      "viewport": "768x1024",
+      "locale": "en",
+      "theme": "dark",
+      "state": "keyboard-focus-2",
+      "focusedElement": "A"
+    },
+    {
+      "id": "8b9e483-v1-tablet768-en-dark-keyboard-focus-3",
+      "file": "8b9e483-v1-tablet768-en-dark-keyboard-focus-3.png",
+      "route": "/planes",
+      "viewport": "768x1024",
+      "locale": "en",
+      "theme": "dark",
+      "state": "keyboard-focus-3",
+      "focusedElement": "BUTTON"
+    },
+    {
+      "id": "8b9e483-v1-tablet768-en-dark-keyboard-focus-4",
+      "file": "8b9e483-v1-tablet768-en-dark-keyboard-focus-4.png",
+      "route": "/planes",
+      "viewport": "768x1024",
+      "locale": "en",
+      "theme": "dark",
+      "state": "keyboard-focus-4",
+      "focusedElement": "BUTTON"
+    },
+    {
+      "id": "8b9e483-v1-tablet768-en-dark-keyboard-focus-5",
+      "file": "8b9e483-v1-tablet768-en-dark-keyboard-focus-5.png",
+      "route": "/planes",
+      "viewport": "768x1024",
+      "locale": "en",
+      "theme": "dark",
+      "state": "keyboard-focus-5",
+      "focusedElement": "BUTTON"
+    },
+    {
+      "id": "8b9e483-v1-tablet768-en-dark-keyboard-focus-6",
+      "file": "8b9e483-v1-tablet768-en-dark-keyboard-focus-6.png",
+      "route": "/planes",
+      "viewport": "768x1024",
+      "locale": "en",
+      "theme": "dark",
+      "state": "keyboard-focus-6",
+      "focusedElement": "BUTTON"
+    },
+    {
+      "id": "8b9e483-v1-tablet768-en-dark-button-hover",
+      "file": "8b9e483-v1-tablet768-en-dark-button-hover.png",
+      "route": "/planes",
+      "viewport": "768x1024",
+      "locale": "en",
+      "theme": "dark",
+      "state": "button-hover"
+    },
+    {
+      "id": "8b9e483-v1-tablet768-en-dark-button-active",
+      "file": "8b9e483-v1-tablet768-en-dark-button-active.png",
+      "route": "/planes",
+      "viewport": "768x1024",
+      "locale": "en",
+      "theme": "dark",
+      "state": "button-active"
+    },
+    {
+      "id": "8b9e483-v1-tablet768-en-dark-language-changed",
+      "file": "8b9e483-v1-tablet768-en-dark-language-changed.png",
+      "route": "/planes",
+      "viewport": "768x1024",
+      "locale": "en",
+      "theme": "dark",
+      "state": "language-changed"
+    },
+    {
+      "id": "8b9e483-v4-tablet768-en-dark-plans-link-focus",
+      "file": "8b9e483-v4-tablet768-en-dark-plans-link-focus.png",
+      "route": "/login",
+      "viewport": "768x1024",
+      "locale": "en",
+      "theme": "dark",
+      "state": "plans-link-focus"
+    },
+    {
+      "id": "8b9e483-v1-desktop1280-es-light-default",
+      "file": "8b9e483-v1-desktop1280-es-light-default.png",
+      "route": "/planes",
+      "viewport": "1280x900",
+      "locale": "es",
+      "theme": "light",
+      "state": "default",
+      "httpStatus": 200
+    },
+    {
+      "id": "8b9e483-v3-desktop1280-es-light-legacy",
+      "file": "8b9e483-v3-desktop1280-es-light-legacy.png",
+      "route": "/planes?vista=seleccionar",
+      "viewport": "1280x900",
+      "locale": "es",
+      "theme": "light",
+      "state": "legacy",
+      "httpStatus": 200
+    },
+    {
+      "id": "8b9e483-v4-desktop1280-es-light-entry",
+      "file": "8b9e483-v4-desktop1280-es-light-entry.png",
+      "route": "/login",
+      "viewport": "1280x900",
+      "locale": "es",
+      "theme": "light",
+      "state": "entry",
+      "httpStatus": 200
+    },
+    {
+      "id": "8b9e483-v1-desktop1280-es-light-reduced-motion",
+      "file": "8b9e483-v1-desktop1280-es-light-reduced-motion.png",
+      "route": "/planes",
+      "viewport": "1280x900",
+      "locale": "es",
+      "theme": "light",
+      "state": "reduced-motion",
+      "httpStatus": 200
+    },
+    {
+      "id": "8b9e483-v1-desktop1280-es-light-still-query-no-preference",
+      "file": "8b9e483-v1-desktop1280-es-light-still-query-no-preference.png",
+      "route": "/planes?still=1",
+      "viewport": "1280x900",
+      "locale": "es",
+      "theme": "light",
+      "state": "still-query-no-preference",
+      "httpStatus": 200
+    },
+    {
+      "id": "8b9e483-v1-desktop1280-es-light-keyboard-focus-1",
+      "file": "8b9e483-v1-desktop1280-es-light-keyboard-focus-1.png",
+      "route": "/planes",
+      "viewport": "1280x900",
+      "locale": "es",
+      "theme": "light",
+      "state": "keyboard-focus-1",
+      "focusedElement": "SELECT"
+    },
+    {
+      "id": "8b9e483-v1-desktop1280-es-light-keyboard-focus-2",
+      "file": "8b9e483-v1-desktop1280-es-light-keyboard-focus-2.png",
+      "route": "/planes",
+      "viewport": "1280x900",
+      "locale": "es",
+      "theme": "light",
+      "state": "keyboard-focus-2",
+      "focusedElement": "A"
+    },
+    {
+      "id": "8b9e483-v1-desktop1280-es-light-keyboard-focus-3",
+      "file": "8b9e483-v1-desktop1280-es-light-keyboard-focus-3.png",
+      "route": "/planes",
+      "viewport": "1280x900",
+      "locale": "es",
+      "theme": "light",
+      "state": "keyboard-focus-3",
+      "focusedElement": "BUTTON"
+    },
+    {
+      "id": "8b9e483-v1-desktop1280-es-light-keyboard-focus-4",
+      "file": "8b9e483-v1-desktop1280-es-light-keyboard-focus-4.png",
+      "route": "/planes",
+      "viewport": "1280x900",
+      "locale": "es",
+      "theme": "light",
+      "state": "keyboard-focus-4",
+      "focusedElement": "BUTTON"
+    },
+    {
+      "id": "8b9e483-v1-desktop1280-es-light-keyboard-focus-5",
+      "file": "8b9e483-v1-desktop1280-es-light-keyboard-focus-5.png",
+      "route": "/planes",
+      "viewport": "1280x900",
+      "locale": "es",
+      "theme": "light",
+      "state": "keyboard-focus-5",
+      "focusedElement": "BUTTON"
+    },
+    {
+      "id": "8b9e483-v1-desktop1280-es-light-keyboard-focus-6",
+      "file": "8b9e483-v1-desktop1280-es-light-keyboard-focus-6.png",
+      "route": "/planes",
+      "viewport": "1280x900",
+      "locale": "es",
+      "theme": "light",
+      "state": "keyboard-focus-6",
+      "focusedElement": "BUTTON"
+    },
+    {
+      "id": "8b9e483-v1-desktop1280-es-light-button-hover",
+      "file": "8b9e483-v1-desktop1280-es-light-button-hover.png",
+      "route": "/planes",
+      "viewport": "1280x900",
+      "locale": "es",
+      "theme": "light",
+      "state": "button-hover"
+    },
+    {
+      "id": "8b9e483-v1-desktop1280-es-light-button-active",
+      "file": "8b9e483-v1-desktop1280-es-light-button-active.png",
+      "route": "/planes",
+      "viewport": "1280x900",
+      "locale": "es",
+      "theme": "light",
+      "state": "button-active"
+    },
+    {
+      "id": "8b9e483-v1-desktop1280-es-light-language-changed",
+      "file": "8b9e483-v1-desktop1280-es-light-language-changed.png",
+      "route": "/planes",
+      "viewport": "1280x900",
+      "locale": "es",
+      "theme": "light",
+      "state": "language-changed"
+    },
+    {
+      "id": "8b9e483-v4-desktop1280-es-light-plans-link-focus",
+      "file": "8b9e483-v4-desktop1280-es-light-plans-link-focus.png",
+      "route": "/login",
+      "viewport": "1280x900",
+      "locale": "es",
+      "theme": "light",
+      "state": "plans-link-focus"
+    },
+    {
+      "id": "8b9e483-v1-desktop1280-es-dark-default",
+      "file": "8b9e483-v1-desktop1280-es-dark-default.png",
+      "route": "/planes",
+      "viewport": "1280x900",
+      "locale": "es",
+      "theme": "dark",
+      "state": "default",
+      "httpStatus": 200
+    },
+    {
+      "id": "8b9e483-v3-desktop1280-es-dark-legacy",
+      "file": "8b9e483-v3-desktop1280-es-dark-legacy.png",
+      "route": "/planes?vista=seleccionar",
+      "viewport": "1280x900",
+      "locale": "es",
+      "theme": "dark",
+      "state": "legacy",
+      "httpStatus": 200
+    },
+    {
+      "id": "8b9e483-v4-desktop1280-es-dark-entry",
+      "file": "8b9e483-v4-desktop1280-es-dark-entry.png",
+      "route": "/login",
+      "viewport": "1280x900",
+      "locale": "es",
+      "theme": "dark",
+      "state": "entry",
+      "httpStatus": 200
+    },
+    {
+      "id": "8b9e483-v1-desktop1280-es-dark-reduced-motion",
+      "file": "8b9e483-v1-desktop1280-es-dark-reduced-motion.png",
+      "route": "/planes",
+      "viewport": "1280x900",
+      "locale": "es",
+      "theme": "dark",
+      "state": "reduced-motion",
+      "httpStatus": 200
+    },
+    {
+      "id": "8b9e483-v1-desktop1280-es-dark-still-query-no-preference",
+      "file": "8b9e483-v1-desktop1280-es-dark-still-query-no-preference.png",
+      "route": "/planes?still=1",
+      "viewport": "1280x900",
+      "locale": "es",
+      "theme": "dark",
+      "state": "still-query-no-preference",
+      "httpStatus": 200
+    },
+    {
+      "id": "8b9e483-v1-desktop1280-es-dark-keyboard-focus-1",
+      "file": "8b9e483-v1-desktop1280-es-dark-keyboard-focus-1.png",
+      "route": "/planes",
+      "viewport": "1280x900",
+      "locale": "es",
+      "theme": "dark",
+      "state": "keyboard-focus-1",
+      "focusedElement": "SELECT"
+    },
+    {
+      "id": "8b9e483-v1-desktop1280-es-dark-keyboard-focus-2",
+      "file": "8b9e483-v1-desktop1280-es-dark-keyboard-focus-2.png",
+      "route": "/planes",
+      "viewport": "1280x900",
+      "locale": "es",
+      "theme": "dark",
+      "state": "keyboard-focus-2",
+      "focusedElement": "A"
+    },
+    {
+      "id": "8b9e483-v1-desktop1280-es-dark-keyboard-focus-3",
+      "file": "8b9e483-v1-desktop1280-es-dark-keyboard-focus-3.png",
+      "route": "/planes",
+      "viewport": "1280x900",
+      "locale": "es",
+      "theme": "dark",
+      "state": "keyboard-focus-3",
+      "focusedElement": "BUTTON"
+    },
+    {
+      "id": "8b9e483-v1-desktop1280-es-dark-keyboard-focus-4",
+      "file": "8b9e483-v1-desktop1280-es-dark-keyboard-focus-4.png",
+      "route": "/planes",
+      "viewport": "1280x900",
+      "locale": "es",
+      "theme": "dark",
+      "state": "keyboard-focus-4",
+      "focusedElement": "BUTTON"
+    },
+    {
+      "id": "8b9e483-v1-desktop1280-es-dark-keyboard-focus-5",
+      "file": "8b9e483-v1-desktop1280-es-dark-keyboard-focus-5.png",
+      "route": "/planes",
+      "viewport": "1280x900",
+      "locale": "es",
+      "theme": "dark",
+      "state": "keyboard-focus-5",
+      "focusedElement": "BUTTON"
+    },
+    {
+      "id": "8b9e483-v1-desktop1280-es-dark-keyboard-focus-6",
+      "file": "8b9e483-v1-desktop1280-es-dark-keyboard-focus-6.png",
+      "route": "/planes",
+      "viewport": "1280x900",
+      "locale": "es",
+      "theme": "dark",
+      "state": "keyboard-focus-6",
+      "focusedElement": "BUTTON"
+    },
+    {
+      "id": "8b9e483-v1-desktop1280-es-dark-button-hover",
+      "file": "8b9e483-v1-desktop1280-es-dark-button-hover.png",
+      "route": "/planes",
+      "viewport": "1280x900",
+      "locale": "es",
+      "theme": "dark",
+      "state": "button-hover"
+    },
+    {
+      "id": "8b9e483-v1-desktop1280-es-dark-button-active",
+      "file": "8b9e483-v1-desktop1280-es-dark-button-active.png",
+      "route": "/planes",
+      "viewport": "1280x900",
+      "locale": "es",
+      "theme": "dark",
+      "state": "button-active"
+    },
+    {
+      "id": "8b9e483-v1-desktop1280-es-dark-language-changed",
+      "file": "8b9e483-v1-desktop1280-es-dark-language-changed.png",
+      "route": "/planes",
+      "viewport": "1280x900",
+      "locale": "es",
+      "theme": "dark",
+      "state": "language-changed"
+    },
+    {
+      "id": "8b9e483-v4-desktop1280-es-dark-plans-link-focus",
+      "file": "8b9e483-v4-desktop1280-es-dark-plans-link-focus.png",
+      "route": "/login",
+      "viewport": "1280x900",
+      "locale": "es",
+      "theme": "dark",
+      "state": "plans-link-focus"
+    },
+    {
+      "id": "8b9e483-v1-desktop1280-en-light-default",
+      "file": "8b9e483-v1-desktop1280-en-light-default.png",
+      "route": "/planes",
+      "viewport": "1280x900",
+      "locale": "en",
+      "theme": "light",
+      "state": "default",
+      "httpStatus": 200
+    },
+    {
+      "id": "8b9e483-v3-desktop1280-en-light-legacy",
+      "file": "8b9e483-v3-desktop1280-en-light-legacy.png",
+      "route": "/planes?vista=seleccionar",
+      "viewport": "1280x900",
+      "locale": "en",
+      "theme": "light",
+      "state": "legacy",
+      "httpStatus": 200
+    },
+    {
+      "id": "8b9e483-v4-desktop1280-en-light-entry",
+      "file": "8b9e483-v4-desktop1280-en-light-entry.png",
+      "route": "/login",
+      "viewport": "1280x900",
+      "locale": "en",
+      "theme": "light",
+      "state": "entry",
+      "httpStatus": 200
+    },
+    {
+      "id": "8b9e483-v1-desktop1280-en-light-reduced-motion",
+      "file": "8b9e483-v1-desktop1280-en-light-reduced-motion.png",
+      "route": "/planes",
+      "viewport": "1280x900",
+      "locale": "en",
+      "theme": "light",
+      "state": "reduced-motion",
+      "httpStatus": 200
+    },
+    {
+      "id": "8b9e483-v1-desktop1280-en-light-still-query-no-preference",
+      "file": "8b9e483-v1-desktop1280-en-light-still-query-no-preference.png",
+      "route": "/planes?still=1",
+      "viewport": "1280x900",
+      "locale": "en",
+      "theme": "light",
+      "state": "still-query-no-preference",
+      "httpStatus": 200
+    },
+    {
+      "id": "8b9e483-v1-desktop1280-en-light-keyboard-focus-1",
+      "file": "8b9e483-v1-desktop1280-en-light-keyboard-focus-1.png",
+      "route": "/planes",
+      "viewport": "1280x900",
+      "locale": "en",
+      "theme": "light",
+      "state": "keyboard-focus-1",
+      "focusedElement": "SELECT"
+    },
+    {
+      "id": "8b9e483-v1-desktop1280-en-light-keyboard-focus-2",
+      "file": "8b9e483-v1-desktop1280-en-light-keyboard-focus-2.png",
+      "route": "/planes",
+      "viewport": "1280x900",
+      "locale": "en",
+      "theme": "light",
+      "state": "keyboard-focus-2",
+      "focusedElement": "A"
+    },
+    {
+      "id": "8b9e483-v1-desktop1280-en-light-keyboard-focus-3",
+      "file": "8b9e483-v1-desktop1280-en-light-keyboard-focus-3.png",
+      "route": "/planes",
+      "viewport": "1280x900",
+      "locale": "en",
+      "theme": "light",
+      "state": "keyboard-focus-3",
+      "focusedElement": "BUTTON"
+    },
+    {
+      "id": "8b9e483-v1-desktop1280-en-light-keyboard-focus-4",
+      "file": "8b9e483-v1-desktop1280-en-light-keyboard-focus-4.png",
+      "route": "/planes",
+      "viewport": "1280x900",
+      "locale": "en",
+      "theme": "light",
+      "state": "keyboard-focus-4",
+      "focusedElement": "BUTTON"
+    },
+    {
+      "id": "8b9e483-v1-desktop1280-en-light-keyboard-focus-5",
+      "file": "8b9e483-v1-desktop1280-en-light-keyboard-focus-5.png",
+      "route": "/planes",
+      "viewport": "1280x900",
+      "locale": "en",
+      "theme": "light",
+      "state": "keyboard-focus-5",
+      "focusedElement": "BUTTON"
+    },
+    {
+      "id": "8b9e483-v1-desktop1280-en-light-keyboard-focus-6",
+      "file": "8b9e483-v1-desktop1280-en-light-keyboard-focus-6.png",
+      "route": "/planes",
+      "viewport": "1280x900",
+      "locale": "en",
+      "theme": "light",
+      "state": "keyboard-focus-6",
+      "focusedElement": "BUTTON"
+    },
+    {
+      "id": "8b9e483-v1-desktop1280-en-light-button-hover",
+      "file": "8b9e483-v1-desktop1280-en-light-button-hover.png",
+      "route": "/planes",
+      "viewport": "1280x900",
+      "locale": "en",
+      "theme": "light",
+      "state": "button-hover"
+    },
+    {
+      "id": "8b9e483-v1-desktop1280-en-light-button-active",
+      "file": "8b9e483-v1-desktop1280-en-light-button-active.png",
+      "route": "/planes",
+      "viewport": "1280x900",
+      "locale": "en",
+      "theme": "light",
+      "state": "button-active"
+    },
+    {
+      "id": "8b9e483-v1-desktop1280-en-light-language-changed",
+      "file": "8b9e483-v1-desktop1280-en-light-language-changed.png",
+      "route": "/planes",
+      "viewport": "1280x900",
+      "locale": "en",
+      "theme": "light",
+      "state": "language-changed"
+    },
+    {
+      "id": "8b9e483-v4-desktop1280-en-light-plans-link-focus",
+      "file": "8b9e483-v4-desktop1280-en-light-plans-link-focus.png",
+      "route": "/login",
+      "viewport": "1280x900",
+      "locale": "en",
+      "theme": "light",
+      "state": "plans-link-focus"
+    },
+    {
+      "id": "8b9e483-v1-desktop1280-en-dark-default",
+      "file": "8b9e483-v1-desktop1280-en-dark-default.png",
+      "route": "/planes",
+      "viewport": "1280x900",
+      "locale": "en",
+      "theme": "dark",
+      "state": "default",
+      "httpStatus": 200
+    },
+    {
+      "id": "8b9e483-v3-desktop1280-en-dark-legacy",
+      "file": "8b9e483-v3-desktop1280-en-dark-legacy.png",
+      "route": "/planes?vista=seleccionar",
+      "viewport": "1280x900",
+      "locale": "en",
+      "theme": "dark",
+      "state": "legacy",
+      "httpStatus": 200
+    },
+    {
+      "id": "8b9e483-v4-desktop1280-en-dark-entry",
+      "file": "8b9e483-v4-desktop1280-en-dark-entry.png",
+      "route": "/login",
+      "viewport": "1280x900",
+      "locale": "en",
+      "theme": "dark",
+      "state": "entry",
+      "httpStatus": 200
+    },
+    {
+      "id": "8b9e483-v1-desktop1280-en-dark-reduced-motion",
+      "file": "8b9e483-v1-desktop1280-en-dark-reduced-motion.png",
+      "route": "/planes",
+      "viewport": "1280x900",
+      "locale": "en",
+      "theme": "dark",
+      "state": "reduced-motion",
+      "httpStatus": 200
+    },
+    {
+      "id": "8b9e483-v1-desktop1280-en-dark-still-query-no-preference",
+      "file": "8b9e483-v1-desktop1280-en-dark-still-query-no-preference.png",
+      "route": "/planes?still=1",
+      "viewport": "1280x900",
+      "locale": "en",
+      "theme": "dark",
+      "state": "still-query-no-preference",
+      "httpStatus": 200
+    },
+    {
+      "id": "8b9e483-v1-desktop1280-en-dark-keyboard-focus-1",
+      "file": "8b9e483-v1-desktop1280-en-dark-keyboard-focus-1.png",
+      "route": "/planes",
+      "viewport": "1280x900",
+      "locale": "en",
+      "theme": "dark",
+      "state": "keyboard-focus-1",
+      "focusedElement": "SELECT"
+    },
+    {
+      "id": "8b9e483-v1-desktop1280-en-dark-keyboard-focus-2",
+      "file": "8b9e483-v1-desktop1280-en-dark-keyboard-focus-2.png",
+      "route": "/planes",
+      "viewport": "1280x900",
+      "locale": "en",
+      "theme": "dark",
+      "state": "keyboard-focus-2",
+      "focusedElement": "A"
+    },
+    {
+      "id": "8b9e483-v1-desktop1280-en-dark-keyboard-focus-3",
+      "file": "8b9e483-v1-desktop1280-en-dark-keyboard-focus-3.png",
+      "route": "/planes",
+      "viewport": "1280x900",
+      "locale": "en",
+      "theme": "dark",
+      "state": "keyboard-focus-3",
+      "focusedElement": "BUTTON"
+    },
+    {
+      "id": "8b9e483-v1-desktop1280-en-dark-keyboard-focus-4",
+      "file": "8b9e483-v1-desktop1280-en-dark-keyboard-focus-4.png",
+      "route": "/planes",
+      "viewport": "1280x900",
+      "locale": "en",
+      "theme": "dark",
+      "state": "keyboard-focus-4",
+      "focusedElement": "BUTTON"
+    },
+    {
+      "id": "8b9e483-v1-desktop1280-en-dark-keyboard-focus-5",
+      "file": "8b9e483-v1-desktop1280-en-dark-keyboard-focus-5.png",
+      "route": "/planes",
+      "viewport": "1280x900",
+      "locale": "en",
+      "theme": "dark",
+      "state": "keyboard-focus-5",
+      "focusedElement": "BUTTON"
+    },
+    {
+      "id": "8b9e483-v1-desktop1280-en-dark-keyboard-focus-6",
+      "file": "8b9e483-v1-desktop1280-en-dark-keyboard-focus-6.png",
+      "route": "/planes",
+      "viewport": "1280x900",
+      "locale": "en",
+      "theme": "dark",
+      "state": "keyboard-focus-6",
+      "focusedElement": "BUTTON"
+    },
+    {
+      "id": "8b9e483-v1-desktop1280-en-dark-button-hover",
+      "file": "8b9e483-v1-desktop1280-en-dark-button-hover.png",
+      "route": "/planes",
+      "viewport": "1280x900",
+      "locale": "en",
+      "theme": "dark",
+      "state": "button-hover"
+    },
+    {
+      "id": "8b9e483-v1-desktop1280-en-dark-button-active",
+      "file": "8b9e483-v1-desktop1280-en-dark-button-active.png",
+      "route": "/planes",
+      "viewport": "1280x900",
+      "locale": "en",
+      "theme": "dark",
+      "state": "button-active"
+    },
+    {
+      "id": "8b9e483-v1-desktop1280-en-dark-language-changed",
+      "file": "8b9e483-v1-desktop1280-en-dark-language-changed.png",
+      "route": "/planes",
+      "viewport": "1280x900",
+      "locale": "en",
+      "theme": "dark",
+      "state": "language-changed"
+    },
+    {
+      "id": "8b9e483-v4-desktop1280-en-dark-plans-link-focus",
+      "file": "8b9e483-v4-desktop1280-en-dark-plans-link-focus.png",
+      "route": "/login",
+      "viewport": "1280x900",
+      "locale": "en",
+      "theme": "dark",
+      "state": "plans-link-focus"
+    },
+    {
+      "id": "8b9e483-v1-phone360-es-light-default",
+      "file": "8b9e483-v1-phone360-es-light-default.png",
+      "route": "/planes",
+      "viewport": "360x780",
+      "locale": "es",
+      "theme": "light",
+      "state": "default",
+      "httpStatus": 200
+    },
+    {
+      "id": "8b9e483-v3-phone360-es-light-legacy",
+      "file": "8b9e483-v3-phone360-es-light-legacy.png",
+      "route": "/planes?vista=seleccionar",
+      "viewport": "360x780",
+      "locale": "es",
+      "theme": "light",
+      "state": "legacy",
+      "httpStatus": 200
+    },
+    {
+      "id": "8b9e483-v4-phone360-es-light-entry",
+      "file": "8b9e483-v4-phone360-es-light-entry.png",
+      "route": "/login",
+      "viewport": "360x780",
+      "locale": "es",
+      "theme": "light",
+      "state": "entry",
+      "httpStatus": 200
+    },
+    {
+      "id": "8b9e483-v1-phone360-es-light-reduced-motion",
+      "file": "8b9e483-v1-phone360-es-light-reduced-motion.png",
+      "route": "/planes",
+      "viewport": "360x780",
+      "locale": "es",
+      "theme": "light",
+      "state": "reduced-motion",
+      "httpStatus": 200
+    },
+    {
+      "id": "8b9e483-v1-phone360-es-light-still-query-no-preference",
+      "file": "8b9e483-v1-phone360-es-light-still-query-no-preference.png",
+      "route": "/planes?still=1",
+      "viewport": "360x780",
+      "locale": "es",
+      "theme": "light",
+      "state": "still-query-no-preference",
+      "httpStatus": 200
+    },
+    {
+      "id": "8b9e483-v1-phone360-es-light-keyboard-focus-1",
+      "file": "8b9e483-v1-phone360-es-light-keyboard-focus-1.png",
+      "route": "/planes",
+      "viewport": "360x780",
+      "locale": "es",
+      "theme": "light",
+      "state": "keyboard-focus-1"
+    },
+    {
+      "id": "8b9e483-v1-phone360-es-light-keyboard-focus-2",
+      "file": "8b9e483-v1-phone360-es-light-keyboard-focus-2.png",
+      "route": "/planes",
+      "viewport": "360x780",
+      "locale": "es",
+      "theme": "light",
+      "state": "keyboard-focus-2"
+    },
+    {
+      "id": "8b9e483-v1-phone360-es-light-keyboard-focus-3",
+      "file": "8b9e483-v1-phone360-es-light-keyboard-focus-3.png",
+      "route": "/planes",
+      "viewport": "360x780",
+      "locale": "es",
+      "theme": "light",
+      "state": "keyboard-focus-3"
+    },
+    {
+      "id": "8b9e483-v1-phone360-es-light-keyboard-focus-4",
+      "file": "8b9e483-v1-phone360-es-light-keyboard-focus-4.png",
+      "route": "/planes",
+      "viewport": "360x780",
+      "locale": "es",
+      "theme": "light",
+      "state": "keyboard-focus-4"
+    },
+    {
+      "id": "8b9e483-v1-phone360-es-light-keyboard-focus-5",
+      "file": "8b9e483-v1-phone360-es-light-keyboard-focus-5.png",
+      "route": "/planes",
+      "viewport": "360x780",
+      "locale": "es",
+      "theme": "light",
+      "state": "keyboard-focus-5"
+    },
+    {
+      "id": "8b9e483-v1-phone360-es-light-keyboard-focus-6",
+      "file": "8b9e483-v1-phone360-es-light-keyboard-focus-6.png",
+      "route": "/planes",
+      "viewport": "360x780",
+      "locale": "es",
+      "theme": "light",
+      "state": "keyboard-focus-6"
+    },
+    {
+      "id": "8b9e483-v1-phone360-es-light-button-hover",
+      "file": "8b9e483-v1-phone360-es-light-button-hover.png",
+      "route": "/planes",
+      "viewport": "360x780",
+      "locale": "es",
+      "theme": "light",
+      "state": "button-hover"
+    },
+    {
+      "id": "8b9e483-v1-phone360-es-light-button-active",
+      "file": "8b9e483-v1-phone360-es-light-button-active.png",
+      "route": "/planes",
+      "viewport": "360x780",
+      "locale": "es",
+      "theme": "light",
+      "state": "button-active"
+    },
+    {
+      "id": "8b9e483-v1-phone360-es-light-language-changed",
+      "file": "8b9e483-v1-phone360-es-light-language-changed.png",
+      "route": "/planes",
+      "viewport": "360x780",
+      "locale": "es",
+      "theme": "light",
+      "state": "language-changed"
+    },
+    {
+      "id": "8b9e483-v4-phone360-es-light-plans-link-focus",
+      "file": "8b9e483-v4-phone360-es-light-plans-link-focus.png",
+      "route": "/login",
+      "viewport": "360x780",
+      "locale": "es",
+      "theme": "light",
+      "state": "plans-link-focus"
+    },
+    {
+      "id": "8b9e483-v1-phone360-es-dark-default",
+      "file": "8b9e483-v1-phone360-es-dark-default.png",
+      "route": "/planes",
+      "viewport": "360x780",
+      "locale": "es",
+      "theme": "dark",
+      "state": "default",
+      "httpStatus": 200
+    },
+    {
+      "id": "8b9e483-v3-phone360-es-dark-legacy",
+      "file": "8b9e483-v3-phone360-es-dark-legacy.png",
+      "route": "/planes?vista=seleccionar",
+      "viewport": "360x780",
+      "locale": "es",
+      "theme": "dark",
+      "state": "legacy",
+      "httpStatus": 200
+    },
+    {
+      "id": "8b9e483-v4-phone360-es-dark-entry",
+      "file": "8b9e483-v4-phone360-es-dark-entry.png",
+      "route": "/login",
+      "viewport": "360x780",
+      "locale": "es",
+      "theme": "dark",
+      "state": "entry",
+      "httpStatus": 200
+    },
+    {
+      "id": "8b9e483-v1-phone360-es-dark-reduced-motion",
+      "file": "8b9e483-v1-phone360-es-dark-reduced-motion.png",
+      "route": "/planes",
+      "viewport": "360x780",
+      "locale": "es",
+      "theme": "dark",
+      "state": "reduced-motion",
+      "httpStatus": 200
+    },
+    {
+      "id": "8b9e483-v1-phone360-es-dark-still-query-no-preference",
+      "file": "8b9e483-v1-phone360-es-dark-still-query-no-preference.png",
+      "route": "/planes?still=1",
+      "viewport": "360x780",
+      "locale": "es",
+      "theme": "dark",
+      "state": "still-query-no-preference",
+      "httpStatus": 200
+    },
+    {
+      "id": "8b9e483-v1-phone360-es-dark-keyboard-focus-1",
+      "file": "8b9e483-v1-phone360-es-dark-keyboard-focus-1.png",
+      "route": "/planes",
+      "viewport": "360x780",
+      "locale": "es",
+      "theme": "dark",
+      "state": "keyboard-focus-1"
+    },
+    {
+      "id": "8b9e483-v1-phone360-es-dark-keyboard-focus-2",
+      "file": "8b9e483-v1-phone360-es-dark-keyboard-focus-2.png",
+      "route": "/planes",
+      "viewport": "360x780",
+      "locale": "es",
+      "theme": "dark",
+      "state": "keyboard-focus-2"
+    },
+    {
+      "id": "8b9e483-v1-phone360-es-dark-keyboard-focus-3",
+      "file": "8b9e483-v1-phone360-es-dark-keyboard-focus-3.png",
+      "route": "/planes",
+      "viewport": "360x780",
+      "locale": "es",
+      "theme": "dark",
+      "state": "keyboard-focus-3"
+    },
+    {
+      "id": "8b9e483-v1-phone360-es-dark-keyboard-focus-4",
+      "file": "8b9e483-v1-phone360-es-dark-keyboard-focus-4.png",
+      "route": "/planes",
+      "viewport": "360x780",
+      "locale": "es",
+      "theme": "dark",
+      "state": "keyboard-focus-4"
+    },
+    {
+      "id": "8b9e483-v1-phone360-es-dark-keyboard-focus-5",
+      "file": "8b9e483-v1-phone360-es-dark-keyboard-focus-5.png",
+      "route": "/planes",
+      "viewport": "360x780",
+      "locale": "es",
+      "theme": "dark",
+      "state": "keyboard-focus-5"
+    },
+    {
+      "id": "8b9e483-v1-phone360-es-dark-keyboard-focus-6",
+      "file": "8b9e483-v1-phone360-es-dark-keyboard-focus-6.png",
+      "route": "/planes",
+      "viewport": "360x780",
+      "locale": "es",
+      "theme": "dark",
+      "state": "keyboard-focus-6"
+    },
+    {
+      "id": "8b9e483-v1-phone360-es-dark-button-hover",
+      "file": "8b9e483-v1-phone360-es-dark-button-hover.png",
+      "route": "/planes",
+      "viewport": "360x780",
+      "locale": "es",
+      "theme": "dark",
+      "state": "button-hover"
+    },
+    {
+      "id": "8b9e483-v1-phone360-es-dark-button-active",
+      "file": "8b9e483-v1-phone360-es-dark-button-active.png",
+      "route": "/planes",
+      "viewport": "360x780",
+      "locale": "es",
+      "theme": "dark",
+      "state": "button-active"
+    },
+    {
+      "id": "8b9e483-v1-phone360-es-dark-language-changed",
+      "file": "8b9e483-v1-phone360-es-dark-language-changed.png",
+      "route": "/planes",
+      "viewport": "360x780",
+      "locale": "es",
+      "theme": "dark",
+      "state": "language-changed"
+    },
+    {
+      "id": "8b9e483-v4-phone360-es-dark-plans-link-focus",
+      "file": "8b9e483-v4-phone360-es-dark-plans-link-focus.png",
+      "route": "/login",
+      "viewport": "360x780",
+      "locale": "es",
+      "theme": "dark",
+      "state": "plans-link-focus"
+    },
+    {
+      "id": "8b9e483-v1-phone360-en-light-default",
+      "file": "8b9e483-v1-phone360-en-light-default.png",
+      "route": "/planes",
+      "viewport": "360x780",
+      "locale": "en",
+      "theme": "light",
+      "state": "default",
+      "httpStatus": 200
+    },
+    {
+      "id": "8b9e483-v3-phone360-en-light-legacy",
+      "file": "8b9e483-v3-phone360-en-light-legacy.png",
+      "route": "/planes?vista=seleccionar",
+      "viewport": "360x780",
+      "locale": "en",
+      "theme": "light",
+      "state": "legacy",
+      "httpStatus": 200
+    },
+    {
+      "id": "8b9e483-v4-phone360-en-light-entry",
+      "file": "8b9e483-v4-phone360-en-light-entry.png",
+      "route": "/login",
+      "viewport": "360x780",
+      "locale": "en",
+      "theme": "light",
+      "state": "entry",
+      "httpStatus": 200
+    },
+    {
+      "id": "8b9e483-v1-phone360-en-light-reduced-motion",
+      "file": "8b9e483-v1-phone360-en-light-reduced-motion.png",
+      "route": "/planes",
+      "viewport": "360x780",
+      "locale": "en",
+      "theme": "light",
+      "state": "reduced-motion",
+      "httpStatus": 200
+    },
+    {
+      "id": "8b9e483-v1-phone360-en-light-still-query-no-preference",
+      "file": "8b9e483-v1-phone360-en-light-still-query-no-preference.png",
+      "route": "/planes?still=1",
+      "viewport": "360x780",
+      "locale": "en",
+      "theme": "light",
+      "state": "still-query-no-preference",
+      "httpStatus": 200
+    },
+    {
+      "id": "8b9e483-v1-phone360-en-light-keyboard-focus-1",
+      "file": "8b9e483-v1-phone360-en-light-keyboard-focus-1.png",
+      "route": "/planes",
+      "viewport": "360x780",
+      "locale": "en",
+      "theme": "light",
+      "state": "keyboard-focus-1"
+    },
+    {
+      "id": "8b9e483-v1-phone360-en-light-keyboard-focus-2",
+      "file": "8b9e483-v1-phone360-en-light-keyboard-focus-2.png",
+      "route": "/planes",
+      "viewport": "360x780",
+      "locale": "en",
+      "theme": "light",
+      "state": "keyboard-focus-2"
+    },
+    {
+      "id": "8b9e483-v1-phone360-en-light-keyboard-focus-3",
+      "file": "8b9e483-v1-phone360-en-light-keyboard-focus-3.png",
+      "route": "/planes",
+      "viewport": "360x780",
+      "locale": "en",
+      "theme": "light",
+      "state": "keyboard-focus-3"
+    },
+    {
+      "id": "8b9e483-v1-phone360-en-light-keyboard-focus-4",
+      "file": "8b9e483-v1-phone360-en-light-keyboard-focus-4.png",
+      "route": "/planes",
+      "viewport": "360x780",
+      "locale": "en",
+      "theme": "light",
+      "state": "keyboard-focus-4"
+    },
+    {
+      "id": "8b9e483-v1-phone360-en-light-keyboard-focus-5",
+      "file": "8b9e483-v1-phone360-en-light-keyboard-focus-5.png",
+      "route": "/planes",
+      "viewport": "360x780",
+      "locale": "en",
+      "theme": "light",
+      "state": "keyboard-focus-5"
+    },
+    {
+      "id": "8b9e483-v1-phone360-en-light-keyboard-focus-6",
+      "file": "8b9e483-v1-phone360-en-light-keyboard-focus-6.png",
+      "route": "/planes",
+      "viewport": "360x780",
+      "locale": "en",
+      "theme": "light",
+      "state": "keyboard-focus-6"
+    },
+    {
+      "id": "8b9e483-v1-phone360-en-light-button-hover",
+      "file": "8b9e483-v1-phone360-en-light-button-hover.png",
+      "route": "/planes",
+      "viewport": "360x780",
+      "locale": "en",
+      "theme": "light",
+      "state": "button-hover"
+    },
+    {
+      "id": "8b9e483-v1-phone360-en-light-button-active",
+      "file": "8b9e483-v1-phone360-en-light-button-active.png",
+      "route": "/planes",
+      "viewport": "360x780",
+      "locale": "en",
+      "theme": "light",
+      "state": "button-active"
+    },
+    {
+      "id": "8b9e483-v1-phone360-en-light-language-changed",
+      "file": "8b9e483-v1-phone360-en-light-language-changed.png",
+      "route": "/planes",
+      "viewport": "360x780",
+      "locale": "en",
+      "theme": "light",
+      "state": "language-changed"
+    },
+    {
+      "id": "8b9e483-v4-phone360-en-light-plans-link-focus",
+      "file": "8b9e483-v4-phone360-en-light-plans-link-focus.png",
+      "route": "/login",
+      "viewport": "360x780",
+      "locale": "en",
+      "theme": "light",
+      "state": "plans-link-focus"
+    },
+    {
+      "id": "8b9e483-v1-phone360-en-dark-default",
+      "file": "8b9e483-v1-phone360-en-dark-default.png",
+      "route": "/planes",
+      "viewport": "360x780",
+      "locale": "en",
+      "theme": "dark",
+      "state": "default",
+      "httpStatus": 200
+    },
+    {
+      "id": "8b9e483-v3-phone360-en-dark-legacy",
+      "file": "8b9e483-v3-phone360-en-dark-legacy.png",
+      "route": "/planes?vista=seleccionar",
+      "viewport": "360x780",
+      "locale": "en",
+      "theme": "dark",
+      "state": "legacy",
+      "httpStatus": 200
+    },
+    {
+      "id": "8b9e483-v4-phone360-en-dark-entry",
+      "file": "8b9e483-v4-phone360-en-dark-entry.png",
+      "route": "/login",
+      "viewport": "360x780",
+      "locale": "en",
+      "theme": "dark",
+      "state": "entry",
+      "httpStatus": 200
+    },
+    {
+      "id": "8b9e483-v1-phone360-en-dark-reduced-motion",
+      "file": "8b9e483-v1-phone360-en-dark-reduced-motion.png",
+      "route": "/planes",
+      "viewport": "360x780",
+      "locale": "en",
+      "theme": "dark",
+      "state": "reduced-motion",
+      "httpStatus": 200
+    },
+    {
+      "id": "8b9e483-v1-phone360-en-dark-still-query-no-preference",
+      "file": "8b9e483-v1-phone360-en-dark-still-query-no-preference.png",
+      "route": "/planes?still=1",
+      "viewport": "360x780",
+      "locale": "en",
+      "theme": "dark",
+      "state": "still-query-no-preference",
+      "httpStatus": 200
+    },
+    {
+      "id": "8b9e483-v1-phone360-en-dark-keyboard-focus-1",
+      "file": "8b9e483-v1-phone360-en-dark-keyboard-focus-1.png",
+      "route": "/planes",
+      "viewport": "360x780",
+      "locale": "en",
+      "theme": "dark",
+      "state": "keyboard-focus-1"
+    },
+    {
+      "id": "8b9e483-v1-phone360-en-dark-keyboard-focus-2",
+      "file": "8b9e483-v1-phone360-en-dark-keyboard-focus-2.png",
+      "route": "/planes",
+      "viewport": "360x780",
+      "locale": "en",
+      "theme": "dark",
+      "state": "keyboard-focus-2"
+    },
+    {
+      "id": "8b9e483-v1-phone360-en-dark-keyboard-focus-3",
+      "file": "8b9e483-v1-phone360-en-dark-keyboard-focus-3.png",
+      "route": "/planes",
+      "viewport": "360x780",
+      "locale": "en",
+      "theme": "dark",
+      "state": "keyboard-focus-3"
+    },
+    {
+      "id": "8b9e483-v1-phone360-en-dark-keyboard-focus-4",
+      "file": "8b9e483-v1-phone360-en-dark-keyboard-focus-4.png",
+      "route": "/planes",
+      "viewport": "360x780",
+      "locale": "en",
+      "theme": "dark",
+      "state": "keyboard-focus-4"
+    },
+    {
+      "id": "8b9e483-v1-phone360-en-dark-keyboard-focus-5",
+      "file": "8b9e483-v1-phone360-en-dark-keyboard-focus-5.png",
+      "route": "/planes",
+      "viewport": "360x780",
+      "locale": "en",
+      "theme": "dark",
+      "state": "keyboard-focus-5"
+    },
+    {
+      "id": "8b9e483-v1-phone360-en-dark-keyboard-focus-6",
+      "file": "8b9e483-v1-phone360-en-dark-keyboard-focus-6.png",
+      "route": "/planes",
+      "viewport": "360x780",
+      "locale": "en",
+      "theme": "dark",
+      "state": "keyboard-focus-6"
+    },
+    {
+      "id": "8b9e483-v1-phone360-en-dark-button-hover",
+      "file": "8b9e483-v1-phone360-en-dark-button-hover.png",
+      "route": "/planes",
+      "viewport": "360x780",
+      "locale": "en",
+      "theme": "dark",
+      "state": "button-hover"
+    },
+    {
+      "id": "8b9e483-v1-phone360-en-dark-button-active",
+      "file": "8b9e483-v1-phone360-en-dark-button-active.png",
+      "route": "/planes",
+      "viewport": "360x780",
+      "locale": "en",
+      "theme": "dark",
+      "state": "button-active"
+    },
+    {
+      "id": "8b9e483-v1-phone360-en-dark-language-changed",
+      "file": "8b9e483-v1-phone360-en-dark-language-changed.png",
+      "route": "/planes",
+      "viewport": "360x780",
+      "locale": "en",
+      "theme": "dark",
+      "state": "language-changed"
+    },
+    {
+      "id": "8b9e483-v4-phone360-en-dark-plans-link-focus",
+      "file": "8b9e483-v4-phone360-en-dark-plans-link-focus.png",
+      "route": "/login",
+      "viewport": "360x780",
+      "locale": "en",
+      "theme": "dark",
+      "state": "plans-link-focus"
+    }
+  ],
+  "blocked": [
+    {
+      "view": "V2 signed-in /planes",
+      "reason": "No genuine account session was available; mock authentication is prohibited."
+    },
+    {
+      "view": "V5 account menu open",
+      "reason": "No genuine account session was available; mock authentication is prohibited."
+    }
+  ],
+  "coverageSupplement": {
+    "viewport360": {
+      "viewport": "360x780",
+      "routes": [
+        "/planes",
+        "/planes?vista=seleccionar",
+        "/login",
+        "/planes?still=1"
+      ],
+      "locales": [
+        "es",
+        "en"
+      ],
+      "themes": [
+        "light",
+        "dark"
+      ],
+      "extraStates": [
+        "keyboard-focus-1..6",
+        "button-hover",
+        "button-active",
+        "language-changed",
+        "plans-link-focus",
+        "reduced-motion"
+      ]
+    },
+    "f1ThroughF5Checks": [
+      {
+        "id": "F1_cards_rows_taller3d",
+        "viewport": "360x780",
+        "locale": "es",
+        "passed": true,
+        "observed": {
+          "cardCount": 4,
+          "rows": [
+            3,
+            3,
+            7,
+            8
+          ],
+          "taller3d": true,
+          "separateExplorer": false
+        }
+      },
+      {
+        "id": "F2_1280_gutter",
+        "viewport": "360x780",
+        "locale": "es",
+        "passed": true,
+        "observed": {
+          "x": 20,
+          "width": 320
+        }
+      },
+      {
+        "id": "F3_card_drop",
+        "viewport": "360x780",
+        "locale": "es",
+        "passed": true,
+        "observed": {
+          "animationNames": [
+            "comparador-planes-module__17B1-q__card-drop",
+            "comparador-planes-module__17B1-q__card-drop",
+            "comparador-planes-module__17B1-q__card-drop",
+            "comparador-planes-module__17B1-q__card-drop"
+          ],
+          "animationDurations": [
+            "0.3s",
+            "0.3s",
+            "0.3s",
+            "0.3s"
+          ]
+        }
+      },
+      {
+        "id": "F4_accessible_button_foot_final",
+        "viewport": "360x780",
+        "locale": "es",
+        "passed": true,
+        "observed": {
+          "buttonCounts": [
+            1,
+            1,
+            1,
+            1
+          ],
+          "buttonNames": [
+            "Escoger: Entusiasta",
+            "Escoger: Designer",
+            "Escoger: Designer Plus",
+            "Escoger: Master Designer"
+          ],
+          "footLast": [
+            true,
+            true,
+            true,
+            true
+          ]
+        }
+      },
+      {
+        "id": "no_overflow_or_truncated_tool_text",
+        "viewport": "360x780",
+        "locale": "es",
+        "passed": false,
+        "observed": {
+          "scrollWidth": 360,
+          "viewport": 360,
+          "clipped": [
+            "Chat asistido con límites.",
+            "Contador de globos",
+            "Catálogo",
+            "Chat asistido con límites más altos.",
+            "Contador de globos",
+            "Catálogo",
+            "Chat asistido con límites más altos.",
+            "Contador de globos",
+            "Catálogo",
+            "Calculadora de costos",
+            "Chat extendido",
+            "aún no disponible",
+            "Detección de estructura",
+            "aún no disponible",
+            "Detección avanzada de globos",
+            "aún no disponible",
+            "Chat asistido con límites más altos.",
+            "Contador de globos",
+            "Catálogo",
+            "Calculadora de costos",
+            "Chat extendido",
+            "aún no disponible",
+            "Detección de estructura",
+            "aún no disponible",
+            "Detección avanzada de globos",
+            "aún no disponible",
+            "Taller 3D"
+          ]
+        }
+      },
+      {
+        "id": "F5_still_query_removes_motion",
+        "viewport": "360x780",
+        "locale": "es",
+        "passed": true,
+        "observed": {
+          "prefersReduce": false,
+          "durations": [
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s"
+          ]
+        }
+      },
+      {
+        "id": "F4_button_inert_enter_space_pointer",
+        "viewport": "360x780",
+        "locale": "es",
+        "passed": true,
+        "observed": {
+          "keyboardUnchanged": true,
+          "pointerUnchanged": true
+        }
+      },
+      {
+        "id": "F1_cards_rows_taller3d",
+        "viewport": "360x780",
+        "locale": "en",
+        "passed": false,
+        "observed": {
+          "cardCount": 4,
+          "rows": [
+            3,
+            3,
+            7,
+            8
+          ],
+          "taller3d": false,
+          "separateExplorer": false
+        }
+      },
+      {
+        "id": "F2_1280_gutter",
+        "viewport": "360x780",
+        "locale": "en",
+        "passed": true,
+        "observed": {
+          "x": 20,
+          "width": 320
+        }
+      },
+      {
+        "id": "F3_card_drop",
+        "viewport": "360x780",
+        "locale": "en",
+        "passed": true,
+        "observed": {
+          "animationNames": [
+            "comparador-planes-module__17B1-q__card-drop",
+            "comparador-planes-module__17B1-q__card-drop",
+            "comparador-planes-module__17B1-q__card-drop",
+            "comparador-planes-module__17B1-q__card-drop"
+          ],
+          "animationDurations": [
+            "0.3s",
+            "0.3s",
+            "0.3s",
+            "0.3s"
+          ]
+        }
+      },
+      {
+        "id": "F4_accessible_button_foot_final",
+        "viewport": "360x780",
+        "locale": "en",
+        "passed": true,
+        "observed": {
+          "buttonCounts": [
+            1,
+            1,
+            1,
+            1
+          ],
+          "buttonNames": [
+            "Choose: Enthusiast",
+            "Choose: Designer",
+            "Choose: Designer Plus",
+            "Choose: Master Designer"
+          ],
+          "footLast": [
+            true,
+            true,
+            true,
+            true
+          ]
+        }
+      },
+      {
+        "id": "no_overflow_or_truncated_tool_text",
+        "viewport": "360x780",
+        "locale": "en",
+        "passed": false,
+        "observed": {
+          "scrollWidth": 360,
+          "viewport": 360,
+          "clipped": [
+            "Assisted chat with limits.",
+            "Balloon counter",
+            "Catalog",
+            "Assisted chat with higher limits.",
+            "Balloon counter",
+            "Catalog",
+            "Assisted chat with higher limits.",
+            "Balloon counter",
+            "Catalog",
+            "Cost calculator",
+            "Extended chat",
+            "not available yet",
+            "Structure detection",
+            "not available yet",
+            "Advanced balloon detection",
+            "not available yet",
+            "Assisted chat with higher limits.",
+            "Balloon counter",
+            "Catalog",
+            "Cost calculator",
+            "Extended chat",
+            "not available yet",
+            "Structure detection",
+            "not available yet",
+            "Advanced balloon detection",
+            "not available yet",
+            "3D workshop"
+          ]
+        }
+      },
+      {
+        "id": "F5_still_query_removes_motion",
+        "viewport": "360x780",
+        "locale": "en",
+        "passed": true,
+        "observed": {
+          "prefersReduce": false,
+          "durations": [
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s"
+          ]
+        }
+      },
+      {
+        "id": "F4_button_inert_enter_space_pointer",
+        "viewport": "360x780",
+        "locale": "en",
+        "passed": true,
+        "observed": {
+          "keyboardUnchanged": true,
+          "pointerUnchanged": true
+        }
+      },
+      {
+        "id": "F1_cards_rows_taller3d",
+        "viewport": "390x844",
+        "locale": "es",
+        "passed": true,
+        "observed": {
+          "cardCount": 4,
+          "rows": [
+            3,
+            3,
+            7,
+            8
+          ],
+          "taller3d": true,
+          "separateExplorer": false
+        }
+      },
+      {
+        "id": "F2_1280_gutter",
+        "viewport": "390x844",
+        "locale": "es",
+        "passed": true,
+        "observed": {
+          "x": 20,
+          "width": 350
+        }
+      },
+      {
+        "id": "F3_card_drop",
+        "viewport": "390x844",
+        "locale": "es",
+        "passed": true,
+        "observed": {
+          "animationNames": [
+            "comparador-planes-module__17B1-q__card-drop",
+            "comparador-planes-module__17B1-q__card-drop",
+            "comparador-planes-module__17B1-q__card-drop",
+            "comparador-planes-module__17B1-q__card-drop"
+          ],
+          "animationDurations": [
+            "0.3s",
+            "0.3s",
+            "0.3s",
+            "0.3s"
+          ]
+        }
+      },
+      {
+        "id": "F4_accessible_button_foot_final",
+        "viewport": "390x844",
+        "locale": "es",
+        "passed": true,
+        "observed": {
+          "buttonCounts": [
+            1,
+            1,
+            1,
+            1
+          ],
+          "buttonNames": [
+            "Escoger: Entusiasta",
+            "Escoger: Designer",
+            "Escoger: Designer Plus",
+            "Escoger: Master Designer"
+          ],
+          "footLast": [
+            true,
+            true,
+            true,
+            true
+          ]
+        }
+      },
+      {
+        "id": "no_overflow_or_truncated_tool_text",
+        "viewport": "390x844",
+        "locale": "es",
+        "passed": false,
+        "observed": {
+          "scrollWidth": 390,
+          "viewport": 390,
+          "clipped": [
+            "Chat asistido con límites.",
+            "Contador de globos",
+            "Catálogo",
+            "Chat asistido con límites más altos.",
+            "Contador de globos",
+            "Catálogo",
+            "Chat asistido con límites más altos.",
+            "Contador de globos",
+            "Catálogo",
+            "Calculadora de costos",
+            "Chat extendido",
+            "aún no disponible",
+            "Detección de estructura",
+            "aún no disponible",
+            "Detección avanzada de globos",
+            "aún no disponible",
+            "Chat asistido con límites más altos.",
+            "Contador de globos",
+            "Catálogo",
+            "Calculadora de costos",
+            "Chat extendido",
+            "aún no disponible",
+            "Detección de estructura",
+            "aún no disponible",
+            "Detección avanzada de globos",
+            "aún no disponible",
+            "Taller 3D"
+          ]
+        }
+      },
+      {
+        "id": "F5_still_query_removes_motion",
+        "viewport": "390x844",
+        "locale": "es",
+        "passed": true,
+        "observed": {
+          "prefersReduce": false,
+          "durations": [
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s"
+          ]
+        }
+      },
+      {
+        "id": "F4_button_inert_enter_space_pointer",
+        "viewport": "390x844",
+        "locale": "es",
+        "passed": true,
+        "observed": {
+          "keyboardUnchanged": true,
+          "pointerUnchanged": true
+        }
+      },
+      {
+        "id": "F1_cards_rows_taller3d",
+        "viewport": "390x844",
+        "locale": "en",
+        "passed": false,
+        "observed": {
+          "cardCount": 4,
+          "rows": [
+            3,
+            3,
+            7,
+            8
+          ],
+          "taller3d": false,
+          "separateExplorer": false
+        }
+      },
+      {
+        "id": "F2_1280_gutter",
+        "viewport": "390x844",
+        "locale": "en",
+        "passed": true,
+        "observed": {
+          "x": 20,
+          "width": 350
+        }
+      },
+      {
+        "id": "F3_card_drop",
+        "viewport": "390x844",
+        "locale": "en",
+        "passed": true,
+        "observed": {
+          "animationNames": [
+            "comparador-planes-module__17B1-q__card-drop",
+            "comparador-planes-module__17B1-q__card-drop",
+            "comparador-planes-module__17B1-q__card-drop",
+            "comparador-planes-module__17B1-q__card-drop"
+          ],
+          "animationDurations": [
+            "0.3s",
+            "0.3s",
+            "0.3s",
+            "0.3s"
+          ]
+        }
+      },
+      {
+        "id": "F4_accessible_button_foot_final",
+        "viewport": "390x844",
+        "locale": "en",
+        "passed": true,
+        "observed": {
+          "buttonCounts": [
+            1,
+            1,
+            1,
+            1
+          ],
+          "buttonNames": [
+            "Choose: Enthusiast",
+            "Choose: Designer",
+            "Choose: Designer Plus",
+            "Choose: Master Designer"
+          ],
+          "footLast": [
+            true,
+            true,
+            true,
+            true
+          ]
+        }
+      },
+      {
+        "id": "no_overflow_or_truncated_tool_text",
+        "viewport": "390x844",
+        "locale": "en",
+        "passed": false,
+        "observed": {
+          "scrollWidth": 390,
+          "viewport": 390,
+          "clipped": [
+            "Assisted chat with limits.",
+            "Balloon counter",
+            "Catalog",
+            "Assisted chat with higher limits.",
+            "Balloon counter",
+            "Catalog",
+            "Assisted chat with higher limits.",
+            "Balloon counter",
+            "Catalog",
+            "Cost calculator",
+            "Extended chat",
+            "not available yet",
+            "Structure detection",
+            "not available yet",
+            "Advanced balloon detection",
+            "not available yet",
+            "Assisted chat with higher limits.",
+            "Balloon counter",
+            "Catalog",
+            "Cost calculator",
+            "Extended chat",
+            "not available yet",
+            "Structure detection",
+            "not available yet",
+            "Advanced balloon detection",
+            "not available yet",
+            "3D workshop"
+          ]
+        }
+      },
+      {
+        "id": "F5_still_query_removes_motion",
+        "viewport": "390x844",
+        "locale": "en",
+        "passed": true,
+        "observed": {
+          "prefersReduce": false,
+          "durations": [
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s"
+          ]
+        }
+      },
+      {
+        "id": "F4_button_inert_enter_space_pointer",
+        "viewport": "390x844",
+        "locale": "en",
+        "passed": true,
+        "observed": {
+          "keyboardUnchanged": true,
+          "pointerUnchanged": true
+        }
+      },
+      {
+        "id": "F1_cards_rows_taller3d",
+        "viewport": "768x1024",
+        "locale": "es",
+        "passed": true,
+        "observed": {
+          "cardCount": 4,
+          "rows": [
+            3,
+            3,
+            7,
+            8
+          ],
+          "taller3d": true,
+          "separateExplorer": false
+        }
+      },
+      {
+        "id": "F2_1280_gutter",
+        "viewport": "768x1024",
+        "locale": "es",
+        "passed": true,
+        "observed": {
+          "x": 24,
+          "width": 720
+        }
+      },
+      {
+        "id": "F3_card_drop",
+        "viewport": "768x1024",
+        "locale": "es",
+        "passed": true,
+        "observed": {
+          "animationNames": [
+            "comparador-planes-module__17B1-q__card-drop",
+            "comparador-planes-module__17B1-q__card-drop",
+            "comparador-planes-module__17B1-q__card-drop",
+            "comparador-planes-module__17B1-q__card-drop"
+          ],
+          "animationDurations": [
+            "0.3s",
+            "0.3s",
+            "0.3s",
+            "0.3s"
+          ]
+        }
+      },
+      {
+        "id": "F4_accessible_button_foot_final",
+        "viewport": "768x1024",
+        "locale": "es",
+        "passed": true,
+        "observed": {
+          "buttonCounts": [
+            1,
+            1,
+            1,
+            1
+          ],
+          "buttonNames": [
+            "Escoger: Entusiasta",
+            "Escoger: Designer",
+            "Escoger: Designer Plus",
+            "Escoger: Master Designer"
+          ],
+          "footLast": [
+            true,
+            true,
+            true,
+            true
+          ]
+        }
+      },
+      {
+        "id": "no_overflow_or_truncated_tool_text",
+        "viewport": "768x1024",
+        "locale": "es",
+        "passed": false,
+        "observed": {
+          "scrollWidth": 768,
+          "viewport": 768,
+          "clipped": [
+            "Chat asistido con límites.",
+            "Contador de globos",
+            "Catálogo",
+            "Chat asistido con límites más altos.",
+            "Contador de globos",
+            "Catálogo",
+            "Chat asistido con límites más altos.",
+            "Contador de globos",
+            "Catálogo",
+            "Calculadora de costos",
+            "Chat extendido",
+            "aún no disponible",
+            "Detección de estructura",
+            "aún no disponible",
+            "Detección avanzada de globos",
+            "aún no disponible",
+            "Chat asistido con límites más altos.",
+            "Contador de globos",
+            "Catálogo",
+            "Calculadora de costos",
+            "Chat extendido",
+            "aún no disponible",
+            "Detección de estructura",
+            "aún no disponible",
+            "Detección avanzada de globos",
+            "aún no disponible",
+            "Taller 3D"
+          ]
+        }
+      },
+      {
+        "id": "F5_still_query_removes_motion",
+        "viewport": "768x1024",
+        "locale": "es",
+        "passed": true,
+        "observed": {
+          "prefersReduce": false,
+          "durations": [
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s"
+          ]
+        }
+      },
+      {
+        "id": "F4_button_inert_enter_space_pointer",
+        "viewport": "768x1024",
+        "locale": "es",
+        "passed": true,
+        "observed": {
+          "keyboardUnchanged": true,
+          "pointerUnchanged": true
+        }
+      },
+      {
+        "id": "F1_cards_rows_taller3d",
+        "viewport": "768x1024",
+        "locale": "en",
+        "passed": false,
+        "observed": {
+          "cardCount": 4,
+          "rows": [
+            3,
+            3,
+            7,
+            8
+          ],
+          "taller3d": false,
+          "separateExplorer": false
+        }
+      },
+      {
+        "id": "F2_1280_gutter",
+        "viewport": "768x1024",
+        "locale": "en",
+        "passed": true,
+        "observed": {
+          "x": 24,
+          "width": 720
+        }
+      },
+      {
+        "id": "F3_card_drop",
+        "viewport": "768x1024",
+        "locale": "en",
+        "passed": true,
+        "observed": {
+          "animationNames": [
+            "comparador-planes-module__17B1-q__card-drop",
+            "comparador-planes-module__17B1-q__card-drop",
+            "comparador-planes-module__17B1-q__card-drop",
+            "comparador-planes-module__17B1-q__card-drop"
+          ],
+          "animationDurations": [
+            "0.3s",
+            "0.3s",
+            "0.3s",
+            "0.3s"
+          ]
+        }
+      },
+      {
+        "id": "F4_accessible_button_foot_final",
+        "viewport": "768x1024",
+        "locale": "en",
+        "passed": true,
+        "observed": {
+          "buttonCounts": [
+            1,
+            1,
+            1,
+            1
+          ],
+          "buttonNames": [
+            "Choose: Enthusiast",
+            "Choose: Designer",
+            "Choose: Designer Plus",
+            "Choose: Master Designer"
+          ],
+          "footLast": [
+            true,
+            true,
+            true,
+            true
+          ]
+        }
+      },
+      {
+        "id": "no_overflow_or_truncated_tool_text",
+        "viewport": "768x1024",
+        "locale": "en",
+        "passed": false,
+        "observed": {
+          "scrollWidth": 768,
+          "viewport": 768,
+          "clipped": [
+            "Assisted chat with limits.",
+            "Balloon counter",
+            "Catalog",
+            "Assisted chat with higher limits.",
+            "Balloon counter",
+            "Catalog",
+            "Assisted chat with higher limits.",
+            "Balloon counter",
+            "Catalog",
+            "Cost calculator",
+            "Extended chat",
+            "not available yet",
+            "Structure detection",
+            "not available yet",
+            "Advanced balloon detection",
+            "not available yet",
+            "Assisted chat with higher limits.",
+            "Balloon counter",
+            "Catalog",
+            "Cost calculator",
+            "Extended chat",
+            "not available yet",
+            "Structure detection",
+            "not available yet",
+            "Advanced balloon detection",
+            "not available yet",
+            "3D workshop"
+          ]
+        }
+      },
+      {
+        "id": "F5_still_query_removes_motion",
+        "viewport": "768x1024",
+        "locale": "en",
+        "passed": true,
+        "observed": {
+          "prefersReduce": false,
+          "durations": [
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s"
+          ]
+        }
+      },
+      {
+        "id": "F4_button_inert_enter_space_pointer",
+        "viewport": "768x1024",
+        "locale": "en",
+        "passed": true,
+        "observed": {
+          "keyboardUnchanged": true,
+          "pointerUnchanged": true
+        }
+      },
+      {
+        "id": "F1_cards_rows_taller3d",
+        "viewport": "1280x900",
+        "locale": "es",
+        "passed": true,
+        "observed": {
+          "cardCount": 4,
+          "rows": [
+            3,
+            3,
+            7,
+            8
+          ],
+          "taller3d": true,
+          "separateExplorer": false
+        }
+      },
+      {
+        "id": "F2_1280_gutter",
+        "viewport": "1280x900",
+        "locale": "es",
+        "passed": true,
+        "observed": {
+          "x": 24,
+          "width": 1232
+        }
+      },
+      {
+        "id": "F3_card_drop",
+        "viewport": "1280x900",
+        "locale": "es",
+        "passed": true,
+        "observed": {
+          "animationNames": [
+            "comparador-planes-module__17B1-q__card-drop",
+            "comparador-planes-module__17B1-q__card-drop",
+            "comparador-planes-module__17B1-q__card-drop",
+            "comparador-planes-module__17B1-q__card-drop"
+          ],
+          "animationDurations": [
+            "0.3s",
+            "0.3s",
+            "0.3s",
+            "0.3s"
+          ]
+        }
+      },
+      {
+        "id": "F4_accessible_button_foot_final",
+        "viewport": "1280x900",
+        "locale": "es",
+        "passed": true,
+        "observed": {
+          "buttonCounts": [
+            1,
+            1,
+            1,
+            1
+          ],
+          "buttonNames": [
+            "Escoger: Entusiasta",
+            "Escoger: Designer",
+            "Escoger: Designer Plus",
+            "Escoger: Master Designer"
+          ],
+          "footLast": [
+            true,
+            true,
+            true,
+            true
+          ]
+        }
+      },
+      {
+        "id": "no_overflow_or_truncated_tool_text",
+        "viewport": "1280x900",
+        "locale": "es",
+        "passed": false,
+        "observed": {
+          "scrollWidth": 1280,
+          "viewport": 1280,
+          "clipped": [
+            "Chat asistido con límites.",
+            "Contador de globos",
+            "Catálogo",
+            "Chat asistido con límites más altos.",
+            "Contador de globos",
+            "Catálogo",
+            "Chat asistido con límites más altos.",
+            "Contador de globos",
+            "Catálogo",
+            "Calculadora de costos",
+            "Chat extendido",
+            "aún no disponible",
+            "Detección de estructura",
+            "aún no disponible",
+            "Detección avanzada de globos",
+            "aún no disponible",
+            "Chat asistido con límites más altos.",
+            "Contador de globos",
+            "Catálogo",
+            "Calculadora de costos",
+            "Chat extendido",
+            "aún no disponible",
+            "Detección de estructura",
+            "aún no disponible",
+            "Detección avanzada de globos",
+            "aún no disponible",
+            "Taller 3D"
+          ]
+        }
+      },
+      {
+        "id": "F5_still_query_removes_motion",
+        "viewport": "1280x900",
+        "locale": "es",
+        "passed": true,
+        "observed": {
+          "prefersReduce": false,
+          "durations": [
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s"
+          ]
+        }
+      },
+      {
+        "id": "F4_button_inert_enter_space_pointer",
+        "viewport": "1280x900",
+        "locale": "es",
+        "passed": true,
+        "observed": {
+          "keyboardUnchanged": true,
+          "pointerUnchanged": true
+        }
+      },
+      {
+        "id": "F1_cards_rows_taller3d",
+        "viewport": "1280x900",
+        "locale": "en",
+        "passed": false,
+        "observed": {
+          "cardCount": 4,
+          "rows": [
+            3,
+            3,
+            7,
+            8
+          ],
+          "taller3d": false,
+          "separateExplorer": false
+        }
+      },
+      {
+        "id": "F2_1280_gutter",
+        "viewport": "1280x900",
+        "locale": "en",
+        "passed": true,
+        "observed": {
+          "x": 24,
+          "width": 1232
+        }
+      },
+      {
+        "id": "F3_card_drop",
+        "viewport": "1280x900",
+        "locale": "en",
+        "passed": true,
+        "observed": {
+          "animationNames": [
+            "comparador-planes-module__17B1-q__card-drop",
+            "comparador-planes-module__17B1-q__card-drop",
+            "comparador-planes-module__17B1-q__card-drop",
+            "comparador-planes-module__17B1-q__card-drop"
+          ],
+          "animationDurations": [
+            "0.3s",
+            "0.3s",
+            "0.3s",
+            "0.3s"
+          ]
+        }
+      },
+      {
+        "id": "F4_accessible_button_foot_final",
+        "viewport": "1280x900",
+        "locale": "en",
+        "passed": true,
+        "observed": {
+          "buttonCounts": [
+            1,
+            1,
+            1,
+            1
+          ],
+          "buttonNames": [
+            "Choose: Enthusiast",
+            "Choose: Designer",
+            "Choose: Designer Plus",
+            "Choose: Master Designer"
+          ],
+          "footLast": [
+            true,
+            true,
+            true,
+            true
+          ]
+        }
+      },
+      {
+        "id": "no_overflow_or_truncated_tool_text",
+        "viewport": "1280x900",
+        "locale": "en",
+        "passed": false,
+        "observed": {
+          "scrollWidth": 1280,
+          "viewport": 1280,
+          "clipped": [
+            "Assisted chat with limits.",
+            "Balloon counter",
+            "Catalog",
+            "Assisted chat with higher limits.",
+            "Balloon counter",
+            "Catalog",
+            "Assisted chat with higher limits.",
+            "Balloon counter",
+            "Catalog",
+            "Cost calculator",
+            "Extended chat",
+            "not available yet",
+            "Structure detection",
+            "not available yet",
+            "Advanced balloon detection",
+            "not available yet",
+            "Assisted chat with higher limits.",
+            "Balloon counter",
+            "Catalog",
+            "Cost calculator",
+            "Extended chat",
+            "not available yet",
+            "Structure detection",
+            "not available yet",
+            "Advanced balloon detection",
+            "not available yet",
+            "3D workshop"
+          ]
+        }
+      },
+      {
+        "id": "F5_still_query_removes_motion",
+        "viewport": "1280x900",
+        "locale": "en",
+        "passed": true,
+        "observed": {
+          "prefersReduce": false,
+          "durations": [
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s",
+            "0s"
+          ]
+        }
+      },
+      {
+        "id": "F4_button_inert_enter_space_pointer",
+        "viewport": "1280x900",
+        "locale": "en",
+        "passed": true,
+        "observed": {
+          "keyboardUnchanged": true,
+          "pointerUnchanged": true
+        }
+      }
+    ],
+    "summary": {
+      "total": 56,
+      "passed": 44,
+      "failed": 12
+    },
+    "probeCorrection": "Initial supplemental probe used unscoped CSS-module class names and misreported F1/F3. Repeated using semantic article/list selectors and CSS-module animation-name substring; this matrix is the corrected result."
+  }
+}

@@ -570,3 +570,18 @@ backup: not needed (no runtime code changed)
 regression: skipped (D-261: integrate.regression = none)
 rollback: git revert the merge of hook-gitleaks-config on main
 result: merged 683b584887fa, restarted nothing, smoke ok
+
+# integration of One UI component pool @bitacora/ui: themes per project, direct sync, live mockups, implementers start from the approved TSX (D-280), local restart of engine + web + remote API, 2026-11-01 00:38, session metodologia-97
+previous main: 32ae1f4e609c2b0df450857784243299370420c4
+/home/david/bitacora/.state/durable/backups/bt_durable-20261101-003824.dump 59881980 d9ba9b184e4c1f55dde53af24744ac28c348913e0de9a7a5e7bc9512e0c11a26
+regression: skipped (D-261: integrate.regression = none)
+rollback: git revert the merge of ui-pool on main, restart bt-durable.service and bitacora-web.service and bitacora-remote-api.service
+remote API pin: 8fc11a051aba -> 621bf4d4d3ad (backup /home/david/.config/systemd/user/bitacora-remote-api.service.d/exec.conf.bak-8fc11a051aba)
+result: merged 621bf4d4d3ad, restarted bt-durable.service, bitacora-web.service, bitacora-remote-api.service, smoke ok
+
+# integration of Weekly quota cap: an account at >=90% of its 7-day quota is excluded from routing (D-279), local restart of engine + web + remote API, 2026-11-01 00:41, session metodologia-97
+previous main: 621bf4d4d3adab08e067bbb99811216ba154e48f
+/home/david/bitacora/.state/durable/backups/bt_durable-20261101-004143.dump 59914871 82f53f5bd7f4c55b76757acafbddb60baf152b1c5e7ffebcec329a431fb92878
+regression: skipped (D-261: integrate.regression = none)
+rollback: git revert the merge of weekly-cap on main, restart bt-durable.service and bitacora-web.service and bitacora-remote-api.service
+remote API pin: 621bf4d4d3ad -> 5a9713f68b7a (backup /home/david/.config/systemd/user/bitacora-remote-api.service.d/exec.conf.bak-621bf4d4d3ad)
