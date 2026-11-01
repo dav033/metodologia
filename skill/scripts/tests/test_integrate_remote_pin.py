@@ -119,7 +119,7 @@ class RemotePin(unittest.TestCase):
                             ("pyproject.toml", [integ.ENGINE_UNIT, integ.WEB_UNIT])):
             with self.subTest(path=path):
                 self.setUp()
-                self.branch_changes(path)
+                self.branch_changes(path, '[project]\nname = "x"\n' if path == "pyproject.toml" else "changed\n")
                 fake = Fake(self)
                 outcome = self.integrate(fake)
                 self.assertEqual(outcome.code, 0, outcome.lines)
