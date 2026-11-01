@@ -32,6 +32,8 @@ DEFAULTS: dict = {
     # `agent_env_file`: a dotenv file the owner keeps for the agents of a project (`{project}` replaced), with TEST values
     # only (a disposable database), never his secrets: every agent of a durable run receives its variables and its brief
     # names them, so it runs the checks that need them before it finishes (the verifier takes its own from verifier.*).
+    # One source per key (D-265): a key the checks' environment also has reaches the agent with the verifier's value;
+    # this file only adds keys the checks lack, and a differing copy is reported as stale.
     "execution": {"backend": "legacy", "database_url": "", "agent_concurrency": 2, "verify_concurrency": 1,
                   "routes": ["claude::sonnet"], "router": "m2", "durable_cli": [],
                   "agent_env_file": "~/.config/metodologia/agent-{project}.env"},

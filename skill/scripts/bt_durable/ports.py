@@ -104,6 +104,13 @@ class DesignGate(Protocol):
 
 
 @runtime_checkable
+class EnvProbe(Protocol):
+    """The attempt's test resources probed before an agent starts (D-265): {} = nothing to report, else a dict with
+    `state` ("unreachable" stops the start), `unreachable` and `divergent` (names, host:port and database only)."""
+    def check(self, run: RunRef, plan: Plan, task_id: str) -> dict: ...
+
+
+@runtime_checkable
 class Telemetry(Protocol):
     def emit(self, event: str, **fields: object) -> None: ...      # structured, secret-free
 
@@ -122,3 +129,4 @@ class Ports:
     composer: Composer | None = None            # plan 1.3.0 composition gates
     auditor: Auditor | None = None              # milestone audits: findings ledger -> coordinated remediation
     design_gate: DesignGate | None = None       # `ui: true` tasks: the contract approval on the chosen base (D-262)
+    env_probe: EnvProbe | None = None           # the agent test environment's network resources, before a start (D-265)

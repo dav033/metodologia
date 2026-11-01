@@ -100,17 +100,20 @@ class M3Attempts:
         ws = workspaces.allocate(request)
         adir = self.attempt_dir(attempt)
         test_env = agent_test_env(attempt.run.project)
-        env_note = _environment_note(test_env, self._check_policy(attempt))
+        policy = self._check_policy(attempt)
+        _, divergent = agent_environment(test_env, policy)
+        env_note = _environment_note(test_env, policy, divergent)
         brief = self._brief(attempt, request, "\n\n".join(x for x in (_continuation(ws, attempt), env_note, note) if x))
         prompt = build_prompt(brief, request, workdir=ws.path, branch=ws.branch,
                               report_path=str(adir / "report.json"), handoff_mode="snapshot", rtk=self.prompt_rtk)
         atomic_write(adir / "prompt.txt", prompt.encode("utf-8"), 0o600)
         atomic_write(adir / "workspace.json", json.dumps(ws.to_dict(), sort_keys=True).encode(), 0o600)
         launch = self.driver(attempt.run.project).prepare(_m3_route(route), prompt, ws, float(timeout))
-        # names a process environment may hold but an agent's cannot (an exported bash function: BASH_FUNC_x%%)
-        env = {k: v for k, v in inherited_env().items()
-               if k not in launch.env_remove and not k.startswith(ENGINE_ONLY_PREFIXES) and ENV_NAME.match(k)}
-        env.update(test_env)
+        env = {k: v for k, v in agent_inherited_env().items() if k not in launch.env_remove}
+        # one source per key (D-265): what the checks get wins over the agent env file, which only adds keys; a name the
+        # driver removes (an API key that would bypass the subscription) comes back only if the owner's agent file sets it
+        env.update({k: v for k, v in agent_environment(test_env, policy, env)[0].items()
+                    if k not in launch.env_remove or k in test_env})
         env.update(dict(launch.env_set))
         env["BITACORA_ATTEMPT"] = attempt.attempt_key      # a task attempt: the bitácora hooks leave it its task (D-168)
         env_file = adir / "agent.env.json"
@@ -262,6 +265,21 @@ def budget_tokens(usage: Mapping[str, object], provider: str = "") -> int | None
     return fresh + cached // 10 + (output or 0)
 
 
+def agent_inherited_env() -> dict[str, str]:
+    """What an agent inherits from the engine before its driver and the owner add theirs: `inherited_env` without the
+    engine's own configuration and names an agent's environment cannot hold (an exported bash function: BASH_FUNC_x%%)."""
+    return {k: v for k, v in inherited_env().items() if not k.startswith(ENGINE_ONLY_PREFIXES) and ENV_NAME.match(k)}
+
+
+def agent_environment(test_env: Mapping[str, str], policy, inherited: Mapping[str, str] = ()
+                      ) -> tuple[dict[str, str], tuple[dict, ...]]:
+    """(variables the attempt gets over `inherited`, divergent keys): `bt_verifier_env.one_source` (D-265), without the
+    engine's own names whatever source holds them."""
+    import bt_verifier_env
+    own, divergent = bt_verifier_env.one_source(dict(test_env), policy, tuple(inherited))
+    return {k: v for k, v in own.items() if not k.startswith(ENGINE_ONLY_PREFIXES) and ENV_NAME.match(k)}, divergent
+
+
 def agent_test_env(project: str) -> dict[str, str]:
     """The owner's test variables for this project's agents (`execution.agent_env_file`); {} when unset or missing."""
     import bt_config
@@ -274,10 +292,10 @@ def _test_env_note(env: Mapping[str, str]) -> str:
     return _environment_note(env, None)
 
 
-def _environment_note(env: Mapping[str, str], check_policy) -> str:
+def _environment_note(env: Mapping[str, str], check_policy, divergent=()) -> str:
     """The owner's test variables of the attempt and, when the run's M6 policy is known, what its checks receive."""
     import bt_verifier_env
-    return bt_verifier_env.attempt_note(dict(env), check_policy)
+    return bt_verifier_env.attempt_note(dict(env), check_policy, divergent)
 
 
 def _m3_route(route: Route) -> m3.Route:

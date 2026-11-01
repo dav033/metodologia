@@ -68,6 +68,8 @@ PATCH_TASK_CATCH_UP = "bt-task-retry-catches-up"
 PATCH_TASK_CONTRACT_GATE = "bt-task-contract-gate"
 PATCH_TASK_NO_CHANGE = "bt-task-no-change-is-not-check-failed"
 PATCH_TASK_HEAP_LIMIT = "bt-task-heap-limit-is-not-sandbox-oom"
+# D-265 (pictures REQ-021 r32 T3.91): the attempt's test resources probed before an agent starts
+PATCH_TASK_ENV_PROBE = "bt-task-probes-agent-env"
 # what a step the run workflow calls itself raises once its retries are spent; before PATCH_RUN_STEP_FAILURES the run
 # ended in ERROR there (never recovered), so no recorded history goes on past such a failure
 RUN_STEP_ERRORS = (steps.StepFailure, DBOSMaxStepRetriesExceeded)
@@ -561,7 +563,7 @@ def _run_task(run: RunRef, task_id: str, round_no: int, settings: Settings, note
     # when, before another attempt, its ancestors are not all done; ordered rounds (repairs, re-audits, recomposed
     # gates, the owner's retry with a note) never are
     requeue_ok = bool(parent_id) and not note and legacy is None
-    ancestors_on = catch_on = gate_on = nochange_on = heap_on = False
+    ancestors_on = catch_on = gate_on = nochange_on = heap_on = probe_on = False
     base_override = ""
     # the newest candidate tree of this task (the last snapshot an attempt left, or the reconciled legacy one): what the
     # next attempt continues from, whichever path decided the retry (automatic, owner/healing answer, wait, memory
@@ -649,6 +651,17 @@ def _run_task(run: RunRef, task_id: str, round_no: int, settings: Settings, note
                 number -= 1                     # no agent ran: the number is used by the next real attempt
                 refused = _contract_refused(run, task_id, gate, requeue_ok, parent_id, decisions, settings, outcomes)
                 if isinstance(refused, (TaskOutcome, Requeued)):
+                    return refused
+                decisions, answer = refused
+                note = answer.note or note
+                continue
+        if probe_on or DBOS.patch(PATCH_TASK_ENV_PROBE):
+            probe_on = True                     # right before a plain step (bt.env_probe); older histories start here
+            probe = steps.env_probe(run.model_dump(mode="json"), task_id)
+            if probe.get("state") == "unreachable":
+                number -= 1                     # no agent ran: the number is used by the next real attempt
+                refused = _env_refused(run, task_id, probe, decisions, settings, outcomes)
+                if isinstance(refused, TaskOutcome):
                     return refused
                 decisions, answer = refused
                 note = answer.note or note
@@ -751,6 +764,25 @@ def _contract_refused(run: RunRef, task_id: str, gate: dict, requeue_ok: bool, p
                                 note_for_agent="")
     steps.emit("design_contract_refused", {"run_id": run.run_id, "task_id": task_id, "code": failure.code,
                                            "state": gate.get("state"), "path": gate.get("path")})
+    decisions, answer = _owner(run, task_id, decisions, decision, settings, outcomes, None)
+    if isinstance(answer, TaskOutcome):
+        return answer
+    if answer.action == "stop":
+        return _finish(run, task_id, TaskStatus.BLOCKED, outcomes, None, decision)
+    return decisions, answer
+
+
+def _env_refused(run: RunRef, task_id: str, probe: dict, decisions: int, settings: Settings,
+                 outcomes: list[AttemptOutcome]) -> TaskOutcome | tuple[int, OwnerAnswer]:
+    """A network resource the task's checks need did not answer before the start (D-265): no agent runs and no attempt
+    is used; the owner fixes the agent env file or starts the tunnel/service and answers retry (the probe runs again),
+    or stops the task (blocked, the decision names the key and host:port)."""
+    failure = classify.agent_env_unreachable(probe)
+    decision = RecoveryDecision(action=RecoveryAction.ESCALATE, reason=failure.summary, failure=failure,
+                                note_for_agent="")
+    steps.emit("agent_env_unreachable", {"run_id": run.run_id, "task_id": task_id,
+                                         "keys": [item.get("key") for item in probe.get("unreachable") or ()],
+                                         "resources": [item.get("resource") for item in probe.get("unreachable") or ()]})
     decisions, answer = _owner(run, task_id, decisions, decision, settings, outcomes, None)
     if isinstance(answer, TaskOutcome):
         return answer

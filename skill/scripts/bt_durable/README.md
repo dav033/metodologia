@@ -84,6 +84,16 @@ uv run bt-durable attest pictures REQ-031 T2 --request T2:d1 --evidence "what wa
   to the owner), not a retried `CHECK_FAILED`; a Node heap-limit abort in a check the task wrote is an implementation
   failure with a NODE_OPTIONS note (`CHECK_HEAP_LIMIT`), and in another check, once the relaxed heap did not help, a
   check problem for the owner (`CHECK_HEAP_LIMIT_PLAN`); a sandbox memory kill keeps the relaxed re-verification.
+- **One source per test variable** (D-265, pictures REQ-021 r32 T3.91): an attempt gets the verifier's value for every
+  variable the checks' environment sets explicitly (`verifier.env_file`, the plan's `requires`) and for every variable
+  it would hold anyway that the checks inherit (`verifier.inherit_env`); the owner's agent env file
+  (`execution.agent_env_file`) only adds keys the checks lack (`bt_verifier_env.one_source`). A key both define with
+  different values gets the verifier's value, a brief note, telemetry `agent_env_divergent` and an activity line (names,
+  host:port and database only). Before an agent starts, `bt.env_probe` opens (TCP, 2 s, reachable results cached 30 s
+  per run) each network URL among the variables the task's checks `require` (or, with none declared, those from the
+  agent env file and the verifier's explicit settings): one that does not answer → no agent, no attempt used, a decision
+  `AGENT_ENV_UNREACHABLE` naming key, host:port and source; `retry` probes again. Healing leaves that decision, and any
+  decided attempt whose agent said it could not run its checks (`checks_not_run`), to the owner.
 - **Manual checks** (`type: manual`): M6 accepts a coordinator receipt (`bt_attestation`, the same one the legacy owner
   uses) for its own check only. Without one, the task does not fail: it opens a decision `MANUAL_EVIDENCE_REQUIRED`
   with its request id, the attempt the receipt must be bound to (`verify_attempt`) and the `bt-durable attest` command;
@@ -274,7 +284,7 @@ Patches in use: `bt-run-subplans`, `bt-run-audit-remediation`, `bt-run-survives-
 `bt-task-reconcile-asks-owner`, `bt-task-continues-latest-tree` (task workflow); D-262: `bt-run-transitive-readiness`,
 `bt-run-requeues-unready-task` (run workflow), `bt-task-rechecks-ancestors`, `bt-task-retry-catches-up`,
 `bt-task-contract-gate`, `bt-task-no-change-is-not-check-failed`, `bt-task-heap-limit-is-not-sandbox-oom` (task
-workflow). A workflow body reads the plan only through `steps.workflow_plan()`:
+workflow); D-265: `bt-task-probes-agent-env` (task workflow). A workflow body reads the plan only through `steps.workflow_plan()`:
 the `bt.plan_text` step must run (or replay) every time, or a run recovered after another workflow warmed the process
 cache skips its first step. The control plane (`control/`: frontier, policy, classifier, subplan scopes) decides what a
 workflow does next from recorded step results, so a change to its decisions is a sequence change too.

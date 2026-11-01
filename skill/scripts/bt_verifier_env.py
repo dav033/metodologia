@@ -137,6 +137,74 @@ def ambient_for_run(project: str, explicit: set[str]) -> tuple[tuple[tuple[str, 
     return tuple(found.items()), secrets
 
 
+# URL schemes of network resources a check may need (a database, a cache, a broker, a service) and their default ports
+RESOURCE_PORTS = {"postgres": 5432, "postgresql": 5432, "mysql": 3306, "mariadb": 3306, "redis": 6379, "rediss": 6379,
+                  "mongodb": 27017, "amqp": 5672, "amqps": 5671, "http": 80, "https": 443}
+
+
+def resource_of(value: object) -> dict | None:
+    """{"scheme", "host", "port", "database", "label"} of a network URL value, or None (not a URL, a unix socket, several
+    hosts). `label` (`postgresql 127.0.0.1:55965/req021_visual`) is what may be shown: never the user, password or query."""
+    from urllib.parse import urlsplit
+    if not isinstance(value, str) or "://" not in value:
+        return None
+    try:
+        parts = urlsplit(value.strip())
+        scheme = parts.scheme.lower().split("+", 1)[0]          # postgresql+psycopg -> postgresql
+        host, port = parts.hostname, parts.port or RESOURCE_PORTS.get(scheme)
+    except ValueError:                                            # a bad port or several hosts (h1:5432,h2:5432)
+        return None
+    if scheme not in RESOURCE_PORTS or not host or not port:
+        return None
+    database = parts.path.lstrip("/").split("/", 1)[0] if scheme not in ("http", "https") else ""
+    shown = f"[{host}]" if ":" in host else host
+    return {"scheme": scheme, "host": host, "port": int(port), "database": database,
+            "label": f"{scheme} {shown}:{port}" + (f"/{database}" if database else "")}
+
+
+def verifier_values(policy: object | None) -> dict[str, str]:
+    """Every variable the independent checks receive under `policy` (inherited ones first, the explicit ones win)."""
+    values = dict(getattr(policy, "ambient_environment", ()) or ())
+    values.update(dict(getattr(policy, "environment", ()) or ()))
+    return values
+
+
+def one_source(test_env: dict | None, policy: object | None, inherited=()) -> tuple[dict[str, str], tuple[dict, ...]]:
+    """(the variables an attempt gets over its inherited environment, the divergent keys) with ONE source per key (D-265).
+
+    The checks' environment (`policy`, built by `operator_quality_policy` from `verifier.env_file`, the plan's `requires`
+    and `verifier.inherit_env`) is the source of truth: the attempt receives the verifier's value for every key the
+    verifier sets explicitly, and for every key it would hold anyway (its inherited names, `inherited`, and the agent env
+    file) that the checks inherit. The agent env file (`test_env`) only ADDS keys the checks do not have. A key in both
+    with a different value is a divergence: the verifier's value is used and the key is reported (names and
+    `resource_of` labels, never a value). pictures REQ-021 r32 T3.91: the agent file's copy of PICTURES_REQ021_DATABASE_URL
+    named a port nothing listened on while the checks used the live tunnel; three attempts could not run their check.
+    Without a policy (it could not be built) the agent env file is used as it is."""
+    test_env = dict(test_env or {})
+    if policy is None:
+        return test_env, ()
+    checks = verifier_values(policy)
+    out = {key: value for key, value in test_env.items() if key not in checks}
+    out.update(dict(getattr(policy, "environment", ()) or ()))
+    for key in {*test_env, *inherited}:
+        if key in checks:
+            out[key] = checks[key]
+    divergent = []
+    for key in sorted(test_env):
+        if key in checks and test_env[key] != checks[key]:
+            mine, theirs = resource_of(test_env[key]), resource_of(checks[key])
+            divergent.append({"key": key, "agent": mine["label"] if mine else "another value",
+                              "verifier": theirs["label"] if theirs else "another value",
+                              "same_resource": bool(mine and theirs and mine["label"] == theirs["label"])})
+    return out, tuple(divergent)
+
+
+def divergence_sentence(divergent) -> str:
+    """The divergent keys as one sentence (names and resource labels only)."""
+    parts = [f"{item['key']} (agent env file: {item['agent']}; verifier: {item['verifier']})" for item in divergent]
+    return ("; ".join(parts[:MAX_NAMED]) + (f" and {len(parts) - MAX_NAMED} more" if len(parts) > MAX_NAMED else ""))
+
+
 MAX_NAMED = 24
 
 
@@ -173,11 +241,18 @@ def check_environment_sentence(policy: object | None) -> str:
             + "; any other variable your attempt had is absent there")
 
 
-def attempt_note(test_env: dict | None, policy: object | None) -> str:
+def attempt_note(test_env: dict | None, policy: object | None, divergent=()) -> str:
     """The brief's environment paragraph: the owner's test variables of this attempt (`execution.agent_env_file`) and what
-    the independent checks will receive instead, so a harness that starts the product sets what it depends on itself."""
+    the independent checks will receive instead, so a harness that starts the product sets what it depends on itself.
+    `divergent` (`one_source`): keys whose agent env file value differed from the verifier's; the attempt got the
+    verifier's value."""
     test_env = dict(test_env or {})
     lines = []
+    if divergent:
+        lines.append("Environment source: " + divergence_sentence(divergent) + ". The owner's agent env file disagreed "
+                     "with the verifier for " + ("this key" if len(divergent) == 1 else "these keys") + "; you received "
+                     "the VERIFIER's value, the one your checks run with, and the owner has been told the agent env file "
+                     "is stale. Reproduce what the verifier runs; do not point your checks anywhere else.")
     if test_env:
         lines.append("Test environment: " + ", ".join(sorted(test_env)) + (" is" if len(test_env) == 1 else " are")
                      + " set in your environment by the owner for testing (a disposable database, never production). "

@@ -196,6 +196,34 @@ def design_contract(gate: dict) -> FailureReport:
                    [Evidence(kind="design_contract", ref=path[:200], excerpt=f"state={state}")], basis=f"{code} {path}")
 
 
+AGENT_ENV_UNREACHABLE = "AGENT_ENV_UNREACHABLE"
+_SOURCES = {"agent_env_file": "agent env file {file} stale or its tunnel/service down",
+            "verifier": "set by the verifier too: tunnel/service down for the checks as well",
+            "verifier_inherited": "inherited by the verifier too: tunnel/service down for the checks as well",
+            "inherited": "from the engine's environment: tunnel/service down"}
+
+
+def agent_env_unreachable(probe: dict) -> FailureReport:
+    """A network resource of the attempt's test environment did not answer before the start (D-265): an environment
+    fact for the owner, never an agent attempt. pictures REQ-021 r32 T3.91 spent a5..a7 on a database port nothing
+    listened on. Names the key, host:port, database and where the value comes from; never the value."""
+    found = [item for item in probe.get("unreachable") or () if isinstance(item, dict)]
+    parts = [f"{item.get('key')} -> {item.get('resource')} {item.get('error')} ("
+             + _SOURCES.get(str(item.get("source")), _SOURCES["inherited"]).format(file=probe.get("env_file") or "")
+             + ")" for item in found]
+    summary = (f"{AGENT_ENV_UNREACHABLE}: " + ("; ".join(parts) or "a test resource did not answer")
+               + ". No agent started, no attempt used: fix the file or start the tunnel/service, then retry (probes again).")
+    divergent = [item for item in probe.get("divergent") or () if isinstance(item, dict)]
+    if divergent:
+        summary += (" Agent env file differs from the verifier on "
+                    + "; ".join(f"{item.get('key')} (agent: {item.get('agent')}; verifier: {item.get('verifier')})"
+                                for item in divergent[:10]) + "; agents get the verifier's value.")
+    return _report(FailureClass.ENVIRONMENT, AGENT_ENV_UNREACHABLE, summary[:500],
+                   [Evidence(kind="agent_env", ref=str(item.get("key"))[:200], excerpt=str(item.get("resource"))[:200])
+                    for item in found[:10]],
+                   basis=f"{AGENT_ENV_UNREACHABLE} " + " ".join(sorted(str(item.get("key")) for item in found)))
+
+
 NO_CHANGE = "AGENT_NO_CHANGE"
 
 
