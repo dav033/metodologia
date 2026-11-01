@@ -114,7 +114,8 @@ class PlanningActions:
         elif action == "verify-approve" and form.get("over_rejection") != "1" and \
                 (blocked := verification.approval_over_rejection(rdir, sid)):
             msg = blocked                             # a mis-click must not answer the owner's own rejection (D-255)
-        elif action in ("verify-run", "verify-stop") and self.client_address[0] not in ("127.0.0.1", "::1"):
+        elif action in ("verify-run", "verify-stop", "verify-discard", "verify-keep") and \
+                self.client_address[0] not in ("127.0.0.1", "::1"):
             msg = "Los servidores de prueba solo se arrancan desde esta máquina."
         elif action == "verify-run":                  # «Probar»: restart the version clean; the new tab follows it
             started = servers.begin(ROOT, project, rdir, sid, login=form.get("login") == "1")
@@ -127,6 +128,9 @@ class PlanningActions:
             msg = servers.stop(ROOT, project, rdir, sid)
         elif action == "verify-open":
             msg = verification.open_local(ROOT, project, rdir, sid)[1]
+        elif action in ("verify-discard", "verify-keep"):     # a copy with the owner's edits at an older commit (D-278)
+            import bt_verify_copy
+            msg = (bt_verify_copy.discard if action == "verify-discard" else bt_verify_copy.keep_aside)(ROOT, project, rdir, sid)
         elif action == "verify-close":
             servers.stop(ROOT, project, rdir, sid)
             msg = verification.close_local(ROOT, project, rdir, sid)

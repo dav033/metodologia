@@ -346,7 +346,8 @@ class Handler(PlanningActions, PlanListActions, BaseHTTPRequestHandler):
                 return self.redirect(f"{base}?tab=plan&msg={quote(msg)}")
             if action in ("design-draft", "design-feedback", "design-answer", "design-choose", "design-iterate", "design-amend", "planning-outline", "planning-focus", "planning-confirm"):
                 return self.redirect(self.planning_post(project, rdir, action, form, base))
-            if action in ("verify-open", "verify-close", "verify-approve", "verify-reject", "verify-run", "verify-stop"):
+            if action in ("verify-open", "verify-close", "verify-approve", "verify-reject", "verify-run", "verify-stop",
+                          "verify-discard", "verify-keep"):
                 return self.redirect(self.verify_post(project, rid, rdir, action, form, base))
             if action in ("agent-say", "agent-start", "agent-restart"):
                 return self.redirect(self.agent_post(project, rid, rdir, action, form, base))

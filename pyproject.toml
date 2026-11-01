@@ -310,6 +310,7 @@ py-modules = [
   "bt_verify_servers",
   "bt_verify_procs",
   "bt_verify_guide",
+  "bt_verify_copy",
   "bt_page_manual_check",
   "bt_page_verify_run",
   "bt_verifier_env",

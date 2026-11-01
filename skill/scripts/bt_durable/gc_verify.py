@@ -17,6 +17,8 @@ Per copy (one pass, facts read once):
 - a task copy (the evidence of an open manual decision) is removed once no open decision of the durable run names its
   attempt and it was untouched for the grace period (`decision-closed`);
 - a name that is neither, or a requirement whose folder is unknown, is never touched (`unknown`).
+- a copy the owner kept aside (`<SP>-v<N>-kept-<sha7>`, bt_verify_copy, D-278) is such a name. A copy left at an
+  older publication of its version is not this pass's business: opening it moves it (bt_verify_copy).
 
 Removal: `git worktree remove --force` from the copy's own repository, then `prune`; the sidecars of a removed version
 go with it. Published commits live in the project's refs (`refs/bt/subplan/...`), so a removed copy can be opened again

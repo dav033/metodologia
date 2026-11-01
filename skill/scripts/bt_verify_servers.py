@@ -142,7 +142,7 @@ def _open(root: Path, project: str, rdir: Path, sid: str, row: dict) -> tuple[Pa
     """The copy to start: a subplan version through bt_verification; a task snapshot the same way, detached, outside
     every repository."""
     if row.get("kind") != "task":
-        return verification.open_local(root, project, rdir, sid)
+        return verification.open_local(root, project, rdir, sid, held=True)      # start holds the lock, servers stopped
     target = _files(root, project, rdir, sid, row["version"])["copy"]
     repo = verification._repo_with(root, project, row["commit"])
     if repo is None:
@@ -391,7 +391,15 @@ def start(root: Path, project: str, rdir: Path, sid: str, run: str = "", login: 
             return _fail(paths, state, f"No pude arrancar los servidores: {exc}")
     told = f" Detuve {len(stopped)} procesos de la versión anterior." if stopped else ""
     return {"ok": True, "url": state["url"],
-            "message": f"Arrancando {', '.join(ports)} de {sid} (versión {row['version']}) desde cero.{told}"}
+            "message": f"Arrancando {', '.join(ports)} de {sid}, {_named(row)}, desde cero.{told}"}
+
+
+def _named(row: dict) -> str:
+    """«versión 2 (commit abc1234)» for a subplan: the number alone does not tell two publications apart (D-278)."""
+    if row.get("kind") == "task":
+        return f"intento {row['version']}"
+    import bt_verify_copy
+    return bt_verify_copy.label(row)
 
 
 # ------------------------------------------------------------------ automatic sign-in (D-205, D-231)
@@ -593,12 +601,18 @@ def stop(root: Path, project: str, rdir: Path, sid: str) -> str:
         return "No había servidores en marcha."
     paths, name = _files(root, project, rdir, sid, row["version"]), session_name(project, rdir, sid, row["version"])
     with _locked(paths["lock"]):
-        had = terminal.exists(name)
-        stopped = stop_version(paths, name, mark(project, rdir, sid, row["version"]))
-        state = _load(paths["state"])
-        if state:
-            _save(paths["state"], {**state, "phase": "stopped"})
+        had, stopped = halt(paths, name, mark(project, rdir, sid, row["version"]))
     return f"Servidores de {sid} detenidos." if had or stopped else "No había servidores en marcha."
+
+
+def halt(paths: dict[str, Path], name: str, own: str) -> tuple[bool, set[int]]:
+    """`stop` under the version's lock, which the caller holds: (a session was running, the pids stopped)."""
+    had = terminal.exists(name)
+    stopped = stop_version(paths, name, own)
+    state = _load(paths["state"])
+    if state:
+        _save(paths["state"], {**state, "phase": "stopped"})
+    return had, stopped
 
 
 # ------------------------------------------------------------------ status
