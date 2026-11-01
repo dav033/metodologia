@@ -571,6 +571,8 @@ def _run_task(run: RunRef, task_id: str, round_no: int, settings: Settings, note
     latest = ""
     carry_on = False
     decisions = 0
+    # D-269: the outcomes before the last answered decision and the attempts its window allows
+    answered, window_attempts = 0, budget.max_attempts
     if legacy is not None:                       # a legacy snapshot counts only after it passes verification again
         reconciled, failure_note, failure = _reconcile(run, task_id, round_no, legacy)
         if reconciled is not None:
@@ -695,9 +697,12 @@ def _run_task(run: RunRef, task_id: str, round_no: int, settings: Settings, note
             used = policy.spent([*outcomes, outcome], waits=waits, repairs=repairs, route_changes=route_changes,
                                 started_at=started, now=now)
             others = steps.alternatives(run.model_dump(mode="json"), task_id, [*exclude, _route_key(choice.route)])
+            window = (policy.spent([*outcomes, outcome], waits=waits, repairs=repairs, route_changes=route_changes,
+                                   started_at=started, now=now, since=answered),
+                      budget.model_copy(update={"max_attempts": window_attempts})) if answered else None
             decision = recovery_policy.decide(outcome.failure, used, budget, now=now, other_route=others > 0,
                                      reset_epoch=outcome.agent.reset_epoch if outcome.agent else None,
-                                     remediated=remediated)
+                                     remediated=remediated, window=window)
             steps.emit_decision(attempt, decision)
             if decision.action == RecoveryAction.REPAIR_ENVIRONMENT and outcome.failure.code in policy.REVERIFY \
                     and agent.get("snapshot"):
@@ -742,6 +747,7 @@ def _run_task(run: RunRef, task_id: str, round_no: int, settings: Settings, note
             if answer.action == "retry_other_route":
                 exclude.append(_route_key(choice.route))
             budget = budget.model_copy(update={"max_attempts": budget.max_attempts + (answer.extra_attempts or 1)})
+            answered, window_attempts = len(outcomes), max(settings.budget.max_attempts, answer.extra_attempts or 1)
             remediated = False
 
 

@@ -54,9 +54,18 @@ class RecoveryAction(StrEnum):
     STOP = "stop"                            # nothing safe left to try; the task is blocked with its evidence
 
 
+MAX_ATTEMPTS_TOTAL = 20
+
+
 class Budget(_Closed):
-    """Anti-loop limits of one task. Every limit is checked before an attempt is started."""
+    """Anti-loop limits of one task. Every limit is checked before an attempt is started.
+
+    `max_attempts` bounds the attempts since the task's last answered decision (a fresh window per answer, D-269);
+    `max_attempts_total` is the ceiling for the whole task across every answer. Left out of a dump at its default:
+    the settings travel to the engine, and an engine still on the code before it forbids unknown fields."""
     max_attempts: int = Field(default=4, ge=1, le=50)
+    max_attempts_total: int = Field(default=MAX_ATTEMPTS_TOTAL, ge=1, le=200,
+                                    exclude_if=lambda value: value == MAX_ATTEMPTS_TOTAL)
     max_same_signature: int = Field(default=2, ge=1, le=20)
     max_elapsed_seconds: int = Field(default=6 * 3600, ge=60)
     max_tokens: int | None = Field(default=8_000_000, ge=1)
@@ -67,8 +76,12 @@ class Budget(_Closed):
 
 
 class Spent(_Closed):
-    """What one task has consumed so far (derived from its attempt outcomes, never edited by hand)."""
+    """What one task has consumed so far (derived from its attempt outcomes, never edited by hand).
+
+    Counted from the task's last answered decision (D-269), `attempts`, `signatures` and `consecutive_regressions` are
+    that window's and `total_attempts` the whole task's; None when no window applies (everything since the start)."""
     attempts: int = 0
+    total_attempts: int | None = None
     elapsed_seconds: float = 0.0
     tokens: int = 0
     route_changes: int = 0

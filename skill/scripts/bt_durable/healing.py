@@ -37,15 +37,27 @@ OPTIONS = {"retry": "a new attempt of the task from its last snapshot",
            "stop": "stop the task"}
 # decisions about the environment itself: a new agent run does not fix them, the owner does (D-265)
 OWNER_ENV_CODES = frozenset({"AGENT_ENV_UNREACHABLE"})
-# the agent's final message says a check could not be run, or why (pictures REQ-021 r32 T3.91 a5..a7: «la URL de prueba
-# apunta al puerto 55965, que rechazó la conexión … el smoke real de navegador queda pendiente»), D-265
+# the agent's final message says, explicitly, that it could not run a check, or why (pictures REQ-021 r32 T3.91 a7: «No
+# ejecuté `--suite rectangular-mouse`: la URL de prueba apunta al puerto `55965`, que rechazó la conexión»; a8: «no llegó
+# a abrir el navegador: … `ECONNREFUSED`»), D-265
 _NOT_RUN = re.compile(
-    r"connection refused|ECONNREFUSED|refused (?:the |a )?connection|could ?n[o']t (?:run|connect|reach|start)|"
-    r"cannot (?:run|connect|reach)|can't (?:run|connect|reach)|unable to (?:run|connect|reach)|"
-    r"did ?n[o']t (?:run|execute)|(?:was|were|has|have) ?n[o']t (?:been )?(?:run|executed)\b|(?:remains?|left|still) pending|"
-    r"rechaz[óoa]\w* (?:la )?conexi[óo]n|conexi[óo]n rechazada|no (?:se )?(?:pud[oe]|puedo|pudimos) (?:ejecutar|correr|"
-    r"conectar|lanzar|arrancar)|no (?:ejecut[ée]|corr[ií]|lanc[ée])\b|no se (?:ejecut[óo]|corri[óo])|"
-    r"(?<!no )(?:queda|quedan|qued[óo]|quedaron|sigue|siguen)\s+(?:\w+\s+){0,2}pendientes?\b", re.IGNORECASE)
+    r"connection refused|ECONNREFUSED|refused (?:the |a )?connection|"
+    r"could ?n[o']t (?:run|execute|connect|reach|start|open)|(?:cannot|can't|unable to) (?:run|execute|connect|reach)|"
+    r"did ?n[o']t (?:run|execute)|(?:was|were|has|have) ?n[o']t (?:been )?(?:run|executed)\b|"
+    r"rechaz[óoa]\w* (?:la )?conexi[óo]n|conexi[óo]n rechazada|"
+    r"no (?:se )?(?:pud[oe]|puedo|pudimos) (?:ejecutar|correr|conectar|lanzar|arrancar|abrir)|"
+    r"no (?:ejecut[ée]|corr[ií]|lanc[ée])\b|no se (?:ejecut[óo]|corri[óo])\b|"
+    r"no lleg[óo] a (?:abrir|arrancar|iniciar|ejecutar|correr|conectar)", re.IGNORECASE)
+# a check «queda/sigue pendiente» or «remains pending»: evidence only when the message claims no passing checks (D-269)
+_PENDING = re.compile(r"(?<!no )(?:queda|quedan|qued[óo]|quedaron|sigue|siguen)\s+(?:\w+\s+){0,2}pendientes?\b|"
+                      r"(?:remains?|left|still) pending", re.IGNORECASE)
+_PASSED = re.compile(r"\bpas(?:aron|ó)\b|\bpassed\b|\b(?:checks?|tests?) pass(?:es)?\b", re.IGNORECASE)
+# the independent verification or audit is never the agent's to run: «La verificación independiente sigue pendiente;
+# no declaro la tarea verificada» (T3.91 a10, every check of its own had passed) says nothing about its checks, D-269
+_INDEPENDENT = re.compile(
+    r"(?:(?:queda|quedan|sigue|siguen|remains?|still)\s+pendientes?\s+(?:la\s+|el\s+|the\s+)?)?"
+    r"(?:(?:verificaci[óo]n|auditor[íi]a|revisi[óo]n|validaci[óo]n|comprobaci[óo]n)\s+independiente|"
+    r"independent(?:ly)?\s+(?:verification|verified|review|audit|check)|independientemente)[^.;\n]*", re.IGNORECASE)
 _running: set[str] = set()
 _lock = threading.Lock()
 
@@ -116,9 +128,16 @@ def attempt_facts(client, decision: dict) -> dict:
 
 
 def checks_not_run(message: str) -> bool:
-    """The agent's final message says it could not run a check (a refused connection, «no ejecuté», «queda pendiente»):
-    the failing checks were never reproduced by the agent, so a code guess does not answer them (D-265)."""
-    return bool(_NOT_RUN.search(message or ""))
+    """The agent's final message says it could not run a check (a refused connection, «no ejecuté», «no llegó a abrir el
+    navegador»): the failing checks were never reproduced by the agent, so a code guess does not answer them (D-265).
+    Only explicit statements count (D-269): a mention of the independent verification is dropped first, and a check
+    «queda pendiente» counts only when the message claims no passing checks. pictures REQ-021 r32 T3.91 a10 ran and
+    passed its checks, ended «La verificación independiente sigue pendiente», and healing left d7 to the owner as if it
+    could not run them."""
+    text = _INDEPENDENT.sub(" ", message or "")
+    if _NOT_RUN.search(text):
+        return True
+    return bool(_PENDING.search(text)) and not _PASSED.search(text)
 
 
 def evidence(run: RunRef, rdir: Path, task_id: str, decision: dict, round_no: int | None,
