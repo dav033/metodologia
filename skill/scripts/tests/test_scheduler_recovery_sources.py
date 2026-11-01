@@ -229,6 +229,36 @@ class ContinuationBases(unittest.TestCase):
         self.assertIsNone(make(("T0",))._earlier_revision_result("T1"))
 
 
+    def test_a_snapshot_that_lost_most_of_its_base_is_never_continued(self):
+        """pictures REQ-021 r35 T3.15: attempt a201 ran in a half-built worktree (1933 of 8564 files); the retry a301
+        started from that snapshot and would have audited the same shell and deleted the rest from the line."""
+        import os
+        for index in range(60):
+            (self.repo / f"f{index}.txt").write_text(str(index))
+        self.git("add", "-A")
+        self.git("commit", "-qm", "wide")
+        base = self.git("rev-parse", "HEAD")
+        self.git("rm", "-q", "--", *[f"f{index}.txt" for index in range(5, 60)])
+        self.git("commit", "-qm", "gutted")
+        gutted = self.git("rev-parse", "HEAD")
+        self.git("checkout", "-q", base, "--", ".")
+        self.git("commit", "-qm", "small edit")
+        edited = self.git("rev-parse", "HEAD")
+        source = self.source()
+        self.assertTrue(source._lost_most(self.repo, base, gutted))
+        self.assertFalse(source._lost_most(self.repo, base, edited))
+        self.assertFalse(source._lost_most(self.repo, self.old, gutted), "a two-file tree proves nothing")
+        self.assertFalse(source._lost_most(self.repo, None, gutted))
+        source._handoff = lambda task: gutted
+        source._previous_base = lambda task: base
+        source._directed = lambda task: None
+        self.assertEqual(source._plan("T1"), (None, "fresh", gutted))
+        self.assertIn("not used", source.notes(SimpleNamespace(task_id="T1", base_ref=base)))
+        source._handoff = lambda task: edited
+        source._same_base = lambda task, previous: True
+        self.assertEqual(source._plan("T1"), (edited, "continue", edited))
+
+
 class SnapshotAcrossRevisions(unittest.TestCase):
     def _ledger(self, root, attempt_id, handoff):
         import json
