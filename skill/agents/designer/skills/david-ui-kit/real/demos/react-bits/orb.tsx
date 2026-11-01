@@ -1,5 +1,5 @@
 import * as React from "react";
-import Orb from "@/components/react-bits/Orb";
+import Orb from "@bitacora/ui/components/react-bits/Orb";
 import { Effect } from "@kit/effect";
 import { Example } from "@kit/demo";
 

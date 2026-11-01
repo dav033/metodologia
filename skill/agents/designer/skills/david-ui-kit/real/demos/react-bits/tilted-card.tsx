@@ -1,4 +1,4 @@
-import TiltedCard from "@/components/react-bits/TiltedCard";
+import TiltedCard from "@bitacora/ui/components/react-bits/TiltedCard";
 import { Example, Row, picture } from "@kit/demo";
 
 export default function TiltedCardDemo() {

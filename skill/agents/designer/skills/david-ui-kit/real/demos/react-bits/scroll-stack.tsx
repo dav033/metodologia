@@ -1,4 +1,4 @@
-import ScrollStack, { ScrollStackItem } from "@/components/react-bits/ScrollStack";
+import ScrollStack, { ScrollStackItem } from "@bitacora/ui/components/react-bits/ScrollStack";
 import { Example } from "@kit/demo";
 import { useMotionProfile } from "@kit/motion";
 

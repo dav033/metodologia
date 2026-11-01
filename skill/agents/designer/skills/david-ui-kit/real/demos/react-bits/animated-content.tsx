@@ -1,4 +1,4 @@
-import AnimatedContent from "@/components/react-bits/AnimatedContent";
+import AnimatedContent from "@bitacora/ui/components/react-bits/AnimatedContent";
 import { Example } from "@kit/demo";
 
 const cards = ["Cotización enviada", "Anticipo recibido", "Montaje programado"];

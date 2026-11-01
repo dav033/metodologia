@@ -121,7 +121,7 @@ def _design_context(brief: Brief) -> dict:
         key, sep, value = line.partition(":")
         key = {"kind": "task kind"}.get(key.strip().lower(), key.strip().lower())
         if sep and key in ("design contract", "task kind", "ui task", "approval", "sha-256", "planning draft",
-                           "planning mockup"):
+                           "planning mockup", "planning tsx"):
             facts.setdefault(key, value.strip())
     path = facts.get("design contract") or getattr(brief, "contract_path", "") or ""
     if not path:
@@ -130,7 +130,8 @@ def _design_context(brief: Brief) -> dict:
             "kind": (facts.get("task kind") or getattr(brief, "task_kind", "") or "").lower(),
             "ui": facts.get("ui task", "").lower() == "true" or bool(getattr(brief, "ui_task", False)),
             "approval": facts.get("approval", ""), "sha256": facts.get("sha-256", ""),
-            "draft": facts.get("planning draft", ""), "mockup": facts.get("planning mockup", "")}
+            "draft": facts.get("planning draft", ""), "mockup": facts.get("planning mockup", ""),
+            "tsx": facts.get("planning tsx", "")}
 
 
 def _design_instructions(brief: Brief, design: dict) -> list[str]:
@@ -147,12 +148,28 @@ def _design_instructions(brief: Brief, design: dict) -> list[str]:
                 "The Designer authors the contract and must never approve its own contract: the owner approves each version "
                 "before UI work starts."]
     if brief.review_axis == "visual":
+        source = ([f"The approved screen source is `{design['tsx']}` (built from `@bitacora/ui` and the project theme): "
+                   "compare the rendered UI against it — the same components in the same places, views, states and "
+                   "flows; the implementation may differ only where real data and logic replace its mock data. A screen "
+                   "re-created with other components fails, even when it looks alike. The contract text still decides "
+                   "structure and behaviour; the look follows the current pool and theme."] if design.get("tsx") else
+                  [f"The approved planning mockup `{design['mockup']}` shows the intended look; the contract text still "
+                   "decides."] if design.get("mockup") else [])
         return [f"Judge the rendered UI against {contract}.",
                 "Request Runner screenshots for each breakpoint and each state the contract declares, and base the review on "
-                "that evidence."] + ([f"The approved planning mockup `{design['mockup']}` shows the intended look; the "
-                                      "contract text still decides."] if design.get("mockup") else [])
+                "that evidence."] + source
     lines = [f"Read {contract} before making changes. Read it before implementing, follow it and report conformance."]
-    if design.get("mockup"):
+    if design.get("tsx"):
+        # D-280: the screen is written once, by the Designer, from the pool; the implementer wires it, never redraws it
+        lines.append(f"The owner approved this screen with the contract: `{design['tsx']}`. START FROM IT: copy it into "
+                     "the route/component the task names, keep its `@bitacora/ui` imports, components, layout, copy, "
+                     "views and states, remove only the mockup harness (`mountMockup`, `useMockup`, the view/state/theme "
+                     "selects from `@kit/…`) and replace its mock data with the real data and logic. Never re-create "
+                     "the screen with other components (the project's own UI components lose to the pool). If "
+                     "`@bitacora/ui` is not installed in the repository, stop and report the task as blocked.")
+        if design.get("mockup"):
+            lines.append(f"`{design['mockup']}` is the same screen built into a static page, for looking only.")
+    elif design.get("mockup"):
         lines.append(f"The owner approved this static mockup with the contract; use it as the visual reference: "
                      f"`{design['mockup']}`.")
     if design["ui"] and design["approval"] == "missing":
@@ -163,6 +180,7 @@ def _design_instructions(brief: Brief, design: dict) -> list[str]:
     elif design["ui"]:
         lines.append(f"Owner approval: `{design['approval'] or 'unknown'}`, SHA-256 `{design['sha256'] or 'none'}`. "
                      f"Proceed only with approval status `approved` and `{design['path']}` matching the approved SHA-256"
-                     + ("; the mockup is only a visual reference with its own hash, never compare it" if design.get("mockup")
+                     + ("; the mockup and its TSX carry no approval hash, never compare them" if design.get("tsx") else
+                        "; the mockup is only a visual reference with its own hash, never compare it" if design.get("mockup")
                         else "") + "; otherwise stop and report the task as blocked without changing UI code.")
     return lines

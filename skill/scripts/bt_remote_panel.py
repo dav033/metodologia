@@ -23,6 +23,7 @@ GET_ROUTES = (
     r"/api/plans", rf"/api/plans/{_ID}/{_ID}",
     r"/static/.+", r"/go/.+",
     r"/components", r"/components/kit", rf"/components/(?:live|ref|frame|kitref)/{_ID}",
+    rf"/ui/{_ID}/{_ID}",
     rf"/p/{_ID}", rf"/p/{_ID}/doc/.+\.md", rf"/p/{_ID}/artifacts/.+", rf"/p/{_ID}/view/.+",
     rf"/p/{_ID}/graph", rf"/p/{_ID}/req/{_ID}",
 )

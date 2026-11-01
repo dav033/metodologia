@@ -1,4 +1,4 @@
-import DecryptedText from "@/components/react-bits/DecryptedText";
+import DecryptedText from "@bitacora/ui/components/react-bits/DecryptedText";
 import { Example } from "@kit/demo";
 
 export default function DecryptedTextDemo() {

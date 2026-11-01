@@ -1,6 +1,6 @@
 import * as React from "react";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@bitacora/ui/components/ui/radio-group";
+import { Label } from "@bitacora/ui/components/ui/label";
 import { Example } from "@kit/demo";
 
 const plans = [

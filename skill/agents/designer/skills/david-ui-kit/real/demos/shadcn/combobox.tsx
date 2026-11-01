@@ -1,4 +1,4 @@
-import { Combobox, ComboboxContent, ComboboxEmpty, ComboboxInput, ComboboxItem, ComboboxList } from "@/components/ui/combobox";
+import { Combobox, ComboboxContent, ComboboxEmpty, ComboboxInput, ComboboxItem, ComboboxList } from "@bitacora/ui/components/ui/combobox";
 import { Example, Row } from "@kit/demo";
 
 const clientes = ["Laura Ruiz", "Camilo Mendoza", "Marta Pineda", "Julián Gómez", "Andrea Salcedo", "Eventos Aurora S.A.S."];

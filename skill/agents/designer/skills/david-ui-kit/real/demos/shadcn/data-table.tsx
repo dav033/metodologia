@@ -4,10 +4,10 @@ import {
   flexRender, getCoreRowModel, getFilteredRowModel, getPaginationRowModel, getSortedRowModel, useReactTable,
   type ColumnDef, type SortingState,
 } from "@tanstack/react-table";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Button } from "@bitacora/ui/components/ui/button";
+import { Checkbox } from "@bitacora/ui/components/ui/checkbox";
+import { Input } from "@bitacora/ui/components/ui/input";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@bitacora/ui/components/ui/table";
 import { Example } from "@kit/demo";
 
 type Order = { id: string; client: string; event: string; balloons: number; total: number };

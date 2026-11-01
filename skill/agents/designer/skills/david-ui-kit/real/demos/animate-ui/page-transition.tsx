@@ -5,7 +5,7 @@ import { Example } from "@kit/demo";
 const PageTransition = lazy(async () => {
   const g = globalThis as { process?: unknown };
   g.process ??= { env: {} };
-  const m = await import("@/components/animate-ui/components/page-transition");
+  const m = await import("@bitacora/ui/components/animate-ui/components/page-transition");
   return { default: m.PageTransition };
 });
 

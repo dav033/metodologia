@@ -1,4 +1,4 @@
-import TextType from "@/components/react-bits/TextType";
+import TextType from "@bitacora/ui/components/react-bits/TextType";
 import { Example } from "@kit/demo";
 import { useMotionProfile } from "@kit/motion";
 

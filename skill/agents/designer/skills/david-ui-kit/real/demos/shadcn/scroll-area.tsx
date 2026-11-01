@@ -1,4 +1,4 @@
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { ScrollArea, ScrollBar } from "@bitacora/ui/components/ui/scroll-area";
 import { Example } from "@kit/demo";
 
 const items = Array.from({ length: 24 }, (_, i) => `Pedido PED-${1300 - i} · ${["Boda", "Cumpleaños", "Corporativo", "Graduación"][i % 4]}`);

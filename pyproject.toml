@@ -263,6 +263,8 @@ py-modules = [
   "bt_design_brief",
   "bt_design_directions",
   "bt_kit_workspace",
+  "bt_ui",
+  "bt_ui_sync",
   "bt_page_design_directions",
   "bt_server_planning",
   "bt_server_plans",
@@ -364,7 +366,7 @@ bt_supervisor = ["README.md"]
 bitacora_resources = [
   "SKILL.md", "templates/*", "templates/**/*", "assets/*", "assets/vendor/**/*", "agents/*", "agents/**/*",
   "agents/*/skills/*/SKILL.md", "githooks/*",
-  "references/*.md", "references/stacks/*", "vendor/archify/**/*",
+  "references/*.md", "references/stacks/*", "vendor/archify/**/*", "ui/*", "ui/**/*",
 ]
 
 [dependency-groups]

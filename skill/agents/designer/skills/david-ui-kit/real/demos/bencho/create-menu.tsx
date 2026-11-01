@@ -1,5 +1,5 @@
-import { Create } from "@/components/bencho/liq-create/Create";
-import "@/components/bencho/liq-create/Create.css";
+import { Create } from "@bitacora/ui/components/bencho/liq-create/Create";
+import "@bitacora/ui/components/bencho/liq-create/Create.css";
 import { Example } from "@kit/demo";
 
 export default function CreateMenuDemo() {

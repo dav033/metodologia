@@ -1,6 +1,6 @@
 import * as React from "react";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@bitacora/ui/components/ui/button";
+import { Checkbox } from "@bitacora/ui/components/ui/checkbox";
 import { Example, Row } from "@kit/demo";
 
 const tareas = ["Inflar globos", "Armar el arco", "Revisar el salón"];

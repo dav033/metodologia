@@ -66,21 +66,42 @@ class Handler(PlanningActions, PlanListActions, BaseHTTPRequestHandler):
 
     # ------------------------------------------------------------ helpers
     def send(self, body: str | bytes, status: int = 200, ctype: str = "text/html; charset=utf-8",
-             sandbox: bool = False) -> None:
+             sandbox: bool = False, live_ui: bool = False, cache: str = "no-store") -> None:
         data = body.encode("utf-8") if isinstance(body, str) else body
         self.send_response(status)
         self.send_header("Content-Type", ctype)
         if sandbox:  # generated or agent-written HTML must not reach the dashboard origin or its token
+            # a live mockup also reads the component pool and the project theme, and only those (/ui/, D-280)
+            ui = f" {self.ui_source()}" if live_ui else ""
             self.send_header("Content-Security-Policy", "sandbox allow-scripts; default-src 'none'; "
-                             "script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; font-src data:")
+                             f"script-src 'unsafe-inline'{ui}; style-src 'unsafe-inline'{ui}; img-src data:; font-src data:")
         else:
             self.send_header("Content-Security-Policy", "default-src 'self'; script-src 'self'; "
                              "style-src 'self' 'unsafe-inline'; img-src 'self' data:; object-src 'none'; "
                              "base-uri 'self'; frame-ancestors 'self'")
         self.send_header("Content-Length", str(len(data)))
-        self.send_header("Cache-Control", "no-store")
+        self.send_header("Cache-Control", cache)
         self.end_headers()
         self.wfile.write(data)
+
+    def ui_source(self) -> str:
+        """`http://<this panel>/ui/`: the one source a live mockup may load besides its inline code (the host is a
+        loopback name: strict_host refused anything else before routing)."""
+        host = self.headers.get("Host") or f"127.0.0.1:{self.server.server_address[1]}"
+        return f"http://{host}/ui/"
+
+    def ui_asset(self, rest: list[str]) -> None:
+        """The component pool (`/ui/<digest>/bitacora-ui.{js,css,json}`, `current` = the sources as they are) and a
+        project's theme (`/ui/theme/<project>.css`) for live mockups (D-280)."""
+        import bt_ui
+        if len(rest) == 2 and rest[0] == "theme" and rest[1].endswith(".css"):
+            return self.send(bt_ui.theme_css(rest[1][:-4]), 200, "text/css; charset=utf-8")
+        path = bt_ui.pool_file(rest[0], rest[1]) if len(rest) == 2 else None
+        if path is None:
+            return self.send("Not found", 404, "text/plain")
+        ctype = {".js": "application/javascript", ".css": "text/css", ".json": "application/json"}[path.suffix]
+        return self.send(path.read_bytes(), 200, f"{ctype}; charset=utf-8",
+                         cache="no-store" if rest[0] == "current" else "private, max-age=31536000, immutable")
 
     def verify_go(self, project: str, rid: str, q: dict) -> None:
         """A version link: start the version if it is not running (the waiting tab comes back here), then sign in as the
@@ -222,6 +243,8 @@ class Handler(PlanningActions, PlanListActions, BaseHTTPRequestHandler):
             import bt_live_api as live
             return self.send(json.dumps({"runs": live.run_summaries(ROOT, q.get("scope", "global"))}), 200,
                              "application/json; charset=utf-8")
+        if parts[0] == "ui":                               # the component pool and project themes (D-280)
+            return self.ui_asset(parts[1:])
         if parts[0] == "components":                       # Designer kit gallery; previews come back sandboxed
             import bt_page_components
             status, body, ctype, sandbox = bt_page_components.route(parts[1:], q)

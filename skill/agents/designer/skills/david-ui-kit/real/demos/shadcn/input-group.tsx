@@ -1,6 +1,6 @@
 import { Copy, Mail, Search, Send } from "lucide-react";
-import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput, InputGroupText, InputGroupTextarea } from "@/components/ui/input-group";
-import { Spinner } from "@/components/ui/spinner";
+import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput, InputGroupText, InputGroupTextarea } from "@bitacora/ui/components/ui/input-group";
+import { Spinner } from "@bitacora/ui/components/ui/spinner";
 import { Example } from "@kit/demo";
 
 export default function InputGroupDemo() {

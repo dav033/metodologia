@@ -1,5 +1,5 @@
 import * as React from "react";
-import ElectricBorder from "@/components/react-bits/ElectricBorder";
+import ElectricBorder from "@bitacora/ui/components/react-bits/ElectricBorder";
 import { Effect } from "@kit/effect";
 import { Example, Row } from "@kit/demo";
 

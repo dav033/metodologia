@@ -1,6 +1,6 @@
 import { AlertCircle, CheckCircle2, Info, Undo2 } from "lucide-react";
-import { Alert, AlertAction, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
+import { Alert, AlertAction, AlertDescription, AlertTitle } from "@bitacora/ui/components/ui/alert";
+import { Button } from "@bitacora/ui/components/ui/button";
 import { Example } from "@kit/demo";
 
 export default function AlertDemo() {

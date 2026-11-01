@@ -1,5 +1,5 @@
 import * as React from "react";
-import SpotlightCard from "@/components/react-bits/SpotlightCard";
+import SpotlightCard from "@bitacora/ui/components/react-bits/SpotlightCard";
 import { Example, Row } from "@kit/demo";
 
 function useDark() {

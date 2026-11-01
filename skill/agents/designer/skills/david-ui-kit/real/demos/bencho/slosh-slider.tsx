@@ -1,5 +1,5 @@
-import { Slosh } from "@/components/bencho/slosh/Slosh";
-import "@/components/bencho/slosh/Slosh.css";
+import { Slosh } from "@bitacora/ui/components/bencho/slosh/Slosh";
+import "@bitacora/ui/components/bencho/slosh/Slosh.css";
 import { Example } from "@kit/demo";
 
 export default function SloshSliderDemo() {

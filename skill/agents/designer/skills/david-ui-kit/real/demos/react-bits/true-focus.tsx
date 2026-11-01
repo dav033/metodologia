@@ -1,4 +1,4 @@
-import TrueFocus from "@/components/react-bits/TrueFocus";
+import TrueFocus from "@bitacora/ui/components/react-bits/TrueFocus";
 import { Example } from "@kit/demo";
 import { useMotionProfile } from "@kit/motion";
 

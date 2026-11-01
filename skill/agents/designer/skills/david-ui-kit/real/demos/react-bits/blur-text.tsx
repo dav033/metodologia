@@ -1,4 +1,4 @@
-import BlurText from "@/components/react-bits/BlurText";
+import BlurText from "@bitacora/ui/components/react-bits/BlurText";
 import { Example } from "@kit/demo";
 import { useMotionProfile } from "@kit/motion";
 

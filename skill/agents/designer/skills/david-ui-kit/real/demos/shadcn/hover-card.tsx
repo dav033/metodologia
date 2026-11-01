@@ -1,7 +1,7 @@
 import { CalendarDays } from "lucide-react";
-import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@bitacora/ui/components/ui/hover-card";
+import { Button } from "@bitacora/ui/components/ui/button";
+import { Avatar, AvatarFallback } from "@bitacora/ui/components/ui/avatar";
 import { Example, Row } from "@kit/demo";
 
 function Client({ name, initials, note }: { name: string; initials: string; note: string }) {

@@ -1,0 +1,44 @@
+{
+  "name": "@bitacora/ui",
+  "version": "1.0.0",
+  "private": true,
+  "description": "metodologia's component pool (D-280): shadcn/ui on Base UI, Animate UI, Bencho and React Bits, one source for every project and every mockup. Structure and behaviour come from here; each project keeps its theme (themes/<project>.css maps its tokens onto the shadcn roles). Written into a project by `bitacora.py components sync <project>`: do not edit the copy in the project, change the pool in metodologia.",
+  "type": "module",
+  "sideEffects": ["*.css"],
+  "exports": {
+    "./components/*.css": "./src/components/*.css",
+    "./components/*": "./src/components/*.tsx",
+    "./lib/*": "./src/lib/*.ts",
+    "./hooks/*": "./src/hooks/*.ts",
+    "./styles.css": "./src/styles.css",
+    "./theme.css": "./src/theme.css",
+    "./themes/*": "./themes/*",
+    "./package.json": "./package.json"
+  },
+  "peerDependencies": {
+    "react": ">=19",
+    "react-dom": ">=19",
+    "motion": ">=12",
+    "lucide-react": ">=1",
+    "next": ">=15"
+  },
+  "peerDependenciesMeta": {
+    "next": { "optional": true }
+  },
+  "dependencies": {
+    "@animate-ui/react": "^2.3.0",
+    "@base-ui/react": "^1.9.0",
+    "@gsap/react": "^2.1.2",
+    "@hugeicons/core-free-icons": "^4.3.5",
+    "@hugeicons/react": "^1.1.10",
+    "class-variance-authority": "^0.7.1",
+    "cmdk": "^1.1.1",
+    "cn": "^0.5.0",
+    "framer-motion": "^12.43.0",
+    "gsap": "^3.15.0",
+    "next-themes": "^0.4.6",
+    "react-day-picker": "^10.0.2",
+    "recharts": "^3.8.0",
+    "sonner": "^2.0.8"
+  }
+}

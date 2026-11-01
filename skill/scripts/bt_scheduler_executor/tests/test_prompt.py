@@ -197,5 +197,25 @@ class PromptDesignContract(unittest.TestCase):
         self.assertIn("the mockup is only a visual reference with its own hash", ui)
 
 
+    def test_a_ui_task_starts_from_the_approved_tsx_and_the_visual_review_compares_against_it(self):
+        """D-280: the screen is written once, by the Designer, from @bitacora/ui; never re-created by the implementer."""
+        from bt_scheduler_executor.model import Brief
+        from bt_scheduler_executor.prompt import build_prompt
+        notes = ("Task kind: implement\nUI task: true\nDesign contract: design/contracts/shop@v2.md\nApproval: approved\n"
+                 "SHA-256: " + "a" * 64 + "\nPlanning mockup: /b/design/history/shop@v2/approved.html"
+                 "\nPlanning TSX: /b/design/history/shop@v2/approved.tsx")
+        request = SimpleNamespace(task_id="T2", acceptance_criteria=())
+        ui = build_prompt(Brief(title="UI work", notes=notes), request, workdir="/w", branch="b", report_path="/r.json")
+        self.assertIn("`/b/design/history/shop@v2/approved.tsx`. START FROM IT", ui)
+        self.assertIn("Never re-create the screen with other components", ui)
+        self.assertIn("`mountMockup`, `useMockup`", ui)
+        self.assertIn("the mockup and its TSX carry no approval hash, never compare them", ui)
+        self.assertNotIn("use it as the visual reference", ui)
+        visual = build_prompt(Brief(title="Review", notes=notes, review_axis="visual"), request, workdir="/w",
+                              branch="b", report_path="/r.json")
+        self.assertIn("compare the rendered UI against it", visual)
+        self.assertIn("A screen re-created with other components fails", visual)
+
+
 if __name__ == "__main__":
     unittest.main()

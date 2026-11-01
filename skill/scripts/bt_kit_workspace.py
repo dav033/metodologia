@@ -6,8 +6,10 @@
   python3 bt_kit_workspace.py status | path
 
 `bitacora.py components install|build|mockup|status` call the same functions. The workspace defaults to
-`~/.local/share/bitacora/kit-workspace` (`BITACORA_KIT_WORKSPACE` overrides it); the skill keeps only the manifest,
-theme, runtime, demos and these scripts. Installers, in order: shadcn CLI (Vite template, Base UI base) for the 42
+`~/.local/share/bitacora/kit-workspace` (`BITACORA_KIT_WORKSPACE` overrides it). Since D-280 the workspace is the
+TOOLCHAIN (node_modules, esbuild, Tailwind) and the installers' scratch space; the component SOURCES live in the
+package `@bitacora/ui` (`skill/ui`), which the builder resolves. After an upstream install,
+`components pool import-sources` copies what the installers wrote into the package. Installers, in order: shadcn CLI (Vite template, Base UI base) for the 42
 shadcn components, Animate UI's CLI swapping their primitives for its animated ones (+ its npm package for the 7
 capabilities), the React Bits registry through the shadcn CLI, and Bencho's published method (copy a block folder from
 its MIT repository at a pinned commit). Each step is skipped when its output is already there (`--force` redoes it).
@@ -143,9 +145,10 @@ def _bencho(ws: Path, force: bool, log: list[str]) -> None:
 
 
 def _write_index_css(ws: Path) -> None:
-    """The workspace's own app (vite dev) uses the same theme as the builder."""
-    (ws / "src/index.css").write_text('@import "tailwindcss";\n@import "tw-animate-css";\n@import "shadcn/tailwind.css";\n'
-                                      f'@import "{REAL / "theme.css"}";\n@source "{REAL}";\n', encoding="utf-8")
+    """The workspace's own app (vite dev) uses the pool's styles and default theme, like the builder (D-280)."""
+    ui = SKILL_ROOT / "ui" / "src"
+    (ws / "src/index.css").write_text(f'@import "tailwindcss";\n@import "{ui / "styles.css"}";\n@import "{ui / "theme.css"}";\n'
+                                      f'@source "{REAL}";\n', encoding="utf-8")
 
 
 def _versions(ws: Path) -> dict:
@@ -183,8 +186,10 @@ def build(only: list[str] | None = None) -> int:
     return _node("gallery", "--out", str(dist()), *(["--only", ",".join(only)] if only else []))
 
 
-def mockup_build(entry: str, out: str, title: str = "") -> int:
-    return _node("mockup", str(Path(entry).resolve()), "--out", str(Path(out).resolve()), *(["--title", title] if title else []))
+def mockup_build(entry: str, out: str, title: str = "", project: str = "") -> int:
+    """The self-contained export of a mockup TSX, with `project`'s theme from the pool inlined when given (D-280)."""
+    return _node("mockup", str(Path(entry).resolve()), "--out", str(Path(out).resolve()), *(["--title", title] if title else []),
+                 *(["--project", project] if project else []))
 
 
 def status() -> dict:

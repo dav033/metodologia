@@ -1,7 +1,7 @@
-import { Button } from "@/components/ui/button";
-import { Field, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
-import { Sheet, SheetClose, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Button } from "@bitacora/ui/components/ui/button";
+import { Field, FieldLabel } from "@bitacora/ui/components/ui/field";
+import { Input } from "@bitacora/ui/components/ui/input";
+import { Sheet, SheetClose, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, SheetTrigger } from "@bitacora/ui/components/ui/sheet";
 import { Example, Row } from "@kit/demo";
 
 export default function SheetDemo() {

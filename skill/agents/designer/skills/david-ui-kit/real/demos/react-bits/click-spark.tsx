@@ -1,5 +1,5 @@
 import * as React from "react";
-import ClickSpark from "@/components/react-bits/ClickSpark";
+import ClickSpark from "@bitacora/ui/components/react-bits/ClickSpark";
 import { Example } from "@kit/demo";
 
 function useDark() {

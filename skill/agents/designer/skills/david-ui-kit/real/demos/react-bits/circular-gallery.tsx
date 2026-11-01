@@ -1,4 +1,4 @@
-import CircularGallery from "@/components/react-bits/CircularGallery";
+import CircularGallery from "@bitacora/ui/components/react-bits/CircularGallery";
 import { Effect } from "@kit/effect";
 import { Example, picture } from "@kit/demo";
 

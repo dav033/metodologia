@@ -1,5 +1,5 @@
 import * as React from "react";
-import Stepper, { Step } from "@/components/react-bits/Stepper";
+import Stepper, { Step } from "@bitacora/ui/components/react-bits/Stepper";
 import { Example } from "@kit/demo";
 
 function useDark() {

@@ -1,5 +1,5 @@
-import { Upload } from "@/components/bencho/upload-dropzone/Upload";
-import "@/components/bencho/upload-dropzone/Upload.css";
+import { Upload } from "@bitacora/ui/components/bencho/upload-dropzone/Upload";
+import "@bitacora/ui/components/bencho/upload-dropzone/Upload.css";
 import { Example } from "@kit/demo";
 
 export default function UploadDropzoneDemo() {

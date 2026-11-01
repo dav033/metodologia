@@ -1,5 +1,5 @@
 import { Search } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { Input } from "@bitacora/ui/components/ui/input";
 import { Example } from "@kit/demo";
 
 export default function InputDemo() {
