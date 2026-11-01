@@ -319,6 +319,11 @@
    "id": "D-289",
    "by": "solver 20261101-015640-eab9: gate task leaves out conflicting lines",
    "at": "2026-11-01T02:01:54"
+  },
+  {
+   "id": "D-290",
+   "by": "claude-luis D-20261101-081430-404c: new UI projects adopt @bitacora/ui by default (Job B)",
+   "at": "2026-11-01T08:16:32"
   }
  ]
 }

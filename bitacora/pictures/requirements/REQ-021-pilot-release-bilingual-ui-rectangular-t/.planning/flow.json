@@ -30,10 +30,35 @@
    "via": "web"
   },
   "SP-10": {
-   "at": "2026-10-31T09:56:35-05:00",
-   "by": "owner",
-   "digest": "61eba9c21617e0d4",
-   "via": "conversation"
+   "at": "2026-11-01T08:17:46-05:00",
+   "by": "policy",
+   "digest": "aac73e3893a3ce14",
+   "history": [
+    {
+     "at": "2026-10-31T09:56:35-05:00",
+     "by": "owner",
+     "digest": "61eba9c21617e0d4",
+     "via": "conversation"
+    }
+   ],
+   "policy": {
+    "evidence": [
+     "RUN.notes/T10.5.manual-observation-a38776b4.md",
+     "RUN.notes/T10.5.manual-observation.md"
+    ],
+    "previous": {
+     "at": "2026-10-31T09:56:35-05:00",
+     "by": "owner",
+     "digest": "61eba9c21617e0d4",
+     "via": "conversation"
+    },
+    "repair": [
+     "T10.451"
+    ],
+    "requested_by": "planner",
+    "rule": "D-241"
+   },
+   "via": "policy"
   },
   "SP-11": {
    "at": "2026-10-30T17:10:53-05:00",

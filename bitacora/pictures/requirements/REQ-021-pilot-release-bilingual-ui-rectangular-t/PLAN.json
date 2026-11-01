@@ -12552,13 +12552,146 @@
       "ui": false
     },
     {
+      "id": "T10.451",
+      "milestone_id": "M3",
+      "title": "Make guided-chat replies and chrome language-correct",
+      "objective": "After the accepted T10.442 dictionaries and alongside the T10.45 harness, repair only the Spanish-only producers proven by T10.5's two authorized configured-provider observations (RUN.notes/T10.5.manual-observation-a38776b4.md on candidate a38776b4, and T10.5.manual-observation.md on 44acfe97): in an English conversation gemini-3.6-flash replied in English, but the customer saw the hard-coded Spanish fraseCercanasPorColor sentence that sanearRespuestaGuiada substitutes when cercanasPorColor applies, with the theme stored by regla:tematica_fiel_cliente as the Spanish label (\"Rosado\"), plus a Spanish header chip, \"Calificar\" link, \"Respuesta lista\" status and catalogue card titles/subtitles. (1) src/lib/ia/guiado/respuesta-guiada.ts: fraseCercanasPorColor and fraseCercanasYaDicha take the conversation language the route already resolves (getRequestLanguage, idioma@1) with Spanish as default so existing callers and Spanish output stay byte-identical except the theme case rule; the English sentence and colour list joiner come from the existing server message dictionary (src/lib/idioma/mensajes-ia.ts), theme and colour names rendered in English through the existing colour English names, falling back to the customer's own words, never the Spanish label inside an English sentence. Mid-sentence the theme is lower case in both languages unless it is a proper name. fraseCercanasYaDicha detects either language's opening. Pass the language from src/app/api/asistente-guiado/route.ts. (2) src/components/guiado/VistaGuiada.tsx: the header chip renders event, age range (\"años\"), theme and \"Para negocio\"/\"Uso personal\" through useTextos(TEXTOS_CHAT_GUIADO) labels and the theme in the UI language; the screen-reader status \"Respuesta lista\" comes from the dictionary. src/components/feedback-ia/CalificacionIA.tsx: \"Calificar\"/\"Cambiar\" join its existing copies mechanism with English values. Idea card titles and subtitles shown by src/components/guiado/CarruselDecoraciones.tsx use the SP-9 English decoration names (textos-ingles@1, cargarNombresDecoracionIngles / textoAplicado, kind campo_decoracion) when the language is English, with the Spanish text as fallback; resolve them where the ideas are built for the response, not by translating at render time. Do not change the stored brief theme, regla:tematica_fiel_cliente, catalogue search arguments (they stay Spanish), the model prompt, ideas selection, SP-9 data or generation, permissions or any other task, criterion, check or gate. New strings go into the existing dictionaries (chat-guiado-parte-2.ts, mensajes-ia.ts); no new dependency, paid call or live provider in tests. Author scripts/test/test-chat-guiado-idioma-respuesta.tsx and register only idioma:test-chat-respuesta: pure EN/ES assertions on the sentence and the already-said detector, written independently from SPEC R12 and fixed expected strings, plus rendering of the actual VistaGuiada chip/status, CalificacionIA and the carousel card under the real IdiomaProvider with a controlled English decoration-name map; show the regression fails on the current Spanish-only producers. T10.5 then reruns its unchanged checks; its manual configured-provider observation stays NOT_RUN until genuinely observed again.",
+      "repository": "pictures",
+      "after": [
+        "T10.442"
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 90,
+      "risk": "medium",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "Agent estimate in minutes: 25 bilingual near-colour sentence, already-said detector and route language + 20 chip, status and rating strings + 15 SP-9 English card titles where ideas are built + 30 rendered EN/ES regression with red/green = 90.",
+      "classification_evidence": {
+        "complexity": {
+          "justification": "A server sentence template, its once-per-theme detector, three client strings and one SP-9 name lookup, each with a known producer.",
+          "evidence": [
+            "file:src/lib/ia/guiado/respuesta-guiada.ts",
+            "file:src/components/guiado/VistaGuiada.tsx"
+          ]
+        },
+        "scope": {
+          "justification": "Four producer files, two existing dictionaries and one new regression script; no schema, prompt or permission change.",
+          "evidence": [
+            "file:src/lib/ia/guiado/respuesta-guiada.ts",
+            "file:src/components/feedback-ia/CalificacionIA.tsx"
+          ]
+        },
+        "duration": {
+          "justification": "Twenty-five, twenty, fifteen and thirty minutes make ninety.",
+          "evidence": [
+            "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind implement -> no comparable samples",
+            "task:T10.441"
+          ]
+        },
+        "risk": {
+          "justification": "The near-colour sentence replaces the model reply, so a wrong language or a repeated sentence reaches every customer whose theme has no decorations.",
+          "evidence": [
+            "file:src/lib/ia/guiado/respuesta-guiada.ts",
+            "spec:SPEC.md#requirements"
+          ]
+        },
+        "coupling": {
+          "justification": "Consumes the idioma@1 request language of T10.3 and the SP-9 English decoration names; T10.5 reruns on the result.",
+          "evidence": [
+            "task:T10.3",
+            "task:T9.1",
+            "task:T10.5"
+          ]
+        },
+        "confidence": {
+          "justification": "Two authorized live observations isolate the producers; the model itself already answers in the conversation language.",
+          "evidence": [
+            "file:src/app/api/asistente-guiado/route.ts",
+            "task:T10.5"
+          ]
+        }
+      },
+      "expected_paths": [
+        "src/lib/ia/guiado/respuesta-guiada.ts",
+        "src/app/api/asistente-guiado/route.ts",
+        "src/lib/idioma/mensajes-ia.ts",
+        "src/components/guiado/VistaGuiada.tsx",
+        "src/components/guiado/CarruselDecoraciones.tsx",
+        "src/components/guiado/textos/chat-guiado-parte-2.ts",
+        "src/components/feedback-ia/CalificacionIA.tsx",
+        "scripts/test/test-chat-guiado-idioma-respuesta.tsx"
+      ],
+      "shared_resources": [
+        "package.json scripts:idioma:test-chat-respuesta",
+        "contract:idioma",
+        "contract:textos-ingles"
+      ],
+      "acceptance_criteria": [
+        "In an English conversation the near-colour sentence the customer sees (fraseCercanasPorColor) is English, with the theme and colours in English, and in a Spanish conversation it stays byte-identical to today's Spanish sentence apart from a theme written in lower case mid-sentence in both languages (proper names such as Spiderman keep their case); fraseCercanasYaDicha recognises the sentence already said in either language, so it is said once per theme, and the regression fails on the current Spanish-only template.",
+        "Rendered under the real IdiomaProvider in English, the guided chat's header chip (event, age range, theme, business use), the rating link (Calificar/Cambiar), the screen-reader status after a reply and the idea card titles and subtitles show no Spanish text: interface words come from the language dictionaries and card titles from the SP-9 English decoration names with the Spanish text only as fallback when no English name exists; in Spanish every one of them is unchanged.",
+        "The existing guided-reply sanitiser suite passes with every case kept, so Spanish replies, failure-phrase removal and real-option validation behave as before.",
+        "The existing theme-change suite passes with every case kept, so the stored brief theme and the Spanish catalogue search arguments stay unchanged in an English conversation.",
+        "The unchanged language coverage guard scans the guided chat view, the rating component and the decoration carousel with no new exemption or skipped control.",
+        "The complete repository passes strict TypeScript after the repair without casts, suppressions or relaxed settings."
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npm run idioma:test-chat-respuesta -- --solo frase",
+          "purpose": "In an English conversation the near-colour sentence the customer sees (fraseCercanasPorColor) is English, with the theme and colours in English, and in a Spanish conversation it stays byte-identical to today's Spanish sentence apart from a theme written in lower case mid-sentence in both languages (proper names such as Spiderman keep their case); fraseCercanasYaDicha recognises the sentence already said in either language, so it is said once per theme, and the regression fails on the current Spanish-only template.",
+          "created_by": "T10.451",
+          "category": "regression"
+        },
+        {
+          "type": "command",
+          "value": "npm run idioma:test-chat-respuesta -- --solo interfaz",
+          "purpose": "Rendered under the real IdiomaProvider in English, the guided chat's header chip (event, age range, theme, business use), the rating link (Calificar/Cambiar), the screen-reader status after a reply and the idea card titles and subtitles show no Spanish text: interface words come from the language dictionaries and card titles from the SP-9 English decoration names with the Spanish text only as fallback when no English name exists; in Spanish every one of them is unchanged.",
+          "created_by": "T10.451",
+          "category": "regression"
+        },
+        {
+          "type": "command",
+          "value": "npx --no-install tsx --conditions=react-server scripts/test/test-respuesta-guiada-sin-fracaso.ts",
+          "purpose": "The existing guided-reply sanitiser suite passes with every case kept, so Spanish replies, failure-phrase removal and real-option validation behave as before.",
+          "category": "regression"
+        },
+        {
+          "type": "command",
+          "value": "npx --no-install tsx --conditions=react-server scripts/test/test-cambio-tematica-guiada.ts",
+          "purpose": "The existing theme-change suite passes with every case kept, so the stored brief theme and the Spanish catalogue search arguments stay unchanged in an English conversation.",
+          "category": "regression"
+        },
+        {
+          "type": "command",
+          "value": "npm run idioma:test-cobertura -- src/components/guiado/VistaGuiada.tsx src/components/feedback-ia/CalificacionIA.tsx src/components/guiado/CarruselDecoraciones.tsx",
+          "purpose": "The unchanged language coverage guard scans the guided chat view, the rating component and the decoration carousel with no new exemption or skipped control.",
+          "created_by": "T8.3",
+          "category": "static"
+        },
+        {
+          "type": "command",
+          "value": "NODE_OPTIONS=--max-old-space-size=4096 npx --no-install tsc --noEmit --incremental false",
+          "purpose": "The complete repository passes strict TypeScript after the repair without casts, suppressions or relaxed settings.",
+          "category": "static"
+        }
+      ],
+      "covers": [
+        "R12"
+      ],
+      "kind": "implement",
+      "subplan_id": "SP-10",
+      "ui": false
+    },
+    {
       "id": "T10.5",
       "milestone_id": "M3",
       "title": "Browser end-to-end: external screens and one live AI turn in English",
       "objective": "Run the existing idioma:test-integracion-resto harness on the exact candidate with controlled local providers and record actual outcomes. Do not write or repair the harness in this command-only task. Record a real configured-model English reply separately as an owner/operator manual observation; absent external access is not a pass. Rerun after the T10.45 repair on the new exact candidate; require complete screen/role/dictionary and actual controlled-provider tool-call evidence, rejecting missing or stale/partial coverage. Preserve both frozen acceptance criteria and their checks verbatim; the configured-provider EN/ES manual observation remains NOT_RUN until actually observed and cannot be waived by command success.",
       "repository": "pictures",
       "after": [
-        "T10.45"
+        "T10.45",
+        "T10.451"
       ],
       "complexity": "medium",
       "scope": "small_change",
