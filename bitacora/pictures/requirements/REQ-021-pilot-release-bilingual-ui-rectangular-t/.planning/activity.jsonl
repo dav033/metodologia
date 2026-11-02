@@ -640,3 +640,36 @@
 {"at": "2026-11-01T17:51:48-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-11", "text": "SP-11 terminó y está listo para probar", "diff": ""}
 {"at": "2026-11-01T17:51:48-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-12", "text": "SP-12 terminó y está listo para probar", "diff": ""}
 {"at": "2026-11-01T19:34:17-05:00", "who": "Tú", "kind": "verify", "sp": "SP-14", "text": "Aprobaste SP-14 (versión 4)", "diff": ""}
+{"at": "2026-11-01T21:43:31-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-3", "text": "SP-3 versión 5 está lista para probar de nuevo: rechazaste la versión 3 («las mesas quese arreglaron no sepuedn arrastrar y colocar, si el probelma es otro, investigalo y solucionalo»)", "diff": ""}
+{"at": "2026-11-01T21:43:31-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-4", "text": "SP-4 versión 4 está lista para probar de nuevo: rechazaste la versión 2 («No se ve una opcion dodne recuperar los proyectos, l toast que me avisa lo de exportacion no se ve nada bien y los modales son horribles»)", "diff": ""}
+{"at": "2026-11-01T21:43:47-05:00", "who": "Combinación", "kind": "flow", "sp": "", "text": "SP-4: su línea ya incluye la versión actual de SP-1, SP-2, SP-14, SP-3", "diff": ""}
+{"at": "2026-11-01T21:45:59-05:00", "who": "Solucionador", "kind": "flow", "sp": "", "text": "SP-5×SP-3: un conflicto de composición espera una resolución; pasa al Solucionador (SP-5 builds on SP-3 and cannot take its current line: src/components/tres-d/Taller3D.tsx needs a recorded resolution; no retry can settle it)", "diff": ""}
+{"at": "2026-11-01T21:45:59-05:00", "who": "Solucionador", "kind": "flow", "sp": "", "text": "SP-5×SP-3: un conflicto de composición espera una resolución; pasa al Solucionador (SP-5 builds on SP-3 and cannot take its current line: src/components/tres-d/SelectorAmbienteVisor.tsx needs a recorded resolution; no retry can settle it)", "diff": ""}
+{"at": "2026-11-01T21:46:00-05:00", "who": "Solucionador", "kind": "flow", "sp": "", "text": "SP-5×SP-3: el Solucionador empezó (bit-pictures-REQ-021-solver, claude sonnet): SP-5 builds on SP-3 and cannot take its current line: src/components/tres-d/Taller3D.tsx needs a recorded resolution; no retry can settle it", "diff": ""}
+{"at": "2026-11-01T21:46:36-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-11", "text": "SP-11 terminó y está listo para probar", "diff": ""}
+{"at": "2026-11-01T21:46:36-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-12", "text": "SP-12 terminó y está listo para probar", "diff": ""}
+{"at": "2026-11-01T21:46:36-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-5", "text": "SP-5 terminó y está listo para probar", "diff": ""}
+{"at": "2026-11-01T21:46:36-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-6", "text": "SP-6 terminó y está listo para probar", "diff": ""}
+{"at": "2026-11-01T21:46:36-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-7", "text": "SP-7 terminó y está listo para probar", "diff": ""}
+{"at": "2026-11-01T21:46:36-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-8", "text": "SP-8 terminó y está listo para probar", "diff": ""}
+{"at": "2026-11-01T21:46:36-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-9", "text": "SP-9 terminó y está listo para probar", "diff": ""}
+{"at": "2026-11-01T21:46:41-05:00", "who": "Solucionador", "kind": "flow", "sp": "", "text": "SP-5×SP-3: Solucionador · decisión respondida: Resueltos los dos conflictos SP-5×SP-3 (Taller3D.tsx y SelectorAmbienteVisor.tsx) conservando la intención de ambos lados; sin cambio en el sistema.", "diff": ""}
+{"at": "2026-11-01T21:46:42-05:00", "who": "Combinación", "kind": "flow", "sp": "", "text": "SP-5: su línea ya incluye la versión actual de SP-1, SP-2, SP-14, SP-3, SP-4", "diff": ""}
+{"at": "2026-11-01T21:46:43-05:00", "who": "Combinación", "kind": "flow", "sp": "", "text": "SP-6: su línea ya incluye la versión actual de SP-1, SP-2, SP-14, SP-3, SP-4, SP-5", "diff": ""}
+{"at": "2026-11-01T21:46:46-05:00", "who": "Combinación", "kind": "flow", "sp": "", "text": "SP-7: su línea ya incluye la versión actual de SP-1, SP-2, SP-14, SP-3, SP-4, SP-5, SP-6", "diff": ""}
+{"at": "2026-11-01T21:46:49-05:00", "who": "Combinación", "kind": "flow", "sp": "", "text": "SP-8: su línea ya incluye la versión actual de SP-1, SP-2, SP-14, SP-3, SP-4, SP-5, SP-6, SP-7", "diff": ""}
+{"at": "2026-11-01T21:46:51-05:00", "who": "Combinación", "kind": "flow", "sp": "", "text": "SP-9: su línea ya incluye la versión actual de SP-1, SP-2, SP-14, SP-3, SP-4, SP-5, SP-6, SP-7, SP-8", "diff": ""}
+{"at": "2026-11-01T21:46:54-05:00", "who": "Combinación", "kind": "flow", "sp": "", "text": "SP-10: su línea ya incluye la versión actual de SP-1, SP-2, SP-14, SP-3, SP-4, SP-5, SP-6, SP-7, SP-8, SP-9", "diff": ""}
+{"at": "2026-11-01T21:46:57-05:00", "who": "Combinación", "kind": "flow", "sp": "", "text": "SP-11: su línea ya incluye la versión actual de SP-1, SP-2, SP-14, SP-3, SP-4, SP-5, SP-6, SP-7, SP-8, SP-9, SP-10", "diff": ""}
+{"at": "2026-11-01T21:47:00-05:00", "who": "Combinación", "kind": "flow", "sp": "", "text": "SP-12: su línea ya incluye la versión actual de SP-1, SP-2, SP-14, SP-3, SP-4, SP-5, SP-6, SP-7, SP-8, SP-9, SP-10, SP-11", "diff": ""}
+{"at": "2026-11-01T21:47:05-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-11", "text": "SP-11 terminó y está listo para probar", "diff": ""}
+{"at": "2026-11-01T21:47:05-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-12", "text": "SP-12 terminó y está listo para probar", "diff": ""}
+{"at": "2026-11-01T21:47:05-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-7", "text": "SP-7 terminó y está listo para probar", "diff": ""}
+{"at": "2026-11-01T21:47:05-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-8", "text": "SP-8 terminó y está listo para probar", "diff": ""}
+{"at": "2026-11-01T21:47:05-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-9", "text": "SP-9 terminó y está listo para probar", "diff": ""}
+{"at": "2026-11-01T21:47:18-05:00", "who": "Combinación", "kind": "flow", "sp": "", "text": "SP-7: su línea ya incluye la versión actual de SP-1, SP-2, SP-14, SP-3, SP-4, SP-5, SP-6", "diff": ""}
+{"at": "2026-11-01T21:47:18-05:00", "who": "Combinación", "kind": "flow", "sp": "", "text": "SP-8: su línea ya incluye la versión actual de SP-1, SP-2, SP-14, SP-3, SP-4, SP-5, SP-6, SP-7", "diff": ""}
+{"at": "2026-11-01T21:47:19-05:00", "who": "Combinación", "kind": "flow", "sp": "", "text": "SP-9: su línea ya incluye la versión actual de SP-1, SP-2, SP-14, SP-3, SP-4, SP-5, SP-6, SP-7, SP-8", "diff": ""}
+{"at": "2026-11-01T21:47:31-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-8", "text": "SP-8 terminó y está listo para probar", "diff": ""}
+{"at": "2026-11-01T21:47:31-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-9", "text": "SP-9 terminó y está listo para probar", "diff": ""}
+{"at": "2026-11-01T22:07:05-05:00", "who": "Tú", "kind": "verify", "sp": "SP-3", "text": "Aprobaste SP-3 (versión 5)", "diff": ""}

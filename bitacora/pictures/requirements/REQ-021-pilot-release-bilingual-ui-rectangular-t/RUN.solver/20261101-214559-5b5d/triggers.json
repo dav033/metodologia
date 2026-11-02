@@ -1,0 +1,64 @@
+[
+ {
+  "kind": "resolution",
+  "key": "pictures:REQ-021:r39:resolution:b22fcececd9a3edfedb6af0246b04a37",
+  "run_id": "pictures:REQ-021:r39",
+  "task_id": "",
+  "request_id": "",
+  "round": null,
+  "reason": "SP-5 builds on SP-3 and cannot take its current line: src/components/tres-d/Taller3D.tsx needs a recorded resolution; no retry can settle it",
+  "subplan": "SP-5×SP-3",
+  "reconcile": true,
+  "resolution": {
+   "key": "b22fcececd9a3edfedb6af0246b04a37",
+   "path": "src/components/tres-d/Taller3D.tsx",
+   "blobs": {
+    "base": "e4b8d0db1c9f65d571eac0947dc41f5aaf441067",
+    "ours": "00a49fb94c211e83626bb1579a0bb14c7b93d35c",
+    "theirs": "6542291813a3ac15a7998c68f0c8b335d775b5ac"
+   },
+   "commits": {
+    "base": "448ca6c7f708b14fa287e2fb29e95d0a82241c0f",
+    "ours": "31fc677465611e0e85f4694b03b9d452fef78a20",
+    "theirs": "98a159a4e8c9f6e0c9c5bc3d3c8ebeafdeab1295"
+   },
+   "json": "/home/david/bitacora/.state/durable/composition/resolutions/b22fcececd9a3edfedb6af0246b04a37.json",
+   "diff3": "/home/david/bitacora/.state/durable/composition/resolutions/b22fcececd9a3edfedb6af0246b04a37.diff3",
+   "resolved": "/home/david/bitacora/.state/durable/composition/resolutions/b22fcececd9a3edfedb6af0246b04a37.resolved",
+   "since": 1793587427.8937316
+  },
+  "status": "pending",
+  "at": "2026-11-01T21:45:59"
+ },
+ {
+  "kind": "resolution",
+  "key": "pictures:REQ-021:r39:resolution:c579d638a04256a9d3c55eb14fa35cef",
+  "run_id": "pictures:REQ-021:r39",
+  "task_id": "",
+  "request_id": "",
+  "round": null,
+  "reason": "SP-5 builds on SP-3 and cannot take its current line: src/components/tres-d/SelectorAmbienteVisor.tsx needs a recorded resolution; no retry can settle it",
+  "subplan": "SP-5×SP-3",
+  "reconcile": true,
+  "resolution": {
+   "key": "c579d638a04256a9d3c55eb14fa35cef",
+   "path": "src/components/tres-d/SelectorAmbienteVisor.tsx",
+   "blobs": {
+    "base": "4e5df68378251bbffa950a9c0c1e97a095320652",
+    "ours": "85dec4c234df61f7a20e88c71037a69df23218c0",
+    "theirs": "4628a454c6bfc6fb56692d2bd59097bced3991cd"
+   },
+   "commits": {
+    "base": "448ca6c7f708b14fa287e2fb29e95d0a82241c0f",
+    "ours": "31fc677465611e0e85f4694b03b9d452fef78a20",
+    "theirs": "98a159a4e8c9f6e0c9c5bc3d3c8ebeafdeab1295"
+   },
+   "json": "/home/david/bitacora/.state/durable/composition/resolutions/c579d638a04256a9d3c55eb14fa35cef.json",
+   "diff3": "/home/david/bitacora/.state/durable/composition/resolutions/c579d638a04256a9d3c55eb14fa35cef.diff3",
+   "resolved": "/home/david/bitacora/.state/durable/composition/resolutions/c579d638a04256a9d3c55eb14fa35cef.resolved",
+   "since": 1793587427.8584926
+  },
+  "status": "pending",
+  "at": "2026-11-01T21:45:59"
+ }
+]

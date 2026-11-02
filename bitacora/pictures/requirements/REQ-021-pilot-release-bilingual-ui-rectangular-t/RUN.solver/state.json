@@ -4,7 +4,13 @@
    "fp": "0accba1718bbcbe6",
    "since": 1793551983.6430216,
    "epoch": "cd446187cb44469b992ecd47d7e1aa4f",
-   "observed_at": 1793579646.1321268
+   "observed_at": 1793588805.387187
+  },
+  "T99": {
+   "fp": "3cf19b3e7f4aa0a0",
+   "since": 1793587668.7811139,
+   "epoch": "cd446187cb44469b992ecd47d7e1aa4f",
+   "observed_at": 1793588805.387187
   }
  },
  "tasks": {
@@ -25,7 +31,8 @@
   "SP-5×SP-2": 1,
   "SP-5×SP-14": 1,
   "SP-5×SP-4": 1,
-  "SP-12×SP-10": 1
+  "SP-12×SP-10": 1,
+  "SP-5×SP-3": 1
  },
  "triggers": {
   "pictures:REQ-021:r25:resolution:4378ebb94f72d6922c89d601ee5db484": {
@@ -2331,6 +2338,70 @@
    "status": "answered",
    "at": "2026-11-01T17:47:11",
    "session": "20261101-174711-3b88"
+  },
+  "pictures:REQ-021:r39:resolution:b22fcececd9a3edfedb6af0246b04a37": {
+   "kind": "resolution",
+   "key": "pictures:REQ-021:r39:resolution:b22fcececd9a3edfedb6af0246b04a37",
+   "run_id": "pictures:REQ-021:r39",
+   "task_id": "",
+   "request_id": "",
+   "round": null,
+   "reason": "SP-5 builds on SP-3 and cannot take its current line: src/components/tres-d/Taller3D.tsx needs a recorded resolution; no retry can settle it",
+   "subplan": "SP-5×SP-3",
+   "reconcile": true,
+   "resolution": {
+    "key": "b22fcececd9a3edfedb6af0246b04a37",
+    "path": "src/components/tres-d/Taller3D.tsx",
+    "blobs": {
+     "base": "e4b8d0db1c9f65d571eac0947dc41f5aaf441067",
+     "ours": "00a49fb94c211e83626bb1579a0bb14c7b93d35c",
+     "theirs": "6542291813a3ac15a7998c68f0c8b335d775b5ac"
+    },
+    "commits": {
+     "base": "448ca6c7f708b14fa287e2fb29e95d0a82241c0f",
+     "ours": "31fc677465611e0e85f4694b03b9d452fef78a20",
+     "theirs": "98a159a4e8c9f6e0c9c5bc3d3c8ebeafdeab1295"
+    },
+    "json": "/home/david/bitacora/.state/durable/composition/resolutions/b22fcececd9a3edfedb6af0246b04a37.json",
+    "diff3": "/home/david/bitacora/.state/durable/composition/resolutions/b22fcececd9a3edfedb6af0246b04a37.diff3",
+    "resolved": "/home/david/bitacora/.state/durable/composition/resolutions/b22fcececd9a3edfedb6af0246b04a37.resolved",
+    "since": 1793587427.8937316
+   },
+   "status": "answered",
+   "at": "2026-11-01T21:45:59",
+   "session": "20261101-214559-5b5d"
+  },
+  "pictures:REQ-021:r39:resolution:c579d638a04256a9d3c55eb14fa35cef": {
+   "kind": "resolution",
+   "key": "pictures:REQ-021:r39:resolution:c579d638a04256a9d3c55eb14fa35cef",
+   "run_id": "pictures:REQ-021:r39",
+   "task_id": "",
+   "request_id": "",
+   "round": null,
+   "reason": "SP-5 builds on SP-3 and cannot take its current line: src/components/tres-d/SelectorAmbienteVisor.tsx needs a recorded resolution; no retry can settle it",
+   "subplan": "SP-5×SP-3",
+   "reconcile": true,
+   "resolution": {
+    "key": "c579d638a04256a9d3c55eb14fa35cef",
+    "path": "src/components/tres-d/SelectorAmbienteVisor.tsx",
+    "blobs": {
+     "base": "4e5df68378251bbffa950a9c0c1e97a095320652",
+     "ours": "85dec4c234df61f7a20e88c71037a69df23218c0",
+     "theirs": "4628a454c6bfc6fb56692d2bd59097bced3991cd"
+    },
+    "commits": {
+     "base": "448ca6c7f708b14fa287e2fb29e95d0a82241c0f",
+     "ours": "31fc677465611e0e85f4694b03b9d452fef78a20",
+     "theirs": "98a159a4e8c9f6e0c9c5bc3d3c8ebeafdeab1295"
+    },
+    "json": "/home/david/bitacora/.state/durable/composition/resolutions/c579d638a04256a9d3c55eb14fa35cef.json",
+    "diff3": "/home/david/bitacora/.state/durable/composition/resolutions/c579d638a04256a9d3c55eb14fa35cef.diff3",
+    "resolved": "/home/david/bitacora/.state/durable/composition/resolutions/c579d638a04256a9d3c55eb14fa35cef.resolved",
+    "since": 1793587427.8584926
+   },
+   "status": "answered",
+   "at": "2026-11-01T21:45:59",
+   "session": "20261101-214559-5b5d"
   }
  },
  "sessions": [
@@ -3046,6 +3117,33 @@
    "summary": "Resolví el conflicto de route.ts entre SP-12 y SP-10 combinando contenido visible (SP-10) y finalización de recomendaciones (SP-12); sin cambios al sistema.",
    "question": "",
    "report": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/RUN.solver/20261101-174711-3b88/REPORT.md"
+  },
+  {
+   "id": "20261101-214559-5b5d",
+   "name": "bit-pictures-REQ-021-solver",
+   "status": "answered",
+   "started": 1793587559.7394226,
+   "started_at": "2026-11-01T21:45:59",
+   "triggers": [
+    "pictures:REQ-021:r39:resolution:b22fcececd9a3edfedb6af0246b04a37",
+    "pictures:REQ-021:r39:resolution:c579d638a04256a9d3c55eb14fa35cef"
+   ],
+   "queued": [],
+   "restarts": 0,
+   "dir": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/RUN.solver/20261101-214559-5b5d",
+   "cwd": "/home/david/.local/share/bitacora-solver/pictures/20261101-214559-5b5d",
+   "task": "SP-5×SP-3",
+   "kind": "resolution",
+   "reason": "SP-5 builds on SP-3 and cannot take its current line: src/components/tres-d/Taller3D.tsx needs a recorded resolution; no retry can settle it",
+   "session_id": "fae5c3ee-e7c4-4b3e-8853-5b7948637c2e",
+   "provider": "claude",
+   "model": "sonnet",
+   "home": "/home/david/.claude-work",
+   "ended": 1793587601.9868612,
+   "ended_at": "2026-11-01T21:46:41",
+   "summary": "Resueltos los dos conflictos SP-5×SP-3 (Taller3D.tsx y SelectorAmbienteVisor.tsx) conservando la intención de ambos lados; sin cambio en el sistema.",
+   "question": "",
+   "report": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/RUN.solver/20261101-214559-5b5d/REPORT.md"
   }
  ]
 }

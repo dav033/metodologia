@@ -3,17 +3,17 @@
  "schema_version": 1,
  "seen": {
   "SP-1": "1:82885950bdfe1bc2c0ab8e169cce74c4c2332f02",
-  "SP-11": "2:69df672571ff50bf0e2f3713a79e0cd522448459",
-  "SP-12": "2:a2abb999c35fe1cdd78d1ccfc627ac7b09ac6a72",
+  "SP-11": "3:d1c2997e8298f5b82d02492401af2a371bc661ed",
+  "SP-12": "3:fbd961e9ff455dd24a340a6827239c201317334c",
   "SP-14": "4:42a774b6ba0cf674382ef42daae6885b321e80ec",
   "SP-2": "2:1c51118c003dbcaafd47ac33c195f30c2774aa99",
-  "SP-3": "5:4763f8c6e5a50372101ca6e66473f4f8bfe42ea1",
-  "SP-4": "4:86aba2bdada518920a7e32a81b96d86b29014072",
-  "SP-5": "5:31fc677465611e0e85f4694b03b9d452fef78a20",
-  "SP-6": "4:78c7fb8419dbbd06cb83881e4e401ce7efa8bd9e",
-  "SP-7": "5:26f663b27b3381b9201d42dc5304b58848fce8db",
-  "SP-8": "5:8dfb38598a1186692564938d470d7267a93d7f40",
-  "SP-9": "5:f4e1e5a9731cead9c6fbbd0d8992cf0c2470ef8d"
+  "SP-3": "5:98a159a4e8c9f6e0c9c5bc3d3c8ebeafdeab1295",
+  "SP-4": "4:4b778b054def5319da36456b9a8a5d6e50ac65b5",
+  "SP-5": "5:d0a3185d94a3854aab4a7223c7b14c4babeb071c",
+  "SP-6": "4:7ba5caeb77dd37508d8f2fd169ad646135729435",
+  "SP-7": "6:3174d86ba0fe62d9ec219b31b641728e3ab653a9",
+  "SP-8": "6:f9c8c8684aa6bee88385e6255dfce928c40b45b3",
+  "SP-9": "6:c4e6f39f55b5476c8453a9f1796d9f08790e1024"
  },
  "subplans": {
   "SP-14": {
@@ -37,17 +37,13 @@
    "via": "web"
   },
   "SP-3": {
-   "at": "2026-10-31T15:41:03-05:00",
+   "at": "2026-11-01T22:07:05-05:00",
    "by": "owner",
-   "commit": "4aa221088d69db34dee43d496ffe61d34b0ea428",
-   "decision": "rejected",
-   "note": "las mesas quese arreglaron no sepuedn arrastrar y colocar, si el probelma es otro, investigalo y solucionalo",
-   "open_pending": [
-    "P-212",
-    "P-213"
-   ],
-   "pending": "P-213",
-   "version": 3,
+   "commit": "98a159a4e8c9f6e0c9c5bc3d3c8ebeafdeab1295",
+   "decision": "approved",
+   "note": "",
+   "open_pending": [],
+   "version": 5,
    "via": "web"
   },
   "SP-4": {
