@@ -610,3 +610,12 @@ Source: owner, REQ-021 rounds 1–3.
 - **Consequences:** chosen without the three-way design panel because the owner set a 20-minute window; reviewers run at the end instead. Not in the pilot unless verified and decided (P-219).
 - **Source:** session 395bd6f1; contract at ~/dev/pictures-infra/pool/CONTRACT.md.
 
+
+## D-091 — One database: the VPS Postgres, reached by Vercel through the ai-api host · 2026-11-02
+
+- **Context:** the owner wants a single database under his control ("la base de datos del VPS ... la única base de datos para tener control todo") and the target shape Vercel → ai-api → Postgres, with the database closed to the internet. Not yet in production, so no data constraints. Next.js still opens SQL directly (74 files, through 3 pool factories), so full mediation by ai-api endpoints cannot land before the 2026-11-03 pilot.
+- **Decision:** database `pictures` in the VPS container `req021-db` (Postgres 16 + pgvector), restored from Neon (56 tables, 68,441 rows, counts identical), plus migrations 037-045 and the pool taxonomy (1,532). Roles `pictures_owner` (DDL, migrations, tests' disposable schemas) and `pictures_app` (DML only; DDL denied). ai-api uses `pictures_app` over the internal Docker network. Vercel reaches it through a WebSocket bridge (`pictures-db-gateway`, neondatabase/wsproxy, only `req021-db:5432` allowed) published by Caddy at `api-decoracion…/db/v1` and gated by the `X-Db-Gateway-Key` header; port 5432 stays closed. Daily `pg_dump` (14 kept) at /root/backups/pictures/daily.
+- **Alternatives:** expose 5432 with TLS (rejected: the owner wants access through the ai-api host); web back on the VPS (deferred); full ai-api mediation now (too large for the pilot).
+- **Consequences:** ~30 ms Vercel→Miami per round trip; Neon stays untouched as rollback until the cut is verified; the old `req021` test database stays until then. A new REQ moves data access into ai-api endpoints module by module (accounts first) and then removes the bridge.
+- **Rollback:** unset `DB_GATEWAY_URL` and point `DATABASE_URL`/`CATALOG_DATABASE_URL` back to Neon on Vercel; restore `/etc/demo-decoracion-ai/ai.env.bak-*-before-single-db` and recreate the ai container.
+- **Source:** session 3ad3bcd4. Secrets in /root/secrets/pictures-db.env (VPS) and ~/.config/metodologia/pictures-db.env (local, 600).

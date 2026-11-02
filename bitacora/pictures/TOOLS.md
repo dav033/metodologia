@@ -42,10 +42,15 @@ _None registered yet._
   (/opt/edge-proxy/Caddyfile): web https://185-147-157-25.sslip.io, ai-api https://api-decoracion.185-147-157-25.sslip.io.
 - **Releases:** /opt/deployments/pictures/releases/<sha> (compose.vps.yml); recreate web only:
   `docker compose -p demo-decoracion -f <release>/compose.vps.yml up -d --no-deps --no-build web`.
-- **Model trials:** /opt/modelos-prueba (compose project `modelos-prueba`, Whisper :8610 / Laya :8611 on 127.0.0.1, stopped).
+- **Model trials:** removed 2026-11-02 at owner request (containers, /opt/modelos-prueba with its 4.4 GB HF cache, audio, scripts, results). Benchmark conclusions remain in 2026-10/W2/2026-10-09.md; the raw results were not kept.
 - **Notes:** never restart the ai-api without owner notice; never print env files. Values containing `$` (scrypt hashes) must be single-quoted in demo.env: Compose interpolates `$` and silently truncates them.
 
 ### req021-db (REQ-021 test Postgres)
 - **Type:** Postgres 16 + pgvector/pg_trgm/unaccent in Docker on the advin VPS (`/opt/req021-db`, container `req021-db`, volume `req021-db-data`, 1 GB memory limit) · created 2026-10-26 for REQ-021's automated and local tests; meant to be replaced by a Supabase later. Not production data.
 - **Access:** bound to `127.0.0.1:5433` on the VPS only; locally through the user unit `pictures-req021-db-tunnel.service` (`ssh -L 127.0.0.1:55433:127.0.0.1:5433 advin`). Connection URL: env var `PICTURES_REQ021_DATABASE_URL` in `~/.config/flow/secrets.env` (mode 600). Never print it.
 - **Notes:** separate from the host Postgres on 5432 and from every other container; the migrations in `scripts/migrations/` have not been applied yet (empty database with the three extensions).
+
+### Single database and pool curator (D-091, 2026-11-02)
+- **DB:** container `req021-db` (pg16 + pgvector), database `pictures`; roles `pictures_owner` (DDL/tests), `pictures_app` (app + ai-api DML), `pictures_curator` (pool_* DML + own schema `curador`). Secrets: VPS `/root/secrets/pictures-db.env`, local `~/.config/metodologia/pictures-db.env` (600). Local access via the user service `pictures-req021-db-tunnel` (127.0.0.1:55433). Daily dump + nonce purge: `/usr/local/sbin/pictures-db-backup` (cron 08:17 UTC, 14 kept, `/root/backups/pictures/daily`).
+- **Gateway:** `/opt/pictures-db-gateway` (container `pictures-db-gateway`, wsproxy, only `req021-db:5432`), Caddy `api-decoracion…/db/v1` with header `X-Db-Gateway-Key`; Vercel uses it through `DB_GATEWAY_URL`/`DB_GATEWAY_KEY`.
+- **Curator:** https://curador.185-147-157-25.sslip.io (Caddy basic auth, user `david`, password `CURATOR_WEB_PASSWORD` in the VPS secrets file); `/opt/pictures-curador/current` → releases/<sha>, compose project `pictures-curador`, env `/etc/pictures-curador/curador.env`, re-embeds edited items (cap CURATOR_EMBED_MAX_USD=1). Deploy: `git archive HEAD` → releases/<sha>, `docker compose -p pictures-curador -f compose.vps.yml up -d --build`.
