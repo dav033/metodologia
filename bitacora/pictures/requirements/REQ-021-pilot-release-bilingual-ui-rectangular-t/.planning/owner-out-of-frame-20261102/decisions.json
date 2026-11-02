@@ -1,0 +1,77 @@
+{
+ "gated": true,
+ "schema_version": 1,
+ "seen": {
+  "SP-1": "1:82885950bdfe1bc2c0ab8e169cce74c4c2332f02",
+  "SP-11": "3:043d0b929dfcb4a672f0d78dc69d97e75bc2056e",
+  "SP-12": "3:043d0b929dfcb4a672f0d78dc69d97e75bc2056e",
+  "SP-14": "4:42a774b6ba0cf674382ef42daae6885b321e80ec",
+  "SP-2": "2:1c51118c003dbcaafd47ac33c195f30c2774aa99",
+  "SP-3": "5:98a159a4e8c9f6e0c9c5bc3d3c8ebeafdeab1295",
+  "SP-4": "4:4b778b054def5319da36456b9a8a5d6e50ac65b5",
+  "SP-5": "5:d0a3185d94a3854aab4a7223c7b14c4babeb071c",
+  "SP-6": "4:7ba5caeb77dd37508d8f2fd169ad646135729435",
+  "SP-7": "6:3174d86ba0fe62d9ec219b31b641728e3ab653a9",
+  "SP-8": "6:f9c8c8684aa6bee88385e6255dfce928c40b45b3",
+  "SP-9": "6:c4e6f39f55b5476c8453a9f1796d9f08790e1024"
+ },
+ "subplans": {
+  "SP-14": {
+   "at": "2026-11-01T19:34:17-05:00",
+   "by": "owner",
+   "commit": "42a774b6ba0cf674382ef42daae6885b321e80ec",
+   "decision": "approved",
+   "note": "",
+   "open_pending": [],
+   "version": 4,
+   "via": "web"
+  },
+  "SP-2": {
+   "at": "2026-10-31T23:32:56-05:00",
+   "by": "owner",
+   "commit": "1c51118c003dbcaafd47ac33c195f30c2774aa99",
+   "decision": "approved",
+   "note": "",
+   "open_pending": [],
+   "version": 2,
+   "via": "web"
+  },
+  "SP-3": {
+   "at": "2026-11-01T22:07:05-05:00",
+   "by": "owner",
+   "commit": "98a159a4e8c9f6e0c9c5bc3d3c8ebeafdeab1295",
+   "decision": "approved",
+   "note": "",
+   "open_pending": [],
+   "version": 5,
+   "via": "web"
+  },
+  "SP-4": {
+   "at": "2026-10-31T23:42:19-05:00",
+   "attachments": [
+    {
+     "bytes": 1377419,
+     "path": "evidence/owner-rejected/SP-4-v2/1-55917b07d4bc.png",
+     "sha256": "55917b07d4bca287225952b92b206d5596c6c2be024cd82d7cd15336752c7028",
+     "type": "image/png"
+    },
+    {
+     "bytes": 133730,
+     "path": "evidence/owner-rejected/SP-4-v2/2-7acf162346b0.png",
+     "sha256": "7acf162346b0cb516c55b5c8a9216ae36579e028ded132b3be3c2119be4f31d9",
+     "type": "image/png"
+    }
+   ],
+   "by": "owner",
+   "commit": "e744aa8f4d4fbd7b73e0e111e2a6adfad81a9173",
+   "decision": "rejected",
+   "note": "No se ve una opcion dodne recuperar los proyectos, l toast que me avisa lo de exportacion no se ve nada bien y los modales son horribles",
+   "open_pending": [
+    "P-214"
+   ],
+   "pending": "P-214",
+   "version": 2,
+   "via": "web"
+  }
+ }
+}

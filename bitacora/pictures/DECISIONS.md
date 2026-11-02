@@ -594,3 +594,19 @@ Source: owner, REQ-021 rounds 1–3.
 - **Rule:** a modify/delete in a fold where ours lacks a file only because a historical merge dropped it (no ours-side task deleted it) takes the predecessor's version; check `git log --full-history` and the merge-base snapshots before treating absence as intent. Proposal (not done): let `bt_verification_tree._settled` take theirs automatically when the file's absence in ours is not a deletion by any non-merge commit of the line.
 - **Source:** Solucionador 20261101-174230-fc8e; D-297 reconcile; earlier D-288 gutted snapshots.
 - **Evidence:** ancestry walk over 565c3bf0c..9263e355f finds the drops only in `compose …`/merge commits; resolution requests under `.state/durable/composition/resolutions/`.
+
+## D-089 — REQ-021 leaves the scheduler for the 2026-11-03 delivery · 2026-11-02
+
+- **Context:** the owner moved the pilot up from about 2026-11-16 to real users on 2026-11-03 and ordered: «vamos a salirnos del marco de metodologia por hoy, aprueba e integra todo»; «no debe ser perfecto, todavía tenemos margen».
+- **Decision:** pause run r39, record his blanket approval on the nine testable subplans, empty the stage queue, and integrate by hand on integ/req-021-pilot (r39 line + SP-10 + origin/main). SP-13 is reduced to what real users need: backup before migrating, runbook with rollback, retire the VPS web, disable previews, short smoke without paid AI. Skipped unless a fact changes that: the cleanup CLI (if no test rows reached production) and the release-receipt manifest.
+- **Consequences:** T10.5:d1 stays open in the paused run; SP-10 and SP-13 stay `waiting` in the gate. The approval auto-closed P-214 without fixing it, so P-216 carries those defects.
+- **Rule:** the order covers that day; check live state before assuming it still applies.
+- **Source:** session 395bd6f1. Backups: requirements/REQ-021-*/.planning/owner-out-of-frame-20261102/.
+
+## D-090 — The decoration pool is new pgvector tables filled by themed generation · 2026-11-02
+
+- **Context:** owner: agents must reach a gigantic pool without limits so they stop being generic; discard base templates; focus on decorations, structures, columns and arches; store colours, structure type, element type and event type; define many events and themes; finer categories; a separate app to recategorize.
+- **Decision:** new tables pool_items, pool_embeddings, pool_taxonomy and pool_curation_log (migration 045, gemini-embedding-2 at 768 dimensions), leaving taller_items and its search untouched. Generated items cross engine archetypes with palettes designed per theme from real Sempertex colours, so tags are inherited and variants are not noise. Recipes are scene pieces, so placing means appending. Branded characters are search synonyms of generic themes, never official categories. Curator app in its own repo, ~/dev/pictures-curador. Embedding spend capped at US$5 for this run.
+- **Consequences:** chosen without the three-way design panel because the owner set a 20-minute window; reviewers run at the end instead. Not in the pilot unless verified and decided (P-219).
+- **Source:** session 395bd6f1; contract at ~/dev/pictures-infra/pool/CONTRACT.md.
+

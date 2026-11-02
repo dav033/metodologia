@@ -1,10 +1,10 @@
 # Index — pictures
 
-_Generated 2026-10-31 19:20 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-11-02 11:53 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/pictures) · [graph](http://127.0.0.1:8765/p/pictures/graph)  
-**Last activity:** 2026-10-31
+**Last activity:** 2026-11-02
 
 ## Workspace
 
@@ -53,23 +53,26 @@ _Generated 2026-10-31 19:20 by `bitacora.py index`. Do not edit by hand._
 ## Top pending (urgency, then complexity)
 
 - P-187 · REQ-020 production advisor never offers Happia packages: migration `002_catalogue.sql` (ta · high/S
+- P-217 · /3d looks blank on entry until a template is chosen (owner report). Measured, agent stoppe · high/S
 - P-010 · Commit photo-reading work (uncommitted) and merge e3-rapido f1198efd (precise AI size edit · high/M
 - P-015 · REQ-002 remaining rollout verification: current read-only Neon audit proves 028 tables and · high/M
 - P-021 · Refine acceptance feat/refinar-aceptacion (e4m) — approved, base of integ/foto-taller (was · high/M
 - P-123 · REQ-020 M2 final acceptance still needs a passing LIVE run and deployed phone check. Crede · high/M
 - P-124 · Summary repair integrated locally at 915a75af on feat/req-020-asesor-happia; scheduler r7  · high/M
-- P-210 · The owner rejected SP-2 v2 of REQ-021 after trying it: El desplegable el menu del usuario  · high/M
 
 ## Recent decisions
 
+- D-090 — The decoration pool is new pgvector tables filled by themed generation · 2026-11-02
+- D-089 — REQ-021 leaves the scheduler for the 2026-11-03 delivery · 2026-11-02
+- D-088 — A later subplan's line takes SP-4's composition test and evidence when its fold meets a «deleted» file · 2026-11-01
 - D-087 — The requested plans redesign changes the accepted comparison contract · 2026-10-31
 - D-086 — Readiness falls back when an input has empty inner text · 2026-10-31
-- D-085 — Reproduce a rejected account UI on its published version and preserve the design gate · 2026-10-31
-- D-084 — Preserve the producer repair and isolated harness prerequisites without bypassing stage confirmation · 2026-10-31
-- D-082 — A remaining-language harness failure repairs its photo-control producer · 2026-10-30
 
 ## Timeline
 
+- **2026-11** — [month summary](2026-11/MONTH.md)
+  - [W2](2026-11/W2/WEEK.md): [02](2026-11/W2/2026-11-02.md)
+  - [W1](2026-11/W1/WEEK.md): [01](2026-11/W1/2026-11-01.md)
 - **2026-10** — [month summary](2026-10/MONTH.md)
   - [W5](2026-10/W5/WEEK.md): [31](2026-10/W5/2026-10-31.md), [30](2026-10/W5/2026-10-30.md), [29](2026-10/W5/2026-10-29.md), [28](2026-10/W5/2026-10-28.md), [27](2026-10/W5/2026-10-27.md), [26](2026-10/W5/2026-10-26.md)
   - [W4](2026-10/W4/WEEK.md): [23](2026-10/W4/2026-10-23.md), [22](2026-10/W4/2026-10-22.md), [21](2026-10/W4/2026-10-21.md), [20](2026-10/W4/2026-10-20.md), [19](2026-10/W4/2026-10-19.md)
