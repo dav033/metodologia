@@ -29,6 +29,11 @@
    "id": "D-087",
    "by": "solver 20261031-153033-1a41: SP-14 owner-requested comparison removal",
    "at": "2026-10-31T15:31:13"
+  },
+  {
+   "id": "D-088",
+   "by": "solver 20261101-174230-fc8e: SP-5xSP-4 modify/delete resolutions",
+   "at": "2026-11-01T17:44:01"
   }
  ]
 }

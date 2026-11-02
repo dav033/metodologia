@@ -1,0 +1,64 @@
+[
+ {
+  "kind": "resolution",
+  "key": "pictures:REQ-021:r39:resolution:43baf678b69a5507677876341bb1437f",
+  "run_id": "pictures:REQ-021:r39",
+  "task_id": "",
+  "request_id": "",
+  "round": null,
+  "reason": "SP-5 builds on SP-4 and cannot take its current line: .evidence/REQ-021/CG-4.integration.json needs a recorded resolution; no retry can settle it",
+  "subplan": "SP-5×SP-4",
+  "reconcile": true,
+  "resolution": {
+   "key": "43baf678b69a5507677876341bb1437f",
+   "path": ".evidence/REQ-021/CG-4.integration.json",
+   "blobs": {
+    "base": "778e744d2978a83e30b41312cb13fb55698e633c",
+    "ours": "-",
+    "theirs": "b707c5f69d70005986aa5b2a868dcc8916161c1b"
+   },
+   "commits": {
+    "base": "8bc594835ab8dd153a1188affbabacf72a13899f",
+    "ours": "9263e355fd80d622205dc50cb98aacf8899f81d2",
+    "theirs": "86aba2bdada518920a7e32a81b96d86b29014072"
+   },
+   "json": "/home/david/bitacora/.state/durable/composition/resolutions/43baf678b69a5507677876341bb1437f.json",
+   "diff3": "/home/david/bitacora/.state/durable/composition/resolutions/43baf678b69a5507677876341bb1437f.diff3",
+   "resolved": "/home/david/bitacora/.state/durable/composition/resolutions/43baf678b69a5507677876341bb1437f.resolved",
+   "since": 1793572826.4274664
+  },
+  "status": "pending",
+  "at": "2026-11-01T17:42:30"
+ },
+ {
+  "kind": "resolution",
+  "key": "pictures:REQ-021:r39:resolution:8ed2b4b693e6b802026a93e7bf32cec1",
+  "run_id": "pictures:REQ-021:r39",
+  "task_id": "",
+  "request_id": "",
+  "round": null,
+  "reason": "SP-5 builds on SP-4 and cannot take its current line: scripts/test/test-composicion-planes.ts needs a recorded resolution; no retry can settle it",
+  "subplan": "SP-5×SP-4",
+  "reconcile": true,
+  "resolution": {
+   "key": "8ed2b4b693e6b802026a93e7bf32cec1",
+   "path": "scripts/test/test-composicion-planes.ts",
+   "blobs": {
+    "base": "2fac8dc4bc370079a99b00fbdf5e7dec97b4c1a7",
+    "ours": "-",
+    "theirs": "3b5fbb0bd25b1edb77c36da93acba2a48ac68a45"
+   },
+   "commits": {
+    "base": "8bc594835ab8dd153a1188affbabacf72a13899f",
+    "ours": "9263e355fd80d622205dc50cb98aacf8899f81d2",
+    "theirs": "86aba2bdada518920a7e32a81b96d86b29014072"
+   },
+   "json": "/home/david/bitacora/.state/durable/composition/resolutions/8ed2b4b693e6b802026a93e7bf32cec1.json",
+   "diff3": "/home/david/bitacora/.state/durable/composition/resolutions/8ed2b4b693e6b802026a93e7bf32cec1.diff3",
+   "resolved": "/home/david/bitacora/.state/durable/composition/resolutions/8ed2b4b693e6b802026a93e7bf32cec1.resolved",
+   "since": 1793572826.4439623
+  },
+  "status": "pending",
+  "at": "2026-11-01T17:42:30"
+ }
+]

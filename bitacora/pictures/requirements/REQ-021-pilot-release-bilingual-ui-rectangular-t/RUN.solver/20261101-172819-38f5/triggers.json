@@ -1,0 +1,343 @@
+[
+ {
+  "kind": "resolution",
+  "key": "pictures:REQ-021:r39:resolution:2bcd2a2cac0a82b498046aa188ef2b83",
+  "run_id": "pictures:REQ-021:r39",
+  "task_id": "",
+  "request_id": "",
+  "round": null,
+  "reason": "SP-5 builds on SP-2 and cannot take its current line: src/components/admin/cuentas/ListaCuentas.tsx needs a recorded resolution; no retry can settle it",
+  "subplan": "SP-5×SP-2",
+  "reconcile": true,
+  "resolution": {
+   "key": "2bcd2a2cac0a82b498046aa188ef2b83",
+   "path": "src/components/admin/cuentas/ListaCuentas.tsx",
+   "blobs": {
+    "base": "c5f26a72010d1163445ddc2a351c3e2d6a54c741",
+    "ours": "4e13fb0b31b7e9bb2eb1be044b78e5ca76e2fc35",
+    "theirs": "fad323d88b030bae83e3b638c1c5911e5ce5fcdc"
+   },
+   "commits": {
+    "base": "cd0ec7732462d300aba395dffaf472edf2853857",
+    "ours": "f71f20423dc5d13a49669f9dcbb799affc6ed086",
+    "theirs": "1c51118c003dbcaafd47ac33c195f30c2774aa99"
+   },
+   "json": "/home/david/bitacora/.state/durable/composition/resolutions/2bcd2a2cac0a82b498046aa188ef2b83.json",
+   "diff3": "/home/david/bitacora/.state/durable/composition/resolutions/2bcd2a2cac0a82b498046aa188ef2b83.diff3",
+   "resolved": "/home/david/bitacora/.state/durable/composition/resolutions/2bcd2a2cac0a82b498046aa188ef2b83.resolved",
+   "since": 1793571975.929195
+  },
+  "status": "pending",
+  "at": "2026-11-01T17:28:19"
+ },
+ {
+  "kind": "resolution",
+  "key": "pictures:REQ-021:r39:resolution:2ceae693df8bbebaba0339d672962ee1",
+  "run_id": "pictures:REQ-021:r39",
+  "task_id": "",
+  "request_id": "",
+  "round": null,
+  "reason": "SP-5 builds on SP-2 and cannot take its current line: src/components/cuentas/textos-acceso.ts needs a recorded resolution; no retry can settle it",
+  "subplan": "SP-5×SP-2",
+  "reconcile": true,
+  "resolution": {
+   "key": "2ceae693df8bbebaba0339d672962ee1",
+   "path": "src/components/cuentas/textos-acceso.ts",
+   "blobs": {
+    "base": "d44c555c515871acdea109f2026414fd21ea903d",
+    "ours": "b10cbc6d134c80307edae31ef7454055c060568b",
+    "theirs": "49b2d62e6f7e60a19279c987055c6c1043483a75"
+   },
+   "commits": {
+    "base": "cd0ec7732462d300aba395dffaf472edf2853857",
+    "ours": "f71f20423dc5d13a49669f9dcbb799affc6ed086",
+    "theirs": "1c51118c003dbcaafd47ac33c195f30c2774aa99"
+   },
+   "json": "/home/david/bitacora/.state/durable/composition/resolutions/2ceae693df8bbebaba0339d672962ee1.json",
+   "diff3": "/home/david/bitacora/.state/durable/composition/resolutions/2ceae693df8bbebaba0339d672962ee1.diff3",
+   "resolved": "/home/david/bitacora/.state/durable/composition/resolutions/2ceae693df8bbebaba0339d672962ee1.resolved",
+   "since": 1793571975.9574754
+  },
+  "status": "pending",
+  "at": "2026-11-01T17:28:19"
+ },
+ {
+  "kind": "resolution",
+  "key": "pictures:REQ-021:r39:resolution:3f3195dd3e9c1782a5ed518dbb15d5a0",
+  "run_id": "pictures:REQ-021:r39",
+  "task_id": "",
+  "request_id": "",
+  "round": null,
+  "reason": "SP-5 builds on SP-2 and cannot take its current line: src/app/activar/[token]/page.tsx needs a recorded resolution; no retry can settle it",
+  "subplan": "SP-5×SP-2",
+  "reconcile": true,
+  "resolution": {
+   "key": "3f3195dd3e9c1782a5ed518dbb15d5a0",
+   "path": "src/app/activar/[token]/page.tsx",
+   "blobs": {
+    "base": "24e04f1f50b2f3b45231a9eb8293570537e13d42",
+    "ours": "be1c0d3bdfc557adceac54e776a78e6bbdeff557",
+    "theirs": "c581b6dbec24148df034305e3c733bf795d45d00"
+   },
+   "commits": {
+    "base": "cd0ec7732462d300aba395dffaf472edf2853857",
+    "ours": "f71f20423dc5d13a49669f9dcbb799affc6ed086",
+    "theirs": "1c51118c003dbcaafd47ac33c195f30c2774aa99"
+   },
+   "json": "/home/david/bitacora/.state/durable/composition/resolutions/3f3195dd3e9c1782a5ed518dbb15d5a0.json",
+   "diff3": "/home/david/bitacora/.state/durable/composition/resolutions/3f3195dd3e9c1782a5ed518dbb15d5a0.diff3",
+   "resolved": "/home/david/bitacora/.state/durable/composition/resolutions/3f3195dd3e9c1782a5ed518dbb15d5a0.resolved",
+   "since": 1793571975.8534033
+  },
+  "status": "pending",
+  "at": "2026-11-01T17:28:19"
+ },
+ {
+  "kind": "resolution",
+  "key": "pictures:REQ-021:r39:resolution:5633362aef225252d620f8c15da6c515",
+  "run_id": "pictures:REQ-021:r39",
+  "task_id": "",
+  "request_id": "",
+  "round": null,
+  "reason": "SP-5 builds on SP-2 and cannot take its current line: src/app/restablecer/[token]/page.tsx needs a recorded resolution; no retry can settle it",
+  "subplan": "SP-5×SP-2",
+  "reconcile": true,
+  "resolution": {
+   "key": "5633362aef225252d620f8c15da6c515",
+   "path": "src/app/restablecer/[token]/page.tsx",
+   "blobs": {
+    "base": "42c9114a162dfdecbc5ea7b2f0e02b40aeb109cc",
+    "ours": "78d95ebe57950e412d6e1eba3a6dcabbda31b134",
+    "theirs": "cee726b81e8cb6d5862878072e62138520e75d34"
+   },
+   "commits": {
+    "base": "cd0ec7732462d300aba395dffaf472edf2853857",
+    "ours": "f71f20423dc5d13a49669f9dcbb799affc6ed086",
+    "theirs": "1c51118c003dbcaafd47ac33c195f30c2774aa99"
+   },
+   "json": "/home/david/bitacora/.state/durable/composition/resolutions/5633362aef225252d620f8c15da6c515.json",
+   "diff3": "/home/david/bitacora/.state/durable/composition/resolutions/5633362aef225252d620f8c15da6c515.diff3",
+   "resolved": "/home/david/bitacora/.state/durable/composition/resolutions/5633362aef225252d620f8c15da6c515.resolved",
+   "since": 1793571975.9045086
+  },
+  "status": "pending",
+  "at": "2026-11-01T17:28:19"
+ },
+ {
+  "kind": "resolution",
+  "key": "pictures:REQ-021:r39:resolution:85d0444211249941c88c7d496ba933f8",
+  "run_id": "pictures:REQ-021:r39",
+  "task_id": "",
+  "request_id": "",
+  "round": null,
+  "reason": "SP-5 builds on SP-2 and cannot take its current line: src/components/cuentas/textos-cuenta.ts needs a recorded resolution; no retry can settle it",
+  "subplan": "SP-5×SP-2",
+  "reconcile": true,
+  "resolution": {
+   "key": "85d0444211249941c88c7d496ba933f8",
+   "path": "src/components/cuentas/textos-cuenta.ts",
+   "blobs": {
+    "base": "80bcf4d0f89a0f6046a673c2ed439b77c4c87751",
+    "ours": "b79d63bc3d1eee1126a2fd88d8c28451f0b56de3",
+    "theirs": "229124a57fd6660472fe7ee3c2b6b0916f9cd2c6"
+   },
+   "commits": {
+    "base": "cd0ec7732462d300aba395dffaf472edf2853857",
+    "ours": "f71f20423dc5d13a49669f9dcbb799affc6ed086",
+    "theirs": "1c51118c003dbcaafd47ac33c195f30c2774aa99"
+   },
+   "json": "/home/david/bitacora/.state/durable/composition/resolutions/85d0444211249941c88c7d496ba933f8.json",
+   "diff3": "/home/david/bitacora/.state/durable/composition/resolutions/85d0444211249941c88c7d496ba933f8.diff3",
+   "resolved": "/home/david/bitacora/.state/durable/composition/resolutions/85d0444211249941c88c7d496ba933f8.resolved",
+   "since": 1793571975.9717462
+  },
+  "status": "pending",
+  "at": "2026-11-01T17:28:19"
+ },
+ {
+  "kind": "resolution",
+  "key": "pictures:REQ-021:r39:resolution:9c0b9c087c45e0f248214a095fa6d046",
+  "run_id": "pictures:REQ-021:r39",
+  "task_id": "",
+  "request_id": "",
+  "round": null,
+  "reason": "SP-5 builds on SP-2 and cannot take its current line: src/components/cuentas/MenuCuenta.tsx needs a recorded resolution; no retry can settle it",
+  "subplan": "SP-5×SP-2",
+  "reconcile": true,
+  "resolution": {
+   "key": "9c0b9c087c45e0f248214a095fa6d046",
+   "path": "src/components/cuentas/MenuCuenta.tsx",
+   "blobs": {
+    "base": "a48ce923956fb2574b6c3a76c6c7dd877f11a130",
+    "ours": "bf8c36e445779b5180ffb4c68fed6aedbe1ff9ea",
+    "theirs": "4377350d966f26f51f6ae7acadcad7f08d7b78ab"
+   },
+   "commits": {
+    "base": "cd0ec7732462d300aba395dffaf472edf2853857",
+    "ours": "f71f20423dc5d13a49669f9dcbb799affc6ed086",
+    "theirs": "1c51118c003dbcaafd47ac33c195f30c2774aa99"
+   },
+   "json": "/home/david/bitacora/.state/durable/composition/resolutions/9c0b9c087c45e0f248214a095fa6d046.json",
+   "diff3": "/home/david/bitacora/.state/durable/composition/resolutions/9c0b9c087c45e0f248214a095fa6d046.diff3",
+   "resolved": "/home/david/bitacora/.state/durable/composition/resolutions/9c0b9c087c45e0f248214a095fa6d046.resolved",
+   "since": 1793571975.9448736
+  },
+  "status": "pending",
+  "at": "2026-11-01T17:28:19"
+ },
+ {
+  "kind": "resolution",
+  "key": "pictures:REQ-021:r39:resolution:a0f21a9a95754ca15520a328effc97ad",
+  "run_id": "pictures:REQ-021:r39",
+  "task_id": "",
+  "request_id": "",
+  "round": null,
+  "reason": "SP-5 builds on SP-2 and cannot take its current line: src/components/admin/cuentas/EditorRol.tsx needs a recorded resolution; no retry can settle it",
+  "subplan": "SP-5×SP-2",
+  "reconcile": true,
+  "resolution": {
+   "key": "a0f21a9a95754ca15520a328effc97ad",
+   "path": "src/components/admin/cuentas/EditorRol.tsx",
+   "blobs": {
+    "base": "6a420aaeebe9fe89190e7cec31e3c15dc7007c74",
+    "ours": "bbac429afe4966d825371689e1d935a2102a1973",
+    "theirs": "15b1ace7d87b9a2d78c9219b228d9a147b7c94f7"
+   },
+   "commits": {
+    "base": "cd0ec7732462d300aba395dffaf472edf2853857",
+    "ours": "f71f20423dc5d13a49669f9dcbb799affc6ed086",
+    "theirs": "1c51118c003dbcaafd47ac33c195f30c2774aa99"
+   },
+   "json": "/home/david/bitacora/.state/durable/composition/resolutions/a0f21a9a95754ca15520a328effc97ad.json",
+   "diff3": "/home/david/bitacora/.state/durable/composition/resolutions/a0f21a9a95754ca15520a328effc97ad.diff3",
+   "resolved": "/home/david/bitacora/.state/durable/composition/resolutions/a0f21a9a95754ca15520a328effc97ad.resolved",
+   "since": 1793571975.917372
+  },
+  "status": "pending",
+  "at": "2026-11-01T17:28:19"
+ },
+ {
+  "kind": "resolution",
+  "key": "pictures:REQ-021:r39:resolution:b47296e19e866fe9de19832c1fd0472d",
+  "run_id": "pictures:REQ-021:r39",
+  "task_id": "",
+  "request_id": "",
+  "round": null,
+  "reason": "SP-5 builds on SP-2 and cannot take its current line: src/lib/cuentas/cuenta-actual.ts needs a recorded resolution; no retry can settle it",
+  "subplan": "SP-5×SP-2",
+  "reconcile": true,
+  "resolution": {
+   "key": "b47296e19e866fe9de19832c1fd0472d",
+   "path": "src/lib/cuentas/cuenta-actual.ts",
+   "blobs": {
+    "base": "3f91cd0dda8a5fc606f1520840f3830fa858b109",
+    "ours": "9782ea1c3ebf8f760ef519820cc79d5c14f03648",
+    "theirs": "d007e44871cfb8aff5f14d650e80b613d1955f4b"
+   },
+   "commits": {
+    "base": "cd0ec7732462d300aba395dffaf472edf2853857",
+    "ours": "f71f20423dc5d13a49669f9dcbb799affc6ed086",
+    "theirs": "1c51118c003dbcaafd47ac33c195f30c2774aa99"
+   },
+   "json": "/home/david/bitacora/.state/durable/composition/resolutions/b47296e19e866fe9de19832c1fd0472d.json",
+   "diff3": "/home/david/bitacora/.state/durable/composition/resolutions/b47296e19e866fe9de19832c1fd0472d.diff3",
+   "resolved": "/home/david/bitacora/.state/durable/composition/resolutions/b47296e19e866fe9de19832c1fd0472d.resolved",
+   "since": 1793571975.985806
+  },
+  "status": "pending",
+  "at": "2026-11-01T17:28:19"
+ },
+ {
+  "kind": "resolution",
+  "key": "pictures:REQ-021:r39:resolution:e27d008454fc327f9dde37e216f6f7b0",
+  "run_id": "pictures:REQ-021:r39",
+  "task_id": "",
+  "request_id": "",
+  "round": null,
+  "reason": "SP-5 builds on SP-2 and cannot take its current line: src/app/aviso-datos/page.tsx needs a recorded resolution; no retry can settle it",
+  "subplan": "SP-5×SP-2",
+  "reconcile": true,
+  "resolution": {
+   "key": "e27d008454fc327f9dde37e216f6f7b0",
+   "path": "src/app/aviso-datos/page.tsx",
+   "blobs": {
+    "base": "a98c5bab046f4641c1863c52bbaf1637d0cbb8d7",
+    "ours": "445fdd09b29fb5385008b8b098a20ab0a3f16bc6",
+    "theirs": "34f79471ed3481281af92aad185bfcffc95fe409"
+   },
+   "commits": {
+    "base": "cd0ec7732462d300aba395dffaf472edf2853857",
+    "ours": "f71f20423dc5d13a49669f9dcbb799affc6ed086",
+    "theirs": "1c51118c003dbcaafd47ac33c195f30c2774aa99"
+   },
+   "json": "/home/david/bitacora/.state/durable/composition/resolutions/e27d008454fc327f9dde37e216f6f7b0.json",
+   "diff3": "/home/david/bitacora/.state/durable/composition/resolutions/e27d008454fc327f9dde37e216f6f7b0.diff3",
+   "resolved": "/home/david/bitacora/.state/durable/composition/resolutions/e27d008454fc327f9dde37e216f6f7b0.resolved",
+   "since": 1793571975.867482
+  },
+  "status": "pending",
+  "at": "2026-11-01T17:28:19"
+ },
+ {
+  "kind": "resolution",
+  "key": "pictures:REQ-021:r39:resolution:f55c341dec2ce4092564dc4ab2e56ab1",
+  "run_id": "pictures:REQ-021:r39",
+  "task_id": "",
+  "request_id": "",
+  "round": null,
+  "reason": "SP-5 builds on SP-2 and cannot take its current line: src/app/cuenta/page.tsx needs a recorded resolution; no retry can settle it",
+  "subplan": "SP-5×SP-2",
+  "reconcile": true,
+  "resolution": {
+   "key": "f55c341dec2ce4092564dc4ab2e56ab1",
+   "path": "src/app/cuenta/page.tsx",
+   "blobs": {
+    "base": "057695cd07228e4e52da7131dcfeb2f58730d447",
+    "ours": "620dfdcb10af1bf00bf7f621bf6e7fcd160b1a24",
+    "theirs": "15a52ada80a2d929b2c4db5f3f9605b28221dfe6"
+   },
+   "commits": {
+    "base": "cd0ec7732462d300aba395dffaf472edf2853857",
+    "ours": "f71f20423dc5d13a49669f9dcbb799affc6ed086",
+    "theirs": "1c51118c003dbcaafd47ac33c195f30c2774aa99"
+   },
+   "json": "/home/david/bitacora/.state/durable/composition/resolutions/f55c341dec2ce4092564dc4ab2e56ab1.json",
+   "diff3": "/home/david/bitacora/.state/durable/composition/resolutions/f55c341dec2ce4092564dc4ab2e56ab1.diff3",
+   "resolved": "/home/david/bitacora/.state/durable/composition/resolutions/f55c341dec2ce4092564dc4ab2e56ab1.resolved",
+   "since": 1793571975.8804705
+  },
+  "status": "pending",
+  "at": "2026-11-01T17:28:19"
+ },
+ {
+  "kind": "resolution",
+  "key": "pictures:REQ-021:r39:resolution:f9c9d93b78cd1ea2373f95af4a50668a",
+  "run_id": "pictures:REQ-021:r39",
+  "task_id": "",
+  "request_id": "",
+  "round": null,
+  "reason": "SP-5 builds on SP-2 and cannot take its current line: src/app/login/page.tsx needs a recorded resolution; no retry can settle it",
+  "subplan": "SP-5×SP-2",
+  "reconcile": true,
+  "resolution": {
+   "key": "f9c9d93b78cd1ea2373f95af4a50668a",
+   "path": "src/app/login/page.tsx",
+   "blobs": {
+    "base": "70a16d3cb604edfbd59c9ef925dfee0e30ae8316",
+    "ours": "25388e19eb4e7aa08df4497d87863429bcd7823e",
+    "theirs": "b8883a0fc545e80c67d2a110f1a01d585c2bb282"
+   },
+   "commits": {
+    "base": "cd0ec7732462d300aba395dffaf472edf2853857",
+    "ours": "f71f20423dc5d13a49669f9dcbb799affc6ed086",
+    "theirs": "1c51118c003dbcaafd47ac33c195f30c2774aa99"
+   },
+   "json": "/home/david/bitacora/.state/durable/composition/resolutions/f9c9d93b78cd1ea2373f95af4a50668a.json",
+   "diff3": "/home/david/bitacora/.state/durable/composition/resolutions/f9c9d93b78cd1ea2373f95af4a50668a.diff3",
+   "resolved": "/home/david/bitacora/.state/durable/composition/resolutions/f9c9d93b78cd1ea2373f95af4a50668a.resolved",
+   "since": 1793571975.8928561
+  },
+  "status": "pending",
+  "at": "2026-11-01T17:28:19"
+ }
+]

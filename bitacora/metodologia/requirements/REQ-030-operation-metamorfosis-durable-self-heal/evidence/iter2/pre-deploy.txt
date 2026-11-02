@@ -698,3 +698,26 @@ regression: skipped (D-261: integrate.regression = none)
 rollback: git revert the merge of ui-dev-loop on main, restart bt-durable.service and bitacora-web.service and bitacora-remote-api.service
 remote API pin: e80d6015893c -> bd726ad0f21f (backup /home/david/.config/systemd/user/bitacora-remote-api.service.d/exec.conf.bak-e80d6015893c)
 result: merged bd726ad0f21f, restarted bt-durable.service, bitacora-web.service, bitacora-remote-api.service, smoke ok
+
+# integration of subplan lines keep up with what they build on (D-296, D-297), local restart of engine + web + remote API, 2026-11-01 17:25
+previous main: e730f981e4ad9d7436b3fd005b709e62ab260511
+/home/david/bitacora/.state/durable/backups/bt_durable-20261101-172517.dump 66576013 1331b3103088a0581343414a441cd736b1cd2c1514251c3752f94e19e1a9e5ab
+regression: skipped (D-261: integrate.regression = none)
+rollback: git revert the merge of subplan-reconcile on main, restart bt-durable.service and bitacora-web.service and bitacora-remote-api.service
+result: not integrated (git checkout -q -B in /home/david/.local/share/bitacora-integrate/deploy failed: fatal: 'deploy-subplan-reconcile' is already used by worktree at '/home/david/dev/metodologia/.claude/worktrees/agent-a63ca1d585ad4f157')
+
+# integration of subplan lines keep up with what they build on (D-296, D-297), local restart of engine + web + remote API, 2026-11-01 17:25
+previous main: e730f981e4ad9d7436b3fd005b709e62ab260511
+/home/david/bitacora/.state/durable/backups/bt_durable-20261101-172532.dump 66576013 209255bf81223c87615033be6e9db855ab327a1cd8a2df571b4a7c4d81cff773
+regression: skipped (D-261: integrate.regression = none)
+rollback: git revert the merge of reconcile-lines on main, restart bt-durable.service and bitacora-web.service and bitacora-remote-api.service
+remote API pin: bd726ad0f21f -> 0c1deac89326 (backup /home/david/.config/systemd/user/bitacora-remote-api.service.d/exec.conf.bak-bd726ad0f21f)
+result: merged 0c1deac89326, restarted bt-durable.service, bitacora-web.service, bitacora-remote-api.service, smoke ok
+
+# integration of a moved line published by a gate is not one more version (D-298), local restart of engine + web + remote API, 2026-11-01 18:06
+previous main: 63271fd4aa765297ec99581437ef656f57118984
+/home/david/bitacora/.state/durable/backups/bt_durable-20261101-180615.dump 66879766 b2d1a1f5644ee3401da834a0bcbc54d9aa47da1cc2a07ade06257d9a5a0512db
+regression: skipped (D-261: integrate.regression = none)
+rollback: git revert the merge of version-order on main, restart bt-durable.service and bitacora-web.service and bitacora-remote-api.service
+remote API pin: 0c1deac89326 -> d286c54574f3 (backup /home/david/.config/systemd/user/bitacora-remote-api.service.d/exec.conf.bak-0c1deac89326)
+result: merged d286c54574f3, restarted bt-durable.service, bitacora-web.service, bitacora-remote-api.service, smoke ok

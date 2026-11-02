@@ -41,6 +41,8 @@ Owner, 2026-10-31 17:05: until further notice metodologia integrations run no re
 - 2026-11-01 11:28 · `c3421a5a6fb4` · UI pool watcher: components watch (D-293) · 10 path(s): install.py, pyproject.toml, skill/references/documentation.md, skill/references/stacks/nextjs.md, skill/scripts/bitacora.py, skill/scripts/bt_ui.py …
 - 2026-11-01 12:19 · `e80d6015893c` · ui pool sync: plumbing and ignored node_modules fixes (D-294) · 2 path(s): skill/scripts/bt_ui_sync.py, skill/scripts/tests/test_ui_sync.py
 - 2026-11-01 13:08 · `bd726ad0f21f` · ui pool dev loop: components dev, WIP-safe watcher (D-295) · 6 path(s): skill/references/documentation.md, skill/references/stacks/nextjs.md, skill/scripts/bitacora.py, skill/scripts/bt_ui_sync.py, skill/scripts/bt_ui_watch.py, skill/scripts/tests/test_ui_watch.py
+- 2026-11-01 17:25 · `0c1deac89326` · subplan lines keep up with what they build on (D-296, D-297) · 20 path(s): skill/agents/solver.md, skill/references/modules.md, skill/scripts/bt_composition_adapter.py, skill/scripts/bt_config.py, skill/scripts/bt_contracts/owner.py, skill/scripts/bt_durable/README.md …
+- 2026-11-01 18:06 · `d286c54574f3` · a moved line published by a gate is not one more version (D-298) · 2 path(s): skill/scripts/bt_verification.py, skill/scripts/tests/test_durable_reconcile.py
 
 ## Escaped defects
 

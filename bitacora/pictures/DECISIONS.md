@@ -585,3 +585,12 @@ Source: owner, REQ-021 rounds 1–3.
 - **Rule:** reproduce rejected versions on the published commit; an owner-requested change to approved behavior or UI needs the affected subplan and revised design contract reconfirmed, not an additive repair classification.
 - **Source:** Solucionador 20261031-153033-1a41; owner P-211; methodology D-241 and D-244; SPEC.md SP-14 Pruebas and Behavior; PLAN.r30 SP-14.
 - **Evidence:** requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/owner-rejected/SP-14-v2.md; session screenshots and REPORT.md. Planner delivery exit 0.
+
+## D-088 — A later subplan's line takes SP-4's composition test and evidence when its fold meets a «deleted» file · 2026-11-01
+
+- **Context:** r39 reconcile of SP-5 × SP-4 (triggers 43baf678…, 8ed2b4b6…): `scripts/test/test-composicion-planes.ts` and `.evidence/REQ-021/CG-4.integration.json` are modify/delete conflicts (base has them, ours `-`, theirs = SP-4's edited versions). SP-5's accumulated line (9263e355f) lacks them (and the `planes:test-composicion` script) because earlier composer merges dropped them (`compose REQ-021.bt-r25 SP-4@v1` 3aef4c5a0, `…r26 SP-4@v1` c72ce5c37, `bt: T93 starts from SP-5's line` d3c38ec06), not because SP-5 deleted them: no SP-5 task touches either file. The five merge bases (criss-cross) include snapshots that still hold them, so the virtual base resurrects them.
+- **Decision:** write SP-4's current content (blobs 3b5fbb0bd / b707c5f69) as both `.resolved` files. SP-5 builds on SP-4, so its line must carry SP-4's test and evidence; the `data-account-row` selector the test now uses already exists in SP-5's `ListaCuentas.tsx`, and `package.json` merges by key.
+- **Consequences:** the next engine pass folds SP-4 into SP-5's line and moves it, or opens the next round. No product commit, ref move or plan change by the solver.
+- **Rule:** a modify/delete in a fold where ours lacks a file only because a historical merge dropped it (no ours-side task deleted it) takes the predecessor's version; check `git log --full-history` and the merge-base snapshots before treating absence as intent. Proposal (not done): let `bt_verification_tree._settled` take theirs automatically when the file's absence in ours is not a deletion by any non-merge commit of the line.
+- **Source:** Solucionador 20261101-174230-fc8e; D-297 reconcile; earlier D-288 gutted snapshots.
+- **Evidence:** ancestry walk over 565c3bf0c..9263e355f finds the drops only in `compose …`/merge commits; resolution requests under `.state/durable/composition/resolutions/`.

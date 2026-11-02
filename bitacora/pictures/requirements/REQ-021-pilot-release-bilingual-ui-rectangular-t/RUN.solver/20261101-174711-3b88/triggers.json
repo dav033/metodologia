@@ -1,0 +1,33 @@
+[
+ {
+  "kind": "resolution",
+  "key": "pictures:REQ-021:r39:resolution:397579b9ac08eda823b51203c92f4397",
+  "run_id": "pictures:REQ-021:r39",
+  "task_id": "",
+  "request_id": "",
+  "round": null,
+  "reason": "SP-12 builds on SP-10 and cannot take its current line: src/app/api/asistente-guiado/route.ts needs a recorded resolution; no retry can settle it",
+  "subplan": "SP-12×SP-10",
+  "reconcile": true,
+  "resolution": {
+   "key": "397579b9ac08eda823b51203c92f4397",
+   "path": "src/app/api/asistente-guiado/route.ts",
+   "blobs": {
+    "base": "437e198cf8670cef356d97b11bfa6f196fb67707",
+    "ours": "e5fc3da513b13b79298353f3cfb6c25bd62400ef",
+    "theirs": "9b485464d35fe05b91b5a7ae369a1cb513de6742"
+   },
+   "commits": {
+    "base": "a48cda8905287a7bfc743a6835fdd89b296310b9",
+    "ours": "03c954ab5fc801df1d7f794d2efd8a97ee2634da",
+    "theirs": "5b3ac6faadff38c761d51c67d22b1f02d3b63464"
+   },
+   "json": "/home/david/bitacora/.state/durable/composition/resolutions/397579b9ac08eda823b51203c92f4397.json",
+   "diff3": "/home/david/bitacora/.state/durable/composition/resolutions/397579b9ac08eda823b51203c92f4397.diff3",
+   "resolved": "/home/david/bitacora/.state/durable/composition/resolutions/397579b9ac08eda823b51203c92f4397.resolved",
+   "since": 1793573083.0341775
+  },
+  "status": "pending",
+  "at": "2026-11-01T17:47:11"
+ }
+]

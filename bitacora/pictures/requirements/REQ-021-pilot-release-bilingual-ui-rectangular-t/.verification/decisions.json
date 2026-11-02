@@ -3,30 +3,27 @@
  "schema_version": 1,
  "seen": {
   "SP-1": "1:82885950bdfe1bc2c0ab8e169cce74c4c2332f02",
-  "SP-11": "1:345adbc8a6cdaaa7f4d277fb21139a0a1df10376",
-  "SP-12": "1:07972947d5cbefbccf9459900267149c27477275",
+  "SP-11": "2:69df672571ff50bf0e2f3713a79e0cd522448459",
+  "SP-12": "2:a2abb999c35fe1cdd78d1ccfc627ac7b09ac6a72",
   "SP-14": "4:42a774b6ba0cf674382ef42daae6885b321e80ec",
   "SP-2": "2:1c51118c003dbcaafd47ac33c195f30c2774aa99",
-  "SP-3": "4:4763f8c6e5a50372101ca6e66473f4f8bfe42ea1",
-  "SP-4": "2:189a5708c81eb893b29c1fd6c00e0349b600cb1d",
-  "SP-5": "3:f71f20423dc5d13a49669f9dcbb799affc6ed086",
-  "SP-6": "2:189a5708c81eb893b29c1fd6c00e0349b600cb1d",
-  "SP-7": "3:0a0b8d55848091bdff4adec411d7c56f3391bf16",
-  "SP-8": "3:684565a8221ad26153f8462e85131b50155402bf",
-  "SP-9": "3:a2ce0d60bb7b24dc837827cfc8bb6b28cf59e286"
+  "SP-3": "5:4763f8c6e5a50372101ca6e66473f4f8bfe42ea1",
+  "SP-4": "4:86aba2bdada518920a7e32a81b96d86b29014072",
+  "SP-5": "5:31fc677465611e0e85f4694b03b9d452fef78a20",
+  "SP-6": "4:78c7fb8419dbbd06cb83881e4e401ce7efa8bd9e",
+  "SP-7": "5:26f663b27b3381b9201d42dc5304b58848fce8db",
+  "SP-8": "5:8dfb38598a1186692564938d470d7267a93d7f40",
+  "SP-9": "5:f4e1e5a9731cead9c6fbbd0d8992cf0c2470ef8d"
  },
  "subplans": {
   "SP-14": {
-   "at": "2026-10-31T15:30:21-05:00",
+   "at": "2026-11-01T19:34:17-05:00",
    "by": "owner",
-   "commit": "0715a331b72111afe085e35d773b284764924fe4",
-   "decision": "rejected",
-   "note": "Quitemos lalogica dela comparacion, ademas hagamos que los items de los planes sean tipo las cartas de subscricpiones normales",
-   "open_pending": [
-    "P-211"
-   ],
-   "pending": "P-211",
-   "version": 2,
+   "commit": "42a774b6ba0cf674382ef42daae6885b321e80ec",
+   "decision": "approved",
+   "note": "",
+   "open_pending": [],
+   "version": 4,
    "via": "web"
   },
   "SP-2": {
