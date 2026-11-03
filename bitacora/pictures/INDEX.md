@@ -1,8 +1,8 @@
 # Index — pictures
 
-_Generated 2026-11-02 21:00 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-11-02 21:17 by `bitacora.py index`. Do not edit by hand._
 
-**Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
+**Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md) · [Glossary](GLOSSARY.md)  
 **Web:** [project](http://127.0.0.1:8765/p/pictures) · [graph](http://127.0.0.1:8765/p/pictures/graph)  
 **Last activity:** 2026-11-02
 
@@ -62,11 +62,11 @@ _Generated 2026-11-02 21:00 by `bitacora.py index`. Do not edit by hand._
 
 ## Recent decisions
 
+- D-095 — A piece of a decoration is not a decoration · 2026-11-02
 - D-094 — The internal demo runs on the production URL without pushing main · 2026-11-02
 - D-093 — System role permissions become editable, amending D-073 · 2026-11-02
 - D-092 — Owner's category model for the decoration pool, and 3D renders as thumbnails · 2026-11-02
 - D-091 — One database: the VPS Postgres, reached by Vercel through the ai-api host · 2026-11-02
-- D-090 — The decoration pool is new pgvector tables filled by themed generation · 2026-11-02
 
 ## Timeline
 

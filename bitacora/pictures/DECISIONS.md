@@ -641,3 +641,10 @@ Source: owner, REQ-021 rounds 1–3.
 - **Decision:** `vercel deploy --prod` from integ/req-021-pilot onto demo-decoracion.vercel.app. Production variables point at the single DB. ai-api updated by hand from the same commit; the old VPS web stays up; main is not pushed.
 - **Consequences:** origin/main no longer matches production, so a push to main would redeploy. Do not redeploy old main: it cannot use the gateway.
 - **Rollback:** Vercel Promote of demo-decoracion-j33441j2f; `demo-decoracion-ai-api:rollback`; `pictures-curador:rollback`.
+
+## D-095 — A piece of a decoration is not a decoration · 2026-11-02
+
+- **Context:** 1804 of 3160 pool items were pieces of a larger decoration (ids like `idea:lapiz-escolar~mina-1`), indexed by the old library and imported by the pool seed. The owner: hidden, agents do not take them into account, out of the vector embeddings, and the system must understand what a part of a decoration is.
+- **Decision:** `pool_items.parent_item_id` (migration 051). Search, facets, the Taller panel, the agent, recommendations and pool:embed leave pieces out; their vectors were deleted, 1340 full decorations keep theirs. The curator hides them behind "Ver piezas", shows "Parte de" on a piece and lists a decoration's pieces. The agent reads how many pieces a decoration has and is told placing it brings them all. The loader refuses a `~` id without an existing parent.
+- **Rollback:** migration 051's header; rebuild vectors with `pool:embed` (paid); dump /root/backups/pictures/pictures-before-parts-vectors-*.
+- **Related:** agents and tests now use a separate database, pictures_test (a query for a table missing from a private test schema used to reach the real one), and base-prueba.ts refuses a target named exactly `pictures`.
