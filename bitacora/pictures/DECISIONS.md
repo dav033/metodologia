@@ -619,3 +619,25 @@ Source: owner, REQ-021 rounds 1–3.
 - **Consequences:** ~30 ms Vercel→Miami per round trip; Neon stays untouched as rollback until the cut is verified; the old `req021` test database stays until then. A new REQ moves data access into ai-api endpoints module by module (accounts first) and then removes the bridge.
 - **Rollback:** unset `DB_GATEWAY_URL` and point `DATABASE_URL`/`CATALOG_DATABASE_URL` back to Neon on Vercel; restore `/etc/demo-decoracion-ai/ai.env.bak-*-before-single-db` and recreate the ai container.
 - **Source:** session 3ad3bcd4. Secrets in /root/secrets/pictures-db.env (VPS) and ~/.config/metodologia/pictures-db.env (local, 600).
+
+## D-092 — Owner's category model for the decoration pool, and 3D renders as thumbnails · 2026-11-02
+
+- **Context:** the owner dictated how decorations must be classified (structure, celebration, topic, colour, type) and said the main point is that the AI reads it correctly. Most curator items showed no thumbnail.
+- **Decision:** six new facets on `pool_items` (migration 050: composition_kind, structure_category, structure_variant, celebrations, topics, color_words), plus pool_color_words and pool_celebration_schemes, derived deterministically by `pool:derive-categories` from `data/pool/categorias-v1.json`. Older facets stay, hidden from default filters and kept in the search text. Thumbnails are WebP renders on the VPS host miniaturas-decoracion.185-147-157-25.sslip.io (`render_url`, migration 046, content-addressed by recipe hash); the reference photo is kept.
+- **Owner rulings:** adds to the list: Guirnalda, Piezas pequeñas, Utilería y ambientación, a wider Figura; celebrations add Día de la Madre, Baby shower, Compromiso, Aniversario, Halloween, Navidad, Inauguración de local, Bautizo, Primera comunión; "temática amor" = San Valentín + Amor y Amistad; the owner's five topics were examples, other root groups stay; organic is a separate filter.
+- **Rulings taken for the owner, to review:** colour words come from the inflated balloon colour and name, not the Pantone (measured 19/70 vs 70/70 in referencia-sempertex.ts); share >= 10%; 63 draft schemes; generic = more than 5 mapped celebrations; ambiguous colours 011, 014, 060, 971, 826, 035.
+- **Consequences:** search_text changed, so the pool was re-embedded (estimated US$1.22). The panel reads typed words as categories and relaxes colour, then celebration, below 5 results. The agent reads labels from the JSON, so label edits in the curator do not reach it until the JSON is regenerated.
+- **Rollback:** migration 050's header; dumps /root/backups/pictures/pictures-before-050-* and pictures-before-derive-*.
+- **Source:** session 62623145 (claude-luis, rule lifted temporarily by the owner), delegations D-20261102-181928-354a, -181929-31af, -173618-9017, -173618-9e98.
+
+## D-093 — System role permissions become editable, amending D-073 · 2026-11-02
+
+- **Decision:** administrators may edit plan and internal-employee permissions (`permissions_customized_at`, migration 048; restore to code defaults). `administrador` stays complete and immutable. Audit history in `account_audit_events` (047). Email sits behind a port, disabled until the owner picks a provider; links stay copyable.
+- **Consequences:** `/planes` still reads permissions from code and will not show an edited role (see P-225).
+
+## D-094 — The internal demo runs on the production URL without pushing main · 2026-11-02
+
+- **Context:** the owner needs visible progress for someone internal on 2026-11-03, not a production release, and chose "el sitio de siempre".
+- **Decision:** `vercel deploy --prod` from integ/req-021-pilot onto demo-decoracion.vercel.app. Production variables point at the single DB. ai-api updated by hand from the same commit; the old VPS web stays up; main is not pushed.
+- **Consequences:** origin/main no longer matches production, so a push to main would redeploy. Do not redeploy old main: it cannot use the gateway.
+- **Rollback:** Vercel Promote of demo-decoracion-j33441j2f; `demo-decoracion-ai-api:rollback`; `pictures-curador:rollback`.

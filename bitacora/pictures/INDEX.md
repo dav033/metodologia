@@ -1,6 +1,6 @@
 # Index — pictures
 
-_Generated 2026-11-02 18:49 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-11-02 19:40 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/pictures) · [graph](http://127.0.0.1:8765/p/pictures/graph)  
@@ -54,19 +54,19 @@ _Generated 2026-11-02 18:49 by `bitacora.py index`. Do not edit by hand._
 
 - P-187 · REQ-020 production advisor never offers Happia packages: migration `002_catalogue.sql` (ta · high/S
 - P-217 · [fix e58be0423 browser-verified 2026-11-02, session 3ad3bcd4; close after the cut] /3d loo · high/S
+- P-226 · Rotate DB_GATEWAY_KEY before inviting real users: it was printed in session 62623145 when  · high/S
 - P-010 · Commit photo-reading work (uncommitted) and merge e3-rapido f1198efd (precise AI size edit · high/M
 - P-015 · REQ-002 remaining rollout verification: current read-only Neon audit proves 028 tables and · high/M
 - P-021 · Refine acceptance feat/refinar-aceptacion (e4m) — approved, base of integ/foto-taller (was · high/M
 - P-123 · REQ-020 M2 final acceptance still needs a passing LIVE run and deployed phone check. Crede · high/M
-- P-124 · Summary repair integrated locally at 915a75af on feat/req-020-asesor-happia; scheduler r7  · high/M
 
 ## Recent decisions
 
+- D-094 — The internal demo runs on the production URL without pushing main · 2026-11-02
+- D-093 — System role permissions become editable, amending D-073 · 2026-11-02
+- D-092 — Owner's category model for the decoration pool, and 3D renders as thumbnails · 2026-11-02
 - D-091 — One database: the VPS Postgres, reached by Vercel through the ai-api host · 2026-11-02
 - D-090 — The decoration pool is new pgvector tables filled by themed generation · 2026-11-02
-- D-089 — REQ-021 leaves the scheduler for the 2026-11-03 delivery · 2026-11-02
-- D-088 — A later subplan's line takes SP-4's composition test and evidence when its fold meets a «deleted» file · 2026-11-01
-- D-087 — The requested plans redesign changes the accepted comparison contract · 2026-10-31
 
 ## Timeline
 
