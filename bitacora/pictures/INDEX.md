@@ -1,6 +1,6 @@
 # Index — pictures
 
-_Generated 2026-11-04 14:28 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-11-04 15:26 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md) · [Glossary](GLOSSARY.md)  
 **Web:** [project](http://127.0.0.1:8765/p/pictures) · [graph](http://127.0.0.1:8765/p/pictures/graph)  
@@ -63,11 +63,11 @@ _Generated 2026-11-04 14:28 by `bitacora.py index`. Do not edit by hand._
 
 ## Recent decisions
 
+- D-097 — The chat's picture adapts to the machine; the Taller stays as it was (2026-11-04)
 - D-096 — Chat references travel as text; store products are pieces read from the catalogue · 2026-11-04
 - D-095 — A piece of a decoration is not a decoration · 2026-11-02
 - D-094 — The internal demo runs on the production URL without pushing main · 2026-11-02
 - D-093 — System role permissions become editable, amending D-073 · 2026-11-02
-- D-092 — Owner's category model for the decoration pool, and 3D renders as thumbnails · 2026-11-02
 
 ## Timeline
 

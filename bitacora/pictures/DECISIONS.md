@@ -657,3 +657,10 @@ Source: owner, REQ-021 rounds 1–3.
 - **Rulings taken for the owner, to review:** bare words map to a base (dorado 970, plata 981, morado 056, "arco orgánico" to `arco_asimetrico`, whose catalogue name it is; the server still reads it as `arco` plus `organica`). The bucket recolours that colour in the whole piece, since connected regions do not survive a rebuild. The picker opens a viewer on demand on picture-only decorations. Inflating an organic size repacks the piece, so neighbours and the count can change.
 - **Rollback:** on integ/req-021-pilot only, a3706eb58 to 9fe986a32; nothing on main. Revert the commits; saved scenes with `trazo`, `borrar` or `producto_tienda` would fail validation after a revert.
 
+
+## D-097 — The chat's picture adapts to the machine; the Taller stays as it was (2026-11-04)
+
+- **Context:** the owner wants far better quality for every decoration in /asistente, with the Taller's performance untouched, and it must work with or without a graphics card, never attempting what the machine cannot do.
+- **Decision:** a viewer profile (`PerfilVisor`) separates the chat's `foto` materials and frame averaging from the default, which keeps the previous materials and passes. `nivel-foto.ts` picks `ligero`, `medio` or `alto` from what the browser reports and one timed real frame; the level only goes down in a session. Time limits measure real GPU work. No WebGL 2 keeps the panel's reference text.
+- **Alternatives:** path tracing (no: heavy, new dependency, and still needs a fallback); AI image pass (no: it would stop showing the exact balloons counted).
+- **Rollback:** `crearEscena` without a profile restores the plain drawing in the chat; `?calidadFoto=ligero|medio|alto` forces a level to check it.
