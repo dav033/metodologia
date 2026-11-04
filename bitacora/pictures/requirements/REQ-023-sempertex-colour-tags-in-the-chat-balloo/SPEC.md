@@ -1,6 +1,6 @@
 ---
 id: REQ-023
-status: clarifying
+status: dropped
 created: 2026-11-04
 track: standard
 ---
