@@ -1,10 +1,10 @@
 # Index — pictures
 
-_Generated 2026-11-03 20:33 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-11-04 10:37 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md) · [Glossary](GLOSSARY.md)  
 **Web:** [project](http://127.0.0.1:8765/p/pictures) · [graph](http://127.0.0.1:8765/p/pictures/graph)  
-**Last activity:** 2026-11-03
+**Last activity:** 2026-11-04
 
 ## Workspace
 
@@ -49,6 +49,7 @@ _Generated 2026-11-03 20:33 by `bitacora.py index`. Do not edit by hand._
 | [REQ-020](requirements/REQ-020-happia-chat-v2-event-advisor-that-ends-i/SPEC.md) | Happia chat v2 event advisor that ends in a brief | `done` | — |  |
 | [REQ-021](requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/SPEC.md) | Pilot release: bilingual UI, rectangular tables, backing, 3D space, admin roles, AI spend, save projects and decorations, Blender/Illustrator export, editable quartets and modules | `ready` | [review](requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/PLAN.md) |  |
 | [REQ-022](requirements/REQ-022-plans-catalogue-subscription-tiers-secti/SPEC.md) | Plans catalogue: subscription tiers section (Free, 20k, Designer, Designer Max) | `dropped` | [draft](requirements/REQ-022-plans-catalogue-subscription-tiers-secti/PLAN.md) | round open |
+| [REQ-023](requirements/REQ-023-sempertex-colour-tags-in-the-chat-balloo/SPEC.md) | Sempertex colour tags in the chat, balloon picker, 3D workshop paint brush and context tools | `clarifying` | — |  |
 
 ## Top pending (urgency, then complexity)
 
@@ -71,7 +72,7 @@ _Generated 2026-11-03 20:33 by `bitacora.py index`. Do not edit by hand._
 ## Timeline
 
 - **2026-11** — [month summary](2026-11/MONTH.md)
-  - [W2](2026-11/W2/WEEK.md): [03](2026-11/W2/2026-11-03.md), [02](2026-11/W2/2026-11-02.md)
+  - [W2](2026-11/W2/WEEK.md): [04](2026-11/W2/2026-11-04.md), [03](2026-11/W2/2026-11-03.md), [02](2026-11/W2/2026-11-02.md)
   - [W1](2026-11/W1/WEEK.md): [01](2026-11/W1/2026-11-01.md)
 - **2026-10** — [month summary](2026-10/MONTH.md)
   - [W5](2026-10/W5/WEEK.md): [31](2026-10/W5/2026-10-31.md), [30](2026-10/W5/2026-10-30.md), [29](2026-10/W5/2026-10-29.md), [28](2026-10/W5/2026-10-28.md), [27](2026-10/W5/2026-10-27.md), [26](2026-10/W5/2026-10-26.md)

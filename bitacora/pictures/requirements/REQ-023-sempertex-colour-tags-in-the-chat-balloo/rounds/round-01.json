@@ -1,0 +1,98 @@
+{
+ "title": "Picker, etiquetas de color y pintura en el Taller",
+ "intro": "Lo que el código no puede responder. Cada pregunta trae mi recomendación; puedes contestar con «1 b, 2 sí, ...».",
+ "coverage": "6/10",
+ "questions": [
+  {
+   "id": "q1",
+   "text": "Panel de la decoración: si el picker ocupa el lugar de la X, ¿cómo se cierra el panel? Hoy esa X es la única forma de cerrarlo en escritorio, y el panel ocupa hasta la mitad de la pantalla.",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "Picker en el lugar de la X y un botón pequeño de cerrar a su lado"
+    },
+    {
+     "key": "b",
+     "label": "Reemplazo literal: el panel ya no se puede cerrar en escritorio"
+    }
+   ],
+   "recommended": "a",
+   "why": "Con la opción b, el chat queda fijo en media pantalla. Además, las decoraciones que se muestran como imagen no tienen visor 3D: ahí no habría picker y el rincón quedaría vacío. En el celular, la hoja inferior conserva su X."
+  },
+  {
+   "id": "q2",
+   "text": "Ficha del picker al tocar un globo: ¿qué muestra además de producto (R-12 Fashion Rojo Imperial), color y acabado (Rojo Imperial, mate)?",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "Foto del catálogo, código (016) y cuántos globos iguales lleva la decoración"
+    },
+    {
+     "key": "b",
+     "label": "Lo de la opción a, más precio y enlace a la tienda"
+    },
+    {
+     "key": "c",
+     "label": "Solo producto, color y acabado"
+    }
+   ],
+   "recommended": "a",
+   "why": "Foto, código y conteo ya están en los datos. El precio exige conectar el catálogo de la tienda, y una foto o un precio del tamaño equivocado confundiría a quien compra."
+  },
+  {
+   "id": "q3",
+   "text": "Etiquetas en el chat: varias palabras de color también significan otra cosa («cuánta plata cuesta», «rosa» como nombre, «vino», «café», «lima», «naranja»). ¿Cómo se convierten?",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "Automático al terminar la palabra; las ambiguas solo si el contexto habla de color o globos. La etiqueta se deshace con Retroceso y al tocarla ofrece colores cercanos"
+    },
+    {
+     "key": "b",
+     "label": "Automático siempre, sin mirar el contexto"
+    },
+    {
+     "key": "c",
+     "label": "Solo sugerir, y que el usuario confirme con Tab o un toque"
+    }
+   ],
+   "recommended": "a",
+   "why": "Es la conversión automática que pediste, sin dañar frases sobre dinero o nombres. Los colores cercanos importan porque «azul» da Fashion Azul 040, que es un azul claro: quien quería azul rey lo cambia con un toque."
+  },
+  {
+   "id": "q4",
+   "text": "Pintar como en Paint: ¿en qué piezas y con qué herramientas?",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "Orgánicas y paredes de globos: pincel de 3 tamaños, cubeta, borrador y deshacer. El trazo se guarda como zona y sobrevive si la pieza se vuelve a armar"
+    },
+    {
+     "key": "b",
+     "label": "Lo mismo, pero en todas las piezas con globos"
+    },
+    {
+     "key": "c",
+     "label": "Globo por globo exacto, y lo pintado se pierde si cambian alto, densidad o variante"
+    }
+   ],
+   "recommended": "a",
+   "why": "Una pieza orgánica recoloca sus globos al cambiar alto o densidad, así que guardar globos sueltos se pierde. El proyecto ya guarda reglas de color por zona (repintes), y estas actualizan la lista de materiales. Con zonas, un globo se pinta si su centro cae bajo el pincel."
+  },
+  {
+   "id": "q5",
+   "text": "Menú de clic derecho del Taller: hoy tiene Editar sola, Duplicar, Colgar decoración, Cambiar colores, Guardar y Eliminar. Propongo agregar: ver producto del globo; color picker con cuentagotas (tomar el color de un globo) y paleta Sempertex; pintar; ocultar o aislar; centrar la cámara. ¿Cuáles van, y falta alguna?",
+   "type": "open",
+   "suggested": "Todas las propuestas. El color picker lleva cuentagotas y paleta, y cambia ese globo o toda la pieza.",
+   "why": "«Más herramientas» no dice cuáles, y «color picker» puede ser cuentagotas o paleta. Si tenías otras en mente, este es el momento de decirlas."
+  }
+ ],
+ "round": 1,
+ "status": "open",
+ "answers": {},
+ "created_at": "2026-11-04T15:38:31Z"
+}
