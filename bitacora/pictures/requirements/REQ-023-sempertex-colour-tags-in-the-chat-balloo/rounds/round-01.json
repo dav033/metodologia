@@ -92,7 +92,29 @@
   }
  ],
  "round": 1,
- "status": "open",
- "answers": {},
- "created_at": "2026-11-04T15:38:31Z"
+ "status": "answered",
+ "answers": {
+  "q1": {
+   "choice": "b",
+   "note": ""
+  },
+  "q2": {
+   "choice": "c",
+   "note": ""
+  },
+  "q3": {
+   "choice": "b",
+   "note": "Si no implica IA, con c como fallback"
+  },
+  "q4": {
+   "choice": "a",
+   "note": ""
+  },
+  "q5": {
+   "text": "Todas las propuestas, además de poder rotar, aumentar o disminuir escala e índice de inflado de globos"
+  }
+ },
+ "created_at": "2026-11-04T15:38:31Z",
+ "answered_at": "2026-11-04T15:53:32Z",
+ "answered_via": "terminal"
 }
