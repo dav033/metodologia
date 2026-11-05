@@ -664,3 +664,15 @@ Source: owner, REQ-021 rounds 1–3.
 - **Decision:** a viewer profile (`PerfilVisor`) separates the chat's `foto` materials and frame averaging from the default, which keeps the previous materials and passes. `nivel-foto.ts` picks `ligero`, `medio` or `alto` from what the browser reports and one timed real frame; the level only goes down in a session. Time limits measure real GPU work. No WebGL 2 keeps the panel's reference text.
 - **Alternatives:** path tracing (no: heavy, new dependency, and still needs a fallback); AI image pass (no: it would stop showing the exact balloons counted).
 - **Rollback:** `crearEscena` without a profile restores the plain drawing in the chat; `?calidadFoto=ligero|medio|alto` forces a level to check it.
+
+
+## D-098 — A base template is not published without its selectable structures (2026-11-05)
+
+- **Date:** 2026-11-05 · **Status:** Accepted
+- **Context:** the owner found that templates built from his photos do not offer structure selection in the chat as «Feliz Año» does. Checked in a browser on `:3010`: New Year shows 6 tappable structures, «Arcoíris y osito» shows one whole piece. The chat splits a template only by `recipe.estructuras` (`turno-plantilla.ts`, `estructuras-plantilla.ts`). Saving through `POST /api/plantillas` does not write that field. The limit was already in the log of 2026-11-04 («templates saved later have no structures and stay whole») and was not applied when these were published. Thirteen rows lack it: `m-7008ae5d`, `m-bb0b7693`, `m-dedc61cd`, `m-ba608aef`, `m-22d33160`, `m-4fd099b6` and the seven of `ids-plantillas.json`.
+- **Decision:** a base template counts as finished only when every node belongs to one named structure in `recipe.estructuras`, and that was seen working in the chat, each structure selectable and opening its detail. Fidelity scores and the Taller opening do not prove it. The same check goes in any brief or report for building templates.
+- **Also, from the same day, taken by the agent for the owner to review:** only one session writes to production at a time. Two sessions resumed from one conversation both pushed to main (`b391e8d72`, `2638a4a37`) and saved the same templates, leaving duplicates `m-0cf03b10` and `m-09600f90`. Before pushing or saving, check for other live sessions with `ListAgents`.
+- **Alternatives:** relying on the instruction alone — rejected as the lasting answer, because the limit was already written down and still missed; P-241 asks for the save itself to create or demand structures.
+- **Consequences:** + the chat behaves the same for all templates; − publishing takes one more check. The rows above stay without structures until P-241 is done.
+- **Rollback:** none needed; this is a working rule.
+
