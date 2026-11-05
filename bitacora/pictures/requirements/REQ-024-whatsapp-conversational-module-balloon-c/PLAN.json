@@ -1,0 +1,1661 @@
+{
+ "schema_version": "1.3.0",
+ "plan_id": "REQ-024",
+ "revision": 1,
+ "spec_ref": "SPEC.md",
+ "milestones": [
+  {
+   "id": "M1",
+   "title": "Walking skeleton (webhook → reading → template reply, dry-run)",
+   "acceptance_criteria": [
+    "A signed Meta photo message produces a correct template reply in dry-run and in the integration test; abuse controls hold."
+   ]
+  },
+  {
+   "id": "M2",
+   "title": "Conversation (follow-ups, corrections, guarded phrasing)",
+   "acceptance_criteria": [
+    "Follow-ups and corrections work with every figure traceable to the reading or a labelled correction."
+   ]
+  },
+  {
+   "id": "M3",
+   "title": "Hardening, parity and deploy",
+   "acceptance_criteria": [
+    "Failures degrade safely, parity with the web path is shown, and the owner accepts a live run."
+   ]
+  }
+ ],
+ "requirements": [
+  "R1",
+  "R10",
+  "R11",
+  "R12",
+  "R13",
+  "R14",
+  "R2",
+  "R3",
+  "R4",
+  "R5",
+  "R6",
+  "R7",
+  "R8",
+  "R9"
+ ],
+ "tasks": [
+  {
+   "id": "T1",
+   "milestone_id": "M1",
+   "title": "Scaffold `services/whatsapp-globos` package (tsconfig, test runner, lint, env schema, README)",
+   "repository": "pictures",
+   "after": [],
+   "expected_paths": [
+    "services/whatsapp-globos/package.json",
+    "services/whatsapp-globos/src/config.ts"
+   ],
+   "verification": [
+    {
+     "type": "command",
+     "value": "npm --prefix services/whatsapp-globos test",
+     "purpose": "npm test in the package runs and passes with at least one config test",
+     "category": "static"
+    },
+    {
+     "type": "command",
+     "value": "npm --prefix services/whatsapp-globos test",
+     "purpose": "Starting with a missing required env variable exits with a message naming the variable and never prints secret values",
+     "category": "static"
+    }
+   ],
+   "covers": [
+    "R11",
+    "R12"
+   ],
+   "kind": "implement",
+   "objective": "A buildable, testable package directory exists with a typed env schema that fails fast when a required variable is missing.",
+   "acceptance_criteria": [
+    "npm test in the package runs and passes with at least one config test",
+    "Starting with a missing required env variable exits with a message naming the variable and never prints secret values"
+   ],
+   "complexity": "low",
+   "scope": "small_change",
+   "estimated_minutes": 30,
+   "risk": "low",
+   "coupling": "low",
+   "confidence": "high",
+   "estimate_rationale": "Small scaffold; the root package.json shows the conventions to follow.",
+   "shared_resources": [],
+   "classification_evidence": {
+    "complexity": {
+     "justification": "Standard Node package scaffold with a known layout; no design choices beyond the env schema.",
+     "evidence": [
+      "file:package.json"
+     ]
+    },
+    "scope": {
+     "justification": "One new directory with config and tooling files, no behaviour beyond configuration loading.",
+     "evidence": [
+      "spec:SPEC.md#constraints"
+     ]
+    },
+    "duration": {
+     "justification": "Scaffolding and a config test fit one short run including the local test command.",
+     "evidence": [
+      "file:package.json"
+     ]
+    },
+    "risk": {
+     "justification": "Only new isolated files; a mistake is caught by the first test and is trivially reversible.",
+     "evidence": [
+      "spec:SPEC.md#constraints"
+     ]
+    },
+    "coupling": {
+     "justification": "Creates the package every later task builds on but depends on nothing else.",
+     "evidence": [
+      "assumption:later tasks only import from this package"
+     ]
+    },
+    "confidence": {
+     "justification": "The repo already runs tsx scripts with node 24 and has package.json conventions to copy.",
+     "evidence": [
+      "file:package.json",
+      "file:scripts/eval/estructuras/conteo.ts"
+     ]
+    }
+   }
+  },
+  {
+   "id": "T2",
+   "milestone_id": "M1",
+   "title": "Webhook server: GET challenge, POST signature check on raw body, fast 200, idempotent queue per message id",
+   "repository": "pictures",
+   "after": [
+    "T1"
+   ],
+   "expected_paths": [
+    "services/whatsapp-globos/src/webhook/server.ts",
+    "services/whatsapp-globos/src/webhook/signature.ts"
+   ],
+   "verification": [
+    {
+     "type": "command",
+     "value": "npm --prefix services/whatsapp-globos test -- webhook",
+     "purpose": "A GET with the right verify token returns the challenge and a wrong token returns 403",
+     "category": "functional"
+    },
+    {
+     "type": "command",
+     "value": "npm --prefix services/whatsapp-globos test -- webhook",
+     "purpose": "A POST with an invalid or missing X-Hub-Signature-256 returns 401 and enqueues nothing",
+     "category": "functional"
+    },
+    {
+     "type": "command",
+     "value": "npm --prefix services/whatsapp-globos test -- webhook",
+     "purpose": "The same message id delivered twice is enqueued once",
+     "category": "functional"
+    }
+   ],
+   "covers": [
+    "R1",
+    "R2",
+    "R3"
+   ],
+   "kind": "implement",
+   "objective": "A webhook HTTP server verifies Meta challenges and signatures on the raw body, answers 200 quickly and enqueues each message id exactly once.",
+   "acceptance_criteria": [
+    "A GET with the right verify token returns the challenge and a wrong token returns 403",
+    "A POST with an invalid or missing X-Hub-Signature-256 returns 401 and enqueues nothing",
+    "The same message id delivered twice is enqueued once"
+   ],
+   "complexity": "medium",
+   "scope": "full_feature",
+   "estimated_minutes": 60,
+   "risk": "high",
+   "coupling": "medium",
+   "confidence": "medium",
+   "estimate_rationale": "Signature and dedup code is short but security-sensitive and needs negative tests.",
+   "shared_resources": [
+    "webhook-queue-contract"
+   ],
+   "classification_evidence": {
+    "complexity": {
+     "justification": "Signature verification over raw bytes and idempotency need careful handling of body parsing order.",
+     "evidence": [
+      "spec:SPEC.md#requirements"
+     ]
+    },
+    "scope": {
+     "justification": "A self-contained feature: server, signature check and dedup queue with their tests.",
+     "evidence": [
+      "spec:SPEC.md#requirements"
+     ]
+    },
+    "duration": {
+     "justification": "Several small modules and negative tests, about an hour with local verification.",
+     "evidence": [
+      "assumption:similar HMAC code exists in ai-api"
+     ]
+    },
+    "risk": {
+     "justification": "It is the public entry point; a wrong signature check lets forged messages spend vision budget.",
+     "evidence": [
+      "spec:SPEC.md#requirements",
+      "spec:SPEC.md#edge-cases--errors"
+     ]
+    },
+    "coupling": {
+     "justification": "Hands accepted messages to the pipeline through a queue contract shared with T6.",
+     "evidence": [
+      "task:T6"
+     ]
+    },
+    "confidence": {
+     "justification": "The Meta webhook rules are known but not yet exercised in this repo, so only partial evidence.",
+     "evidence": [
+      "file:services/ai-api/app/auth.py"
+     ]
+    }
+   }
+  },
+  {
+   "id": "T3",
+   "milestone_id": "M1",
+   "title": "Meta media client and image validation (media id → URL → authenticated fetch, magic bytes, size, no logging of bytes)",
+   "repository": "pictures",
+   "after": [
+    "T1"
+   ],
+   "expected_paths": [
+    "services/whatsapp-globos/src/meta/media.ts",
+    "services/whatsapp-globos/src/meta/image.ts"
+   ],
+   "verification": [
+    {
+     "type": "command",
+     "value": "npm --prefix services/whatsapp-globos test -- media",
+     "purpose": "A valid JPEG PNG or WebP under the size limit is returned with its detected mime",
+     "category": "functional"
+    },
+    {
+     "type": "command",
+     "value": "npm --prefix services/whatsapp-globos test -- media",
+     "purpose": "A GIF HEIC or oversize file is rejected with a typed reason",
+     "category": "functional"
+    },
+    {
+     "type": "command",
+     "value": "npm --prefix services/whatsapp-globos test -- media",
+     "purpose": "Logs and errors never contain image bytes or the access token",
+     "category": "functional"
+    }
+   ],
+   "covers": [
+    "R4"
+   ],
+   "kind": "implement",
+   "objective": "A Meta media client turns a media id into a validated in-memory image or a typed rejection, without ever logging image bytes.",
+   "acceptance_criteria": [
+    "A valid JPEG PNG or WebP under the size limit is returned with its detected mime",
+    "A GIF HEIC or oversize file is rejected with a typed reason",
+    "Logs and errors never contain image bytes or the access token"
+   ],
+   "complexity": "medium",
+   "scope": "small_change",
+   "estimated_minutes": 45,
+   "risk": "medium",
+   "coupling": "low",
+   "confidence": "high",
+   "estimate_rationale": "Format detection exists in analisis-http.ts; the Meta fetch is new but small.",
+   "shared_resources": [],
+   "classification_evidence": {
+    "complexity": {
+     "justification": "Two-step Meta fetch with authentication and format checks, all well specified.",
+     "evidence": [
+      "file:src/app/api/references/analyze/analisis-http.ts"
+     ]
+    },
+    "scope": {
+     "justification": "One client and one validator with fixtures; no cross-cutting behaviour.",
+     "evidence": [
+      "spec:SPEC.md#requirements"
+     ]
+    },
+    "duration": {
+     "justification": "Client plus validator and fixture tests fit within a single focused run.",
+     "evidence": [
+      "file:src/app/api/references/analyze/analisis-http.ts"
+     ]
+    },
+    "risk": {
+     "justification": "Handles untrusted bytes and a token, but failures are contained and covered by negative tests.",
+     "evidence": [
+      "spec:SPEC.md#edge-cases--errors"
+     ]
+    },
+    "coupling": {
+     "justification": "Independent of the other M1 modules; only the pipeline consumes it later.",
+     "evidence": [
+      "assumption:only T6 consumes this client"
+     ]
+    },
+    "confidence": {
+     "justification": "The repo already has magic-byte format detection to mirror.",
+     "evidence": [
+      "file:src/app/api/references/analyze/analisis-http.ts"
+     ]
+    }
+   }
+  },
+  {
+   "id": "T4",
+   "milestone_id": "M1",
+   "title": "Recogniser adapter: `LecturaGlobos` type, the single `src/lib` import boundary, exact/estimate normalisation, contract test against a recorded reading",
+   "repository": "pictures",
+   "after": [
+    "T1"
+   ],
+   "expected_paths": [
+    "services/whatsapp-globos/src/adapters/reconocedor.ts",
+    "services/whatsapp-globos/src/lectura.ts"
+   ],
+   "verification": [
+    {
+     "type": "command",
+     "value": "npm --prefix services/whatsapp-globos test -- adapter",
+     "purpose": "A contract test maps a recorded reading to LecturaGlobos with total per-piece counts and colours",
+     "category": "functional"
+    },
+    {
+     "type": "command",
+     "value": "npm --prefix services/whatsapp-globos test -- adapter",
+     "purpose": "A count flagged not exact by the reading is never reported as exact",
+     "category": "functional"
+    },
+    {
+     "type": "command",
+     "value": "npm --prefix services/whatsapp-globos test -- adapter",
+     "purpose": "Only the adapter file imports from the repo src/lib directory, checked by a test",
+     "category": "functional"
+    }
+   ],
+   "covers": [
+    "R5",
+    "R6",
+    "R12"
+   ],
+   "kind": "implement",
+   "objective": "A single adapter file runs the existing recogniser and the ai-api count and returns a plain LecturaGlobos with exact versus estimate and colours, proving the recogniser runs outside Next.",
+   "acceptance_criteria": [
+    "A contract test maps a recorded reading to LecturaGlobos with total per-piece counts and colours",
+    "A count flagged not exact by the reading is never reported as exact",
+    "Only the adapter file imports from the repo src/lib directory, checked by a test"
+   ],
+   "complexity": "high",
+   "scope": "full_feature",
+   "estimated_minutes": 75,
+   "risk": "medium",
+   "coupling": "medium",
+   "confidence": "medium",
+   "estimate_rationale": "conteo.ts already imports the same functions via tsx react-server; the unknown is packaging.",
+   "shared_resources": [
+    "recogniser-api"
+   ],
+   "classification_evidence": {
+    "complexity": {
+     "justification": "Must bridge Next-oriented code to a standalone process and normalise a rich blueprint, with an unproven assumption (A1).",
+     "evidence": [
+      "file:scripts/eval/estructuras/conteo.ts",
+      "spec:SPEC.md#assumptions"
+     ]
+    },
+    "scope": {
+     "justification": "A full vertical slice of the reading path behind one interface, with a contract test.",
+     "evidence": [
+      "file:scripts/eval/estructuras/conteo.ts",
+      "file:src/app/api/references/analyze/route.ts"
+     ]
+    },
+    "duration": {
+     "justification": "Wiring plus normalisation plus a boundary test, with some investigation of server-only imports.",
+     "evidence": [
+      "file:scripts/eval/estructuras/conteo.ts"
+     ]
+    },
+    "risk": {
+     "justification": "A wrong mapping would state wrong counts to customers, though the figures come from existing logic.",
+     "evidence": [
+      "file:services/ai-api/app/amaterasu/conteo_referencia.py"
+     ]
+    },
+    "coupling": {
+     "justification": "Depends on repo internals that another agent may edit, so the single boundary file is the shared surface.",
+     "evidence": [
+      "file:src/lib/ia/amaterasu/conteo-referencia.ts",
+      "file:src/app/api/references/analyze/route.ts"
+     ]
+    },
+    "confidence": {
+     "justification": "The evaluation runner proves the pattern but this package has not yet run it.",
+     "evidence": [
+      "file:scripts/eval/estructuras/conteo.ts",
+      "file:scripts/ops/diagnosticar-foto.ts"
+     ]
+    }
+   }
+  },
+  {
+   "id": "T5",
+   "milestone_id": "M1",
+   "title": "Policy and state store (own SQLite): allow-list, per-number daily quota, global daily cap, hashed phone, restart-safe counters",
+   "repository": "pictures",
+   "after": [
+    "T1"
+   ],
+   "expected_paths": [
+    "services/whatsapp-globos/src/policy/policy.ts",
+    "services/whatsapp-globos/src/store/sqlite.ts"
+   ],
+   "verification": [
+    {
+     "type": "command",
+     "value": "npm --prefix services/whatsapp-globos test -- policy",
+     "purpose": "A number not on the allow-list is refused before any vision call",
+     "category": "functional"
+    },
+    {
+     "type": "command",
+     "value": "npm --prefix services/whatsapp-globos test -- policy",
+     "purpose": "A number over its daily quota or a day over the global cap is refused with a typed reason",
+     "category": "functional"
+    },
+    {
+     "type": "command",
+     "value": "npm --prefix services/whatsapp-globos test -- policy",
+     "purpose": "Counters persist across a process restart and phone numbers are stored only hashed",
+     "category": "functional"
+    }
+   ],
+   "covers": [
+    "R8",
+    "R10"
+   ],
+   "kind": "implement",
+   "objective": "A local SQLite store enforces an allow-list, per-number and global daily caps with hashed phone numbers and counters that survive restarts.",
+   "acceptance_criteria": [
+    "A number not on the allow-list is refused before any vision call",
+    "A number over its daily quota or a day over the global cap is refused with a typed reason",
+    "Counters persist across a process restart and phone numbers are stored only hashed"
+   ],
+   "complexity": "medium",
+   "scope": "full_feature",
+   "estimated_minutes": 75,
+   "risk": "high",
+   "coupling": "medium",
+   "confidence": "medium",
+   "estimate_rationale": "Standard counters with a restart test; spend control raises the risk, not the effort.",
+   "shared_resources": [
+    "policy-store-contract"
+   ],
+   "classification_evidence": {
+    "complexity": {
+     "justification": "Day boundaries, atomic counters and hashing need careful but standard design.",
+     "evidence": [
+      "spec:SPEC.md#requirements"
+     ]
+    },
+    "scope": {
+     "justification": "A self-contained policy and store feature with its own tests.",
+     "evidence": [
+      "spec:SPEC.md#requirements"
+     ]
+    },
+    "duration": {
+     "justification": "Schema, atomic increments and restart tests take about an hour and a quarter.",
+     "evidence": [
+      "assumption:SQLite via the built-in node driver is enough"
+     ]
+    },
+    "risk": {
+     "justification": "It is the spend and abuse control; a bug lets unbounded Gemini calls through.",
+     "evidence": [
+      "spec:SPEC.md#requirements",
+      "spec:SPEC.md#constraints"
+     ]
+    },
+    "coupling": {
+     "justification": "The pipeline and the conversation state both use this store contract.",
+     "evidence": [
+      "task:T6",
+      "task:T9"
+     ]
+    },
+    "confidence": {
+     "justification": "Requirements are exact but the store technology is new to this package.",
+     "evidence": [
+      "spec:SPEC.md#requirements"
+     ]
+    }
+   }
+  },
+  {
+   "id": "T6",
+   "milestone_id": "M1",
+   "title": "Pipeline, ES/EN template replies, Meta sender and `--dry-run` CLI",
+   "repository": "pictures",
+   "after": [
+    "T2",
+    "T3",
+    "T4",
+    "T5"
+   ],
+   "expected_paths": [
+    "services/whatsapp-globos/src/pipeline.ts",
+    "services/whatsapp-globos/src/replies/templates.ts",
+    "services/whatsapp-globos/bin/dry-run.ts"
+   ],
+   "verification": [
+    {
+     "type": "command",
+     "value": "npm --prefix services/whatsapp-globos test -- pipeline",
+     "purpose": "Dry-run on a local photo prints the reply without any network call to Meta",
+     "category": "functional"
+    },
+    {
+     "type": "command",
+     "value": "npm --prefix services/whatsapp-globos test -- pipeline",
+     "purpose": "The reply states total, exact versus estimate and colours with their share in the sender language",
+     "category": "functional"
+    },
+    {
+     "type": "command",
+     "value": "npm --prefix services/whatsapp-globos test -- pipeline",
+     "purpose": "A text-only message gets the polite send-a-photo reply",
+     "category": "functional"
+    }
+   ],
+   "covers": [
+    "R6",
+    "R13",
+    "R14"
+   ],
+   "kind": "implement",
+   "objective": "A pipeline turns an accepted message into a template reply (Spanish or English) via media, policy and adapter, with a dry-run command that needs no Meta access.",
+   "acceptance_criteria": [
+    "Dry-run on a local photo prints the reply without any network call to Meta",
+    "The reply states total, exact versus estimate and colours with their share in the sender language",
+    "A text-only message gets the polite send-a-photo reply"
+   ],
+   "complexity": "medium",
+   "scope": "full_feature",
+   "estimated_minutes": 90,
+   "risk": "medium",
+   "coupling": "high",
+   "confidence": "medium",
+   "estimate_rationale": "Glue plus copy; effort driven by integrating four earlier contracts.",
+   "shared_resources": [
+    "webhook-queue-contract",
+    "policy-store-contract",
+    "recogniser-api"
+   ],
+   "classification_evidence": {
+    "complexity": {
+     "justification": "Orchestration of four ports with error mapping and copy in two languages.",
+     "evidence": [
+      "spec:SPEC.md#requirements"
+     ]
+    },
+    "scope": {
+     "justification": "The end-to-end behaviour of M1 behind fakes, including the dry-run command.",
+     "evidence": [
+      "spec:SPEC.md#requirements"
+     ]
+    },
+    "duration": {
+     "justification": "Pipeline, templates, sender client and CLI make this the largest M1 task.",
+     "evidence": [
+      "assumption:templates are short"
+     ]
+    },
+    "risk": {
+     "justification": "Customer-visible wording of counts; wrong phrasing could overstate certainty.",
+     "evidence": [
+      "spec:SPEC.md#out-of-scope"
+     ]
+    },
+    "coupling": {
+     "justification": "Consumes the outputs of T2 T3 T4 and T5, so changes there directly affect it.",
+     "evidence": [
+      "task:T2",
+      "task:T3",
+      "task:T4",
+      "task:T5"
+     ]
+    },
+    "confidence": {
+     "justification": "Ports are defined by earlier tasks, so exact shapes are only partly known now.",
+     "evidence": [
+      "task:T4"
+     ]
+    }
+   }
+  },
+  {
+   "id": "T7",
+   "milestone_id": "M1",
+   "title": "Integration test: start the real server, post signed recorded Meta payloads against fake Meta and fake recogniser servers, assert reply, idempotency, allow-list and cap",
+   "repository": "pictures",
+   "after": [
+    "T6"
+   ],
+   "expected_paths": [
+    "services/whatsapp-globos/test/integration/m1.test.ts"
+   ],
+   "verification": [
+    {
+     "type": "command",
+     "value": "npm --prefix services/whatsapp-globos run test:integration",
+     "purpose": "A signed image payload yields one reply through the fake Meta server",
+     "category": "integration"
+    },
+    {
+     "type": "command",
+     "value": "npm --prefix services/whatsapp-globos run test:integration",
+     "purpose": "A duplicate delivery yields no second reply and a non-listed number triggers no recogniser call",
+     "category": "integration"
+    },
+    {
+     "type": "command",
+     "value": "npm --prefix services/whatsapp-globos run test:integration",
+     "purpose": "Exceeding the cap blocks the recogniser call and tells the sender",
+     "category": "integration"
+    }
+   ],
+   "covers": [
+    "R1",
+    "R2",
+    "R3",
+    "R4",
+    "R5",
+    "R10",
+    "R14"
+   ],
+   "kind": "test",
+   "objective": "An integration test starts the real server and proves signed recorded Meta payloads produce the right replies, with idempotency, allow-list and cap behaviour.",
+   "acceptance_criteria": [
+    "A signed image payload yields one reply through the fake Meta server",
+    "A duplicate delivery yields no second reply and a non-listed number triggers no recogniser call",
+    "Exceeding the cap blocks the recogniser call and tells the sender"
+   ],
+   "complexity": "medium",
+   "scope": "full_feature",
+   "estimated_minutes": 75,
+   "risk": "low",
+   "coupling": "medium",
+   "confidence": "medium",
+   "estimate_rationale": "Mostly fixture work around a flow T6 already implements.",
+   "shared_resources": [],
+   "classification_evidence": {
+    "complexity": {
+     "justification": "Fake Meta and recogniser servers plus recorded payload fixtures to design.",
+     "evidence": [
+      "spec:SPEC.md#requirements"
+     ]
+    },
+    "scope": {
+     "justification": "One end-to-end test suite for the whole M1 flow.",
+     "evidence": [
+      "task:T6"
+     ]
+    },
+    "duration": {
+     "justification": "Fixtures and fake servers dominate the time.",
+     "evidence": [
+      "assumption:recorded payloads come from Meta public docs"
+     ]
+    },
+    "risk": {
+     "justification": "Test code only; a flaw shows as a failing or weak test, not a production fault.",
+     "evidence": [
+      "spec:SPEC.md#requirements"
+     ]
+    },
+    "coupling": {
+     "justification": "Exercises every M1 module together so it follows them all.",
+     "evidence": [
+      "task:T6"
+     ]
+    },
+    "confidence": {
+     "justification": "Test structure is clear but the recorded Meta payload shapes are not yet captured.",
+     "evidence": [
+      "task:T6"
+     ]
+    }
+   }
+  },
+  {
+   "id": "T8",
+   "milestone_id": "M1",
+   "title": "M1 audit (findings ledger)",
+   "repository": "pictures",
+   "after": [
+    "T7"
+   ],
+   "expected_paths": [
+    "services/whatsapp-globos/audit/m1.findings.json"
+   ],
+   "verification": [
+    {
+     "type": "command",
+     "value": "bitacora.py audit-ledger check services/whatsapp-globos/audit/m1.findings.json",
+     "purpose": "The findings ledger validates with audit-ledger check",
+     "category": "static"
+    },
+    {
+     "type": "command",
+     "value": "bitacora.py audit-ledger check services/whatsapp-globos/audit/m1.findings.json",
+     "purpose": "No security or correctness finding on signature, media or caps remains open",
+     "category": "static"
+    }
+   ],
+   "covers": [
+    "R2",
+    "R4",
+    "R10",
+    "R11"
+   ],
+   "kind": "audit",
+   "objective": "An independent audit of M1 records findings in a ledger and every finding is fixed or justified.",
+   "acceptance_criteria": [
+    "The findings ledger validates with audit-ledger check",
+    "No security or correctness finding on signature, media or caps remains open"
+   ],
+   "complexity": "medium",
+   "scope": "small_change",
+   "estimated_minutes": 45,
+   "risk": "low",
+   "coupling": "low",
+   "confidence": "medium",
+   "estimate_rationale": "One audit pass over a small new package.",
+   "shared_resources": [],
+   "classification_evidence": {
+    "complexity": {
+     "justification": "Reading the M1 diff adversarially for the security surfaces.",
+     "evidence": [
+      "task:T7"
+     ]
+    },
+    "scope": {
+     "justification": "A review report and ledger, no product code.",
+     "evidence": [
+      "task:T7"
+     ]
+    },
+    "duration": {
+     "justification": "One review pass plus ledger bookkeeping.",
+     "evidence": [
+      "assumption:diff is small enough for one pass"
+     ]
+    },
+    "risk": {
+     "justification": "A missed defect would surface later, but the audit itself changes nothing.",
+     "evidence": [
+      "task:T7"
+     ]
+    },
+    "coupling": {
+     "justification": "Reads the finished M1 diff only.",
+     "evidence": [
+      "task:T7"
+     ]
+    },
+    "confidence": {
+     "justification": "Audit procedure is established by the methodology.",
+     "evidence": [
+      "task:T7"
+     ]
+    }
+   }
+  },
+  {
+   "id": "T9",
+   "milestone_id": "M2",
+   "title": "Conversation state: last reading, user corrections (labelled, confirmation above threshold), retention job",
+   "repository": "pictures",
+   "after": [
+    "T8"
+   ],
+   "expected_paths": [
+    "services/whatsapp-globos/src/conversation/state.ts"
+   ],
+   "verification": [
+    {
+     "type": "command",
+     "value": "npm --prefix services/whatsapp-globos test -- state",
+     "purpose": "A stored reading can be retrieved by a later message from the same number",
+     "category": "functional"
+    },
+    {
+     "type": "command",
+     "value": "npm --prefix services/whatsapp-globos test -- state",
+     "purpose": "A correction is stored labelled as user-declared and an absurd one needs confirmation first",
+     "category": "functional"
+    },
+    {
+     "type": "command",
+     "value": "npm --prefix services/whatsapp-globos test -- state",
+     "purpose": "Records older than the retention limit are deleted and no image bytes are ever stored",
+     "category": "functional"
+    }
+   ],
+   "covers": [
+    "R8",
+    "R7"
+   ],
+   "kind": "implement",
+   "objective": "Conversation state stores the last reading and labelled user corrections per hashed number with a retention job, and large corrections require confirmation.",
+   "acceptance_criteria": [
+    "A stored reading can be retrieved by a later message from the same number",
+    "A correction is stored labelled as user-declared and an absurd one needs confirmation first",
+    "Records older than the retention limit are deleted and no image bytes are ever stored"
+   ],
+   "complexity": "medium",
+   "scope": "small_change",
+   "estimated_minutes": 60,
+   "risk": "medium",
+   "coupling": "medium",
+   "confidence": "medium",
+   "estimate_rationale": "Extension of an existing store with a few semantic rules.",
+   "shared_resources": [
+    "policy-store-contract"
+   ],
+   "classification_evidence": {
+    "complexity": {
+     "justification": "Correction semantics and confirmation thresholds need a few decisions.",
+     "evidence": [
+      "spec:SPEC.md#requirements"
+     ]
+    },
+    "scope": {
+     "justification": "One state module extending the existing store.",
+     "evidence": [
+      "spec:SPEC.md#requirements"
+     ]
+    },
+    "duration": {
+     "justification": "Schema, semantics and retention tests in one run.",
+     "evidence": [
+      "assumption:reuses the T5 store"
+     ]
+    },
+    "risk": {
+     "justification": "Personal data retention and wrong correction handling could mislead customers.",
+     "evidence": [
+      "spec:SPEC.md#constraints"
+     ]
+    },
+    "coupling": {
+     "justification": "Shares the SQLite store contract with T5.",
+     "evidence": [
+      "task:T5"
+     ]
+    },
+    "confidence": {
+     "justification": "Requirement text is explicit; thresholds are chosen during the task.",
+     "evidence": [
+      "spec:SPEC.md#requirements"
+     ]
+    }
+   }
+  },
+  {
+   "id": "T10",
+   "milestone_id": "M2",
+   "title": "Conversational layer: intent routing (follow-up, correction, off-topic), LLM phrasing from structured reading, post-generation number/colour guard, language detection",
+   "repository": "pictures",
+   "after": [
+    "T9"
+   ],
+   "expected_paths": [
+    "services/whatsapp-globos/src/conversation/router.ts",
+    "services/whatsapp-globos/src/conversation/guard.ts"
+   ],
+   "verification": [
+    {
+     "type": "command",
+     "value": "npm --prefix services/whatsapp-globos test -- conversation",
+     "purpose": "A follow-up about colours is answered from the stored reading without a new vision call",
+     "category": "functional"
+    },
+    {
+     "type": "command",
+     "value": "npm --prefix services/whatsapp-globos test -- conversation",
+     "purpose": "A reply containing a figure absent from the reading or corrections is blocked and replaced by a template",
+     "category": "functional"
+    },
+    {
+     "type": "command",
+     "value": "npm --prefix services/whatsapp-globos test -- conversation",
+     "purpose": "A caption containing instructions is treated as data and never changes behaviour",
+     "category": "functional"
+    }
+   ],
+   "covers": [
+    "R7",
+    "R13"
+   ],
+   "kind": "implement",
+   "objective": "The conversational layer routes follow-ups corrections and off-topic messages and phrases replies from the structured reading, with a guard that blocks any number or colour not in the reading.",
+   "acceptance_criteria": [
+    "A follow-up about colours is answered from the stored reading without a new vision call",
+    "A reply containing a figure absent from the reading or corrections is blocked and replaced by a template",
+    "A caption containing instructions is treated as data and never changes behaviour"
+   ],
+   "complexity": "high",
+   "scope": "full_feature",
+   "estimated_minutes": 120,
+   "risk": "high",
+   "coupling": "medium",
+   "confidence": "low",
+   "estimate_rationale": "Low confidence: the guard is deterministic but prompt quality is only known after trying it.",
+   "shared_resources": [
+    "conversation-state-contract"
+   ],
+   "classification_evidence": {
+    "complexity": {
+     "justification": "LLM output must be constrained and verified; intent routing and language handling add design choices.",
+     "evidence": [
+      "spec:SPEC.md#requirements"
+     ]
+    },
+    "scope": {
+     "justification": "A complete feature: router, phrasing, guard and language detection.",
+     "evidence": [
+      "spec:SPEC.md#requirements"
+     ]
+    },
+    "duration": {
+     "justification": "The longest task, with prompt iteration against fake and real model outputs.",
+     "evidence": [
+      "assumption:phrasing needs a couple of prompt iterations"
+     ]
+    },
+    "risk": {
+     "justification": "A hallucinated figure sent to a customer breaks the central promise of the module.",
+     "evidence": [
+      "spec:SPEC.md#requirements",
+      "spec:SPEC.md#edge-cases--errors"
+     ]
+    },
+    "coupling": {
+     "justification": "Uses the state contract from T9 and the reading type from T4.",
+     "evidence": [
+      "task:T9",
+      "task:T4"
+     ]
+    },
+    "confidence": {
+     "justification": "Model behaviour is uncertain until measured, so the estimate is preliminary.",
+     "evidence": [
+      "assumption:model quality for Spanish phrasing is adequate"
+     ]
+    }
+   }
+  },
+  {
+   "id": "T11",
+   "milestone_id": "M2",
+   "title": "Multi-photo bursts (1–3 images read together, per-number queue)",
+   "repository": "pictures",
+   "after": [
+    "T9"
+   ],
+   "expected_paths": [
+    "services/whatsapp-globos/src/pipeline-burst.ts"
+   ],
+   "verification": [
+    {
+     "type": "command",
+     "value": "npm --prefix services/whatsapp-globos test -- burst",
+     "purpose": "Three images sent in one burst produce a single combined reply",
+     "category": "functional"
+    },
+    {
+     "type": "command",
+     "value": "npm --prefix services/whatsapp-globos test -- burst",
+     "purpose": "Two bursts from one number are processed in order and never interleave",
+     "category": "functional"
+    }
+   ],
+   "covers": [
+    "R3",
+    "R5"
+   ],
+   "kind": "implement",
+   "objective": "One to three images received in a burst are read together and queued per number so replies stay in order.",
+   "acceptance_criteria": [
+    "Three images sent in one burst produce a single combined reply",
+    "Two bursts from one number are processed in order and never interleave"
+   ],
+   "complexity": "medium",
+   "scope": "small_change",
+   "estimated_minutes": 60,
+   "risk": "medium",
+   "coupling": "medium",
+   "confidence": "medium",
+   "estimate_rationale": "Small queue change with timing tests.",
+   "shared_resources": [
+    "webhook-queue-contract"
+   ],
+   "classification_evidence": {
+    "complexity": {
+     "justification": "Burst windowing and ordered queues need a small design decision.",
+     "evidence": [
+      "file:src/app/api/references/analyze/analisis-http.ts"
+     ]
+    },
+    "scope": {
+     "justification": "One queueing change on top of the M1 pipeline.",
+     "evidence": [
+      "spec:SPEC.md#requirements"
+     ]
+    },
+    "duration": {
+     "justification": "Windowing logic and tests in one run.",
+     "evidence": [
+      "assumption:window of a few seconds"
+     ]
+    },
+    "risk": {
+     "justification": "Reading images together changes costs and could mix photos if the window is wrong.",
+     "evidence": [
+      "file:src/app/api/references/analyze/analisis-http.ts"
+     ]
+    },
+    "coupling": {
+     "justification": "Changes the queue contract that T2 introduced.",
+     "evidence": [
+      "task:T2"
+     ]
+    },
+    "confidence": {
+     "justification": "The recogniser accepts 1 to 3 images, but window timing is untested.",
+     "evidence": [
+      "file:src/app/api/references/analyze/analisis-http.ts"
+     ]
+    }
+   }
+  },
+  {
+   "id": "T12",
+   "milestone_id": "M2",
+   "title": "Integration test: scripted multi-turn conversations with a fake LLM, including a guard-trip case and prompt-injection caption",
+   "repository": "pictures",
+   "after": [
+    "T10",
+    "T11"
+   ],
+   "expected_paths": [
+    "services/whatsapp-globos/test/integration/m2.test.ts"
+   ],
+   "verification": [
+    {
+     "type": "command",
+     "value": "npm --prefix services/whatsapp-globos run test:integration -- m2",
+     "purpose": "A scripted conversation ends with the expected labelled corrections and replies",
+     "category": "integration"
+    },
+    {
+     "type": "command",
+     "value": "npm --prefix services/whatsapp-globos run test:integration -- m2",
+     "purpose": "A guard trip replaces the reply with a template and is logged",
+     "category": "integration"
+    },
+    {
+     "type": "command",
+     "value": "npm --prefix services/whatsapp-globos run test:integration -- m2",
+     "purpose": "A burst of three photos yields one combined reply through the real server",
+     "category": "integration"
+    }
+   ],
+   "covers": [
+    "R7",
+    "R8",
+    "R13"
+   ],
+   "kind": "test",
+   "objective": "A scripted multi-turn integration test proves follow-ups, corrections, guard trips and prompt-injection captions end to end with a fake LLM.",
+   "acceptance_criteria": [
+    "A scripted conversation ends with the expected labelled corrections and replies",
+    "A guard trip replaces the reply with a template and is logged",
+    "A burst of three photos yields one combined reply through the real server"
+   ],
+   "complexity": "medium",
+   "scope": "full_feature",
+   "estimated_minutes": 75,
+   "risk": "low",
+   "coupling": "medium",
+   "confidence": "medium",
+   "estimate_rationale": "Same shape as the M1 integration test with scripted dialogues.",
+   "shared_resources": [],
+   "classification_evidence": {
+    "complexity": {
+     "justification": "Scripted dialogues with a fake model to design.",
+     "evidence": [
+      "task:T7"
+     ]
+    },
+    "scope": {
+     "justification": "One suite covering the whole M2 behaviour.",
+     "evidence": [
+      "task:T10"
+     ]
+    },
+    "duration": {
+     "justification": "Writing dialogues and assertions.",
+     "evidence": [
+      "task:T7"
+     ]
+    },
+    "risk": {
+     "justification": "Only test code is written here.",
+     "evidence": [
+      "task:T10"
+     ]
+    },
+    "coupling": {
+     "justification": "Needs every M2 module in place.",
+     "evidence": [
+      "task:T10",
+      "task:T11"
+     ]
+    },
+    "confidence": {
+     "justification": "The pattern follows the M1 integration test.",
+     "evidence": [
+      "task:T7"
+     ]
+    }
+   }
+  },
+  {
+   "id": "T13",
+   "milestone_id": "M2",
+   "title": "M2 audit (findings ledger)",
+   "repository": "pictures",
+   "after": [
+    "T12"
+   ],
+   "expected_paths": [
+    "services/whatsapp-globos/audit/m2.findings.json"
+   ],
+   "verification": [
+    {
+     "type": "command",
+     "value": "bitacora.py audit-ledger check services/whatsapp-globos/audit/m2.findings.json",
+     "purpose": "The findings ledger validates with audit-ledger check",
+     "category": "static"
+    },
+    {
+     "type": "command",
+     "value": "bitacora.py audit-ledger check services/whatsapp-globos/audit/m2.findings.json",
+     "purpose": "No open finding on guard bypass or retention",
+     "category": "static"
+    }
+   ],
+   "covers": [
+    "R7",
+    "R8"
+   ],
+   "kind": "audit",
+   "objective": "An independent audit of M2 records findings, with focus on guard bypass, data retention and prompt injection.",
+   "acceptance_criteria": [
+    "The findings ledger validates with audit-ledger check",
+    "No open finding on guard bypass or retention"
+   ],
+   "complexity": "medium",
+   "scope": "small_change",
+   "estimated_minutes": 45,
+   "risk": "low",
+   "coupling": "low",
+   "confidence": "medium",
+   "estimate_rationale": "One audit pass over the M2 diff.",
+   "shared_resources": [],
+   "classification_evidence": {
+    "complexity": {
+     "justification": "Adversarial reading of the LLM guard and state code.",
+     "evidence": [
+      "task:T12"
+     ]
+    },
+    "scope": {
+     "justification": "Review report and ledger only.",
+     "evidence": [
+      "task:T12"
+     ]
+    },
+    "duration": {
+     "justification": "One adversarial review pass of the M2 diff.",
+     "evidence": [
+      "task:T8"
+     ]
+    },
+    "risk": {
+     "justification": "Audit itself changes nothing.",
+     "evidence": [
+      "task:T12"
+     ]
+    },
+    "coupling": {
+     "justification": "Reads the finished M2 diff.",
+     "evidence": [
+      "task:T12"
+     ]
+    },
+    "confidence": {
+     "justification": "Same procedure as the M1 audit.",
+     "evidence": [
+      "task:T8"
+     ]
+    }
+   }
+  },
+  {
+   "id": "T14",
+   "milestone_id": "M3",
+   "title": "Failure paths (recogniser/ai-api/LLM timeout and error → retry message, no partial figures), health endpoint, structured logs",
+   "repository": "pictures",
+   "after": [
+    "T13"
+   ],
+   "expected_paths": [
+    "services/whatsapp-globos/src/errors.ts",
+    "services/whatsapp-globos/src/health.ts"
+   ],
+   "verification": [
+    {
+     "type": "command",
+     "value": "npm --prefix services/whatsapp-globos test -- failure",
+     "purpose": "A recogniser timeout yields the retry message and no figures",
+     "category": "functional"
+    },
+    {
+     "type": "command",
+     "value": "npm --prefix services/whatsapp-globos test -- failure",
+     "purpose": "A model failure falls back to a template reply with the stored figures",
+     "category": "functional"
+    },
+    {
+     "type": "command",
+     "value": "npm --prefix services/whatsapp-globos test -- failure",
+     "purpose": "The health endpoint reports ok only when its dependencies are configured",
+     "category": "functional"
+    }
+   ],
+   "covers": [
+    "R9",
+    "R14"
+   ],
+   "kind": "implement",
+   "objective": "Failures of the recogniser, ai-api or model produce a short retry message and structured logs with request ids, never partial figures, and a health endpoint reports readiness.",
+   "acceptance_criteria": [
+    "A recogniser timeout yields the retry message and no figures",
+    "A model failure falls back to a template reply with the stored figures",
+    "The health endpoint reports ok only when its dependencies are configured"
+   ],
+   "complexity": "medium",
+   "scope": "small_change",
+   "estimated_minutes": 75,
+   "risk": "medium",
+   "coupling": "medium",
+   "confidence": "medium",
+   "estimate_rationale": "Error mapping over existing paths; ai-api never retries by design.",
+   "shared_resources": [
+    "recogniser-api"
+   ],
+   "classification_evidence": {
+    "complexity": {
+     "justification": "Error taxonomy across three upstreams.",
+     "evidence": [
+      "file:services/ai-api/app/amaterasu/conteo_referencia.py"
+     ]
+    },
+    "scope": {
+     "justification": "Cross-cutting error handling in the existing pipeline.",
+     "evidence": [
+      "spec:SPEC.md#requirements"
+     ]
+    },
+    "duration": {
+     "justification": "Mapping errors and testing each path.",
+     "evidence": [
+      "task:T7"
+     ]
+    },
+    "risk": {
+     "justification": "Wrong fallbacks could show stale or partial numbers.",
+     "evidence": [
+      "spec:SPEC.md#requirements"
+     ]
+    },
+    "coupling": {
+     "justification": "Touches the pipeline and adapter error paths.",
+     "evidence": [
+      "task:T6",
+      "task:T4"
+     ]
+    },
+    "confidence": {
+     "justification": "Failure modes of ai-api are documented as non-retrying.",
+     "evidence": [
+      "file:services/ai-api/app/amaterasu/conteo_referencia.py"
+     ]
+    }
+   }
+  },
+  {
+   "id": "T15",
+   "milestone_id": "M3",
+   "title": "Parity test: fixed photo set, module reading vs web `/api/references/analyze` reading (live Gemini, US$1 cap, external)",
+   "repository": "pictures",
+   "after": [
+    "T14"
+   ],
+   "expected_paths": [
+    "services/whatsapp-globos/test/parity/parity.test.ts"
+   ],
+   "verification": [
+    {
+     "type": "command",
+     "value": "npm --prefix services/whatsapp-globos run test:parity",
+     "purpose": "For each photo in the fixed set the module count and colour set equal the web route result",
+     "category": "integration",
+     "environment": "external_authorized",
+     "requires": [
+      "GEMINI_API_KEY",
+      "INTERNAL_HMAC_SECRET",
+      "PYTHON_BACKEND_URL"
+     ]
+    },
+    {
+     "type": "command",
+     "value": "npm --prefix services/whatsapp-globos run test:parity",
+     "purpose": "Total spend of the run is recorded and stays under the cap",
+     "category": "integration",
+     "environment": "external_authorized",
+     "requires": [
+      "GEMINI_API_KEY",
+      "INTERNAL_HMAC_SECRET",
+      "PYTHON_BACKEND_URL"
+     ]
+    }
+   ],
+   "covers": [
+    "R5",
+    "R6"
+   ],
+   "kind": "test",
+   "objective": "A parity test proves the module returns the same count and colour set as the web analyze route on a fixed photo set, within a one dollar live spend cap.",
+   "acceptance_criteria": [
+    "For each photo in the fixed set the module count and colour set equal the web route result",
+    "Total spend of the run is recorded and stays under the cap"
+   ],
+   "complexity": "medium",
+   "scope": "small_change",
+   "estimated_minutes": 60,
+   "risk": "medium",
+   "coupling": "low",
+   "confidence": "low",
+   "estimate_rationale": "Low confidence: live readings can differ between runs.",
+   "shared_resources": [],
+   "classification_evidence": {
+    "complexity": {
+     "justification": "Comparing two live readings that may vary between runs needs a tolerance rule.",
+     "evidence": [
+      "file:src/app/api/references/analyze/route.ts"
+     ]
+    },
+    "scope": {
+     "justification": "One live test over a small photo set.",
+     "evidence": [
+      "file:scripts/eval/estructuras/conteo.ts"
+     ]
+    },
+    "duration": {
+     "justification": "Running and tuning a handful of live calls.",
+     "evidence": [
+      "file:scripts/eval/estructuras/conteo.ts"
+     ]
+    },
+    "risk": {
+     "justification": "Real Gemini spend, bounded by the cap.",
+     "evidence": [
+      "spec:SPEC.md#constraints"
+     ]
+    },
+    "coupling": {
+     "justification": "Independent of other tasks once the module works.",
+     "evidence": [
+      "assumption:the photo set already exists in the eval data"
+     ]
+    },
+    "confidence": {
+     "justification": "Reading variability between runs is unknown until measured.",
+     "evidence": [
+      "assumption:readings are stable enough for a tolerance"
+     ]
+    }
+   }
+  },
+  {
+   "id": "T16",
+   "milestone_id": "M3",
+   "title": "Deploy recipe (Dockerfile, compose service on the VPS next to `ai-api`, env template, runbook with Meta setup steps)",
+   "repository": "pictures",
+   "after": [
+    "T14"
+   ],
+   "expected_paths": [
+    "services/whatsapp-globos/Dockerfile",
+    "services/whatsapp-globos/RUNBOOK.md"
+   ],
+   "verification": [
+    {
+     "type": "command",
+     "value": "docker build -t whatsapp-globos:test services/whatsapp-globos",
+     "purpose": "The Docker image builds from the package",
+     "category": "static"
+    },
+    {
+     "type": "command",
+     "value": "docker build -t whatsapp-globos:test services/whatsapp-globos",
+     "purpose": "The runbook lists every environment variable by name and each Meta setup step in order",
+     "category": "static"
+    }
+   ],
+   "covers": [
+    "R11",
+    "R14"
+   ],
+   "kind": "docs",
+   "objective": "A container image and a runbook let the owner deploy the module next to ai-api and register the Meta webhook.",
+   "acceptance_criteria": [
+    "The Docker image builds from the package",
+    "The runbook lists every environment variable by name and each Meta setup step in order"
+   ],
+   "complexity": "low",
+   "scope": "small_change",
+   "estimated_minutes": 45,
+   "risk": "medium",
+   "coupling": "low",
+   "confidence": "medium",
+   "estimate_rationale": "Copy the ai-api deployment pattern.",
+   "shared_resources": [],
+   "classification_evidence": {
+    "complexity": {
+     "justification": "Standard container and documentation work.",
+     "evidence": [
+      "file:services/ai-api/Dockerfile"
+     ]
+    },
+    "scope": {
+     "justification": "Two files and an env template.",
+     "evidence": [
+      "file:compose.vps.yml"
+     ]
+    },
+    "duration": {
+     "justification": "Writing and a local build.",
+     "evidence": [
+      "file:services/ai-api/Dockerfile"
+     ]
+    },
+    "risk": {
+     "justification": "A wrong recipe could expose a webhook without checks, so it must follow the env schema.",
+     "evidence": [
+      "spec:SPEC.md#constraints"
+     ]
+    },
+    "coupling": {
+     "justification": "Reads the env schema from T1 only.",
+     "evidence": [
+      "task:T1"
+     ]
+    },
+    "confidence": {
+     "justification": "Compose conventions exist in the repo for ai-api.",
+     "evidence": [
+      "file:compose.vps.yml"
+     ]
+    }
+   }
+  },
+  {
+   "id": "T17",
+   "milestone_id": "M3",
+   "title": "Live acceptance with the owner's Meta test number (human attestation: send photos, check replies and caps)",
+   "repository": "pictures",
+   "after": [
+    "T15",
+    "T16"
+   ],
+   "covers": [
+    "R1",
+    "R2",
+    "R4",
+    "R5",
+    "R10"
+   ],
+   "kind": "test",
+   "verification": [
+    {
+     "type": "manual",
+     "value": "Send a balloon photo from an allow-listed WhatsApp number and from a non-listed one",
+     "expected": "The first number receives count and colours; the second receives nothing and no recogniser call is logged",
+     "purpose": "A photo from an allow-listed number gets the count and colours reply",
+     "category": "product",
+     "environment": "human_attestation"
+    }
+   ],
+   "objective": "The owner confirms with a real Meta test number that photos produce correct replies and that caps and the allow-list work.",
+   "acceptance_criteria": [
+    "A photo from an allow-listed number gets the count and colours reply",
+    "A number outside the allow-list gets no reply and no vision spend"
+   ],
+   "complexity": "low",
+   "scope": "small_change",
+   "estimated_minutes": 45,
+   "risk": "medium",
+   "coupling": "low",
+   "confidence": "medium",
+   "estimate_rationale": "Depends on external inputs from the owner.",
+   "shared_resources": [],
+   "classification_evidence": {
+    "complexity": {
+     "justification": "A manual checklist against a live number.",
+     "evidence": [
+      "spec:SPEC.md#requirements"
+     ]
+    },
+    "scope": {
+     "justification": "A short acceptance session.",
+     "evidence": [
+      "task:T16"
+     ]
+    },
+    "duration": {
+     "justification": "Setup plus a few photos.",
+     "evidence": [
+      "assumption:credentials are ready"
+     ]
+    },
+    "risk": {
+     "justification": "Uses live credentials and real spend, bounded by the caps.",
+     "evidence": [
+      "spec:SPEC.md#constraints"
+     ]
+    },
+    "coupling": {
+     "justification": "Needs deploy and parity done first.",
+     "evidence": [
+      "task:T15",
+      "task:T16"
+     ]
+    },
+    "confidence": {
+     "justification": "Depends on the owner supplying Meta credentials.",
+     "evidence": [
+      "assumption:owner provides Meta app and token"
+     ]
+    }
+   },
+   "expected_paths": []
+  },
+  {
+   "id": "T18",
+   "milestone_id": "M3",
+   "title": "Final audit (findings ledger)",
+   "repository": "pictures",
+   "after": [
+    "T17"
+   ],
+   "expected_paths": [
+    "services/whatsapp-globos/audit/final.findings.json"
+   ],
+   "verification": [
+    {
+     "type": "command",
+     "value": "bitacora.py audit-ledger check services/whatsapp-globos/audit/final.findings.json",
+     "purpose": "The findings ledger validates with audit-ledger check",
+     "category": "static"
+    },
+    {
+     "type": "command",
+     "value": "bitacora.py audit-ledger check services/whatsapp-globos/audit/final.findings.json",
+     "purpose": "No open finding on secrets handling or the single repo import boundary",
+     "category": "static"
+    }
+   ],
+   "covers": [
+    "R9",
+    "R10",
+    "R11",
+    "R12"
+   ],
+   "kind": "audit",
+   "objective": "A final independent audit of the whole module records findings and closes them, covering failure paths, secrets and the isolation boundary.",
+   "acceptance_criteria": [
+    "The findings ledger validates with audit-ledger check",
+    "No open finding on secrets handling or the single repo import boundary"
+   ],
+   "complexity": "medium",
+   "scope": "small_change",
+   "estimated_minutes": 45,
+   "risk": "low",
+   "coupling": "low",
+   "confidence": "medium",
+   "estimate_rationale": "One audit pass over the finished module.",
+   "shared_resources": [],
+   "classification_evidence": {
+    "complexity": {
+     "justification": "Whole-module adversarial review.",
+     "evidence": [
+      "task:T17"
+     ]
+    },
+    "scope": {
+     "justification": "Review report and ledger only.",
+     "evidence": [
+      "task:T17"
+     ]
+    },
+    "duration": {
+     "justification": "One adversarial review pass of the module.",
+     "evidence": [
+      "task:T13"
+     ]
+    },
+    "risk": {
+     "justification": "Audit itself changes nothing.",
+     "evidence": [
+      "task:T17"
+     ]
+    },
+    "coupling": {
+     "justification": "Reads the final diff.",
+     "evidence": [
+      "task:T17"
+     ]
+    },
+    "confidence": {
+     "justification": "Same procedure as earlier audits.",
+     "evidence": [
+      "task:T13"
+     ]
+    }
+   }
+  }
+ ]
+}
