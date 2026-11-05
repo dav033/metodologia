@@ -1,6 +1,6 @@
 # Index — pictures
 
-_Generated 2026-11-05 06:24 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-11-05 06:46 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md) · [Glossary](GLOSSARY.md)  
 **Web:** [project](http://127.0.0.1:8765/p/pictures) · [graph](http://127.0.0.1:8765/p/pictures/graph)  
@@ -57,9 +57,9 @@ _Generated 2026-11-05 06:24 by `bitacora.py index`. Do not edit by hand._
 - P-217 · [fix e58be0423 browser-verified 2026-11-02, session 3ad3bcd4; close after the cut] /3d loo · high/S
 - P-226 · Rotate DB_GATEWAY_KEY before inviting real users: it was printed in session 62623145 when  · high/S
 - P-228 · Chat tags and picker on real devices: phone keyboards (Gboard composition, autocorrect), i · high/S
+- P-240 · Check the six birthday templates in production with a signed-in session (`davidt@sempertex · high/S
 - P-010 · Commit photo-reading work (uncommitted) and merge e3-rapido f1198efd (precise AI size edit · high/M
 - P-015 · REQ-002 remaining rollout verification: current read-only Neon audit proves 028 tables and · high/M
-- P-021 · Refine acceptance feat/refinar-aceptacion (e4m) — approved, base of integ/foto-taller (was · high/M
 
 ## Recent decisions
 
