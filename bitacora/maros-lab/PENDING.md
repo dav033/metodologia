@@ -1,8 +1,10 @@
 # maros-lab — Pending
 
 _Sorted automatically by `bitacora.py pending` (urgency high → low, then complexity S → L: quick urgent wins first).
-One line per item: `P-012 · <task> · urgency: high|med|low · complexity: S|M|L · added YYYY-MM-DD · <source>`.
-Indented lines under an item are its details and move with it. Get IDs with `bitacora.py id P`._
+One line per item: `P-NNN · <task> · urgency: high|med|low · complexity: S|M|L · added YYYY-MM-DD · <source>`.
+Indented lines under an item are its details and move with it. Get IDs with `bitacora.py id P`.
+Move items between sections as they change; closed items keep 14 days in "Recently closed", then go to the
+month summary._
 
 ## Open
 - P-005 · REQ-001/R5: see the shared-element motion once in a real browser before merging · urgency: med · complexity: S · added 2026-10-13 · REQ-001/M3-audit
@@ -38,11 +40,3 @@ _None_
   Done in marathon session 10: pass-with-fixes, see `requirements/REQ-001-invoice-list-filters-and-shared-element/AUDIT-M2.md`; follow-ups P-012…P-014.
 - P-001 · CLOSED: REQ-001/T4 date semantics, query merging and reversed-range feedback · urgency: med · complexity: S · added 2026-10-12 · REQ-001/M2
   Explicit invoice-date labels/help describe issue date or local creation day when absent (D-001). The query adapter preserves unrelated keys/hash; reversed date and amount bounds expose associated errors. Verified by five page filter regressions, query-helper unit tests, typecheck and feature ESLint.
-
-## Notes
-One line per item: `P-012 · <task> · urgency: high|med|low · complexity: S|M|L · added YYYY-MM-DD · <source>`.
-Indented lines under an item are its details and move with it. Get IDs with `bitacora.py id P`._
-One line per item: `P-012 · <task> · urgency: high|med|low · complexity: S|M|L · added YYYY-MM-DD · <source>`.
-Indented lines under an item are its details and move with it. Get IDs with `bitacora.py id P`._
-One line per item: `P-012 · <task> · urgency: high|med|low · complexity: S|M|L · added YYYY-MM-DD · <source>`.
-Indented lines under an item are its details and move with it. Get IDs with `bitacora.py id P`._

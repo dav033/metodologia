@@ -1,6 +1,6 @@
 # Index — escritorio
 
-_Generated 2026-10-25 21:40 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-11-05 09:25 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/escritorio) · [graph](http://127.0.0.1:8765/p/escritorio/graph)  

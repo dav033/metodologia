@@ -1,10 +1,10 @@
 # Index — metodologia
 
-_Generated 2026-10-29 17:18 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-11-05 09:25 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/metodologia) · [graph](http://127.0.0.1:8765/p/metodologia/graph)  
-**Last activity:** 2026-10-29
+**Last activity:** 2026-11-01
 
 ## Workspace
 
@@ -44,7 +44,7 @@ _Generated 2026-10-29 17:18 by `bitacora.py index`. Do not edit by hand._
 | [REQ-028](requirements/REQ-028-per-run-integration-branch-and-remediati/SPEC.md) | Per-run integration branch and remediation tasks: audit findings stop cascading rebuilds | `in-progress` | — |  |
 | [REQ-029](requirements/REQ-029-autonomous-recovery-from-repeated-audit/SPEC.md) | Autonomous recovery from repeated audit and integration failures | `done` | — |  |
 | [REQ-030](requirements/REQ-030-operation-metamorfosis-durable-self-heal/SPEC.md) | Operation Metamorfosis: durable, self-healing, Linux-native execution engine | `in-progress` | — | report ✓ |
-| [REQ-031](requirements/REQ-031-solucionador-a-full-access-agent-that-fi/SPEC.md) | Solucionador: a full-access agent that fixes blocked runs at their origin | `ready` | [in-progress](requirements/REQ-031-solucionador-a-full-access-agent-that-fi/PLAN.md) |  |
+| [REQ-031](requirements/REQ-031-solucionador-a-full-access-agent-that-fi/SPEC.md) | Solucionador: a full-access agent that fixes blocked runs at their origin | `in-progress` | [in-progress](requirements/REQ-031-solucionador-a-full-access-agent-that-fi/PLAN.md) |  |
 
 ## Top pending (urgency, then complexity)
 
@@ -58,11 +58,11 @@ _Generated 2026-10-29 17:18 by `bitacora.py index`. Do not edit by hand._
 
 ## Recent decisions
 
-- D-168 — Task sessions never do the bitácora's chores
-- D-167 — The durable engine heals its runs' decisions
-- D-166 — Reconfirming a running subplan approves its stage again
-- D-165 — Dependencies are typed when the plan is written
-- D-164 — Subplan lines settle conflicts like the composer
+- D-298 — A gate publishing a moved line is not one more version; the same commit is not announced twice
+- D-297 — Subplan lines keep up with what they build on; a passed gate stops counting when what it judged changed
+- D-296 — The fold warning names every predecessor the tried tree lacks, not only the one that clashed
+- D-295 — `components dev`: the two-step pool loop, proven on a live `next dev`; the watcher never commits work in progress
+- D-294 — `components sync` commits on pictures' real layout: plumbing with another branch checked out, ignored nested `node_modules`
 
 ## Artifacts
 
@@ -78,8 +78,10 @@ _Generated 2026-10-29 17:18 by `bitacora.py index`. Do not edit by hand._
 
 ## Timeline
 
+- **2026-11** — [month summary](2026-11/MONTH.md)
+  - [W1](2026-11/W1/WEEK.md): [01](2026-11/W1/2026-11-01.md)
 - **2026-10** — [month summary](2026-10/MONTH.md)
-  - [W5](2026-10/W5/WEEK.md): [29](2026-10/W5/2026-10-29.md), [28](2026-10/W5/2026-10-28.md), [27](2026-10/W5/2026-10-27.md), [26](2026-10/W5/2026-10-26.md)
+  - [W5](2026-10/W5/WEEK.md): [31](2026-10/W5/2026-10-31.md), [30](2026-10/W5/2026-10-30.md), [29](2026-10/W5/2026-10-29.md), [28](2026-10/W5/2026-10-28.md), [27](2026-10/W5/2026-10-27.md), [26](2026-10/W5/2026-10-26.md)
   - [W4](2026-10/W4/WEEK.md): [25](2026-10/W4/2026-10-25.md), [24](2026-10/W4/2026-10-24.md), [23](2026-10/W4/2026-10-23.md), [22](2026-10/W4/2026-10-22.md), [21](2026-10/W4/2026-10-21.md), [20](2026-10/W4/2026-10-20.md), [19](2026-10/W4/2026-10-19.md)
   - [W3](2026-10/W3/WEEK.md): [18](2026-10/W3/2026-10-18.md), [17](2026-10/W3/2026-10-17.md), [16](2026-10/W3/2026-10-16.md), [15](2026-10/W3/2026-10-15.md), [14](2026-10/W3/2026-10-14.md), [13](2026-10/W3/2026-10-13.md), [12](2026-10/W3/2026-10-12.md)
   - [W2](2026-10/W2/WEEK.md): [10](2026-10/W2/2026-10-10.md), [09](2026-10/W2/2026-10-09.md), [08](2026-10/W2/2026-10-08.md)

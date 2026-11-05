@@ -676,3 +676,21 @@ Source: owner, REQ-021 rounds 1–3.
 - **Consequences:** + the chat behaves the same for all templates; − publishing takes one more check. The rows above stay without structures until P-241 is done.
 - **Rollback:** none needed; this is a working rule.
 
+
+## D-099 — A template cannot gain R-5 balloons in the air (2026-11-05)
+
+- **Context:** the owner and a colleague saw R-5 balloons floating in the air. Fixed balloons in an organic piece get their depth from the piece's radius, not from what they touch, so they can end up clear of everything. Measured on 34 templates: 568 loose groups.
+- **Decision:** saving refuses a template with a group of R-5 that touches no bigger balloon, stand, tube, flower, wall or floor within 0.5 cm (`GLOBOS_SUELTOS`, `src/lib/globos3d/globos-sueltos.ts`). Amended the same day at the owner's word: a group of fewer than three R-5 is refused too, since in the photos they go in tight clusters; `src/lib/globos3d/racimito-r5.ts` is the new small structure that places one. New templates allow 0; an edit allows what the saved recipe already has, so the other 33 are not blocked until their turn. `npm run plantilla:globos-sueltos -- <file>` lists them before saving.
+- **Owner rulings:** a limit so this does not happen again (his request); templates are improved one at a time starting with Feliz Año; fixing means placing balloons well, never removing them.
+- **Alternatives:** moving loose balloons automatically in the engine (started, dropped at the owner's word: it changes all templates at once); fixing recipes with no guard (no: it comes back).
+- **Consequences:** the rule covers saving through the API and the Taller, not scenes the agents build in chat. The root cause in `organico-fijos.ts` stays, so new organic pieces can hit the refusal.
+- **Rollback:** revert 6251e4bdf and the commit after it. Removal condition of the allowance: every saved template at 0.
+
+## D-100 — A template opens in the chat from views rendered ahead of time (2026-11-05)
+
+- **Context:** a client said the 3D models look false. The owner and a colleague agreed the first result of a request gets a serious render, in the 3D view and not as a still; modifying drops to the plain viewer. The customer's computer must not carry it: we render with our GPU and present the result. One template at a time, Feliz Año first.
+- **Decision:** `recipe.presentacion` holds views rendered with Cycles and OptiX on this machine, 14 cameras at 1280 x 1024 with depth, in the object store. The chat panel shows them with `VisorPresentacion`, plain WebGL 2 and no 3D engine: the exact render at rest, neighbouring views blended on a mesh from depth while orbiting. Tapping a piece or the picker starts the live viewer, labelled «Vista de edición»; going back returns to the views. Any chat change arrives as a decoration without views. Saving an edit rebuilds the recipe without them, so stale views cannot survive.
+- **Owner rulings:** not a still image; a mode of the 3D view; approved the Feliz Año result "for now" with known flaws.
+- **Alternatives:** still image as thumbnail (owner: no); baked light textures (my first recommendation, dropped: glossy balloons and chrome would not reach the Cycles look); path tracing in the browser (needs a strong GPU, D-097).
+- **Consequences:** orbit limited to ±21° and elevation 3° to 11°; zoom only enlarges up to 1.8x; ghosting while moving. A change to a saved template needs views rendered again by hand: the pipeline is in `~/dev/pictures-infra/plantillas/feliz-ano/presentacion/`, not automated. Taller unchanged.
+- **Rollback:** delete `recipe.presentacion` from the row to return the template to the plain viewer; code `git revert 65d946c71`. Old recipe: VPS `/root/backups/pictures/feliz-ano-receta-antes-presentacion-*.json`, and `pictures-before-estructuras-fotos-20261105T131620Z.dump`.

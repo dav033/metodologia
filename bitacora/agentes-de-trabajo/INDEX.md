@@ -1,6 +1,6 @@
 # Index — agentes-de-trabajo
 
-_Generated 2026-10-12 20:09 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-11-05 09:25 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/agentes-de-trabajo) · [graph](http://127.0.0.1:8765/p/agentes-de-trabajo/graph)  
