@@ -1,10 +1,10 @@
 # Index — maros
 
-_Generated 2026-11-05 09:25 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-11-07 13:44 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/maros) · [graph](http://127.0.0.1:8765/p/maros/graph)  
-**Last activity:** 2026-10-25
+**Last activity:** 2026-11-07
 
 ## Workspace
 
@@ -29,21 +29,24 @@ _Generated 2026-11-05 09:25 by `bitacora.py index`. Do not edit by hand._
 
 - P-010 · Apply `db/add-role-audit-events.sql` to Supabase by hand before the REQ-005 backend is dep · high/S
 - P-012 · Apply `db/add-access-requests.sql` to Supabase by hand before deploying REQ-005 backend · high/S
+- P-016 · GitHub Actions is blocked by an account billing lock, so the API deploy workflow does not  · high/S
+- P-017 · Enable Gmail API and Drive API in Google Cloud project `maros-423220`, add the `gmail.comp · high/S
+- P-018 · Live acceptance of `create_draft_with_attachment`, `save_report_to_drive`, `save_invoice_t · med/S
 - P-011 · Make role write + audit insert atomic (transaction or outbox) once the SQL is applied, so  · med/M
 - P-014 · Make the duplicate-pending check race-safe for access requests: the backend already refuse · low/S
-- P-015 · Add a server-side test for settings/users and settings/roles gating (null user → dashboard · low/S
-- P-013 · Apply the explanatory no-access state (`NoAccessState`) to the other permission-guarded pa · low/M
 
 ## Recent decisions
 
+- D-007 — Gmail drafts and Drive files go through narrow scopes, as a named connected person
 - D-006 — The `member` role is resolved in code, and last-admin counts internal users only
 - D-005 — Access requests grant nothing; resolution is single-shot and self-resolution is refused
 - D-004 — Permission model v2 is metadata beside the existing codes, with shared guard rails
 - D-003 — Central MCP simulation and attribution with shared role guard rails
-- D-002 — Explicit MCP capability inventory and system attribution
 
 ## Timeline
 
+- **2026-11** — [month summary](2026-11/MONTH.md)
+  - [W2](2026-11/W2/WEEK.md): [07](2026-11/W2/2026-11-07.md)
 - **2026-10** — [month summary](2026-10/MONTH.md)
   - [W4](2026-10/W4/WEEK.md): [25](2026-10/W4/2026-10-25.md)
   - [W3](2026-10/W3/WEEK.md): [15](2026-10/W3/2026-10-15.md), [14](2026-10/W3/2026-10-14.md), [13](2026-10/W3/2026-10-13.md), [12](2026-10/W3/2026-10-12.md)
