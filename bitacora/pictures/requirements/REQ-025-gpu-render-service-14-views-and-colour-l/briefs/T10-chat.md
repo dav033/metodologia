@@ -1,0 +1,9 @@
+# REQ-025 T10 — Chat shows a finished render for any scene with that content (repo)
+
+Write your report in Spanish. Repo `/home/david/dev/pictures-wt/pilot`. Follow root `AGENTS.md`. Read REQ-025 SPEC/PLAN (US-4, R8) and `src/lib/render/` (contract, `huella.ts`, `repositorio.ts` → `resultadoPorHuella`).
+
+Today the chat shows the 14 pre-rendered views only when the ensamble comes unchanged from a template: `src/lib/ensamble-pool/turno-plantilla.ts` (`presentacionDe(item, escena, piezas, …)` reads `item.recipe.presentacion`/`capas`), used also by `recolor-plantilla.ts` and `quitar-estructura.ts`. A scene edited in the chat shows the live 3D viewer.
+
+Build: wherever the server builds the ensamble returned to the chat (find every place that sets or clears `ensamble.presentacion`), when the ensamble has no presentation, compute `huellaEscena(ensamble.escena)` and look up the newest finished render (`resultadoPorHuella`); if found, build the template-like item `{recipe: {presentacion, capas, estructuras}}` from the Result and pass it through `presentacionDe` so rotate/zoom/tap structures/colour change work unchanged (estructuras must map to `ensamble.piezas` the same way the template path does; if they do not match, do not show the render). Colour change on these views must reuse the same code path as templates (`recolor-plantilla.ts`): make it accept the render-backed item. One DB lookup per turn at most; on any lookup error, fall back to the live viewer (log the error with a correlation id, never fail the turn). Keep the chat behaviour for templates byte-identical.
+
+Check: `npx tsc --noEmit`, `npm run lint` on changed files (no test suites, owner's order). On `http://127.0.0.1:3010`: once a render of a scene exists (the coordinator will give you a job id, or use any `listo` row in `render_jobs`), open that scene in the chat and see the views + a colour change. Do not commit; report changed files and what you checked.

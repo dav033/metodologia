@@ -1,6 +1,6 @@
 # Index — pictures
 
-_Generated 2026-11-07 11:30 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-11-07 12:05 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md) · [Glossary](GLOSSARY.md)  
 **Web:** [project](http://127.0.0.1:8765/p/pictures) · [graph](http://127.0.0.1:8765/p/pictures/graph)  
@@ -51,6 +51,7 @@ _Generated 2026-11-07 11:30 by `bitacora.py index`. Do not edit by hand._
 | [REQ-022](requirements/REQ-022-plans-catalogue-subscription-tiers-secti/SPEC.md) | Plans catalogue: subscription tiers section (Free, 20k, Designer, Designer Max) | `dropped` | [draft](requirements/REQ-022-plans-catalogue-subscription-tiers-secti/PLAN.md) | round open |
 | [REQ-023](requirements/REQ-023-sempertex-colour-tags-in-the-chat-balloo/SPEC.md) | Sempertex colour tags in the chat, balloon picker, 3D workshop paint brush and context tools | `dropped` | — |  |
 | [REQ-024](requirements/REQ-024-whatsapp-conversational-module-balloon-c/SPEC.md) | WhatsApp conversational module: balloon count and colour detection | `ready` | [draft](requirements/REQ-024-whatsapp-conversational-module-balloon-c/PLAN.md) |  |
+| [REQ-025](requirements/REQ-025-gpu-render-service-14-views-and-colour-l/SPEC.md) | GPU render service: 14 views and colour layers for any chosen scene, internal staff only | `ready` | [proposed](requirements/REQ-025-gpu-render-service-14-views-and-colour-l/PLAN.md) |  |
 
 ## Top pending (urgency, then complexity)
 
