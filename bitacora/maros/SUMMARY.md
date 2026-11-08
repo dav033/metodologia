@@ -39,3 +39,5 @@ _Last updated: 2026-10-25_
 2026-11-08 (later): maros-nest/production at `82881251` (Gmail label import, Drive search, any-file attachments; read scopes added), frontend `856bd877` (reconnect button for llozano@). Luis must reconnect again for the new scopes (P-023); T6 migration (P-024) and QuickBooks writes (P-025) are next.
 
 2026-11-08 (end): production `dc1268d4` (index of Drive locations deployed, migration pending P-024); Claude web connector refreshed (280 tools); live tests passed. Open: P-024 (apply SQL), P-025 (QBO), P-026 (T1 needs the two prompts), P-020 (pictures purge), P-016 (GitHub billing).
+
+2026-11-08 (night): production `357a2184`; invoice index live (migration applied); pictures history purge pushed (P-020 remaining: realign local clones); open: P-027 (Luis reconnect for gmail.labels, then label + real import), P-026 (T1 prompts), P-025 (QBO), P-016 (GitHub billing, ignored by the owner).

@@ -1,6 +1,6 @@
 # Bitácora — index
 
-_Generated 2026-11-08 15:38. Do not edit by hand. Web: http://127.0.0.1:8765_
+_Generated 2026-11-08 16:14. Do not edit by hand. Web: http://127.0.0.1:8765_
 
 | Project | Repos | Open REQs | Open pending | Last activity | Links |
 |---|---|---|---|---|---|
@@ -11,7 +11,7 @@ _Generated 2026-11-08 15:38. Do not edit by hand. Web: http://127.0.0.1:8765_
 | [escritorio](escritorio/INDEX.md) | — | 1 | 3 (1 high) | 2026-10-25 | [summary](escritorio/SUMMARY.md) · [web](http://127.0.0.1:8765/p/escritorio) |
 | [eventos](eventos/INDEX.md) | frontend, backend | 0 | 9 (7 high) | 2026-10-08 | [summary](eventos/SUMMARY.md) · [web](http://127.0.0.1:8765/p/eventos) |
 | [lotm](lotm/INDEX.md) | — | 1 | 2 (2 high) | 2026-10-13 | [summary](lotm/SUMMARY.md) · [web](http://127.0.0.1:8765/p/lotm) |
-| [maros](maros/INDEX.md) | frontend, backend | 4 | 13 (4 high) | 2026-11-08 | [summary](maros/SUMMARY.md) · [web](http://127.0.0.1:8765/p/maros) |
+| [maros](maros/INDEX.md) | frontend, backend | 4 | 12 (4 high) | 2026-11-08 | [summary](maros/SUMMARY.md) · [web](http://127.0.0.1:8765/p/maros) |
 | [maros-lab](maros-lab/INDEX.md) | frontend | 1 | 9 (0 high) | 2026-10-13 | [summary](maros-lab/SUMMARY.md) · [web](http://127.0.0.1:8765/p/maros-lab) |
 | [metodologia](metodologia/INDEX.md) | skill | 27 | 100 (24 high) | 2026-11-01 | [summary](metodologia/SUMMARY.md) · [web](http://127.0.0.1:8765/p/metodologia) |
 | [oraldenti](oraldenti/INDEX.md) | frontend | 0 | 0 (0 high) | 2026-10-17 | [summary](oraldenti/SUMMARY.md) · [web](http://127.0.0.1:8765/p/oraldenti) |
