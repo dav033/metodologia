@@ -1,6 +1,6 @@
 # Index — maros
 
-_Generated 2026-11-08 15:01 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-11-08 15:29 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/maros) · [graph](http://127.0.0.1:8765/p/maros/graph)  
@@ -31,10 +31,10 @@ _Generated 2026-11-08 15:01 by `bitacora.py index`. Do not edit by hand._
 - P-010 · Apply `db/add-role-audit-events.sql` to Supabase by hand before the REQ-005 backend is dep · high/S
 - P-012 · Apply `db/add-access-requests.sql` to Supabase by hand before deploying REQ-005 backend · high/S
 - P-016 · GitHub Actions is blocked by an account billing lock, so the API deploy workflow does not  · high/S
-- P-021 · REQ-006 owner decisions: (a) T5 Gmail label -> Receipts: Apps Script inside Luis's account · high/S
 - P-020 · pictures: purge of `scripts/test/` from all history is rewritten locally and being force-p · high/M
+- P-024 · T6 invoice index: code DEPLOYED (`dc1268d4`), migration `db/add-invoice-drive-locations.sq · med/S
+- P-026 · REQ-006 T1 (unify the two daily Claude tasks): found them in claude.ai/Scheduled as `Sopor · med/S
 - P-011 · Make role write + audit insert atomic (transaction or outbox) once the SQL is applied, so  · med/M
-- P-014 · Make the duplicate-pending check race-safe for access requests: the backend already refuse · low/S
 
 ## Recent decisions
 
