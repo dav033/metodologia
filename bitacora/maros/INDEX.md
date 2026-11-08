@@ -1,6 +1,6 @@
 # Index — maros
 
-_Generated 2026-11-08 16:19 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-11-08 16:58 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/maros) · [graph](http://127.0.0.1:8765/p/maros/graph)  
