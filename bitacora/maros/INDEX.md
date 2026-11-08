@@ -1,10 +1,10 @@
 # Index — maros
 
-_Generated 2026-11-07 14:02 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-11-08 15:01 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/maros) · [graph](http://127.0.0.1:8765/p/maros/graph)  
-**Last activity:** 2026-11-07
+**Last activity:** 2026-11-08
 
 ## Workspace
 
@@ -24,29 +24,30 @@ _Generated 2026-11-07 14:02 by `bitacora.py index`. Do not edit by hand._
 | [REQ-003](requirements/REQ-003-adopt-bencho-interactions-across-maros-c/SPEC.md) | Adopt Bencho interactions across Maros CRM | `done` | [done](requirements/REQ-003-adopt-bencho-interactions-across-maros-c/PLAN.md) |  |
 | [REQ-004](requirements/REQ-004-transversal-maros-ux-and-motion-refineme/SPEC.md) | Transversal Maros UX and motion refinement | `in-progress` | [in-progress](requirements/REQ-004-transversal-maros-ux-and-motion-refineme/PLAN.md) |  |
 | [REQ-005](requirements/REQ-005-friendlier-roles-and-permissions-ux-func/SPEC.md) | Friendlier roles and permissions (UX + functionality) and full-power admin MCP | `approved` | [done](requirements/REQ-005-friendlier-roles-and-permissions-ux-func/PLAN.md) | report ✓ |
+| [REQ-006](requirements/REQ-006-luis-lozano-automation-backlog-14-tasks/SPEC.md) | Luis Lozano automation backlog (14 tasks, MCP capabilities) | `in-progress` | — |  |
 
 ## Top pending (urgency, then complexity)
 
 - P-010 · Apply `db/add-role-audit-events.sql` to Supabase by hand before the REQ-005 backend is dep · high/S
 - P-012 · Apply `db/add-access-requests.sql` to Supabase by hand before deploying REQ-005 backend · high/S
 - P-016 · GitHub Actions is blocked by an account billing lock, so the API deploy workflow does not  · high/S
-- P-017 · Enable Gmail API and Drive API in Google Cloud project `maros-423220`, add the `gmail.comp · high/S
-- P-018 · Live acceptance of `create_draft_with_attachment`, `save_report_to_drive`, `save_invoice_t · med/S
+- P-021 · REQ-006 owner decisions: (a) T5 Gmail label -> Receipts: Apps Script inside Luis's account · high/S
+- P-020 · pictures: purge of `scripts/test/` from all history is rewritten locally and being force-p · high/M
 - P-011 · Make role write + audit insert atomic (transaction or outbox) once the SQL is applied, so  · med/M
 - P-014 · Make the duplicate-pending check race-safe for access requests: the backend already refuse · low/S
 
 ## Recent decisions
 
+- D-008 — Invoice files are named Project-Vendor-Amount, and filing never guesses or overwrites
 - D-007 — Gmail drafts and Drive files go through narrow scopes, as a named connected person
 - D-006 — The `member` role is resolved in code, and last-admin counts internal users only
 - D-005 — Access requests grant nothing; resolution is single-shot and self-resolution is refused
 - D-004 — Permission model v2 is metadata beside the existing codes, with shared guard rails
-- D-003 — Central MCP simulation and attribution with shared role guard rails
 
 ## Timeline
 
 - **2026-11** — [month summary](2026-11/MONTH.md)
-  - [W2](2026-11/W2/WEEK.md): [07](2026-11/W2/2026-11-07.md)
+  - [W2](2026-11/W2/WEEK.md): [08](2026-11/W2/2026-11-08.md), [07](2026-11/W2/2026-11-07.md)
 - **2026-10** — [month summary](2026-10/MONTH.md)
   - [W4](2026-10/W4/WEEK.md): [25](2026-10/W4/2026-10-25.md)
   - [W3](2026-10/W3/WEEK.md): [15](2026-10/W3/2026-10-15.md), [14](2026-10/W3/2026-10-14.md), [13](2026-10/W3/2026-10-13.md), [12](2026-10/W3/2026-10-12.md)

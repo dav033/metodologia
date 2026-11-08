@@ -31,3 +31,9 @@ REQ-005 (friendlier roles and permissions UX/func + full-power admin MCP) is com
 - Backend full lint baseline: quickbooks-auth.service.spec.ts:218 unbound method; invoice-scans.service.ts:685 useless escape.
 
 _Last updated: 2026-10-25_
+
+2026-11-07: maros-nest `main` at `a82d96f` is deployed on the VPS (manual deploy, GitHub Actions locked by billing, P-016). New MCP tools in production: `search_invoices`; `create_draft_with_attachment`, `save_report_to_drive`, `save_invoice_to_receipts` are deployed but need P-017 (Google Cloud APIs/consent + reconnect) to work. See D-007.
+
+2026-11-08: maros-nest `main` and production are at `bb1db26e` (manual SSH deploy; GitHub Actions still locked by billing, P-016). REQ-006 tracks the 14-task backlog; invoice naming D-008, Google scopes D-007. Google tools need Luis to log into Maros and reconnect Google (P-022); owner decisions pending in P-021.
+
+2026-11-08 (later): maros-nest/production at `82881251` (Gmail label import, Drive search, any-file attachments; read scopes added), frontend `856bd877` (reconnect button for llozano@). Luis must reconnect again for the new scopes (P-023); T6 migration (P-024) and QuickBooks writes (P-025) are next.
