@@ -1,6 +1,6 @@
 # Index — maros
 
-_Generated 2026-11-08 16:03 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-11-08 16:19 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/maros) · [graph](http://127.0.0.1:8765/p/maros/graph)  
@@ -31,10 +31,10 @@ _Generated 2026-11-08 16:03 by `bitacora.py index`. Do not edit by hand._
 - P-010 · Apply `db/add-role-audit-events.sql` to Supabase by hand before the REQ-005 backend is dep · high/S
 - P-012 · Apply `db/add-access-requests.sql` to Supabase by hand before deploying REQ-005 backend · high/S
 - P-016 · GitHub Actions is blocked by an account billing lock, so the API deploy workflow does not  · high/S
-- P-027 · Luis must reconnect Google once more for `gmail.labels` (added to the consent screen and d · high/S
-- P-026 · REQ-006 T1: scheduled tasks live in claude.ai/Scheduled; `Soportes diarios correo` (Paused · med/S
+- P-026 · REQ-006 T1: still need the FULL prompts of the two scheduled tasks `Soportes diarios corre · med/S
 - P-011 · Make role write + audit insert atomic (transaction or outbox) once the SQL is applied, so  · med/M
-- P-025 · QuickBooks: owner said "the necessary writes". The REQ-006 backlog needs NONE (T13 is read · med/L
+- P-025 · QuickBooks basic writes DEPLOYED (`5a30f779`, 97 suites / 1260 tests): `qbo_attach_invoice · med/M
+- P-021 · ANSWERED 2026-11-08 (owner: "yes to everything, as maximal as possible"): T5 -> `gmail.rea · med/?
 
 ## Recent decisions
 

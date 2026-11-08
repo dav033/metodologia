@@ -41,3 +41,5 @@ _Last updated: 2026-10-25_
 2026-11-08 (end): production `dc1268d4` (index of Drive locations deployed, migration pending P-024); Claude web connector refreshed (280 tools); live tests passed. Open: P-024 (apply SQL), P-025 (QBO), P-026 (T1 needs the two prompts), P-020 (pictures purge), P-016 (GitHub billing).
 
 2026-11-08 (night): production `357a2184`; invoice index live (migration applied); pictures history purge pushed (P-020 remaining: realign local clones); open: P-027 (Luis reconnect for gmail.labels, then label + real import), P-026 (T1 prompts), P-025 (QBO), P-016 (GitHub billing, ignored by the owner).
+
+2026-11-08 (late): production `5a30f779` (QuickBooks basic writes, preview-first); Gmail label `Invoices` exists in Luis's mailbox (no labeled mail yet); open: real labeled invoice email for an import test, T1 prompts (P-026), Bill creation rules (P-025), P-020 local clone realignment, P-016 ignored.
