@@ -1,5 +1,7 @@
 # pictures — Summary
 
+- 2026-11-09 D-104: main (b2ae69824) and production (Vercel demo-decoracion-j4a1s0u4v) carry the editable catalogue list; migration 057 applied after a backup; GitHub Actions cannot start (P-309); main's lint has one old error (P-310). ai-api not redeployed.
+
 - 2026-10-27 REQ-021 SP-2 selected r14 finalization (D-20261027-143831-9bda): canonical cuentas-admin@v1 Markdown/HTML delivered as draft, not approved (12 sections, 44 criteria). Current offline rebuild preserves the selected composition/motion; contrast 158 pairs, full audit 476/476 renders and 216 supplementary assertions PASS. Sempertex name resolved; P-206 remains for policy/rights-contact/legal review. Exact-snapshot approval and T2.1–T2.8 implementation/review remain; no production changes.
 
 - 2026-10-27 REQ-021 SP-14 owner-selected direction C finalized (D-076): canonical planes@v1 Markdown/HTML delivered as draft, not approved. Twelve sections/24 criteria; current offline build, 158 contrast pairs, 128/128-render audit, 446 supplemental assertions and four pixel-identical selected/canonical screenshot comparisons PASS. P-207 catalogue wording resolved from current SPEC/T1.2; P-208 tracks upstream Quieto residual springs (canonical HTML already corrected without altering exploration/runtime). Independent approval and T14.1–T14.6 implementation/review remain; no production changes.
