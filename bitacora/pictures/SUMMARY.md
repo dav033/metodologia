@@ -1,4 +1,4 @@
-- 2026-11-09 REQ-027 / D-106: Telegram bot MVP LIVE on the laptop (`@dav033_globos_bot`, `services/telegram-globos`, worktree `~/dev/pictures-wt/telegram-globos`, uncommitted): same backend as /contador, 42 tests, reviewed, first real photo counted end to end (P-312).
+- 2026-11-09 REQ-027 / D-106: Telegram bot MVP LIVE on the laptop (`@dav033_globos_bot`, `services/telegram-globos`, worktree `~/dev/pictures-wt/telegram-globos`, pushed as `feat/telegram-globos` a1b45ad4f, no PR yet): same backend as /contador, 42 tests, reviewed, first real photo counted end to end (P-312).
 
 # pictures — Summary
 
