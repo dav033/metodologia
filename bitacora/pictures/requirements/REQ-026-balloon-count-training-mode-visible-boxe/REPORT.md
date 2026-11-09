@@ -58,6 +58,21 @@ Research by four Codex tasks (`~/dev/pictures-infra/conteo/investigacion/`, code
 3D with the structure given (validation + test, 96): general rule 17.8 %, by structure 15.4 %. Simple quartet columns: 3 unseen models 0.0 % and 17 training models 0.3 %. Single-layer walls 36.6 % to 6.1 %, figures 28.4 % to 15.4 %, link walls 11.8 % to 3.8 %.
 Automatic recognition (Haiku through the local provider, with measured size spread): 3D test 15.2 % against 15.3 % for the general rule; structure right in 27 of 43. On 29 real photos against human estimates it is worse: 47.6 % against 39.1 %. So the default is the general rule; automatic detection is an option.
 
+## Automatic count, chosen by evolution (owner goal, 2026-11-09, D-105)
+Lab in `~/dev/pictures-infra/conteo/lab`: fixed score, Sonnet medium lanes over three rounds, then a genetic search (40 individuals, 40 generations, 3 seeds, bootstrap fitness).
+Winner: detector t2, plain 960, isolated-box filter, NMS 0.5, confidence 0.2, ridge + GBM from box features (`scripts/conteo-vision/conteo_automatico.py`). Lab score 29.21 to 19.46; it converged and the seeds agree.
+Survived: photographic-augmentation retraining, extra NMS, isolated-box filter, box-feature regression. Died: stronger degradation (t3, t4), hard negatives (t5), tile mode once retrained, nested-box and texture filters, Haiku as box reviewer, Haiku type recognition as the main path.
+
+Reserved data, scored once:
+
+| Set | Fixed rule | Winner |
+|---|---|---|
+| 12 real photos against human estimates | 34.5 % (median 29.6 %) | 25.7 % (median 19.0 %) |
+| 43 3D test scenes | 16.2 % | 14.7 % |
+
+95 % interval of the improvement: real -3.7 to +19.6 points, 3D -1.8 to +4.8. Both include zero: consistent improvement, not statistically proven with this little data. Selection optimism on the 17 dev photos was estimated at about 14 points.
+Verified in the browser on port 3012: Contador and chat, automatic by default. Local only; nothing pushed or deployed.
+
 ## Pending
 - Merge is the owner's decision; nothing is pushed or deployed.
 

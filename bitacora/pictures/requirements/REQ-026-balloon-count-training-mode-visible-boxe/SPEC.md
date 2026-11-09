@@ -48,6 +48,9 @@ As David, I want a model that estimates total/visible from the image, adopted on
 ### US-6 (P1, Must) — Count by how the structure is built
 As a Contador user, I want to pick or detect the structure so the total uses its construction formula.
 
+### US-7 (P1, Must) — Fully automatic count
+As a Contador or chat user, I want a total from one photo with no input of mine.
+
 ## Out of scope
 - Vertex/Gemini weight tuning (deferred by the owner, 2026-11-09).
 - Multiple camera angles: the photos received are neutral and frontal (owner, 2026-11-09).

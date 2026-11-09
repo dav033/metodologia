@@ -731,3 +731,12 @@ Source: owner, REQ-021 rounds 1–3.
 - **Consequences:** GitHub Actions cannot run: every run since 2026-11-08 ends `startup_failure` on every branch (88 runs), so the «Quality checks» that `Deploy ai-api to VPS` requires can never be green until the owner fixes it (likely billing or the account's Actions limit; the workflow YAML parses). `npm run lint` fails on main with one error that predates this work (`Taller3D.tsx:243`, setState inside an effect).
 - **Rollback:** web: Vercel «Promote» of `demo-decoracion-h9958uip8` (the previous Ready production deployment); DB: 057's rollback block (it deletes `imagen` jobs) or restore the dump above; git: `main` back to `a940c6947` (backup branch) only with the owner's say, since it rewrites a pushed branch.
 - **Source:** session 66dd7966.
+
+## D-105 — The automatic balloon count comes from an evolved detector pipeline, not from recognising the structure (2026-11-09)
+
+- **Context:** the owner wants the count fully automatic. Structure formulas are exact on simple 3D columns but automatic recognition worsened real photos.
+- **Decision:** detector t2, isolated-box filter, NMS 0.5, confidence 0.2, and a ridge + boosting model over box features. Picking a structure stays as an optional override. Selected with a fixed score over validation 3D and 17 real photos, then scored once on 43 reserved 3D scenes and 12 reserved real photos.
+- **Owner rulings:** fully automatic; iterations with Sonnet medium subagents; evolve by recombining the improvements that are worth it; no human labelling campaign; Shopify orders discarded.
+- **Alternatives:** Haiku type recognition, stronger retraining, hard negatives, tiling, Haiku box review: all lost and are in the lab reports.
+- **Consequences:** no colours or sizes in this mode. Real-photo accuracy is only known against human estimates. Active only where `CONTADOR_FOTO_YOLO_URL` is set, with a local service; production needs a deployed service.
+- **Rollback:** unset `CONTADOR_FOTO_YOLO_URL`, or `git revert` the branch.

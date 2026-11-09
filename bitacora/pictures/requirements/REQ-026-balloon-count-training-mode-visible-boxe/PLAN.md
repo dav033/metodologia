@@ -17,6 +17,9 @@ Neutral frontal camera only. No datasets or results in the repository (`~/dev/pi
 - [x] T3 — Dataset generator · kind: implement · after: T1 · files: scripts/conteo-vision/generar-dataset*.ts · verify: `npm run conteo:dataset` · covers: US-2, R3, R4, R5
 - [x] T4 — Train and run YOLO · kind: implement · after: T3 · files: scripts/conteo-vision/{entrenar,predecir}_yolo.py · verify: validation metrics · covers: US-3, R6
 - [x] T5 — Haiku inference with tools and tuned prompt · kind: implement · after: T4 · files: scripts/conteo-vision/{inferir_haiku,herramientas_mcp,evaluar}.py · verify: evaluar.py on validation, then once on test · covers: US-4, R7, R8, R9
+- [x] T6 — Learned hidden-balloon ratio, measured and not adopted · kind: implement · after: T4 · files: scripts/conteo-vision/proporcion_ocultos.py · verify: scored on test once · covers: US-5
+- [x] T7 — Per-structure formulas and selector in the Contador · kind: implement · after: T4 · files: src/lib/contador/formulas-estructura.ts, src/components/herramientas/contador/SelectorEstructura.tsx · verify: browser on port 3012 · covers: US-6
+- [x] T8 — Evolved automatic count, wired to Contador and chat · kind: implement · after: T7 · files: scripts/conteo-vision/conteo_automatico.py, src/lib/contador/foto-yolo.ts · verify: `python medir_ganador.py` once, browser on port 3012 · covers: US-7
 
 ## Verification
 Look at exported boxes and at the Taller overlay in the browser; `tsc`, `eslint` and `ruff`; run the dataset, YOLO and Haiku for real and read `evaluar.py`. Automated tests are not run (owner rule).
