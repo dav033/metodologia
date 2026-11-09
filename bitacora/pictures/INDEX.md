@@ -1,6 +1,6 @@
 # Index — pictures
 
-_Generated 2026-11-09 11:09 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-11-09 11:52 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md) · [Glossary](GLOSSARY.md)  
 **Web:** [project](http://127.0.0.1:8765/p/pictures) · [graph](http://127.0.0.1:8765/p/pictures/graph)  
@@ -67,11 +67,11 @@ _Generated 2026-11-09 11:09 by `bitacora.py index`. Do not edit by hand._
 
 ## Recent decisions
 
+- D-103 — The whole catalogue becomes an editable list; «edited by a person» is read from the curation log (2026-11-09)
 - D-102 — Balloon count learns from the 3D pool: visible boxes from an ID pass, total inferred by Haiku (2026-11-09)
 - D-101 — Free mode, pool replacement, single-image render and draft templates (2026-11-09)
 - D-100 — A template opens in the chat from views rendered ahead of time (2026-11-05)
 - D-099 — A template cannot gain R-5 balloons in the air (2026-11-05)
-- D-098 — A base template is not published without its selectable structures (2026-11-05)
 
 ## Timeline
 

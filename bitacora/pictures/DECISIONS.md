@@ -711,3 +711,13 @@ Source: owner, REQ-021 rounds 1–3.
 - **Alternatives:** projecting 3D boxes (rejected: boxes hidden balloons); six views per model (owner: no); Gemini tuning on Vertex (deferred by the owner).
 - **Consequences:** only models whose materials equal their drawn balloons qualify (460 of 650). Accuracy is known on renders only (test: YOLO visible 3.5 %, Haiku total 17.6 %, per-type factor with known type 13.8 %); against real photos there are only human estimates.
 - **Rollback:** `git revert` the commits of `feat/modo-entrenamiento-conteo`; the data lives outside the repository in `~/dev/pictures-infra/conteo/`.
+
+## D-103 — The whole catalogue becomes an editable list; «edited by a person» is read from the curation log (2026-11-09)
+
+- **Context:** the owner wants «Structures category» in the account menu (under Balloon count) opening /3d/decoraciones «Whole catalogue», and that view to edit type, structure + classic/organic, celebration, theme, colours and finish without moving around, with green checks where a person edited.
+- **Decision:** one continuous list; each row edits in place and saves on change through `PATCH /api/pool/items/:id` over `updateItem` (one `pool_curation_log` row per changed field). A field counts as human-edited when its log row has actor `cuenta:<accountId>`; scripts and the classifier use other actors, so no migration. Finishes travel as `acabados` (colour code → finish) so the browser never resends colours. «Orgánico» is `structure_variant` (classic/organic), «tipo» is `composition_kind`.
+- **Owner rulings:** everyone with decorations access may edit (not only `gestionar_catalogo`); per-field green plus a row summary (7/7 = reviewed); the separate curator (`pictures-curador`) stays.
+- **Alternatives:** a new `human_edited` column or table (rejected: the log already has actor and field); gating edits to `gestionar_catalogo` (the owner chose open editing).
+- **Consequences:** every edit changes what the AI reads and leaves the item pending for re-embedding (`pool:embed`, paid, not run automatically). Saving the value an item already has logs nothing, so it does not turn green; a person can confirm a field as it is (`confirmar` in the patch logs one row with the same value before and after, so the item and its search text do not change and nothing needs re-embedding). Edits made before this change are neutral. :3010 reads the production database, so edits there are real.
+- **Rollback:** `git revert` the three commits `696773fba`, `eae23929a`, `278730628` (merged fast-forward into `integ/req-021-pilot`); no migration, nothing to undo in the schema. Log rows written by `cuenta:*` stay as history.
+- **Source:** session 66dd7966.

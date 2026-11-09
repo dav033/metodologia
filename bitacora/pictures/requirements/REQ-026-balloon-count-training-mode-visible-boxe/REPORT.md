@@ -49,6 +49,9 @@ Ridge over DINOv2 features of the detected decoration (`proporcion_ocultos.py`),
 
 The agreed goal for organic structures (12 % or less) was not met. Against the 18 human estimates the learned ratio is far worse (82.5 %, overestimating): it predicts a median ratio near 2.4 where people imply 1.34, and real photos sit outside what it learned (mean standardised distance 1.24 against 0.78 for unseen 3D). No code defect was found. Not adopted.
 
+## Trial wiring
+YOLO × 1.455 behind `CONTADOR_FOTO_YOLO_URL`, off by default. No colours or sizes in this mode.
+
 ## Pending
 - Merge is the owner's decision; nothing is pushed or deployed.
 
