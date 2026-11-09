@@ -63,3 +63,8 @@ _None registered yet._
 - **Meta callback URL:** `https://whatsapp.185-147-157-25.sslip.io/webhook`; verify token = `META_VERIFY_TOKEN` (never written here; `~/.config/metodologia/pictures-meta.env`).
 - **Deploy:** `services/whatsapp-webhook/deploy.sh advin`. **App secret:** add `META_APP_SECRET` to the VPS `.env` and recreate the container.
 - The Vercel route `/api/whatsapp/webhook` still exists (owner asked not to link Meta to Vercel); remove it if unwanted.
+
+### pictures-conteo (automatic balloon count, REQ-026)
+- **Type:** CPU detector service on the advin VPS, container `pictures-conteo`, compose in `/opt/pictures-conteo`, weights in `/opt/pictures-conteo/modelo`, network `stack_web`, 3 CPUs and 3 GB. Image built from `scripts/conteo-vision/Dockerfile`.
+- **Access:** Caddy route `https://api-decoracion.185-147-157-25.sslip.io/conteo/*`; `/contar` needs header `x-conteo-token`. Token: `/opt/pictures-conteo/.env` on the VPS, `~/.config/metodologia/pictures-conteo-prod.env` locally. Vercel: `CONTADOR_FOTO_YOLO_URL`, `CONTADOR_FOTO_YOLO_TOKEN`.
+- **Rollback:** remove `CONTADOR_FOTO_YOLO_URL` from Vercel and redeploy: the Contador returns to the Python count with colours. Caddy backup: `/opt/edge-proxy/Caddyfile.bak.20261109T211929Z-conteo`.

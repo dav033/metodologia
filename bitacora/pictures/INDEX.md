@@ -1,6 +1,6 @@
 # Index — pictures
 
-_Generated 2026-11-09 16:19 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-11-09 16:39 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md) · [Glossary](GLOSSARY.md)  
 **Web:** [project](http://127.0.0.1:8765/p/pictures) · [graph](http://127.0.0.1:8765/p/pictures/graph)  
@@ -54,6 +54,7 @@ _Generated 2026-11-09 16:19 by `bitacora.py index`. Do not edit by hand._
 | [REQ-024](requirements/REQ-024-whatsapp-conversational-module-balloon-c/SPEC.md) | WhatsApp conversational module: balloon count and colour detection | `ready` | [draft](requirements/REQ-024-whatsapp-conversational-module-balloon-c/PLAN.md) |  |
 | [REQ-025](requirements/REQ-025-gpu-render-service-14-views-and-colour-l/SPEC.md) | GPU render service: 14 views and colour layers for any chosen scene, internal staff only | `ready` | [proposed](requirements/REQ-025-gpu-render-service-14-views-and-colour-l/PLAN.md) |  |
 | [REQ-026](requirements/REQ-026-balloon-count-training-mode-visible-boxe/SPEC.md) | Balloon count training mode: visible boxes for YOLO and total inference with Haiku | `in-progress` | [done](requirements/REQ-026-balloon-count-training-mode-visible-boxe/PLAN.md) | report ✓ |
+| [REQ-027](requirements/REQ-027-telegram-bot-mvp-photo-to-balloon-count/SPEC.md) | Telegram bot MVP: photo to balloon count (same backend as /contador) | `ready` | [in-progress](requirements/REQ-027-telegram-bot-mvp-photo-to-balloon-count/PLAN.md) |  |
 
 ## Top pending (urgency, then complexity)
 

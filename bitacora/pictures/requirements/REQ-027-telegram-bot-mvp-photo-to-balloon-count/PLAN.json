@@ -1,0 +1,868 @@
+{
+  "schema_version": "1.3.0",
+  "plan_id": "REQ-027",
+  "revision": 1,
+  "spec_ref": "SPEC.md",
+  "milestones": [
+    {
+      "id": "M1",
+      "title": "MVP (single milestone)",
+      "acceptance_criteria": [
+        "An allow-listed Telegram user sends a photo and receives the backend total, size and Sempertex colour breakdown in Spanish",
+        "Users outside the allow-list or over a quota cause no contador-foto call",
+        "The package test suite passes offline with fakes and the dry-run prints the reply for a local image"
+      ]
+    }
+  ],
+  "requirements": [
+    "R1",
+    "R2",
+    "R3",
+    "R4",
+    "R5",
+    "R6",
+    "R7",
+    "R8",
+    "R9"
+  ],
+  "tasks": [
+    {
+      "id": "T1",
+      "milestone_id": "M1",
+      "title": "Scaffold package: package.json, tsconfig, env schema (`TELEGRAM_BOT_TOKEN`, `ALLOWED_TELEGRAM_IDS`, `DAILY_QUOTA_PER_USER`, `DAILY_CAP_GLOBAL`), README, test runner",
+      "after": [],
+      "expected_paths": [
+        "services/telegram-globos/package.json",
+        "services/telegram-globos/src/config.ts"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npm --prefix services/telegram-globos test",
+          "purpose": "The package test suite runs with npm test and passes on the scaffold",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm --prefix services/telegram-globos test",
+          "purpose": "Config loading fails with a clear error naming the variable when TELEGRAM_BOT_TOKEN is missing or ALLOWED_TELEGRAM_IDS is malformed",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm --prefix services/telegram-globos test",
+          "purpose": "Config errors and logs never contain the bot token or INTERNAL_HMAC_SECRET value",
+          "category": "functional"
+        }
+      ],
+      "covers": [
+        "R8",
+        "R9"
+      ],
+      "kind": "implement",
+      "repository": "pictures",
+      "objective": "A runnable services/telegram-globos package whose env schema validates token, allow-list and caps and never exposes secret values",
+      "acceptance_criteria": [
+        "The package test suite runs with npm test and passes on the scaffold",
+        "Config loading fails with a clear error naming the variable when TELEGRAM_BOT_TOKEN is missing or ALLOWED_TELEGRAM_IDS is malformed",
+        "Config errors and logs never contain the bot token or INTERNAL_HMAC_SECRET value"
+      ],
+      "complexity": "low",
+      "scope": "small_change",
+      "estimated_minutes": 30,
+      "risk": "medium",
+      "coupling": "low",
+      "confidence": "high",
+      "estimate_rationale": "Copy of the whatsapp-globos scaffold (package.json scripts, tsconfig, config.ts) with Telegram variable names; REQ-024/T1 was planned at 30 minutes",
+      "shared_resources": [],
+      "classification_evidence": {
+        "complexity": {
+          "justification": "Known scaffold pattern copied from the sibling package, no design choice left open",
+          "evidence": [
+            "command:grep -n tsx /home/david/dev/pictures/services/whatsapp-globos/package.json -> test and dry-run scripts run tsx --conditions=react-server",
+            "command:grep -n leerConfig /home/david/dev/pictures/services/whatsapp-globos/src/config.ts -> zod env schema with leerConfig and an allowlist set"
+          ]
+        },
+        "scope": {
+          "justification": "Only new package files: manifest, tsconfig, config module, README and test runner",
+          "evidence": [
+            "command:wc -l /home/david/dev/pictures/services/whatsapp-globos/tsconfig.json -> 11-line tsconfig reused as is",
+            "spec:SPEC.md#requirements"
+          ]
+        },
+        "duration": {
+          "justification": "Same size as the WhatsApp scaffold task, which was estimated at half an hour",
+          "evidence": [
+            "precedent:REQ-024/T1",
+            "command:wc -l /home/david/dev/pictures/services/whatsapp-globos/src/config.test.ts -> 19-line config test to port"
+          ]
+        },
+        "risk": {
+          "justification": "The config module handles the bot token and HMAC secret, so a leak into errors or logs matters",
+          "evidence": [
+            "spec:SPEC.md#requirements",
+            "command:grep -n leerConfig /home/david/dev/pictures/services/whatsapp-globos/src/config.ts -> zod env schema with leerConfig and an allowlist set"
+          ]
+        },
+        "coupling": {
+          "justification": "First task; later tasks only import its config module after it is done",
+          "evidence": [
+            "task:T2",
+            "command:grep -n leerConfig /home/david/dev/pictures/services/whatsapp-globos/src/config.ts -> zod env schema with leerConfig and an allowlist set"
+          ]
+        },
+        "confidence": {
+          "justification": "The sibling package scaffold and its config tests were read and are reused almost verbatim",
+          "evidence": [
+            "command:grep -n tsx /home/david/dev/pictures/services/whatsapp-globos/package.json -> test and dry-run scripts run tsx --conditions=react-server",
+            "command:wc -l /home/david/dev/pictures/services/whatsapp-globos/src/config.test.ts -> 19-line config test to port"
+          ]
+        }
+      }
+    },
+    {
+      "id": "T2",
+      "milestone_id": "M1",
+      "title": "Telegram client + long-polling loop: getUpdates with offset, dedup, per-chat queue, photo/document pick, getFile download, magic-byte + 10 MB validation, sendMessage/typing, 409 handling",
+      "after": [
+        "T1"
+      ],
+      "expected_paths": [
+        "services/telegram-globos/src/telegram/*.ts"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npm --prefix services/telegram-globos test",
+          "purpose": "The poller requests getUpdates with offset last update id plus one and a repeated update id is processed only once",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm --prefix services/telegram-globos test",
+          "purpose": "Two photos from the same chat are handled in arrival order, one at a time",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm --prefix services/telegram-globos test",
+          "purpose": "A file whose magic bytes are not JPEG, PNG or WebP, or larger than 10 MB, is rejected before any backend call even when its name or MIME claims an image",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm --prefix services/telegram-globos test",
+          "purpose": "A photo and an image document are both picked; edited messages and non-message updates are ignored",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm --prefix services/telegram-globos test",
+          "purpose": "A 409 Conflict from getUpdates is logged and retried with backoff without crashing the poller",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm --prefix services/telegram-globos test",
+          "purpose": "The typing action is sent before the long count call starts",
+          "category": "functional"
+        }
+      ],
+      "covers": [
+        "R1",
+        "R2",
+        "R6"
+      ],
+      "kind": "implement",
+      "repository": "pictures",
+      "objective": "A Telegram Bot API client and long-polling loop that delivers each validated photo once, in per-chat order, without logging or persisting image bytes",
+      "acceptance_criteria": [
+        "The poller requests getUpdates with offset last update id plus one and a repeated update id is processed only once",
+        "Two photos from the same chat are handled in arrival order, one at a time",
+        "A file whose magic bytes are not JPEG, PNG or WebP, or larger than 10 MB, is rejected before any backend call even when its name or MIME claims an image",
+        "A photo and an image document are both picked; edited messages and non-message updates are ignored",
+        "A 409 Conflict from getUpdates is logged and retried with backoff without crashing the poller",
+        "The typing action is sent before the long count call starts"
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 60,
+      "risk": "medium",
+      "coupling": "low",
+      "confidence": "medium",
+      "estimate_rationale": "Bot API surface is small (getUpdates, getFile, file download, sendMessage, sendChatAction); media validation is ported from whatsapp-globos src/meta/api.ts; tested with a fake fetch",
+      "shared_resources": [],
+      "classification_evidence": {
+        "complexity": {
+          "justification": "Offset bookkeeping, per-chat ordering and 409 handling need some design, but the media validation already exists",
+          "evidence": [
+            "command:grep -n detectarMime /home/david/dev/pictures/services/whatsapp-globos/src/meta/api.ts -> magic-byte JPEG/PNG detection and a byte-size limit",
+            "spec:SPEC.md#edge-cases"
+          ]
+        },
+        "scope": {
+          "justification": "A few new modules under src/telegram with their tests, no change outside the package",
+          "evidence": [
+            "command:wc -l /home/david/dev/pictures/services/whatsapp-globos/src/webhook/mensajes-meta.ts -> 29-line inbound message parser",
+            "spec:SPEC.md#requirements"
+          ]
+        },
+        "duration": {
+          "justification": "Comparable to the WhatsApp media client task estimated near an hour",
+          "evidence": [
+            "precedent:REQ-024/T3",
+            "command:wc -l /home/david/dev/pictures/services/whatsapp-globos/src/meta/api.test.ts -> 37-line media client test with a fake fetch"
+          ]
+        },
+        "risk": {
+          "justification": "It parses untrusted network input and downloads files; a wrong check spends Gemini on junk or replays updates",
+          "evidence": [
+            "spec:SPEC.md#edge-cases",
+            "command:grep -n detectarMime /home/david/dev/pictures/services/whatsapp-globos/src/meta/api.ts -> magic-byte JPEG/PNG detection and a byte-size limit"
+          ]
+        },
+        "coupling": {
+          "justification": "Independent module after the scaffold; the wiring task consumes its client later",
+          "evidence": [
+            "task:T5",
+            "task:T1"
+          ]
+        },
+        "confidence": {
+          "justification": "The WhatsApp media client was read, but the Telegram poller loop itself has no precedent in the repository",
+          "evidence": [
+            "command:grep -n detectarMime /home/david/dev/pictures/services/whatsapp-globos/src/meta/api.ts -> magic-byte JPEG/PNG detection and a byte-size limit",
+            "assumption:Bot API getUpdates semantics match the public documentation"
+          ]
+        }
+      }
+    },
+    {
+      "id": "T3",
+      "milestone_id": "M1",
+      "title": "Adapter over `llamarPythonContadorFoto` (telemetry/DB off, HMAC, timeout) and `ResultadoFotoContador` → plain result type; contract test with a fake backend",
+      "after": [
+        "T1"
+      ],
+      "expected_paths": [
+        "services/telegram-globos/src/adapters/contador.ts"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npm --prefix services/telegram-globos test",
+          "purpose": "The adapter calls llamarPythonContadorFoto with the image base64, MIME type and a request id, and returns total, exact flag, tolerance, sizes and Sempertex colours from the result unchanged",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm --prefix services/telegram-globos test",
+          "purpose": "A backend error or timeout yields a typed failure with the request id and no partial figures",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm --prefix services/telegram-globos test",
+          "purpose": "src/adapters/contador.ts is the only file of the package that imports from src/lib",
+          "category": "functional"
+        }
+      ],
+      "covers": [
+        "R3",
+        "R4",
+        "R7"
+      ],
+      "kind": "implement",
+      "repository": "pictures",
+      "objective": "One adapter file that counts a photo through the existing contador-foto.v1 call and returns a plain channel-free result or a typed failure",
+      "acceptance_criteria": [
+        "The adapter calls llamarPythonContadorFoto with the image base64, MIME type and a request id, and returns total, exact flag, tolerance, sizes and Sempertex colours from the result unchanged",
+        "A backend error or timeout yields a typed failure with the request id and no partial figures",
+        "src/adapters/contador.ts is the only file of the package that imports from src/lib"
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 60,
+      "risk": "medium",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "Thin mapping over llamarPythonContadorFoto as contarFotoConBackend does, plus the import-boundary test and a fake backend contract test; the server-only/react-server import setup is the unknown",
+      "shared_resources": [
+        "contador-foto.v1 result contract"
+      ],
+      "classification_evidence": {
+        "complexity": {
+          "justification": "Mapping is known from contarFotoConBackend, but importing src/lib outside Next needs the react-server condition and telemetry off",
+          "evidence": [
+            "command:git -C /home/david/dev/pictures show origin/main:src/lib/contador/foto.ts -> contarFotoConBackend calls llamarPythonContadorFoto and maps with resultadoDeFoto",
+            "file:src/lib/ia/nucleo/python-adapter.ts"
+          ]
+        },
+        "scope": {
+          "justification": "One adapter file and its contract test; the backend and src/lib stay untouched",
+          "evidence": [
+            "command:grep -n ReconocedorPictures /home/david/dev/pictures/services/whatsapp-globos/src/adapters/reconocedor.ts -> the single src/lib adapter class of the sibling package",
+            "spec:SPEC.md#out-of-scope"
+          ]
+        },
+        "duration": {
+          "justification": "WhatsApp recogniser adapter was estimated at 75 minutes with more normalisation than this one",
+          "evidence": [
+            "precedent:REQ-024/T4",
+            "command:git -C /home/david/dev/pictures show origin/main:src/lib/contador/resultado-foto.ts -> exports ResultadoFotoContadorSchema and resultadoDeFoto"
+          ]
+        },
+        "risk": {
+          "justification": "A wrong mapping shows figures that differ from /contador, which is the success criterion",
+          "evidence": [
+            "spec:SPEC.md#problem-goal",
+            "command:git -C /home/david/dev/pictures show origin/main:src/lib/contador/resultado-foto.ts -> exports ResultadoFotoContadorSchema and resultadoDeFoto"
+          ]
+        },
+        "coupling": {
+          "justification": "Shares the contador-foto.v1 result contract with the web and with the parity test",
+          "evidence": [
+            "task:T6",
+            "file:services/ai-api/app/main.py"
+          ]
+        },
+        "confidence": {
+          "justification": "The adapter function and the web caller were read, but the import path outside Next is not yet proven in this package",
+          "evidence": [
+            "file:src/lib/ia/nucleo/python-adapter.ts",
+            "command:grep -n ReconocedorPictures /home/david/dev/pictures/services/whatsapp-globos/src/adapters/reconocedor.ts -> the single src/lib adapter class of the sibling package"
+          ]
+        }
+      }
+    },
+    {
+      "id": "T4",
+      "milestone_id": "M1",
+      "title": "Policy + store (own SQLite): allow-list, per-user quota, global cap, hashed ids, counters survive restart",
+      "after": [
+        "T1"
+      ],
+      "expected_paths": [
+        "services/telegram-globos/src/policy/*.ts",
+        "services/telegram-globos/src/store/*.ts"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npm --prefix services/telegram-globos test",
+          "purpose": "A user id not on the allow-list is denied and the policy reports that no backend call may be made",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm --prefix services/telegram-globos test",
+          "purpose": "The per-user daily quota and the global daily cap deny the next photo once reached and reset on the next day",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm --prefix services/telegram-globos test",
+          "purpose": "Counters persist in the package SQLite file and survive closing and reopening the store",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm --prefix services/telegram-globos test",
+          "purpose": "Two concurrent reservations for the last quota slot grant at most one",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm --prefix services/telegram-globos test",
+          "purpose": "Logged user ids are hashed and never appear in clear",
+          "category": "functional"
+        }
+      ],
+      "covers": [
+        "R5"
+      ],
+      "kind": "implement",
+      "repository": "pictures",
+      "objective": "An allow-list and daily-cap policy backed by the bot's own SQLite store, whose counters survive restarts and whose logs carry only hashed ids",
+      "acceptance_criteria": [
+        "A user id not on the allow-list is denied and the policy reports that no backend call may be made",
+        "The per-user daily quota and the global daily cap deny the next photo once reached and reset on the next day",
+        "Counters persist in the package SQLite file and survive closing and reopening the store",
+        "Two concurrent reservations for the last quota slot grant at most one",
+        "Logged user ids are hashed and never appear in clear"
+      ],
+      "complexity": "low",
+      "scope": "small_change",
+      "estimated_minutes": 45,
+      "risk": "high",
+      "coupling": "low",
+      "confidence": "high",
+      "estimate_rationale": "Policy and store are copied from whatsapp-globos politica.ts and almacen.ts with Telegram ids instead of phone numbers, plus the concurrency and day-reset tests",
+      "shared_resources": [],
+      "classification_evidence": {
+        "complexity": {
+          "justification": "Existing policy and store modules solve the same problem with phone numbers",
+          "evidence": [
+            "command:grep -n Cupos /home/david/dev/pictures/services/whatsapp-globos/src/policy/politica.ts -> per-number daily quota and global daily cap policy",
+            "command:grep -n DatabaseSync /home/david/dev/pictures/services/whatsapp-globos/src/store/almacen.ts -> node:sqlite store with hashed ids and Bogota day keys"
+          ]
+        },
+        "scope": {
+          "justification": "Two small modules and their tests inside the new package",
+          "evidence": [
+            "command:grep -n DatabaseSync /home/david/dev/pictures/services/whatsapp-globos/src/store/almacen.ts -> node:sqlite store with hashed ids and Bogota day keys",
+            "spec:SPEC.md#requirements"
+          ]
+        },
+        "duration": {
+          "justification": "Shorter than the WhatsApp policy task because the code is copied rather than designed",
+          "evidence": [
+            "precedent:REQ-024/T5",
+            "command:grep -n Cupos /home/david/dev/pictures/services/whatsapp-globos/src/policy/politica.ts -> per-number daily quota and global daily cap policy"
+          ]
+        },
+        "risk": {
+          "justification": "It is the access control and spend cap; a defect lets unknown users spend Gemini or blocks approved users",
+          "evidence": [
+            "spec:SPEC.md#constraints",
+            "command:grep -n Cupos /home/david/dev/pictures/services/whatsapp-globos/src/policy/politica.ts -> per-number daily quota and global daily cap policy"
+          ]
+        },
+        "coupling": {
+          "justification": "Self-contained store file; only the wiring task consumes the policy after it is done",
+          "evidence": [
+            "task:T5",
+            "task:T1"
+          ]
+        },
+        "confidence": {
+          "justification": "Both source modules were read and the port is mechanical",
+          "evidence": [
+            "command:grep -n Cupos /home/david/dev/pictures/services/whatsapp-globos/src/policy/politica.ts -> per-number daily quota and global daily cap policy",
+            "command:grep -n DatabaseSync /home/david/dev/pictures/services/whatsapp-globos/src/store/almacen.ts -> node:sqlite store with hashed ids and Bogota day keys"
+          ]
+        }
+      }
+    },
+    {
+      "id": "T5",
+      "milestone_id": "M1",
+      "title": "Replies (ES, ≤900 chars: total, exact/estimate ±, sizes, Sempertex colours, no-balloons, errors, /start /ayuda /id) and wiring of the whole flow; `--dry-run` with a local image and a canned result",
+      "after": [
+        "T2",
+        "T3",
+        "T4"
+      ],
+      "expected_paths": [
+        "services/telegram-globos/src/replies/*.ts",
+        "services/telegram-globos/bin/*.ts"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npm --prefix services/telegram-globos test",
+          "purpose": "For an allow-listed user's photo the reply is in Spanish, at most 900 characters, and states total, exact or estimate with tolerance, sizes and Sempertex colour names and codes",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm --prefix services/telegram-globos test",
+          "purpose": "A result with zero balloons replies that none were found and asks for another photo",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm --prefix services/telegram-globos test",
+          "purpose": "A non-image message gets the send-a-photo reply and an album counts only the first photo and says so",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm --prefix services/telegram-globos test",
+          "purpose": "A denied or over-quota user gets the fixed reply and the fake backend records no call",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm --prefix services/telegram-globos test",
+          "purpose": "/start and /ayuda reply with the one-line usage and /id replies with the sender's Telegram id",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm --prefix services/telegram-globos test",
+          "purpose": "A backend failure produces the short retry message with no figures",
+          "category": "functional"
+        }
+      ],
+      "covers": [
+        "R3",
+        "R4",
+        "R5",
+        "R9"
+      ],
+      "kind": "implement",
+      "repository": "pictures",
+      "objective": "The Spanish reply builder and the end-to-end flow (update, policy, adapter, reply) plus a dry-run CLI that runs a local image through it with a canned result",
+      "acceptance_criteria": [
+        "For an allow-listed user's photo the reply is in Spanish, at most 900 characters, and states total, exact or estimate with tolerance, sizes and Sempertex colour names and codes",
+        "A result with zero balloons replies that none were found and asks for another photo",
+        "A non-image message gets the send-a-photo reply and an album counts only the first photo and says so",
+        "A denied or over-quota user gets the fixed reply and the fake backend records no call",
+        "/start and /ayuda reply with the one-line usage and /id replies with the sender's Telegram id",
+        "A backend failure produces the short retry message with no figures"
+      ],
+      "complexity": "medium",
+      "scope": "full_feature",
+      "estimated_minutes": 75,
+      "risk": "medium",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "Reply texts and wiring follow whatsapp-globos replies/mensajes.ts and bin/dry-run.ts; it joins three modules and covers commands, album and failure paths",
+      "shared_resources": [
+        "contador-foto.v1 result contract"
+      ],
+      "classification_evidence": {
+        "complexity": {
+          "justification": "Joins client, policy and adapter and decides the order of checks before spending a backend call",
+          "evidence": [
+            "command:wc -l /home/david/dev/pictures/services/whatsapp-globos/bin/dry-run.ts -> 52-line dry-run CLI over the full path",
+            "spec:SPEC.md#edge-cases"
+          ]
+        },
+        "scope": {
+          "justification": "Completes the user-visible feature end to end inside the package, including the CLI",
+          "evidence": [
+            "command:wc -l /home/david/dev/pictures/services/whatsapp-globos/src/replies/mensajes.ts -> 70-line reply text module",
+            "spec:SPEC.md#requirements"
+          ]
+        },
+        "duration": {
+          "justification": "The WhatsApp pipeline with replies, sender and dry-run was estimated at 90 minutes with two languages",
+          "evidence": [
+            "precedent:REQ-024/T6",
+            "command:wc -l /home/david/dev/pictures/services/whatsapp-globos/bin/dry-run.ts -> 52-line dry-run CLI over the full path"
+          ]
+        },
+        "risk": {
+          "justification": "Wrong ordering would call the backend before the policy check or show figures on failure",
+          "evidence": [
+            "spec:SPEC.md#requirements",
+            "task:T4"
+          ]
+        },
+        "coupling": {
+          "justification": "Consumes the client, adapter and policy contracts produced by the three previous tasks",
+          "evidence": [
+            "task:T2",
+            "task:T3",
+            "task:T4"
+          ]
+        },
+        "confidence": {
+          "justification": "Reference pipeline was read; exact reply wording still has to fit the 900 character limit",
+          "evidence": [
+            "command:wc -l /home/david/dev/pictures/services/whatsapp-globos/src/replies/mensajes.ts -> 70-line reply text module",
+            "command:wc -l /home/david/dev/pictures/services/whatsapp-globos/bin/dry-run.ts -> 52-line dry-run CLI over the full path"
+          ]
+        }
+      }
+    },
+    {
+      "id": "T6",
+      "milestone_id": "M1",
+      "title": "Parity test: same fixture result through the web mapping (`resultadoDeFoto`) and the bot gives identical total/size/colour figures; the dry-run CLI runs a fixture image end to end",
+      "after": [
+        "T5"
+      ],
+      "expected_paths": [
+        "services/telegram-globos/test/paridad.test.ts",
+        "services/telegram-globos/test/fixtures/*"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npm --prefix services/telegram-globos test",
+          "purpose": "For the same contador-foto.v1 fixture result, the bot reply figures equal the web resultadoDeFoto mapping for total, sizes and colours, with expected values taken from the fixture and SPEC, not from bot output",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm --prefix services/telegram-globos test",
+          "purpose": "A denied user in the parity run gets no reply figures and no backend call",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm --prefix services/telegram-globos run dry-run -- --foto test/fixtures/globos.jpg",
+          "purpose": "The dry-run CLI started on a fixture image prints the Spanish reply with total and colours and exits zero",
+          "category": "integration"
+        }
+      ],
+      "covers": [
+        "R3",
+        "R4"
+      ],
+      "kind": "test",
+      "repository": "pictures",
+      "objective": "Proof that the bot shows the same figures as /contador for one fixture result and that the shipped dry-run CLI runs the whole path",
+      "acceptance_criteria": [
+        "For the same contador-foto.v1 fixture result, the bot reply figures equal the web resultadoDeFoto mapping for total, sizes and colours, with expected values taken from the fixture and SPEC, not from bot output",
+        "A denied user in the parity run gets no reply figures and no backend call",
+        "The dry-run CLI started on a fixture image prints the Spanish reply with total and colours and exits zero"
+      ],
+      "complexity": "low",
+      "scope": "small_change",
+      "estimated_minutes": 45,
+      "risk": "medium",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "One parity test file plus a fixture image and canned result; resultadoDeFoto is pure, so no network is involved",
+      "shared_resources": [
+        "contador-foto.v1 result contract"
+      ],
+      "classification_evidence": {
+        "complexity": {
+          "justification": "A pure mapping comparison over a fixed fixture with a known oracle",
+          "evidence": [
+            "command:git -C /home/david/dev/pictures show origin/main:src/lib/contador/resultado-foto.ts -> exports ResultadoFotoContadorSchema and resultadoDeFoto",
+            "spec:SPEC.md#scope-in"
+          ]
+        },
+        "scope": {
+          "justification": "A test file and its fixtures in the package test folder",
+          "evidence": [
+            "command:wc -l /home/david/dev/pictures/services/whatsapp-globos/test/integracion.test.ts -> 104-line end-to-end test with fakes",
+            "spec:SPEC.md#scope-in"
+          ]
+        },
+        "duration": {
+          "justification": "Smaller than the WhatsApp parity test because it uses no live Gemini",
+          "evidence": [
+            "precedent:REQ-024/T15",
+            "command:git -C /home/david/dev/pictures show origin/main:src/lib/contador/resultado-foto.ts -> exports ResultadoFotoContadorSchema and resultadoDeFoto"
+          ]
+        },
+        "risk": {
+          "justification": "A weak oracle would let the bot drift from /contador, the stated success criterion",
+          "evidence": [
+            "spec:SPEC.md#problem-goal",
+            "command:git -C /home/david/dev/pictures show origin/main:src/lib/contador/foto.ts -> contarFotoConBackend calls llamarPythonContadorFoto and maps with resultadoDeFoto"
+          ]
+        },
+        "coupling": {
+          "justification": "Reads the same result contract as the adapter and runs the CLI from the wiring task",
+          "evidence": [
+            "task:T3",
+            "task:T5"
+          ]
+        },
+        "confidence": {
+          "justification": "The web mapping was read, but the fixture image and canned result do not exist yet",
+          "evidence": [
+            "command:git -C /home/david/dev/pictures show origin/main:src/lib/contador/resultado-foto.ts -> exports ResultadoFotoContadorSchema and resultadoDeFoto",
+            "assumption:a representative fixture result can be captured from contador-foto.v1 output"
+          ]
+        }
+      }
+    },
+    {
+      "id": "T7",
+      "milestone_id": "M1",
+      "title": "Independent review (spec + standards) of the diff",
+      "after": [
+        "T6"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "bitacora.py audit-ledger check services/telegram-globos/audit/t7.findings.json",
+          "purpose": "The findings ledger validates and has no open critical or high finding",
+          "category": "static"
+        }
+      ],
+      "covers": [
+        "R1",
+        "R2",
+        "R3",
+        "R4",
+        "R5",
+        "R6",
+        "R7",
+        "R8",
+        "R9"
+      ],
+      "kind": "audit",
+      "repository": "pictures",
+      "objective": "An independent spec and standards review of the package diff recorded in a findings ledger that names the task to redo for each defect",
+      "acceptance_criteria": [
+        "The findings ledger validates and has no open critical or high finding"
+      ],
+      "expected_paths": [
+        "services/telegram-globos/audit/t7-review.md",
+        "services/telegram-globos/audit/t7.findings.json"
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 45,
+      "risk": "medium",
+      "coupling": "low",
+      "confidence": "high",
+      "estimate_rationale": "Read-only review of a small new package against nine requirements; same size as the REQ-024 milestone audits",
+      "shared_resources": [],
+      "classification_evidence": {
+        "complexity": {
+          "justification": "Needs judgement on security of input handling, caps and secret handling across modules",
+          "evidence": [
+            "spec:SPEC.md#requirements",
+            "spec:SPEC.md#edge-cases"
+          ]
+        },
+        "scope": {
+          "justification": "Writes only its review report and findings ledger; no product file changes",
+          "evidence": [
+            "command:grep -n Cupos /home/david/dev/pictures/services/whatsapp-globos/src/policy/politica.ts -> per-number daily quota and global daily cap policy",
+            "spec:SPEC.md#constraints"
+          ]
+        },
+        "duration": {
+          "justification": "REQ-024 milestone audits over a similar package were estimated at 45 minutes",
+          "evidence": [
+            "precedent:REQ-024/T8",
+            "precedent:REQ-024/T18"
+          ]
+        },
+        "risk": {
+          "justification": "A missed defect in caps or validation reaches the live check and spends Gemini",
+          "evidence": [
+            "spec:SPEC.md#constraints",
+            "task:T4"
+          ]
+        },
+        "coupling": {
+          "justification": "Runs after every build task and writes only its own audit files",
+          "evidence": [
+            "task:T6",
+            "task:T5"
+          ]
+        },
+        "confidence": {
+          "justification": "The audit shape and its duration have direct precedent in REQ-024",
+          "evidence": [
+            "precedent:REQ-024/T8",
+            "command:wc -l /home/david/dev/pictures/services/whatsapp-globos/test/integracion.test.ts -> 104-line end-to-end test with fakes"
+          ]
+        }
+      }
+    },
+    {
+      "id": "T8",
+      "milestone_id": "M1",
+      "title": "Live check on the laptop with the owner's bot token: start poller, send 1–3 real photos, compare with `/contador`; record evidence",
+      "after": [
+        "T7"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npm --prefix services/telegram-globos run dry-run -- --help",
+          "purpose": "The dry-run CLI prints its usage with --help and exits zero",
+          "category": "static"
+        },
+        {
+          "type": "manual",
+          "value": "Start the poller with the owner's token and ai-api running; send one to three balloon photos from an allow-listed account and the same photos to /contador",
+          "expected": "Each Telegram reply shows the same total, sizes and Sempertex colours as /contador for that photo within about 45 seconds",
+          "purpose": "On the laptop with the owner's bot token, one to three real photos from an allow-listed user get the same total and colours as /contador",
+          "category": "product",
+          "environment": "human_attestation",
+          "requires": [
+            "TELEGRAM_BOT_TOKEN",
+            "ALLOWED_TELEGRAM_IDS",
+            "INTERNAL_HMAC_SECRET",
+            "GEMINI_API_KEY"
+          ]
+        },
+        {
+          "type": "manual",
+          "value": "Send a photo from a Telegram account that is not on the allow-list",
+          "expected": "The account gets the fixed short reply and the bot log shows no contador-foto call for it",
+          "purpose": "A message from a user outside the allow-list gets the fixed reply and no backend call is logged",
+          "category": "product",
+          "environment": "human_attestation",
+          "requires": [
+            "TELEGRAM_BOT_TOKEN",
+            "ALLOWED_TELEGRAM_IDS"
+          ]
+        }
+      ],
+      "covers": [
+        "R1",
+        "R3",
+        "R4",
+        "R5"
+      ],
+      "kind": "test",
+      "repository": "pictures",
+      "objective": "Owner-attested evidence that the running bot answers real photos with the same figures as /contador and refuses non-listed users",
+      "acceptance_criteria": [
+        "The dry-run CLI prints its usage with --help and exits zero",
+        "On the laptop with the owner's bot token, one to three real photos from an allow-listed user get the same total and colours as /contador",
+        "A message from a user outside the allow-list gets the fixed reply and no backend call is logged"
+      ],
+      "complexity": "low",
+      "scope": "small_change",
+      "estimated_minutes": 30,
+      "risk": "medium",
+      "coupling": "low",
+      "confidence": "medium",
+      "estimate_rationale": "Start the poller and send at most three photos with the owner present; time depends on owner availability and ai-api being up",
+      "shared_resources": [],
+      "classification_evidence": {
+        "complexity": {
+          "justification": "Running the finished bot and comparing replies needs no design work",
+          "evidence": [
+            "spec:SPEC.md#problem-goal",
+            "file:services/ai-api/app/main.py"
+          ]
+        },
+        "scope": {
+          "justification": "A manual check with at most three photos, no code change",
+          "evidence": [
+            "spec:SPEC.md#constraints",
+            "precedent:REQ-024/T17"
+          ]
+        },
+        "duration": {
+          "justification": "The WhatsApp live acceptance was estimated at 45 minutes with more steps than this one",
+          "evidence": [
+            "precedent:REQ-024/T17",
+            "spec:SPEC.md#constraints"
+          ]
+        },
+        "risk": {
+          "justification": "Each real photo spends Gemini and uses the owner's real bot token",
+          "evidence": [
+            "spec:SPEC.md#constraints",
+            "file:src/lib/ia/nucleo/python-adapter.ts"
+          ]
+        },
+        "coupling": {
+          "justification": "Runs alone after the audit and writes nothing to the repository",
+          "evidence": [
+            "task:T7",
+            "task:T6"
+          ]
+        },
+        "confidence": {
+          "justification": "Precedent exists, but it depends on the owner's token and a running ai-api",
+          "evidence": [
+            "precedent:REQ-024/T17",
+            "assumption:ai-api with contador-foto.v1 runs on the laptop during the check"
+          ]
+        }
+      },
+      "expected_paths": []
+    }
+  ]
+}
