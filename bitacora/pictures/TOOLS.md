@@ -57,3 +57,9 @@ _None registered yet._
 
 ### Reference images read token (2026-11-04)
 - `REFERENCIAS_DECORACIONES_TOKEN` in Vercel production and in `~/.config/metodologia/pictures-referencias.env` (600). Read-only; usage in `docs/referencias-decoraciones.md`.
+
+### whatsapp-webhook (Meta webhook receiver, 2026-11-09)
+- **What:** container `pictures-whatsapp-webhook` (node:24-alpine, no deps, 96 MB) on the advin VPS, dir `/opt/pictures-whatsapp-webhook` (compose + `.env` mode 600 + `app/`), network `stack_web`. Caddy block `whatsapp.185-147-157-25.sslip.io` → `/webhook` only (1 MB cap, rest 404); Caddyfile backup `/opt/edge-proxy/Caddyfile.bak.20261109T154603Z-whatsapp`.
+- **Meta callback URL:** `https://whatsapp.185-147-157-25.sslip.io/webhook`; verify token = `META_VERIFY_TOKEN` (never written here; `~/.config/metodologia/pictures-meta.env`).
+- **Deploy:** `services/whatsapp-webhook/deploy.sh advin`. **App secret:** add `META_APP_SECRET` to the VPS `.env` and recreate the container.
+- The Vercel route `/api/whatsapp/webhook` still exists (owner asked not to link Meta to Vercel); remove it if unwanted.

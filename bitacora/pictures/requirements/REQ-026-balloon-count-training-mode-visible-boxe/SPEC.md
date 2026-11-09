@@ -1,6 +1,6 @@
 ---
 id: REQ-026
-status: planned
+status: in-progress
 created: 2026-11-09
 track: standard
 ---
@@ -42,6 +42,9 @@ As David, I want a one-class detector trained on that dataset with its counting 
 As David, I want Haiku 5.5 at low effort, through the local CLI, with tools and a tuned prompt, to infer the total from
 the image and YOLO's output, measured against baselines.
 
+### US-5 (P2, Should) — Learned hidden ratio
+As David, I want a model that estimates total/visible from the image, adopted only if organic error is 12 % or less.
+
 ## Out of scope
 - Vertex/Gemini weight tuning (deferred by the owner, 2026-11-09).
 - Multiple camera angles: the photos received are neutral and frontal (owner, 2026-11-09).
@@ -67,7 +70,7 @@ the image and YOLO's output, measured against baselines.
 
 ## Edge cases & errors
 - Scene with no balloons: counter shows 0 and no rectangles.
-- Balloon cut by the image edge: its footprint is unclipped, so its visible fraction falls accordingly.
+- Balloon cut by the image edge: both its visible pixels and its silhouette are limited to the image.
 - WebGL context loss or a failed measurement: the mode shows an error and turns no data into success.
 
 ## Constraints

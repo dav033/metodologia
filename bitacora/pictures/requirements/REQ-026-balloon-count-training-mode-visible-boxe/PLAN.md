@@ -22,8 +22,9 @@ Neutral frontal camera only. No datasets or results in the repository (`~/dev/pi
 Look at exported boxes and at the Taller overlay in the browser; `tsc`, `eslint` and `ruff`; run the dataset, YOLO and Haiku for real and read `evaluar.py`. Automated tests are not run (owner rule).
 
 ## Rulings
+- T1: silhouettes are measured by drawing non-overlapping groups with nothing in front; projected bounds rejected visible flattened balloons — cost if wrong: low.
 - T3: rooms vary per model (a third neutral, the rest from the existing scenarios), colours are kept as designed — one image per model, so variety has to come from the room — cost if wrong: low.
 - T5: stopped at three prompts; the test split was scored once and not used to adjust anything — cost if wrong: low.
 
 ## Progress log
-2026-11-09: approved in chat by the owner («procede»). Dataset 457 images; YOLO 60 epochs in 13.5 min; Haiku v3 chosen on validation and scored on test.
+2026-11-09: approved in chat by the owner («procede»). First dataset 457 images. Independent review found three defects; all fixed, dataset regenerated (460 images), YOLO retrained (60 epochs, 13.9 min) and every evaluation rerun. See REPORT.md.

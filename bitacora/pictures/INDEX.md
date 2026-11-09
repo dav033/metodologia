@@ -1,6 +1,6 @@
 # Index — pictures
 
-_Generated 2026-11-09 09:47 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-11-09 11:09 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md) · [Glossary](GLOSSARY.md)  
 **Web:** [project](http://127.0.0.1:8765/p/pictures) · [graph](http://127.0.0.1:8765/p/pictures/graph)  
@@ -22,6 +22,7 @@ _Generated 2026-11-09 09:47 by `bitacora.py index`. Do not edit by hand._
 - REQ-017: executor finished — review & merge
 - REQ-021: plan waiting for approval
 - REQ-022: question round waiting for answers
+- REQ-026: executor finished — review & merge
 
 ## Requirements
 
@@ -52,7 +53,7 @@ _Generated 2026-11-09 09:47 by `bitacora.py index`. Do not edit by hand._
 | [REQ-023](requirements/REQ-023-sempertex-colour-tags-in-the-chat-balloo/SPEC.md) | Sempertex colour tags in the chat, balloon picker, 3D workshop paint brush and context tools | `dropped` | — |  |
 | [REQ-024](requirements/REQ-024-whatsapp-conversational-module-balloon-c/SPEC.md) | WhatsApp conversational module: balloon count and colour detection | `ready` | [draft](requirements/REQ-024-whatsapp-conversational-module-balloon-c/PLAN.md) |  |
 | [REQ-025](requirements/REQ-025-gpu-render-service-14-views-and-colour-l/SPEC.md) | GPU render service: 14 views and colour layers for any chosen scene, internal staff only | `ready` | [proposed](requirements/REQ-025-gpu-render-service-14-views-and-colour-l/PLAN.md) |  |
-| [REQ-026](requirements/REQ-026-balloon-count-training-mode-visible-boxe/SPEC.md) | Balloon count training mode: visible boxes for YOLO and total inference with Haiku | `planned` | [done](requirements/REQ-026-balloon-count-training-mode-visible-boxe/PLAN.md) |  |
+| [REQ-026](requirements/REQ-026-balloon-count-training-mode-visible-boxe/SPEC.md) | Balloon count training mode: visible boxes for YOLO and total inference with Haiku | `in-progress` | [done](requirements/REQ-026-balloon-count-training-mode-visible-boxe/PLAN.md) | report ✓ |
 
 ## Top pending (urgency, then complexity)
 
