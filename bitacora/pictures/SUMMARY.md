@@ -1,3 +1,5 @@
+- 2026-11-09 REQ-027 / D-106: Telegram bot MVP LIVE on the laptop (`@dav033_globos_bot`, `services/telegram-globos`, worktree `~/dev/pictures-wt/telegram-globos`, uncommitted): same backend as /contador, 42 tests, reviewed, first real photo counted end to end (P-312).
+
 # pictures — Summary
 
 - 2026-11-09 D-104: main (b2ae69824) and production (Vercel demo-decoracion-j4a1s0u4v) carry the editable catalogue list; migration 057 applied after a backup; GitHub Actions cannot start (P-309); main's lint has one old error (P-310). ai-api not redeployed.

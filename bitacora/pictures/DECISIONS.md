@@ -740,3 +740,12 @@ Source: owner, REQ-021 rounds 1–3.
 - **Alternatives:** Haiku type recognition, stronger retraining, hard negatives, tiling, Haiku box review: all lost and are in the lab reports.
 - **Consequences:** no colours or sizes in this mode. Real-photo accuracy is only known against human estimates. Active only where `CONTADOR_FOTO_YOLO_URL` is set, with a local service; production needs a deployed service.
 - **Rollback:** unset `CONTADOR_FOTO_YOLO_URL`, or `git revert` the branch.
+
+## D-106 — The Telegram MVP counts with the web Contador's backend call, on the laptop by long polling (2026-11-09)
+
+- **Context:** WhatsApp (REQ-024) is blocked by the phone-number problem; the owner wants an MVP assistant: send a photo, get the count and colours.
+- **Decision:** new isolated package `services/telegram-globos/` (REQ-027). One adapter file calls `contarFotoConBackend`, the same function behind `/api/contador` (ai-api `contador-foto.v1`), with the experimental YOLO branch forced off. Allow-listed Telegram ids, daily per-user and global quotas, no data capture. Built manually outside the scheduler (owner ruling), no second cross-audit.
+- **Alternatives:** the REQ-024 recogniser reading (a different path from /contador); calling the Vercel route (needs a session cookie); a VPS webhook (deferred).
+- **Consequences:** a photo takes ~20-75 s (two Gemini calls; first live attempt hit the backend's 75 s deadline); the ai-api must run from the same commit as the bot. 42 tests; independent review found 6 defects, all fixed.
+- **Rollback:** delete the package/branch; nothing else was touched.
+- **Source:** session 139244c3.

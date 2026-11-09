@@ -73,6 +73,12 @@ Reserved data, scored once:
 95 % interval of the improvement: real -3.7 to +19.6 points, 3D -1.8 to +4.8. Both include zero: consistent improvement, not statistically proven with this little data. Selection optimism on the 17 dev photos was estimated at about 14 points.
 Verified in the browser on port 3012: Contador and chat, automatic by default. Local only; nothing pushed or deployed.
 
+## Generation 4 and close of the evolution (2026-11-09)
+Truth fix first: three human estimates that were clear typos ([1, 121], [12, 228], [118, 1, 123]) were cleaned the same way for every set; the winner scores 17.56 on the lab after it.
+Lanes (Sonnet medium): small photos (upscaling, size-dependent confidence, box fusion) died: on the cleaned truth small photos were not the weak point (14.7 % against 24.2 % for large). More renders with other rooms and lights (1,068 scenes, detectors o1 and o2) died: real photos got worse. Mapper trained on degraded boxes (HistGB) reached 16.20 in the lab, inside the noise by its own stability check.
+Second and last use of the reserved data, paired, winner against that candidate: real 22.2 % against 21.2 % (difference -4.2 to +6.6 points), 3D 14.7 % against 15.9 % (-3.6 to +1.0). Not adopted. The evolution is closed with the deployed configuration as the best one found; the reserved data must not be used again for choosing.
+Production: deployed to main (7b327e1aa, fbafd4955, 47f2c8926) with the detector service on the VPS; colours and sizes come from the Python service rescaled to the automatic total. Not checked with a real signed-in session.
+
 ## Pending
 - Merge is the owner's decision; nothing is pushed or deployed.
 
