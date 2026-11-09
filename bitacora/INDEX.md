@@ -1,13 +1,13 @@
 # Bitácora — index
 
-_Generated 2026-11-09 05:54. Do not edit by hand. Web: http://127.0.0.1:8765_
+_Generated 2026-11-09 08:59. Do not edit by hand. Web: http://127.0.0.1:8765_
 
 | Project | Repos | Open REQs | Open pending | Last activity | Links |
 |---|---|---|---|---|---|
 | [agentes-de-trabajo](agentes-de-trabajo/INDEX.md) | package | 0 | 1 (0 high) | 2026-10-12 | [summary](agentes-de-trabajo/SUMMARY.md) · [web](http://127.0.0.1:8765/p/agentes-de-trabajo) |
 | [dav033-demos](dav033-demos/INDEX.md) | app, example-child | 1 | 0 (0 high) | 2026-10-18 | [summary](dav033-demos/SUMMARY.md) · [web](http://127.0.0.1:8765/p/dav033-demos) |
 | [david-ui](david-ui/INDEX.md) | app | 1 | 1 (0 high) | 2026-10-26 | [summary](david-ui/SUMMARY.md) · [web](http://127.0.0.1:8765/p/david-ui) |
-| [dev](dev/INDEX.md) | repo-agentes-de-trabajo, repo-crunchyreroll, repo-hints-custom, repo-hints.wiki, repo-hyprland-wiki, repo-kodi, repo-lotm, repo-lotm-backend, repo-lotm-frontend, repo-marketplace-control-backend, repo-marketplace-control-frontend, repo-maros-nest-ci, repo-metodologia, repo-metodologia-m2, repo-metodologia-m5, repo-metodologia-m6-quality, repo-oraldenti, repo-pictures, repo-proposal-studio, repo-trainingapp | 0 | 27 (7 high) | 2026-11-06 | [summary](dev/SUMMARY.md) · [web](http://127.0.0.1:8765/p/dev) |
+| [dev](dev/INDEX.md) | repo-agentes-de-trabajo, repo-crunchyreroll, repo-hints-custom, repo-hints.wiki, repo-hyprland-wiki, repo-kodi, repo-lotm, repo-lotm-backend, repo-lotm-frontend, repo-marketplace-control-backend, repo-marketplace-control-frontend, repo-maros-nest-ci, repo-metodologia, repo-metodologia-m2, repo-metodologia-m5, repo-metodologia-m6-quality, repo-oraldenti, repo-pictures, repo-proposal-studio, repo-trainingapp | 0 | 27 (7 high) | 2026-11-09 | [summary](dev/SUMMARY.md) · [web](http://127.0.0.1:8765/p/dev) |
 | [escritorio](escritorio/INDEX.md) | — | 1 | 3 (1 high) | 2026-10-25 | [summary](escritorio/SUMMARY.md) · [web](http://127.0.0.1:8765/p/escritorio) |
 | [eventos](eventos/INDEX.md) | frontend, backend | 0 | 9 (7 high) | 2026-10-08 | [summary](eventos/SUMMARY.md) · [web](http://127.0.0.1:8765/p/eventos) |
 | [lotm](lotm/INDEX.md) | — | 1 | 2 (2 high) | 2026-10-13 | [summary](lotm/SUMMARY.md) · [web](http://127.0.0.1:8765/p/lotm) |
@@ -17,7 +17,7 @@ _Generated 2026-11-09 05:54. Do not edit by hand. Web: http://127.0.0.1:8765_
 | [oraldenti](oraldenti/INDEX.md) | frontend | 0 | 0 (0 high) | 2026-10-17 | [summary](oraldenti/SUMMARY.md) · [web](http://127.0.0.1:8765/p/oraldenti) |
 | [p](p/INDEX.md) | — | 0 | 0 (0 high) | — | [summary](p/SUMMARY.md) · [web](http://127.0.0.1:8765/p/p) |
 | [pi](pi/INDEX.md) | harness | 0 | 0 (0 high) | 2026-10-24 | [summary](pi/SUMMARY.md) · [web](http://127.0.0.1:8765/p/pi) |
-| [pictures](pictures/INDEX.md) | demo-decoracion, t7, audit, t12, pictures | 22 | 90 (17 high) | 2026-11-08 | [summary](pictures/SUMMARY.md) · [web](http://127.0.0.1:8765/p/pictures) |
+| [pictures](pictures/INDEX.md) | demo-decoracion, t7, audit, t12, pictures | 22 | 92 (17 high) | 2026-11-09 | [summary](pictures/SUMMARY.md) · [web](http://127.0.0.1:8765/p/pictures) |
 | [proposal-studio](proposal-studio/INDEX.md) | app | 4 | 6 (3 high) | 2026-10-13 | [summary](proposal-studio/SUMMARY.md) · [web](http://127.0.0.1:8765/p/proposal-studio) |
 | [sample](sample/INDEX.md) | — | 0 | 0 (0 high) | — | [summary](sample/SUMMARY.md) · [web](http://127.0.0.1:8765/p/sample) |
 | [signature-extraction](signature-extraction/INDEX.md) | — | 0 | 0 (0 high) | 2026-10-09 | [summary](signature-extraction/SUMMARY.md) · [web](http://127.0.0.1:8765/p/signature-extraction) |
