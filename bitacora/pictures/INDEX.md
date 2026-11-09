@@ -1,6 +1,6 @@
 # Index — pictures
 
-_Generated 2026-11-09 16:39 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-11-09 17:41 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md) · [Glossary](GLOSSARY.md)  
 **Web:** [project](http://127.0.0.1:8765/p/pictures) · [graph](http://127.0.0.1:8765/p/pictures/graph)  
@@ -60,7 +60,7 @@ _Generated 2026-11-09 16:39 by `bitacora.py index`. Do not edit by hand._
 
 - P-187 · REQ-020 production advisor never offers Happia packages: migration `002_catalogue.sql` (ta · high/S
 - P-217 · [fix e58be0423 browser-verified 2026-11-02, session 3ad3bcd4; close after the cut] /3d loo · high/S
-- P-226 · Rotate DB_GATEWAY_KEY before inviting real users: it was printed in session 62623145 when  · high/S
+- P-226 · [closed 2026-11-09: rotated with an overlap window; Vercel production uses the new key, th · high/S
 - P-228 · Chat tags and picker on real devices: phone keyboards (Gboard composition, autocorrect), i · high/S
 - P-240 · Check the six birthday templates in production with a signed-in session (`davidt@sempertex · high/S
 - P-309 · GitHub Actions never starts: all 88 runs since 2026-11-08 end `startup_failure` on every b · high/S
@@ -68,11 +68,11 @@ _Generated 2026-11-09 16:39 by `bitacora.py index`. Do not edit by hand._
 
 ## Recent decisions
 
+- D-107 — Every Contador photo is kept and shown to administrators in Admin › Subidas (2026-11-09)
+- D-106 — The Telegram MVP counts with the web Contador's backend call, on the laptop by long polling (2026-11-09)
 - D-105 — The automatic balloon count comes from an evolved detector pipeline, not from recognising the structure (2026-11-09)
 - D-104 — The catalogue list reaches production by merging the pilot into main with main's tree as the base (2026-11-09)
 - D-103 — The whole catalogue becomes an editable list; «edited by a person» is read from the curation log (2026-11-09)
-- D-102 — Balloon count learns from the 3D pool: visible boxes from an ID pass, total inferred by Haiku (2026-11-09)
-- D-101 — Free mode, pool replacement, single-image render and draft templates (2026-11-09)
 
 ## Timeline
 

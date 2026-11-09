@@ -750,3 +750,13 @@ Source: owner, REQ-021 rounds 1–3.
 - **Rollback:** delete the package/branch; nothing else was touched.
 - **Update 2026-11-09 (owner: everything in main and production):** merged to `main` (ed19cd5db) and deployed on the `advin` VPS as container `pictures-telegram-bot` next to the ai-api (docker network `stack_web`, `PYTHON_BACKEND_URL=http://demo-decoracion-ai-api:8000`, env `/etc/pictures-telegram/telegram.env`, data `/opt/pictures-telegram/data`). Root `tsconfig.json` now excludes `services/telegram-globos` (own tsconfig). Rollback: `docker rm -f pictures-telegram-bot`. Only the owner's Telegram id is allowed; more ids go in `ALLOWED_TELEGRAM_IDS`.
 - **Source:** session 139244c3.
+
+## D-107 — Every Contador photo is kept and shown to administrators in Admin › Subidas (2026-11-09)
+
+- **Context:** the owner wants to monitor what people upload. The Contador did not keep photos; only corrections (`contador_correcciones`) and staff Balloon Count photos were stored.
+- **Decision:** after each photo count, `after()` stores the image under `contador-subidas/` and a row in `contador_subidas` (migration 059: account, size, chosen structure, the result shown or a stable error code). It never delays or fails the count. Admin › Subidas (`/admin/subidas`, `/api/admin/subidas`, `/api/admin/subidas/:id/imagen`) lists counts and corrections with photo, user, total, colours and sizes, newest first.
+- **Owner rulings:** only administrators (`administracion_usuarios`), no new «counter» role; keep everything; no legal or notice text in the app.
+- **Consequences:** storage grows with every count; nothing deletes old uploads yet. Chat photo counts are not captured (they do not go through `/api/contador`).
+- **Rollback:** revert 0ed3bde45; the table can stay (additive) or be dropped after exporting.
+- **Source:** session 00431355.
+
