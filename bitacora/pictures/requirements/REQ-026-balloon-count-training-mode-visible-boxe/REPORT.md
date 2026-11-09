@@ -52,6 +52,12 @@ The agreed goal for organic structures (12 % or less) was not met. Against the 1
 ## Trial wiring
 YOLO × 1.455 behind `CONTADOR_FOTO_YOLO_URL`, off by default. No colours or sizes in this mode.
 
+## Per-structure formulas (owner request, 2026-11-09)
+Research by four Codex tasks (`~/dev/pictures-infra/conteo/investigacion/`, codex-1 and codex-luis). Formulas in `src/lib/contador/formulas-estructura.ts`; key constants checked against the code.
+
+3D with the structure given (validation + test, 96): general rule 17.8 %, by structure 15.4 %. Simple quartet columns: 3 unseen models 0.0 % and 17 training models 0.3 %. Single-layer walls 36.6 % to 6.1 %, figures 28.4 % to 15.4 %, link walls 11.8 % to 3.8 %.
+Automatic recognition (Haiku through the local provider, with measured size spread): 3D test 15.2 % against 15.3 % for the general rule; structure right in 27 of 43. On 29 real photos against human estimates it is worse: 47.6 % against 39.1 %. So the default is the general rule; automatic detection is an option.
+
 ## Pending
 - Merge is the owner's decision; nothing is pushed or deployed.
 

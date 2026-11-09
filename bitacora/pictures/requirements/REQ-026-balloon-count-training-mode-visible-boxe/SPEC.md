@@ -45,6 +45,9 @@ the image and YOLO's output, measured against baselines.
 ### US-5 (P2, Should) — Learned hidden ratio
 As David, I want a model that estimates total/visible from the image, adopted only if organic error is 12 % or less.
 
+### US-6 (P1, Must) — Count by how the structure is built
+As a Contador user, I want to pick or detect the structure so the total uses its construction formula.
+
 ## Out of scope
 - Vertex/Gemini weight tuning (deferred by the owner, 2026-11-09).
 - Multiple camera angles: the photos received are neutral and frontal (owner, 2026-11-09).
