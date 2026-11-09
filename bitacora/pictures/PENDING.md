@@ -186,7 +186,7 @@ _None_
 - P-036 · 3 pre-existing failing tests on main · closed 2026-10-10 with P-029 · 77b4af27
 - P-044 · flower radius from the flower's own box (scenario matrix) · closed 2026-10-09 · 15c74eb7
 - P-304 · [DONE 2026-11-09] Colour swap on a focused structure now keeps the pre-rendered views (see session log).
-- P-312 · [2026-11-09] REQ-027 Telegram bot LIVE on the laptop (`@dav033_globos_bot`, worktree `~/dev/pictures-wt/telegram-globos`, branch `feat/telegram-globos`, pushed to origin (a1b45ad4f), no PR/merge yet; `.env` with the token stays untracked). Left: owner decides PR/merge, where it runs permanently (VPS + webhook), whether to compare against production /contador, and BotFather polish (description, photo). The ai-api (port 41731) and the bot run as background processes of this session. · urgency: low · complexity: S
+- P-312 · [2026-11-09] REQ-027 Telegram bot is in `main` and in production (container `pictures-telegram-bot` on `advin`, only the owner's Telegram id allowed). Left: add Sempertex staff ids to `/etc/pictures-telegram/telegram.env` (`ALLOWED_TELEGRAM_IDS`) and restart the container; BotFather polish (description, photo); optional comparison against /contador; moving to a webhook only if polling proves insufficient. · urgency: low · complexity: S
 
 ## Notes
 REQ-003 · Scene agent v2 — merged and pushed (main 0046ab80); left: paid eval (cap US$0.50) + P-013 · high · added 2026-10-08 · requirements/REQ-003-scene-agent-v2

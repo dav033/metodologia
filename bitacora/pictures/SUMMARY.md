@@ -1,4 +1,4 @@
-- 2026-11-09 REQ-027 / D-106: Telegram bot MVP LIVE on the laptop (`@dav033_globos_bot`, `services/telegram-globos`, worktree `~/dev/pictures-wt/telegram-globos`, pushed as `feat/telegram-globos` a1b45ad4f, no PR yet): same backend as /contador, 42 tests, reviewed, first real photo counted end to end (P-312).
+- 2026-11-09 REQ-027 / D-106: Telegram bot MVP in `main` (ed19cd5db) and PRODUCTION: container `pictures-telegram-bot` on VPS `advin` next to the ai-api, same backend as /contador; first prod photo counted (15 balloons, 3.6 s). Only the owner's id is allowed (P-312).
 
 # pictures — Summary
 

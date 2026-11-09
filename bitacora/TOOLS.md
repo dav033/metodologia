@@ -30,6 +30,8 @@ an `~/.ssh/config` host alias, an env var name, a password-manager entry, or "CL
 - **Status:** verified reachable 2026-10-19 · **Authority:** agents may deploy and restart here on their own (owner decision 2026-10-19)
 - **Notes:** before a risky change (migration, config edit) take a backup or note the current version to roll back to
 
+- **pictures-telegram-bot (2026-11-09):** container on `advin` (docker network `stack_web`), Telegram bot `@dav033_globos_bot`; env `/etc/pictures-telegram/telegram.env` (600, never print), data `/opt/pictures-telegram/data`; logs `docker logs -f pictures-telegram-bot`; deploy `services/telegram-globos/deploy/vps.sh advin` from a `main` checkout; one poller per token.
+
 ### marketplace (AWS EC2)
 - **Type:** EC2 instance · **Access:** `ssh marketplace` (key `~/.ssh/marketplace-eventos`), user `ec2-user`
 - **Status:** verified reachable 2026-10-19 · **Authority:** as above

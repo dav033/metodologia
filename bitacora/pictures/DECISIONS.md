@@ -748,4 +748,5 @@ Source: owner, REQ-021 rounds 1–3.
 - **Alternatives:** the REQ-024 recogniser reading (a different path from /contador); calling the Vercel route (needs a session cookie); a VPS webhook (deferred).
 - **Consequences:** a photo takes ~20-75 s (two Gemini calls; first live attempt hit the backend's 75 s deadline); the ai-api must run from the same commit as the bot. 42 tests; independent review found 6 defects, all fixed.
 - **Rollback:** delete the package/branch; nothing else was touched.
+- **Update 2026-11-09 (owner: everything in main and production):** merged to `main` (ed19cd5db) and deployed on the `advin` VPS as container `pictures-telegram-bot` next to the ai-api (docker network `stack_web`, `PYTHON_BACKEND_URL=http://demo-decoracion-ai-api:8000`, env `/etc/pictures-telegram/telegram.env`, data `/opt/pictures-telegram/data`). Root `tsconfig.json` now excludes `services/telegram-globos` (own tsconfig). Rollback: `docker rm -f pictures-telegram-bot`. Only the owner's Telegram id is allowed; more ids go in `ALLOWED_TELEGRAM_IDS`.
 - **Source:** session 139244c3.
