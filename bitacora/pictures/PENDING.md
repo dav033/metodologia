@@ -64,8 +64,9 @@ month summary._
 - P-235 · No operation to replace one structure with another: the structure tags make the request explicit and the agent cannot do it · urgency: med · complexity: L · added 2026-11-04 · same audit
 - P-242 · Seven adult birthday templates score 57.7 to 71 of 100 against the requested 80, with Terra judges; comedor-marino lowest, camera never solved. Owner decides whether to invest in the still render or accept them · urgency: med · complexity: L · added 2026-11-05 · photo templates
 - P-121 · Decide whether to rerun the M1-M3 flow test from a new run as pure supervisor (T2 failure list in `.state/req018-full-mwvocojr/reviews/T2/` is the corpus); pending owner choice. Related: T1 matcher does not exclude qualifier+colour phrases ("sin fondo rosa"); P-118 still open. · urgency: med · complexity: ?
-- P-300 · [2026-11-09] Owner to review 12 draft templates (`/3d/revision` → Borradores; sheet `~/.local/tmp/libre/borradores-hoja.png`); approve/reject. Approved ones need «Renderizar 14 vistas». · urgency: med · complexity: ? · medium/S
 - P-301 · [2026-11-09] Merge Task C (`feat/libre-imagen`: single-image render job + base light rig), apply migration 057 with backup, restart `pictures-render-worker`. · urgency: med · complexity: ? · high/M
+- P-302 · [2026-11-09] Not pushed: all of feat/chat-libre (modo libre, reemplazo, borradores, imagen) lives only in the pilot branch `integ/req-021-pilot`; production deploy needs push + migration 057 on the production DB (apply BEFORE deploying the app: the old ON CONFLICT index is gone) + worker. · urgency: med · complexity: ? · high/M
+- P-303 · [2026-11-09] Browser check of `ControlImagen` («Generar imagen») in the chat panel and Taller drawer (only tsc/eslint/API verified); free-mode first turn often builds one piece only with Haiku — consider prompt richness. · urgency: med · complexity: ? · medium/S
 - P-027 · Burgundy chrome: no wine Reflex in the Sempertex table (915 used) and 915 renders too bright/red in the viewer — check swatch fidelity · urgency: low · complexity: S · added 2026-10-09
 - P-030 · RAG: `taller_taxonomia` (migration 028) has no writer and the search reads the taxonomy from code — orphan table: drop it or load it from src/lib/taller/taxonomia (decide with the reader) · urgency: low · complexity: S · added 2026-10-09
 - P-046 · Shopping list «Por pieza» lists identical decorations one per row («Ojo con venas 1…14 · urgency: low · complexity: S · 1 globo»): group identical pieces (× 14) · added 2026-10-09 · judge
@@ -106,6 +107,7 @@ month summary._
 _None_
 
 ## Recently closed
+- P-300 · [CLOSED 2026-11-09] The 12 draft templates were deleted at the owner's order.
 - P-241 · Photo templates without selectable structures: 13 rows given `recipe.estructuras`, saves now create base structures (dd42c5c52). Closed 2026-11-05.
 - P-214 · CLOSED 2026-11-02: the owner approved SP-4 v4 · urgency: high · complexity: M · The owner rejected SP-4 v2 of REQ-021 after trying it: No se ve una opcion dodne recuperar los proyectos, l toast que me avisa lo de exportacion no se ve nada bien y los modales son horribles [imagen 1](requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/owner-rejected/SP-4-v2/1-55917b07d4bc.png) [imagen 2](requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/evidence/owner-rejected/SP-4-v2/2-7acf162346b0.png) · added 2026-10-31 · per-subplan verification
 - P-212 · CLOSED 2026-11-01: the owner approved SP-3 v5 · urgency: high · complexity: M · The owner rejected SP-3 v3 of REQ-021 after trying it: las mesas quese arreglaron no sepuedn arrastrar y colocar, si el probelma es otro, investigalo y solucionalo · added 2026-10-31 · per-subplan verification
@@ -174,6 +176,7 @@ _None_
 - P-001 · Implement the approved 3D editor redesign · urgency: med · complexity: ? · closed 2026-10-08 · commits 5adaa808..f0c2895a
 - P-036 · 3 pre-existing failing tests on main · closed 2026-10-10 with P-029 · 77b4af27
 - P-044 · flower radius from the flower's own box (scenario matrix) · closed 2026-10-09 · 15c74eb7
+- P-304 · [DONE 2026-11-09] Colour swap on a focused structure now keeps the pre-rendered views (see session log).
 
 ## Notes
 REQ-003 · Scene agent v2 — merged and pushed (main 0046ab80); left: paid eval (cap US$0.50) + P-013 · high · added 2026-10-08 · requirements/REQ-003-scene-agent-v2

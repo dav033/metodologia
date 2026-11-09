@@ -694,3 +694,20 @@ Source: owner, REQ-021 rounds 1–3.
 - **Alternatives:** still image as thumbnail (owner: no); baked light textures (my first recommendation, dropped: glossy balloons and chrome would not reach the Cycles look); path tracing in the browser (needs a strong GPU, D-097).
 - **Consequences:** orbit limited to ±21° and elevation 3° to 11°; zoom only enlarges up to 1.8x; ghosting while moving. A change to a saved template needs views rendered again by hand: the pipeline is in `~/dev/pictures-infra/plantillas/feliz-ano/presentacion/`, not automated. Taller unchanged.
 - **Rollback:** delete `recipe.presentacion` from the row to return the template to the plain viewer; code `git revert 65d946c71`. Old recipe: VPS `/root/backups/pictures/feliz-ano-receta-antes-presentacion-*.json`, and `pictures-before-estructuras-fotos-20261105T131620Z.dump`.
+
+## D-101 — Free mode, pool replacement, single-image render and draft templates (2026-11-09)
+
+- **Context:** owner asked for a togglable chat mode that builds decorations without templates, replacing structures in the normal chat from the pool (category + colours), a one-picture render with a base light rig, and new draft templates to accept or reject.
+- **Decision:** (1) `modoLibre` flag in the chat request and `armado`; `armarLibre` runs a generator tool loop from an empty scene (receta v1 allows `piezas: []`, every generator call kept in `ediciones`); a piece outside the room is refused during the build. (2) `reemplazar_estructura_del_pool` swaps a structure through the pool port, saves the resolved item id in the edit so replay never re-ranks. (3) Render job `kind=imagen` (migration 057, own lane in the worker, priority over 14-view jobs), centered camera az 0°/el 3.5°, `render-base.py` rig with measured exposure, internal staff only (`ROLES_RENDER`). (4) Draft templates = inactive pool rows (`source=generated`), reviewed in `/3d/revision`.
+- **Alternatives:** templates-as-seed for the free mode (rejected: owner wants no templates); re-ranking at replay (rejected: not deterministic).
+- **Consequences:** drafts and Primera comunión have only a 1-view presentation until «Renderizar 14 vistas». Production needs migration 057 before the app.
+- **Rollback:** `git revert` the four merges; 057 rollback block in the migration header; drafts `~/.local/tmp/libre/borradores/rollback-deactivate.sql`.
+
+## D-102 — Balloon count learns from the 3D pool: visible boxes from an ID pass, total inferred by Haiku (2026-11-09)
+
+- **Context:** the goal is the total number of balloons from one photo, including hidden ones. Only 18 real photos have (human, approximate) totals. The pool knows its exact counts.
+- **Decision:** a pass that draws each balloon in a unique flat colour tells what the camera sees; those boxes train a one-class YOLO. The total comes from `armarEscena(...).materiales`, never from `globos.length` (tubes are not spheres) or the stored `balloon_count`. Haiku 5.5 at effort low, through the local CLI, infers the total with read-only tools and a tuned prompt; no weights are trained.
+- **Owner rulings:** normal renders, not Cycles; one neutral frontal view per model, because that is what received photos look like; prompts and tools instead of Vertex tuning for now; no real totals available yet.
+- **Alternatives:** projecting 3D boxes (rejected: boxes hidden balloons); six views per model (owner: no); Gemini tuning on Vertex (deferred by the owner).
+- **Consequences:** only models whose materials equal their drawn balloons qualify (460 of 650). Accuracy is known on renders only; against real photos there are only human estimates.
+- **Rollback:** `git revert` the commits of `feat/modo-entrenamiento-conteo`; the data lives outside the repository in `~/dev/pictures-infra/conteo/`.

@@ -1,6 +1,6 @@
 # Index — pictures
 
-_Generated 2026-11-09 08:59 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-11-09 09:47 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md) · [Glossary](GLOSSARY.md)  
 **Web:** [project](http://127.0.0.1:8765/p/pictures) · [graph](http://127.0.0.1:8765/p/pictures/graph)  
@@ -52,6 +52,7 @@ _Generated 2026-11-09 08:59 by `bitacora.py index`. Do not edit by hand._
 | [REQ-023](requirements/REQ-023-sempertex-colour-tags-in-the-chat-balloo/SPEC.md) | Sempertex colour tags in the chat, balloon picker, 3D workshop paint brush and context tools | `dropped` | — |  |
 | [REQ-024](requirements/REQ-024-whatsapp-conversational-module-balloon-c/SPEC.md) | WhatsApp conversational module: balloon count and colour detection | `ready` | [draft](requirements/REQ-024-whatsapp-conversational-module-balloon-c/PLAN.md) |  |
 | [REQ-025](requirements/REQ-025-gpu-render-service-14-views-and-colour-l/SPEC.md) | GPU render service: 14 views and colour layers for any chosen scene, internal staff only | `ready` | [proposed](requirements/REQ-025-gpu-render-service-14-views-and-colour-l/PLAN.md) |  |
+| [REQ-026](requirements/REQ-026-balloon-count-training-mode-visible-boxe/SPEC.md) | Balloon count training mode: visible boxes for YOLO and total inference with Haiku | `planned` | [done](requirements/REQ-026-balloon-count-training-mode-visible-boxe/PLAN.md) |  |
 
 ## Top pending (urgency, then complexity)
 
@@ -65,11 +66,11 @@ _Generated 2026-11-09 08:59 by `bitacora.py index`. Do not edit by hand._
 
 ## Recent decisions
 
+- D-102 — Balloon count learns from the 3D pool: visible boxes from an ID pass, total inferred by Haiku (2026-11-09)
+- D-101 — Free mode, pool replacement, single-image render and draft templates (2026-11-09)
 - D-100 — A template opens in the chat from views rendered ahead of time (2026-11-05)
 - D-099 — A template cannot gain R-5 balloons in the air (2026-11-05)
 - D-098 — A base template is not published without its selectable structures (2026-11-05)
-- D-097 — The chat's picture adapts to the machine; the Taller stays as it was (2026-11-04)
-- D-096 — Chat references travel as text; store products are pieces read from the catalogue · 2026-11-04
 
 ## Timeline
 
