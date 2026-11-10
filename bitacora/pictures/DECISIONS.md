@@ -779,4 +779,5 @@ Source: owner, REQ-021 rounds 1–3.
 - **Rollback:** revert 10ffffd33.
 - **Source:** session 00431355; lab `aq-grosor/`, `am-calibrar-hq/`, `ap-densidad-plantillas/`.
 - **Update 2026-11-10 (D-109):** thickness options are shown as three large cards at the top of the photo panel (Bajo/Normal/Alto, 148f75da7); Normal and Alto refitted on 40 front-view room renders (lab ar): 1.02 and 1.07 instead of 1.106 and 1.357, which came from black-background views and over-counted. Corrections route mapped to `contador_globos` (946128753): internal employees could not send corrections before (unmapped routes default to admins only).
+- **Update 2026-11-10 10:25 (adopted three-way):** lane al found CountGD and CountGD++ share identical Swin-B/BERT weights; one backbone pass + two threads + per-level deformable attention gives the same counts (0 drift on 36 local and 8 VPS comparisons) at 12.7-18.3 s per photo on the VPS. Production now runs image `pictures-conteo:4`: equal-weight geometric mean of detector, CountGD and CountGD++ (234 real photos: 25.44 -> 23.92 %, paired 90 % [-2.34, -0.74]). main 56b2df20b. Rollback: `/opt/pictures-conteo/compose.yml.bak-3-*` (image :2).
 

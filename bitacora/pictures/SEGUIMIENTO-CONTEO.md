@@ -7,8 +7,8 @@ Paste this into a new session started in `~/dev/pictures-wt/conteo-entrenamiento
 Continue the automatic balloon count of Pictures (REQ-026). Talk to me in Spanish; I do not want permission questions (see the memory `pictures-sin-pedir-permiso`). Read these first:
 `~/dev/pictures-infra/conteo/lab/LEEME.md` (all rounds, «Adopted» sections and sealed-check notes), decisions D-107, D-108 and D-109 in `~/bitacora/pictures/DECISIONS.md`, pending items P-313 and P-314, and the memories `pictures-3010-main`, `pictures-conteo-agresivo` and `pictures-subagentes-cuentas`.
 
-## State in production (main 11648eaed, Vercel; VPS `pictures-conteo:2`)
-- Automatic count = detector t2 + CountGD, blended 70/30 (VPS service `pictures-conteo`, image `:2`). Image `:3`, which adds CountGD++, is built but not live: it took about 60 s per photo against the web's 60 s deadline, so it was rolled back to `:2`.
+## State in production (main 56b2df20b, Vercel; VPS `pictures-conteo:4` since 2026-11-10 10:25)
+- Automatic count = equal-weight geometric mean of detector t2, CountGD and CountGD++ (VPS service `pictures-conteo`, image `:4`, 12.7-18.3 s per photo; D-108).
 - Contador: three large cards **Bajo / Normal / Alto** (×0.956 / ×1.02 / ×1.07) above the photo. One count brings all three totals (`totalesGrosor`), and switching does not recount. The band is ±30 %.
 - Corrections are open to every role with the Contador (fixed today; before, only admins could send them). Admin › Subidas keeps every Contador photo.
 - localhost:3010 runs `~/dev/pictures-wt/main-local`. After each push to main, run `~/dev/pictures-infra/actualizar-main-local.sh`. The render worker stays in the pilot worktree; do not touch it.
@@ -16,8 +16,8 @@ Continue the automatic balloon count of Pictures (REQ-026). Talk to me in Spanis
 **Coordination:** another Claude session (pilot-d1) also works on the count. It ran its own speed lane, `lab/al-velocidad`, and made 92a5a3baf, 0a5c44cff and main 2ec2c87d7. Before touching the VPS service `pictures-conteo`, tell it (or check `ListAgents`) so you do not both redeploy. Always merge origin/main before pushing.
 
 ## Pending, in order
-1. **CountGD++ speed (lane `an` finished, `lab/an-velocidad/REPORTE.md`).** CountGD and CountGD++ share identical backbone weights; `velocidad.diff` shares the Swin-B pass with 0 count drift and about 0.55x the counters' time. The estimate on the VPS is about 35 s, or about 30 s with `torch.compile`.
-   - Apply the patch to `scripts/conteo-vision/conteo_countgd.py` and `servicio_yolo.py`, turn CountGD++ on, rebuild `pictures-conteo:3` on the VPS (`/opt/pictures-conteo/build`, back up `compose.yml` first) and measure the real latency with 3 photos.
+1. **CountGD++ speed: DONE 2026-11-10 (session 00431355, lane `al`).** Shared Swin-B pass + CountGD/CountGD++ in two threads (OMP 3 each) + per-level deformable attention (`lab/al-velocidad/cambios.diff`, now in `scripts/conteo-vision/conteo_countgd.py`): 0 count drift, 12.7-18.3 s per photo measured on the VPS (faster than the old two-way image). Production runs the three-way blend (image :4, D-108 update). Rollback: `/opt/pictures-conteo/compose.yml.bak-3-*` (image :2). Lane `an` reached the same backbone finding independently.
+   - (Done: patch applied in 2fac7d707, image :4 live, measured on the VPS.)
    - If it stays under about 40 s, raise the web's `PLAZO_MS` in `src/lib/contador/foto-yolo.ts` to 75 s (the route's `maxDuration` is 75) and switch to it. Otherwise try `torch.compile`, or leave it off.
    - Evidence for the three-way blend: −1.52 MAPE points on 234 real photos, nothing fitted on them (lab `ak-contadores-abiertos`).
    - The CountGD++ code is already in main (92a5a3baf) but switched off (0a5c44cff). To turn it on, add `--countgdpp-codigo /opt/countgdpp --countgdpp-pesos /modelo/countgdpp` to the command; the weights are already in `/opt/pictures-conteo/modelo/countgdpp/`.
