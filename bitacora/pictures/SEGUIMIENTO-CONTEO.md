@@ -32,3 +32,10 @@ Continue the automatic balloon count of Pictures (REQ-026). Talk to me in Spanis
 - Visual pages: the box gallery is at http://localhost:8130/ and the thickness page at http://localhost:8130/grosor.html (`~/dev/pictures-infra/conteo/galeria`, `generar.py` and `grosor_datos.py`).
 
 ---
+
+## 2026-11-10 14:30 — search closed (session 00431355)
+Round 9 lanes am (CountGD++ prompts), ao (tiling for big decorations) and ap (Gemini total as 4th vote) did not beat the three-way blend; details in `lab/LEEME.md` "Round 9 closed". The only open candidate is ap's 4-vote rule (`lab/ap-cuatro-votos/frozen.json`), to judge once on clean real truth.
+
+## 2026-11-10 16:40 — fourth vote live (session 00431355)
+The automatic total now includes the colour model's own total as a fourth equal vote (`conVotoVisual`, main 6e7c480ae, D-108 update). Round 10 lanes aq (density k) and ar (SAM 2, Qwen3-VL) did not beat the blend.
+
