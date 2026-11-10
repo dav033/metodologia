@@ -771,3 +771,12 @@ Source: owner, REQ-021 rounds 1–3.
 - **Update 2026-11-10 (round 7):** 9 more Sonnet lanes (TTA, amodal CountGD head, VLM total blend, photoreal renders x2, more web cases) found nothing that holds on real photos; a second one-time sealed check (28 cases) rejected the CountGD+VLM blend (24.0-23.7 % vs 24.3 %, intervals across zero). Production unchanged. Further gains need clean real truth (P-314).
 - **Update 2026-11-10 (round 8):** the detector + CountGD + CountGD++ equal-weight blend (lane ak) improved 234 real photos by 1.52 MAPE points [-2.34, -0.74] with nothing fitted on them, but on the VPS it took 37-64 s per photo (deadline 60 s); it was deployed as image :3 and rolled back to :2 the same minute. Code merged and off by default (2ec2c87d7). Unblock: a GPU host or an async count. Rollback files: `compose.yml.bak-2-20261110T130407`.
 
+## D-109 — The Contador asks how thick the decoration is and shows a ±30 % band (2026-11-10)
+
+- **Context:** exact-truth high-quality renders (437 views, 31 jobs) showed the photo count under-counts thick 3D decorations by about 18 % while it over-counts real photos by about 13 %; one calibration cannot fit both (lab am), and thickness cannot be read from the boxes (lab aq, ~40 % class accuracy). Owner's idea: a thickness delta.
+- **Decision:** next to the structure selector, «Grosor»: delgada (default, ×0.956), normal (×1.106), gruesa (×1.357) on the automatic total; the shown tolerance is ±30 % (held the true total ~80 % of the time on both domains). Commit 10ffffd33, main a1a166fe6.
+- **Evidence:** delgada is fitted on 262 real photos with grouped CV (about -1.5 MAPE points); normal/gruesa keep render-tercile ratios and are NOT validated on real photos.
+- **Rollback:** revert 10ffffd33.
+- **Source:** session 00431355; lab `aq-grosor/`, `am-calibrar-hq/`, `ap-densidad-plantillas/`.
+- **Update 2026-11-10 (D-109):** thickness options are shown as three large cards at the top of the photo panel (Bajo/Normal/Alto, 148f75da7); Normal and Alto refitted on 40 front-view room renders (lab ar): 1.02 and 1.07 instead of 1.106 and 1.357, which came from black-background views and over-counted. Corrections route mapped to `contador_globos` (946128753): internal employees could not send corrections before (unmapped routes default to admins only).
+

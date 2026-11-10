@@ -1,6 +1,6 @@
 # Index — pictures
 
-_Generated 2026-11-10 09:29 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-11-10 09:33 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md) · [Glossary](GLOSSARY.md)  
 **Web:** [project](http://127.0.0.1:8765/p/pictures) · [graph](http://127.0.0.1:8765/p/pictures/graph)  
@@ -68,11 +68,11 @@ _Generated 2026-11-10 09:29 by `bitacora.py index`. Do not edit by hand._
 
 ## Recent decisions
 
+- D-109 — The Contador asks how thick the decoration is and shows a ±30 % band (2026-11-10)
 - D-108 — The automatic count blends the detector with CountGD (2026-11-09)
 - D-107 — Every Contador photo is kept and shown to administrators in Admin › Subidas (2026-11-09)
 - D-106 — The Telegram MVP counts with the web Contador's backend call, on the laptop by long polling (2026-11-09)
 - D-105 — The automatic balloon count comes from an evolved detector pipeline, not from recognising the structure (2026-11-09)
-- D-104 — The catalogue list reaches production by merging the pilot into main with main's tree as the base (2026-11-09)
 
 ## Timeline
 
