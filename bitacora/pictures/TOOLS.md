@@ -65,6 +65,6 @@ _None registered yet._
 - The Vercel route `/api/whatsapp/webhook` still exists (owner asked not to link Meta to Vercel); remove it if unwanted.
 
 ### pictures-conteo (automatic balloon count, REQ-026)
-- **Type:** CPU detector service on the advin VPS, container `pictures-conteo`, compose in `/opt/pictures-conteo`, weights in `/opt/pictures-conteo/modelo`, network `stack_web`, 3 CPUs and 3 GB. Image built from `scripts/conteo-vision/Dockerfile`.
+- **Type:** CPU detector service on the advin VPS, container `pictures-conteo`, compose in `/opt/pictures-conteo`, weights in `/opt/pictures-conteo/modelo`, network `stack_web`. Since 2026-11-09 (D-108) image `pictures-conteo:2` with CountGD (weights `/opt/pictures-conteo/modelo/countgd/`, cpus 6, mem 6g, ~15-20 s/photo); rollback `compose.yml.bak-1-20261110T031805` (image :1). Image built on the VPS from `/opt/pictures-conteo/build` (`Dockerfile.countgd`).
 - **Access:** Caddy route `https://api-decoracion.185-147-157-25.sslip.io/conteo/*`; `/contar` needs header `x-conteo-token`. Token: `/opt/pictures-conteo/.env` on the VPS, `~/.config/metodologia/pictures-conteo-prod.env` locally. Vercel: `CONTADOR_FOTO_YOLO_URL`, `CONTADOR_FOTO_YOLO_TOKEN`.
 - **Rollback:** remove `CONTADOR_FOTO_YOLO_URL` from Vercel and redeploy: the Contador returns to the Python count with colours. Caddy backup: `/opt/edge-proxy/Caddyfile.bak.20261109T211929Z-conteo`.

@@ -1,10 +1,10 @@
 # Index — pictures
 
-_Generated 2026-11-09 18:33 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-11-10 09:29 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md) · [Glossary](GLOSSARY.md)  
 **Web:** [project](http://127.0.0.1:8765/p/pictures) · [graph](http://127.0.0.1:8765/p/pictures/graph)  
-**Last activity:** 2026-11-09
+**Last activity:** 2026-11-10
 
 ## Workspace
 
@@ -68,16 +68,16 @@ _Generated 2026-11-09 18:33 by `bitacora.py index`. Do not edit by hand._
 
 ## Recent decisions
 
+- D-108 — The automatic count blends the detector with CountGD (2026-11-09)
 - D-107 — Every Contador photo is kept and shown to administrators in Admin › Subidas (2026-11-09)
 - D-106 — The Telegram MVP counts with the web Contador's backend call, on the laptop by long polling (2026-11-09)
 - D-105 — The automatic balloon count comes from an evolved detector pipeline, not from recognising the structure (2026-11-09)
 - D-104 — The catalogue list reaches production by merging the pilot into main with main's tree as the base (2026-11-09)
-- D-103 — The whole catalogue becomes an editable list; «edited by a person» is read from the curation log (2026-11-09)
 
 ## Timeline
 
 - **2026-11** — [month summary](2026-11/MONTH.md)
-  - [W3](2026-11/W3/WEEK.md): [09](2026-11/W3/2026-11-09.md)
+  - [W3](2026-11/W3/WEEK.md): [10](2026-11/W3/2026-11-10.md), [09](2026-11/W3/2026-11-09.md)
   - [W2](2026-11/W2/WEEK.md): [08](2026-11/W2/2026-11-08.md), [07](2026-11/W2/2026-11-07.md), [06](2026-11/W2/2026-11-06.md), [05](2026-11/W2/2026-11-05.md), [04](2026-11/W2/2026-11-04.md), [03](2026-11/W2/2026-11-03.md), [02](2026-11/W2/2026-11-02.md)
   - [W1](2026-11/W1/WEEK.md): [01](2026-11/W1/2026-11-01.md)
 - **2026-10** — [month summary](2026-10/MONTH.md)

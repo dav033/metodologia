@@ -760,3 +760,14 @@ Source: owner, REQ-021 rounds 1–3.
 - **Rollback:** revert 0ed3bde45; the table can stay (additive) or be dropped after exporting.
 - **Source:** session 00431355.
 
+## D-108 — The automatic count blends the detector with CountGD (2026-11-09)
+
+- **Context:** round 6 of REQ-026 (owner: aggressive lanes, massive search, no permission questions). Ten Sonnet lanes searched papers, models and the web; lanes w1/w2/v collected 241 real photos with a stated total. Nothing else held on many real photos: bigger detector (26.8), seed ensembles (19.3), OWLv2 confirmation, structure formulas, amodal heads, real-trained mappers (about 1 point, noise).
+- **Decision:** CountGD (MIT; Hugging Face space `nikigoli/countgd` at 6e82e595, CUDA attention switched to PyTorch), prompted with "balloon" and the detector's three most confident raw boxes, threshold 0.15, NMS 0.5, count x 1.498, blended 70/30 geometrically with the detector's total. Frozen before a single sealed check: on 75 sealed web cases MAPE 30.1 -> 28.5 % (paired 90 % [-2.4, -0.7]); on 150 dev web cases -1.3 [-2.0, -0.6]; on the 17 real dev photos 20.8 -> 15.4.
+- **Deploy:** VPS image `pictures-conteo:2` (`scripts/conteo-vision/Dockerfile.countgd`), weights in `/opt/pictures-conteo/modelo/countgd/`, cpus 6, mem 6g; about 15-20 s per photo, one at a time. Web deadline `PLAZO_MS` 30 -> 60 s (a460cb883, main 6d3c084e8). If CountGD fails the service answers with the detector's total.
+- **Not adopted:** CountGD alone scored better on the sealed set (26.7 %), but choosing it after reading that set would be selection on sealed data; it is the next candidate, to judge on new real photos (Contador uploads, D-107).
+- **Rollback:** `/opt/pictures-conteo/compose.yml.bak-1-20261110T031805` (image `pictures-conteo:1`), `docker compose up -d`.
+- **Source:** session 00431355; lab `~/dev/pictures-infra/conteo/lab` (s-, ad-sellado/, LEEME round 6).
+- **Update 2026-11-10 (round 7):** 9 more Sonnet lanes (TTA, amodal CountGD head, VLM total blend, photoreal renders x2, more web cases) found nothing that holds on real photos; a second one-time sealed check (28 cases) rejected the CountGD+VLM blend (24.0-23.7 % vs 24.3 %, intervals across zero). Production unchanged. Further gains need clean real truth (P-314).
+- **Update 2026-11-10 (round 8):** the detector + CountGD + CountGD++ equal-weight blend (lane ak) improved 234 real photos by 1.52 MAPE points [-2.34, -0.74] with nothing fitted on them, but on the VPS it took 37-64 s per photo (deadline 60 s); it was deployed as image :3 and rolled back to :2 the same minute. Code merged and off by default (2ec2c87d7). Unblock: a GPU host or an async count. Rollback files: `compose.yml.bak-2-20261110T130407`.
+
