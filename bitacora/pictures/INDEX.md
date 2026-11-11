@@ -1,6 +1,6 @@
 # Index — pictures
 
-_Generated 2026-11-10 22:44 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-11-11 06:47 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md) · [Glossary](GLOSSARY.md)  
 **Web:** [project](http://127.0.0.1:8765/p/pictures) · [graph](http://127.0.0.1:8765/p/pictures/graph)  
@@ -65,7 +65,7 @@ _Generated 2026-11-10 22:44 by `bitacora.py index`. Do not edit by hand._
 - P-228 · Chat tags and picker on real devices: phone keyboards (Gboard composition, autocorrect), i · high/S
 - P-240 · Check the six birthday templates in production with a signed-in session (`davidt@sempertex · high/S
 - P-309 · GitHub Actions never starts: all 88 runs since 2026-11-08 end `startup_failure` on every b · high/S
-- P-010 · Commit photo-reading work (uncommitted) and merge e3-rapido f1198efd (precise AI size edit · high/M
+- P-315 · fal.ai balance exhausted (403 «Exhausted balance», 2026-11-10 ~23:15): FLUX down in produc · high/S
 
 ## Recent decisions
 

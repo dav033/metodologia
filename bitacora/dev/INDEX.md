@@ -1,10 +1,10 @@
 # Index — dev
 
-_Generated 2026-11-10 11:35 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-11-11 17:33 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/dev) · [graph](http://127.0.0.1:8765/p/dev/graph)  
-**Last activity:** 2026-11-10
+**Last activity:** 2026-11-11
 
 ## Workspace
 
@@ -54,7 +54,7 @@ _None yet._
 ## Timeline
 
 - **2026-11** — [month summary](2026-11/MONTH.md)
-  - [W3](2026-11/W3/WEEK.md): [10](2026-11/W3/2026-11-10.md), [09](2026-11/W3/2026-11-09.md)
+  - [W3](2026-11/W3/WEEK.md): [11](2026-11/W3/2026-11-11.md), [10](2026-11/W3/2026-11-10.md), [09](2026-11/W3/2026-11-09.md)
   - [W2](2026-11/W2/WEEK.md): [06](2026-11/W2/2026-11-06.md), [05](2026-11/W2/2026-11-05.md), [04](2026-11/W2/2026-11-04.md), [03](2026-11/W2/2026-11-03.md), [02](2026-11/W2/2026-11-02.md)
   - [W1](2026-11/W1/WEEK.md): [01](2026-11/W1/2026-11-01.md)
 - **2026-10** — [month summary](2026-10/MONTH.md)
