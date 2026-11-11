@@ -1,6 +1,6 @@
 # Index — pictures
 
-_Generated 2026-11-10 22:22 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-11-10 22:24 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md) · [Glossary](GLOSSARY.md)  
 **Web:** [project](http://127.0.0.1:8765/p/pictures) · [graph](http://127.0.0.1:8765/p/pictures/graph)  
