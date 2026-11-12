@@ -44,23 +44,23 @@
   {
    "id": "q3",
    "type": "choice",
-   "text": "Solo 61 de los 670 puntos de venta tienen correo (59 tienen teléfono). ¿Qué pasa cuando la persona elige un distribuidor cercano sin correo?",
+   "text": "Los 596 distribuidores de Colombia no traen correo ni teléfono en el archivo. ¿A dónde llega el pedido con su PDF cuando la persona elige uno?",
    "options": [
     {
      "key": "a",
-     "label": "Se muestran todos los cercanos; si el elegido no tiene correo, el pedido con su PDF llega a un correo interno de Sempertex y queda en la tabla de pedidos para que alguien lo gestione, y la persona recibe dirección y teléfono del punto"
+     "label": "Queda cableado a un correo fijo configurable (me dices cuál): todo pedido llega ahí con el PDF y el nombre del distribuidor elegido; cuando un distribuidor tenga correo en la tabla editable, le llega a él con copia al fijo. La persona recibe nombre, dirección y mapa del punto"
     },
     {
      "key": "b",
-     "label": "Solo se ofrecen distribuidores que tienen correo"
+     "label": "Igual que a, pero agrego a la tabla un campo de WhatsApp del distribuidor y, si lo tiene, también se le envía el PDF por WhatsApp"
     },
     {
      "key": "c",
-     "label": "Se muestran todos, pero sin correo solo se le dan los datos del punto a la persona (no se envía nada)"
+     "label": "Solo se ofrecen distribuidores que ya tengan correo cargado (hoy, ninguno en Colombia)"
     }
    ],
    "recommended": "a",
-   "why": "Con b, la mayoría de ciudades quedaría sin opciones; con a ningún pedido se pierde y los correos se van completando desde la tabla editable."
+   "why": "El flujo completo funciona desde el primer día sin esperar los contactos, y cambia solo a medida que se cargan correos en la tabla. Escribirle por WhatsApp a un distribuidor que nunca le escribió al bot exige plantilla aprobada por Meta."
   },
   {
    "id": "q4",
@@ -102,7 +102,30 @@
   }
  ],
  "round": 1,
- "status": "open",
- "answers": {},
- "created_at": "2026-11-12T15:04:30Z"
+ "status": "answered",
+ "answers": {
+  "q1": {
+   "choice": "a",
+   "note": "usa el crosswalk"
+  },
+  "q2": {
+   "choice": "b",
+   "note": "sí precios"
+  },
+  "q3": {
+   "choice": "a",
+   "note": "por el momento haz la configuración, luego conseguimos los correos (correo fijo aún sin valor)"
+  },
+  "q4": {
+   "choice": "a",
+   "note": "se escribe la dirección"
+  },
+  "q5": {
+   "choice": "a",
+   "note": ""
+  }
+ },
+ "created_at": "2026-11-12T15:04:30Z",
+ "answered_at": "2026-11-12T15:15:27Z",
+ "answered_via": "terminal"
 }
