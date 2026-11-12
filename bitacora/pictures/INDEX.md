@@ -1,6 +1,6 @@
 # Index — pictures
 
-_Generated 2026-11-12 10:04 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-11-12 10:49 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md) · [Glossary](GLOSSARY.md)  
 **Web:** [project](http://127.0.0.1:8765/p/pictures) · [graph](http://127.0.0.1:8765/p/pictures/graph)  
@@ -58,7 +58,7 @@ _Generated 2026-11-12 10:04 by `bitacora.py index`. Do not edit by hand._
 | [REQ-028](requirements/REQ-028-contador-classify-column-arch-wall-and-r/SPEC.md) | Contador: classify column/arch/wall and return the formula count | `ready` | [awaiting-approval](requirements/REQ-028-contador-classify-column-arch-wall-and-r/PLAN.md) |  |
 | [REQ-029](requirements/REQ-029-modular-balloon-analysis-one-ai-per-stag/SPEC.md) | Modular balloon analysis: one AI per stage, exact rings for classic columns and arches, assisted training | `in-progress` | [in-progress](requirements/REQ-029-modular-balloon-analysis-one-ai-per-stag/PLAN.md) |  |
 | [REQ-030](requirements/REQ-030-whatsapp-assistant-registration-daily-co/SPEC.md) | WhatsApp assistant: registration, daily conversation limit, palette advice, background prompts | `done` | — |  |
-| [REQ-031](requirements/REQ-031-distributors-and-mbp-tables-sketch-cart/SPEC.md) | Distributors and MBP tables, sketch cart with simulated Shopify, pending orders answered by WhatsApp, nearest-distributor order e-mail with PDF | `clarifying` | — |  |
+| [REQ-031](requirements/REQ-031-distributors-and-mbp-tables-sketch-cart/SPEC.md) | Distributors and MBP tables, sketch cart with simulated Shopify, pending orders answered by WhatsApp, nearest-distributor order e-mail with PDF | `clarifying` | [draft](requirements/REQ-031-distributors-and-mbp-tables-sketch-cart/PLAN.md) |  |
 
 ## Top pending (urgency, then complexity)
 
