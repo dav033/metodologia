@@ -1,6 +1,6 @@
 # Index — pictures
 
-_Generated 2026-11-11 21:05 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-11-11 21:51 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md) · [Glossary](GLOSSARY.md)  
 **Web:** [project](http://127.0.0.1:8765/p/pictures) · [graph](http://127.0.0.1:8765/p/pictures/graph)  
@@ -57,6 +57,7 @@ _Generated 2026-11-11 21:05 by `bitacora.py index`. Do not edit by hand._
 | [REQ-027](requirements/REQ-027-telegram-bot-mvp-photo-to-balloon-count/SPEC.md) | Telegram bot MVP: photo to balloon count (same backend as /contador) | `ready` | [in-progress](requirements/REQ-027-telegram-bot-mvp-photo-to-balloon-count/PLAN.md) |  |
 | [REQ-028](requirements/REQ-028-contador-classify-column-arch-wall-and-r/SPEC.md) | Contador: classify column/arch/wall and return the formula count | `ready` | [awaiting-approval](requirements/REQ-028-contador-classify-column-arch-wall-and-r/PLAN.md) |  |
 | [REQ-029](requirements/REQ-029-modular-balloon-analysis-one-ai-per-stag/SPEC.md) | Modular balloon analysis: one AI per stage, exact rings for classic columns and arches, assisted training | `in-progress` | [in-progress](requirements/REQ-029-modular-balloon-analysis-one-ai-per-stag/PLAN.md) |  |
+| [REQ-030](requirements/REQ-030-whatsapp-assistant-registration-daily-co/SPEC.md) | WhatsApp assistant: registration, daily conversation limit, palette advice, background prompts | `in-progress` | — |  |
 
 ## Top pending (urgency, then complexity)
 
@@ -70,11 +71,11 @@ _Generated 2026-11-11 21:05 by `bitacora.py index`. Do not edit by hand._
 
 ## Recent decisions
 
+- D-111 — WhatsApp becomes an assistant behind a registration gate and a daily conversation limit (2026-11-11)
 - D-110 — Balloon photos are analysed in stages; classic columns and arches are read ring by ring, exact only by consensus (2026-11-11)
 - D-109 — The Contador asks how thick the decoration is and shows a ±30 % band (2026-11-10)
 - D-108 — The automatic count blends the detector with CountGD (2026-11-09)
 - D-107 — Every Contador photo is kept and shown to administrators in Admin › Subidas (2026-11-09)
-- D-106 — The Telegram MVP counts with the web Contador's backend call, on the laptop by long polling (2026-11-09)
 
 ## Timeline
 
