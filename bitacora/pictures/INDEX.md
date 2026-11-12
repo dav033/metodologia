@@ -1,10 +1,10 @@
 # Index — pictures
 
-_Generated 2026-11-12 08:10 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-11-12 08:14 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md) · [Glossary](GLOSSARY.md)  
 **Web:** [project](http://127.0.0.1:8765/p/pictures) · [graph](http://127.0.0.1:8765/p/pictures/graph)  
-**Last activity:** 2026-11-12
+**Last activity:** 2026-11-11
 
 ## Workspace
 
@@ -80,7 +80,7 @@ _Generated 2026-11-12 08:10 by `bitacora.py index`. Do not edit by hand._
 ## Timeline
 
 - **2026-11** — [month summary](2026-11/MONTH.md)
-  - [W3](2026-11/W3/WEEK.md): [12](2026-11/W3/2026-11-12.md), [11](2026-11/W3/2026-11-11.md), [10](2026-11/W3/2026-11-10.md), [09](2026-11/W3/2026-11-09.md)
+  - [W3](2026-11/W3/WEEK.md): [11](2026-11/W3/2026-11-11.md), [10](2026-11/W3/2026-11-10.md), [09](2026-11/W3/2026-11-09.md)
   - [W2](2026-11/W2/WEEK.md): [08](2026-11/W2/2026-11-08.md), [07](2026-11/W2/2026-11-07.md), [06](2026-11/W2/2026-11-06.md), [05](2026-11/W2/2026-11-05.md), [04](2026-11/W2/2026-11-04.md), [03](2026-11/W2/2026-11-03.md), [02](2026-11/W2/2026-11-02.md)
   - [W1](2026-11/W1/WEEK.md): [01](2026-11/W1/2026-11-01.md)
 - **2026-10** — [month summary](2026-10/MONTH.md)
