@@ -1,10 +1,10 @@
 # Index — pictures
 
-_Generated 2026-11-11 06:47 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-11-11 21:05 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md) · [Glossary](GLOSSARY.md)  
 **Web:** [project](http://127.0.0.1:8765/p/pictures) · [graph](http://127.0.0.1:8765/p/pictures/graph)  
-**Last activity:** 2026-11-10
+**Last activity:** 2026-11-11
 
 ## Workspace
 
@@ -56,6 +56,7 @@ _Generated 2026-11-11 06:47 by `bitacora.py index`. Do not edit by hand._
 | [REQ-026](requirements/REQ-026-balloon-count-training-mode-visible-boxe/SPEC.md) | Balloon count training mode: visible boxes for YOLO and total inference with Haiku | `in-progress` | [done](requirements/REQ-026-balloon-count-training-mode-visible-boxe/PLAN.md) | report ✓ |
 | [REQ-027](requirements/REQ-027-telegram-bot-mvp-photo-to-balloon-count/SPEC.md) | Telegram bot MVP: photo to balloon count (same backend as /contador) | `ready` | [in-progress](requirements/REQ-027-telegram-bot-mvp-photo-to-balloon-count/PLAN.md) |  |
 | [REQ-028](requirements/REQ-028-contador-classify-column-arch-wall-and-r/SPEC.md) | Contador: classify column/arch/wall and return the formula count | `ready` | [awaiting-approval](requirements/REQ-028-contador-classify-column-arch-wall-and-r/PLAN.md) |  |
+| [REQ-029](requirements/REQ-029-modular-balloon-analysis-one-ai-per-stag/SPEC.md) | Modular balloon analysis: one AI per stage, exact rings for classic columns and arches, assisted training | `in-progress` | [in-progress](requirements/REQ-029-modular-balloon-analysis-one-ai-per-stag/PLAN.md) |  |
 
 ## Top pending (urgency, then complexity)
 
@@ -69,16 +70,16 @@ _Generated 2026-11-11 06:47 by `bitacora.py index`. Do not edit by hand._
 
 ## Recent decisions
 
+- D-110 — Balloon photos are analysed in stages; classic columns and arches are read ring by ring, exact only by consensus (2026-11-11)
 - D-109 — The Contador asks how thick the decoration is and shows a ±30 % band (2026-11-10)
 - D-108 — The automatic count blends the detector with CountGD (2026-11-09)
 - D-107 — Every Contador photo is kept and shown to administrators in Admin › Subidas (2026-11-09)
 - D-106 — The Telegram MVP counts with the web Contador's backend call, on the laptop by long polling (2026-11-09)
-- D-105 — The automatic balloon count comes from an evolved detector pipeline, not from recognising the structure (2026-11-09)
 
 ## Timeline
 
 - **2026-11** — [month summary](2026-11/MONTH.md)
-  - [W3](2026-11/W3/WEEK.md): [10](2026-11/W3/2026-11-10.md), [09](2026-11/W3/2026-11-09.md)
+  - [W3](2026-11/W3/WEEK.md): [11](2026-11/W3/2026-11-11.md), [10](2026-11/W3/2026-11-10.md), [09](2026-11/W3/2026-11-09.md)
   - [W2](2026-11/W2/WEEK.md): [08](2026-11/W2/2026-11-08.md), [07](2026-11/W2/2026-11-07.md), [06](2026-11/W2/2026-11-06.md), [05](2026-11/W2/2026-11-05.md), [04](2026-11/W2/2026-11-04.md), [03](2026-11/W2/2026-11-03.md), [02](2026-11/W2/2026-11-02.md)
   - [W1](2026-11/W1/WEEK.md): [01](2026-11/W1/2026-11-01.md)
 - **2026-10** — [month summary](2026-10/MONTH.md)
