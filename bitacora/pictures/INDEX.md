@@ -1,6 +1,6 @@
 # Index — pictures
 
-_Generated 2026-11-12 14:22 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-11-12 17:16 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md) · [Glossary](GLOSSARY.md)  
 **Web:** [project](http://127.0.0.1:8765/p/pictures) · [graph](http://127.0.0.1:8765/p/pictures/graph)  
@@ -72,11 +72,11 @@ _Generated 2026-11-12 14:22 by `bitacora.py index`. Do not edit by hand._
 
 ## Recent decisions
 
+- D-115 — 2026-11-12 · Explicit personal-data authorization (Law 1581) on WhatsApp and for distributors
+- D-114 — 2026-11-12 · WhatsApp converses through the web's guided assistant
 - D-113 — 2026-11-12 · Ring reads: photo border, design gaps, second read decides exact columns
 - D-112 — Sketch cart and distributor directory: three swappable ports, orders in the shared Postgres, flags off by default (2026-11-12)
 - D-111 — WhatsApp becomes an assistant behind a registration gate and a daily conversation limit (2026-11-11)
-- D-110 — Balloon photos are analysed in stages; classic columns and arches are read ring by ring, exact only by consensus (2026-11-11)
-- D-109 — The Contador asks how thick the decoration is and shows a ±30 % band (2026-11-10)
 
 ## Timeline
 
