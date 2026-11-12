@@ -1,6 +1,6 @@
 ---
 id: REQ-031
-status: clarifying
+status: in-progress (in production 2026-11-12, main b410c690b; flags off, awaiting owner)
 created: 2026-11-12
 track: deep
 ---
