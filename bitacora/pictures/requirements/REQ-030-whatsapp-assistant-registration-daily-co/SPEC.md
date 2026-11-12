@@ -1,6 +1,6 @@
 ---
 id: REQ-030
-status: in-progress
+status: done
 created: 2026-11-11
 track: quick
 ---
