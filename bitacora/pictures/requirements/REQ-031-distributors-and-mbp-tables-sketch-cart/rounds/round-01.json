@@ -1,0 +1,108 @@
+{
+ "title": "Ronda 1 — decisiones que dan forma a todo el plan",
+ "intro": "Distribuidores y MBP en base de datos con administración, carrito sobre el boceto (web y WhatsApp) con catálogo intercambiable que simula Shopify, pedidos pendientes que un administrador responde por WhatsApp con el enlace, y envío del pedido al distribuidor cercano por correo con PDF.",
+ "coverage": "5/10",
+ "questions": [
+  {
+   "id": "q1",
+   "type": "choice",
+   "text": "No existe ningún archivo llamado «btb» en el repositorio ni en pictures-infra. ¿Cuál es el JSON de BTB que debe alimentar el carrito?",
+   "options": [
+    {
+     "key": "a",
+     "label": "El crosswalk B2B que ya usa el motor (crosswalk-vigente.json: 653 combinaciones formato|color, 1.185 variantes con paquete y precio mayorista, sin SKU), completando el SKU desde la tabla catalog_variants"
+    },
+    {
+     "key": "b",
+     "label": "Es otro archivo: te digo dónde está"
+    }
+   ],
+   "recommended": "a",
+   "why": "Es el único dato B2B del proyecto y ya traduce «R-12 color 005» a un producto; el boceto no entrega SKU ni precio."
+  },
+  {
+   "id": "q2",
+   "type": "choice",
+   "text": "¿El carrito muestra precios?",
+   "options": [
+    {
+     "key": "a",
+     "label": "No: solo productos, paquetes y cantidades; el precio lo ve la persona en el enlace de Shopify que le manda el administrador"
+    },
+    {
+     "key": "b",
+     "label": "Sí, los precios del JSON B2B (son mayoristas)"
+    },
+    {
+     "key": "c",
+     "label": "Sí, pero solo a administradores"
+    }
+   ],
+   "recommended": "a",
+   "why": "Los precios del JSON son mayoristas y el carrito real lo arma el administrador; mostrar un total que luego no coincide genera reclamos."
+  },
+  {
+   "id": "q3",
+   "type": "choice",
+   "text": "Solo 61 de los 670 puntos de venta tienen correo (59 tienen teléfono). ¿Qué pasa cuando la persona elige un distribuidor cercano sin correo?",
+   "options": [
+    {
+     "key": "a",
+     "label": "Se muestran todos los cercanos; si el elegido no tiene correo, el pedido con su PDF llega a un correo interno de Sempertex y queda en la tabla de pedidos para que alguien lo gestione, y la persona recibe dirección y teléfono del punto"
+    },
+    {
+     "key": "b",
+     "label": "Solo se ofrecen distribuidores que tienen correo"
+    },
+    {
+     "key": "c",
+     "label": "Se muestran todos, pero sin correo solo se le dan los datos del punto a la persona (no se envía nada)"
+    }
+   ],
+   "recommended": "a",
+   "why": "Con b, la mayoría de ciudades quedaría sin opciones; con a ningún pedido se pierde y los correos se van completando desde la tabla editable."
+  },
+  {
+   "id": "q4",
+   "type": "choice",
+   "text": "Para hallar los distribuidores cercanos hay que convertir la dirección en coordenadas. ¿Con qué?",
+   "options": [
+    {
+     "key": "a",
+     "label": "Ubicación compartida (pin de WhatsApp / botón «usar mi ubicación» en la web) y, si escribe la dirección, OpenStreetMap (Nominatim, gratis, sin clave); si no la encuentra, se usa la ciudad"
+    },
+    {
+     "key": "b",
+     "label": "Google Geocoding (más preciso con direcciones colombianas; necesita una clave con facturación que tú creas)"
+    }
+   ],
+   "recommended": "a",
+   "why": "Funciona hoy sin credenciales nuevas; el geocodificador queda detrás de un puerto y se cambia a Google después sin tocar lo demás."
+  },
+  {
+   "id": "q5",
+   "type": "choice",
+   "text": "WhatsApp solo permite mensajes libres durante las 24 h siguientes al último mensaje de la persona; después exige plantillas aprobadas por Meta (hoy no hay ninguna). ¿Cómo responde el administrador con el enlace de Shopify?",
+   "options": [
+    {
+     "key": "a",
+     "label": "Desde el panel pega el enlace y se envía por el número del bot si está dentro de las 24 h; si ya pasaron, se envía al correo registrado y el panel lo indica. La plantilla de Meta queda como propuesta"
+    },
+    {
+     "key": "b",
+     "label": "Igual que a, y además dejo redactada la plantilla para que la envíes a aprobación en Meta en este mismo trabajo"
+    },
+    {
+     "key": "c",
+     "label": "El panel solo abre un chat (wa.me) con el mensaje listo y el administrador lo envía desde su propio WhatsApp"
+    }
+   ],
+   "recommended": "a",
+   "why": "El bot ya guarda nombre y correo de cada número, así que el enlace siempre llega; la aprobación de plantillas depende de Meta y no debe frenar la entrega."
+  }
+ ],
+ "round": 1,
+ "status": "open",
+ "answers": {},
+ "created_at": "2026-11-12T15:04:30Z"
+}

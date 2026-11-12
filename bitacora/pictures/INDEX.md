@@ -1,10 +1,10 @@
 # Index — pictures
 
-_Generated 2026-11-12 08:14 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-11-12 10:04 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md) · [Glossary](GLOSSARY.md)  
 **Web:** [project](http://127.0.0.1:8765/p/pictures) · [graph](http://127.0.0.1:8765/p/pictures/graph)  
-**Last activity:** 2026-11-11
+**Last activity:** 2026-11-12
 
 ## Workspace
 
@@ -58,6 +58,7 @@ _Generated 2026-11-12 08:14 by `bitacora.py index`. Do not edit by hand._
 | [REQ-028](requirements/REQ-028-contador-classify-column-arch-wall-and-r/SPEC.md) | Contador: classify column/arch/wall and return the formula count | `ready` | [awaiting-approval](requirements/REQ-028-contador-classify-column-arch-wall-and-r/PLAN.md) |  |
 | [REQ-029](requirements/REQ-029-modular-balloon-analysis-one-ai-per-stag/SPEC.md) | Modular balloon analysis: one AI per stage, exact rings for classic columns and arches, assisted training | `in-progress` | [in-progress](requirements/REQ-029-modular-balloon-analysis-one-ai-per-stag/PLAN.md) |  |
 | [REQ-030](requirements/REQ-030-whatsapp-assistant-registration-daily-co/SPEC.md) | WhatsApp assistant: registration, daily conversation limit, palette advice, background prompts | `done` | — |  |
+| [REQ-031](requirements/REQ-031-distributors-and-mbp-tables-sketch-cart/SPEC.md) | Distributors and MBP tables, sketch cart with simulated Shopify, pending orders answered by WhatsApp, nearest-distributor order e-mail with PDF | `clarifying` | — |  |
 
 ## Top pending (urgency, then complexity)
 
@@ -80,7 +81,7 @@ _Generated 2026-11-12 08:14 by `bitacora.py index`. Do not edit by hand._
 ## Timeline
 
 - **2026-11** — [month summary](2026-11/MONTH.md)
-  - [W3](2026-11/W3/WEEK.md): [11](2026-11/W3/2026-11-11.md), [10](2026-11/W3/2026-11-10.md), [09](2026-11/W3/2026-11-09.md)
+  - [W3](2026-11/W3/WEEK.md): [12](2026-11/W3/2026-11-12.md), [11](2026-11/W3/2026-11-11.md), [10](2026-11/W3/2026-11-10.md), [09](2026-11/W3/2026-11-09.md)
   - [W2](2026-11/W2/WEEK.md): [08](2026-11/W2/2026-11-08.md), [07](2026-11/W2/2026-11-07.md), [06](2026-11/W2/2026-11-06.md), [05](2026-11/W2/2026-11-05.md), [04](2026-11/W2/2026-11-04.md), [03](2026-11/W2/2026-11-03.md), [02](2026-11/W2/2026-11-02.md)
   - [W1](2026-11/W1/WEEK.md): [01](2026-11/W1/2026-11-01.md)
 - **2026-10** — [month summary](2026-10/MONTH.md)
