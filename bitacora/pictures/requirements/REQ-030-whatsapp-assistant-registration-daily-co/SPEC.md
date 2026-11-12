@@ -23,7 +23,7 @@ picture, and is cut at the 6th conversation of the Bogotá day.
 
 ## Decisions (made without asking, owner's standing autonomy instruction; recorded as D-111)
 1. **Registration (gate before everything).** Unknown number → ask name, then email. Stored in the production Postgres
-   (`pictures`, table `whatsapp_contactos`, migration 063): phone digits in clear (null for BSUID users), keyed hash of the
+   (`pictures`, table `whatsapp_contactos`, migration 064): phone digits in clear (null for BSUID users), keyed hash of the
    WhatsApp id (unique), name, lower-cased email, `account_id` linked when a Pictures account has that email (case-insensitive),
    timestamps. No account is created or invited. Without both fields: no count, no sketch, no assistant. DB unreachable →
    short «no puedo atenderte ahora», nothing else (fail closed). Bot connects with its own least-privilege role
