@@ -1,10 +1,10 @@
 # Index — dev
 
-_Generated 2026-11-12 14:23 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-11-12 17:16 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/dev) · [graph](http://127.0.0.1:8765/p/dev/graph)  
-**Last activity:** 2026-11-11
+**Last activity:** 2026-11-12
 
 ## Workspace
 
@@ -41,7 +41,7 @@ _None yet._
 - P-012 · [closed 2026-10-19 by D-016: `scheduler-watch` restarts a dead owner with backoff and a fa · high/M
 - P-139 · Carry of a redone task onto its new base commits files with git conflict markers (`m3 carr · high/M
 - P-142 · Tasks that author an integration harness can discover production defects of accepted tasks · high/M
-- P-001 · Remove the marathon (relocate shared bt_run* helpers, scheduler as the only launch/handoff · high/L
+- P-328 · [closed 2026-11-12 by session 800effe7: Pictures main af422b2f1, bot + Vercel deployed] Pi · high/M
 
 ## Recent decisions
 
@@ -54,7 +54,7 @@ _None yet._
 ## Timeline
 
 - **2026-11** — [month summary](2026-11/MONTH.md)
-  - [W3](2026-11/W3/WEEK.md): [11](2026-11/W3/2026-11-11.md), [10](2026-11/W3/2026-11-10.md), [09](2026-11/W3/2026-11-09.md)
+  - [W3](2026-11/W3/WEEK.md): [12](2026-11/W3/2026-11-12.md), [11](2026-11/W3/2026-11-11.md), [10](2026-11/W3/2026-11-10.md), [09](2026-11/W3/2026-11-09.md)
   - [W2](2026-11/W2/WEEK.md): [06](2026-11/W2/2026-11-06.md), [05](2026-11/W2/2026-11-05.md), [04](2026-11/W2/2026-11-04.md), [03](2026-11/W2/2026-11-03.md), [02](2026-11/W2/2026-11-02.md)
   - [W1](2026-11/W1/WEEK.md): [01](2026-11/W1/2026-11-01.md)
 - **2026-10** — [month summary](2026-10/MONTH.md)
