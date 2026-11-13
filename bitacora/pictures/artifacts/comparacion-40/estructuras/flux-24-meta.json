@@ -1,0 +1,14 @@
+{
+  "n": 24,
+  "id": "motor:oficial-columna_asimetrica",
+  "model": "fal-ai/flux-2/edit",
+  "palette": [
+    "005",
+    "038",
+    "041"
+  ],
+  "place": "estudio",
+  "status": "completed",
+  "mime": "image/png",
+  "completed": "2026-11-13T01:56:59.927Z"
+}

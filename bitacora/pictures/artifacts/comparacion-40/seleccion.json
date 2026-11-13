@@ -1,0 +1,322 @@
+[
+  {
+    "id": "idea:arco-acuatico",
+    "name_es": "Arco acuático: arco de Link-O-Loon azul con peces y caracolas",
+    "structure_category": "arch",
+    "structure_variant": "classic",
+    "render_url": "https://miniaturas-decoracion.185-147-157-25.sslip.io/r/66/66c61820662aea28ce5cd0d9164a3e9ce5ace1449c90f14dae2194f637bae9dd.webp",
+    "thumbnail_url": "https://sempertex.com/cdn/shop/articles/176c4d31246cad51cdb9b01f50421de3_84b3fe80-77bc-4bd0-a4e4-0b7072260daa.jpg"
+  },
+  {
+    "id": "idea:arco-azul",
+    "name_es": "Arco azul en espiral",
+    "structure_category": "arch",
+    "structure_variant": "classic",
+    "render_url": "https://miniaturas-decoracion.185-147-157-25.sslip.io/r/54/549f31f75d19bc988a25731208bf49af81d90b5ddca0463ea44828150064c3cd.webp",
+    "thumbnail_url": "https://sempertex.com/cdn/shop/articles/e63ea12705edd8a6ca1a0529d7426575_0f8c89ff-a852-4e3f-965b-fb0ac1a684aa.jpg"
+  },
+  {
+    "id": "idea:arco-azul-y-rojo",
+    "name_es": "Arco azul y rojo",
+    "structure_category": "arch",
+    "structure_variant": "classic",
+    "render_url": "https://miniaturas-decoracion.185-147-157-25.sslip.io/r/7b/7bd49e3875298239916a06bdef0857cda0bcc4a5088ad377a0485133ae2f832a.webp",
+    "thumbnail_url": "https://sempertex.com/cdn/shop/articles/bede532cf38b5a519d30005953e179d3_c4995634-4ebc-45f4-8d09-6fedd05f97ce.jpg"
+  },
+  {
+    "id": "idea:arco-bebito",
+    "name_es": "Arco bebito: cadena de R-12 celestes con nudos de R-5 azul rey",
+    "structure_category": "arch",
+    "structure_variant": "classic",
+    "render_url": "https://miniaturas-decoracion.185-147-157-25.sslip.io/r/20/20c49a1e91b7825ef17fe23bbc15d494edd8d78918a7a35ac16ad552230b6d36.webp",
+    "thumbnail_url": "https://sempertex.com/cdn/shop/articles/0e6ff54e44a373de6c1944ec25aa29f6_42818838-a953-45e0-b70d-afb57db9f6f1.jpg"
+  },
+  {
+    "id": "idea:arco-dos-colores",
+    "name_es": "Arco clásico redondo fucsia y amarillo",
+    "structure_category": "arch",
+    "structure_variant": "classic",
+    "render_url": "https://miniaturas-decoracion.185-147-157-25.sslip.io/r/7e/7e23d732dae21eb8bb99dc793b02e04a333ccb1235a37831b7426aaa3594d73b.webp",
+    "thumbnail_url": "https://sempertex.com/cdn/shop/articles/f51807b8fb5c28baec153a5f25da1207_a0d5d005-5c31-4cf2-a832-e28c70896cf6.jpg"
+  },
+  {
+    "id": "idea:arco-halloween-de-varios-tamanos",
+    "name_es": "Arco de Halloween de varios tamaños con araña",
+    "structure_category": "arch",
+    "structure_variant": "organic",
+    "render_url": "https://miniaturas-decoracion.185-147-157-25.sslip.io/r/0c/0c3c5f9de286787a80f36d945ecc3779fa2b89f80afb8c28ecd30d8c461c67c7.webp",
+    "thumbnail_url": "https://sempertex.com/cdn/shop/articles/b8c1023d70040b072666e7a25d3a2000.jpg"
+  },
+  {
+    "id": "idea:arco-organico-aguamarina",
+    "name_es": "Arco orgánico aguamarina, dorado rosa, perla y champaña",
+    "structure_category": "arch",
+    "structure_variant": "organic",
+    "render_url": "https://miniaturas-decoracion.185-147-157-25.sslip.io/r/56/56c6a922afc723a8ce42f5f7c8001011e02a6661768a4a6ed5cf818c84385c68.webp",
+    "thumbnail_url": "https://sempertex.com/cdn/shop/articles/d3423f733e22ca317ce1ea367c8b06ac_e719d136-f8a7-4126-8cff-f32767cd80db.jpg"
+  },
+  {
+    "id": "idea:arco-organico-amor",
+    "name_es": "Arco orgánico amor rojo, fucsia, rosado y dorado",
+    "structure_category": "arch",
+    "structure_variant": "organic",
+    "render_url": "https://miniaturas-decoracion.185-147-157-25.sslip.io/r/9b/9bc8d87b5c9efc43cd66014ca58b78799526b2fc9874fb70dbbd7a3e5c0c3728.webp",
+    "thumbnail_url": "https://sempertex.com/cdn/shop/files/logosptx_1200x1200_1.png"
+  },
+  {
+    "id": "idea:arco-organico-satin-pastel",
+    "name_es": "Arco orgánico satín pastel",
+    "structure_category": "arch",
+    "structure_variant": "organic",
+    "render_url": "https://miniaturas-decoracion.185-147-157-25.sslip.io/r/10/10a5b0e5f3863ec98acd9004669a4fa10effb24b902e798a99cbaadf292e5189.webp",
+    "thumbnail_url": "https://sempertex.com/cdn/shop/articles/2785371d9264f570b6bc59b6951b896d.jpg"
+  },
+  {
+    "id": "base-organica:arco-menta-azul-blanco",
+    "name_es": "Arco orgánico menta, azul empolvado y blanco",
+    "structure_category": "arch",
+    "structure_variant": "organic",
+    "render_url": "https://miniaturas-decoracion.185-147-157-25.sslip.io/r/fd/fde13ebdd685dfb51d59a5845df1272812f98838cbd5d697802e91d171a86c33.webp",
+    "thumbnail_url": "https://cdn.shopify.com/s/files/1/0013/9683/4349/files/IMG_3197.jpg?width=1400"
+  },
+  {
+    "id": "idea:columna-arana-1",
+    "name_es": "Columna araña de otoño",
+    "structure_category": "column",
+    "structure_variant": "classic",
+    "render_url": "https://miniaturas-decoracion.185-147-157-25.sslip.io/r/b1/b13321316f0872db692b782a2611e33a779df7c378d8c70ca0ac6c5dc78890be.webp",
+    "thumbnail_url": "https://sempertex.com/cdn/shop/articles/Columna_Arana.png"
+  },
+  {
+    "id": "idea:columna-bosque-silvestre",
+    "name_es": "Columna bosque silvestre",
+    "structure_category": "column",
+    "structure_variant": "classic",
+    "render_url": "https://miniaturas-decoracion.185-147-157-25.sslip.io/r/84/8421d5cce6e893a0fc00f01ae34d99dcf62ffec06e88912bbc629944406a120d.webp",
+    "thumbnail_url": "https://sempertex.com/cdn/shop/articles/119064bd60adc1e5b7b7e9dc728058d9_c39bb926-15ca-4b41-ae61-5f4f3a3955cf.jpg"
+  },
+  {
+    "id": "idea:mister-halloween",
+    "name_es": "Columna de Halloween naranja y negra con calabaza",
+    "structure_category": "column",
+    "structure_variant": "classic",
+    "render_url": "https://miniaturas-decoracion.185-147-157-25.sslip.io/r/e8/e8758830b58548d207e4a744226a2c754e6256ff0a816ae34d8ef838ec13deb0.webp",
+    "thumbnail_url": "https://sempertex.com/cdn/shop/articles/106c4ba7d919252fb84055ad40c0a2d0_85bf869e-1dfa-4773-9674-aadba8036c42.jpg"
+  },
+  {
+    "id": "idea:flor-de-corazones-dorados",
+    "name_es": "Columna dorada con flor roja y corazones de helio",
+    "structure_category": "column",
+    "structure_variant": "classic",
+    "render_url": "https://miniaturas-decoracion.185-147-157-25.sslip.io/r/4a/4afbe7f036eb980373253bf11d5332bbcb6d0d3ae92832c87a7dee40b29d1160.webp",
+    "thumbnail_url": "https://sempertex.com/cdn/shop/articles/6ede545660cd3d75e0b457fd50cab165_178e66d4-468e-4e1c-9cd0-4ec8e079325c.jpg"
+  },
+  {
+    "id": "idea:columna-organica-encanto-dorado",
+    "name_es": "Columna orgánica Encanto Dorado",
+    "structure_category": "column",
+    "structure_variant": "organic",
+    "render_url": "https://miniaturas-decoracion.185-147-157-25.sslip.io/r/79/795e2f31a566cc7c833222d0e002ea89252e78eae9e7006a13858a5b0a342757.webp",
+    "thumbnail_url": "https://sempertex.com/cdn/shop/articles/Columna-Org_C3_A1nica-Encanto-Dorado.jpg"
+  },
+  {
+    "id": "idea:mi-boda",
+    "name_es": "Torre orgánica dorada de boda con margaritas y globos de helio",
+    "structure_category": "column",
+    "structure_variant": "organic",
+    "render_url": "https://miniaturas-decoracion.185-147-157-25.sslip.io/r/5d/5d467c67f8e95cf54952f30be878df609cc4acf18c697b028326f63720027357.webp",
+    "thumbnail_url": "https://sempertex.com/cdn/shop/articles/afc69ff5f88d66fb1d96b21f6dce02fd_0f0cc594-a752-49b0-b463-9969f942a6d1.jpg"
+  },
+  {
+    "id": "base-organica:baston-ombre-rosa-blanco-monos",
+    "name_es": "Columna bastón en degradé de rosa a blanco con moños",
+    "structure_category": "column",
+    "structure_variant": "organic",
+    "render_url": "https://miniaturas-decoracion.185-147-157-25.sslip.io/r/83/83bc9ebb90a564226e7b6ee2c3ed7a0d185fec8fafd30cabe8217c4501aebde3.webp",
+    "thumbnail_url": "https://cdn.shopify.com/s/files/1/0725/6375/3274/files/column_5_d4911de1-05a3-41ca-b189-da4f56ecb273.png"
+  },
+  {
+    "id": "base-organica:columna-bienvenida-crema-negro-oro",
+    "name_es": "Columna de bienvenida crema, negro y oro con remate",
+    "structure_category": "column",
+    "structure_variant": "organic",
+    "render_url": "https://miniaturas-decoracion.185-147-157-25.sslip.io/r/be/bed888b6369889738a8ff4d41cd006c42380655d9f3c2e18cd10294600381aec.webp",
+    "thumbnail_url": "https://cdn.shopify.com/s/files/1/0363/2984/8969/files/organic-balloon-column-560549.jpg?width=1400"
+  },
+  {
+    "id": "idea:figura-de-amor-y-amistad-1",
+    "name_es": "Guirnalda de amor y amistad con cerezas de corazón",
+    "structure_category": "garland",
+    "structure_variant": "organic",
+    "render_url": "https://miniaturas-decoracion.185-147-157-25.sslip.io/r/a5/a56523126ec58b00aadda30196f9f508ab209a80db46882e35aaaf29e2627ec0.webp",
+    "thumbnail_url": "https://sempertex.com/cdn/shop/articles/Figura_Amor_y_amistad.jpg"
+  },
+  {
+    "id": "idea:garland-grado",
+    "name_es": "Guirnalda de grado con cortina",
+    "structure_category": "garland",
+    "structure_variant": "organic",
+    "render_url": "https://miniaturas-decoracion.185-147-157-25.sslip.io/r/6e/6ea22a53f37fc93dac401615280b3ebf92395d3bb772a85ec8fca4da16277d6e.webp",
+    "thumbnail_url": "https://sempertex.com/cdn/shop/articles/Garland_Grado.jpg"
+  },
+  {
+    "id": "idea:revelacion-de-genero",
+    "name_es": "Revelación de género: globo «?» sobre base orgánica perla",
+    "structure_category": "garland",
+    "structure_variant": "organic",
+    "render_url": "https://miniaturas-decoracion.185-147-157-25.sslip.io/r/41/41e08fc69c92b0b44781dcc4981717efe4f44af9761dc28da6465e591865fd76.webp",
+    "thumbnail_url": "https://sempertex.com/cdn/shop/articles/Idea_Revelacion_de_Genero.jpg"
+  },
+  {
+    "id": "asistente:deco-real-22-guirnalda-san-valentin",
+    "name_es": "Guirnalda de San Valentín «Te amo»",
+    "structure_category": "garland",
+    "structure_variant": "organic",
+    "render_url": "https://miniaturas-decoracion.185-147-157-25.sslip.io/r/c1/c1f0d688edc94e6b0456c34c45bb297bccccc25f79c2cb04e71ad41a713d8187.webp",
+    "thumbnail_url": "/biblioteca-sempertex/referencias/deco-real-22-guirnalda-san-valentin.jpg"
+  },
+  {
+    "id": "idea:semiarco-organico-combinaciones-con-reflex",
+    "name_es": "Semiarco orgánico rosado, fucsia y Reflex",
+    "structure_category": "semi-arch",
+    "structure_variant": "organic",
+    "render_url": "https://miniaturas-decoracion.185-147-157-25.sslip.io/r/36/36b1b903323696d3e2be8ca4137325b5b7e57c3678dab82d0b5d430063866875.webp",
+    "thumbnail_url": "https://sempertex.com/cdn/shop/articles/Semiarco-Organico-Combinaciones-con-Reflex_26bbcc5b-3c4b-46ac-9c75-63909164c307.jpg"
+  },
+  {
+    "id": "idea:semiarco-amor-y-amistad",
+    "name_es": "Semiarco rosa dusk con flores lavanda y rizos dorados",
+    "structure_category": "semi-arch",
+    "structure_variant": "organic",
+    "render_url": "https://miniaturas-decoracion.185-147-157-25.sslip.io/r/c7/c7793c32cfd354712543178ce64ee35e77950292d8c7c3f310d80dbcd2dac713.webp",
+    "thumbnail_url": "https://sempertex.com/cdn/shop/articles/Webinar_Semiarco_Amor_y_Amistad_05301828-3046-425d-8154-3b6acd706192.jpg"
+  },
+  {
+    "id": "asistente:deco-real-10-images-25",
+    "name_es": "Semiarco azul, blanco y plateado",
+    "structure_category": "semi-arch",
+    "structure_variant": "organic",
+    "render_url": "https://miniaturas-decoracion.185-147-157-25.sslip.io/r/58/582dc7661a555a91a46761dbb915b709520c9c281183960f3705ccbd556fc15b.webp",
+    "thumbnail_url": "/biblioteca-sempertex/referencias/real-10-images-25.jpg"
+  },
+  {
+    "id": "asistente:deco-real-20-semiarcoilusionazul-1200x1200",
+    "name_es": "Semiarco azul ilusión",
+    "structure_category": "semi-arch",
+    "structure_variant": "organic",
+    "render_url": "https://miniaturas-decoracion.185-147-157-25.sslip.io/r/23/2313f6941fa2fbc51ee9e6e70b83ed73e72ac97741f24f068d216baa3ca3614e.webp",
+    "thumbnail_url": "/biblioteca-sempertex/referencias/real-20-semiarcoilusionazul-1200x1200.jpg"
+  },
+  {
+    "id": "idea:aro-de-aranas",
+    "name_es": "Aro de arañas con ojos",
+    "structure_category": "ring",
+    "structure_variant": "organic",
+    "render_url": "https://miniaturas-decoracion.185-147-157-25.sslip.io/r/88/883e7d6faaadd5898998b322e7aa7055364b10d71b93454d143ef5a912db928b.webp",
+    "thumbnail_url": "https://sempertex.com/cdn/shop/articles/Aro_de_Aranas_-_Paola_Tamayo.png"
+  },
+  {
+    "id": "motor:oficial-aro_circular",
+    "name_es": "Aro circular orgánico",
+    "structure_category": "ring",
+    "structure_variant": "organic",
+    "render_url": "https://miniaturas-decoracion.185-147-157-25.sslip.io/r/da/da1d61f28e69d2bb37a8a1caa4d7a37917820e3e0f51be49e56b7b6227f3137d.webp",
+    "thumbnail_url": null
+  },
+  {
+    "id": "idea:corona-navidena",
+    "name_es": "Corona navideña con moño",
+    "structure_category": "ring",
+    "structure_variant": "organic",
+    "render_url": "https://miniaturas-decoracion.185-147-157-25.sslip.io/r/2a/2a95e36c3fe3f0d5c515985f838d4eff652e22f27de7e8f143412dce1c7d9006.webp",
+    "thumbnail_url": "https://sempertex.com/cdn/shop/articles/Corona_navidena.png"
+  },
+  {
+    "id": "idea:telarana",
+    "name_es": "Medio aro orgánico de Halloween con araña y telaraña",
+    "structure_category": "ring",
+    "structure_variant": "organic",
+    "render_url": "https://miniaturas-decoracion.185-147-157-25.sslip.io/r/15/15265e42c49016eab043e902ee10204227ae83332a5d5c0fc23c24f537de8f0a.webp",
+    "thumbnail_url": "https://sempertex.com/cdn/shop/articles/DSC00130.jpg"
+  },
+  {
+    "id": "idea:bouquet-amor-dorado-rosa",
+    "name_es": "Bouquet amor dorado rosa: ramo de helio sobre base con flores de lazos",
+    "structure_category": "bouquet",
+    "structure_variant": null,
+    "render_url": "https://miniaturas-decoracion.185-147-157-25.sslip.io/r/a3/a37cec7a96880eb9601d3ab6a41112e9bbdcf3c38b67fd0d78879a41b538abb5.webp",
+    "thumbnail_url": "https://sempertex.com/cdn/shop/articles/IMG_2080.jpg"
+  },
+  {
+    "id": "idea:bouquet-baby-shower",
+    "name_es": "Bouquet baby shower: tríos de helio con tetero «It's a boy»",
+    "structure_category": "bouquet",
+    "structure_variant": null,
+    "render_url": "https://miniaturas-decoracion.185-147-157-25.sslip.io/r/75/759d3ca7ee53982a07dd019b7c48f95e8e7f185e372d857d372ec44a3473fae9.webp",
+    "thumbnail_url": "https://sempertex.com/cdn/shop/articles/e2e09caee4724cb0d1cab939f8e99828_89fc3f9b-c136-459b-8e6b-023a1aa71a2d.jpg"
+  },
+  {
+    "id": "idea:bouquet",
+    "name_es": "Bouquet Feliz Día con estrella verde y base de números",
+    "structure_category": "bouquet",
+    "structure_variant": null,
+    "render_url": "https://miniaturas-decoracion.185-147-157-25.sslip.io/r/72/72186f19bcbe3c9e24801302d247826114a3c86bea8d9c08599a7d0d5468b1ea.webp",
+    "thumbnail_url": "https://sempertex.com/cdn/shop/articles/5dd9b90f9c1f3eb774f447abcf3cf34d.jpg"
+  },
+  {
+    "id": "idea:bouquet-filigree-con-base",
+    "name_es": "Bouquet Filigree con base de burbuja",
+    "structure_category": "bouquet",
+    "structure_variant": null,
+    "render_url": "https://miniaturas-decoracion.185-147-157-25.sslip.io/r/8a/8ad54f498c4b3fe5e6781dc061e9282be0b577f424c7b780a75460d79b7e5f0b.webp",
+    "thumbnail_url": "https://sempertex.com/cdn/shop/articles/356b519053d941f3be71fc273cf146e7_e65436f0-c535-43f0-a119-5dde43fc43ee.jpg"
+  },
+  {
+    "id": "idea:arreglo-calabaza",
+    "name_es": "Arreglo de calabaza con impreso Happy Halloween",
+    "structure_category": "centerpiece",
+    "structure_variant": null,
+    "render_url": "https://miniaturas-decoracion.185-147-157-25.sslip.io/r/18/18df3fb74597929184bcab2e7f7d718015a7e791d540cef7ac8a6bfc2db1d5b5.webp",
+    "thumbnail_url": "https://sempertex.com/cdn/shop/articles/Arreglo_Calabaza.png"
+  },
+  {
+    "id": "idea:arreglo-flores",
+    "name_es": "Arreglo de flores de tubito",
+    "structure_category": "centerpiece",
+    "structure_variant": null,
+    "render_url": "https://miniaturas-decoracion.185-147-157-25.sslip.io/r/b1/b1dd70552a03fb3ef71ab8238d8a360d67c6ad79e5c6e5692960cadc5670e08f.webp",
+    "thumbnail_url": "https://sempertex.com/cdn/shop/articles/6cbc6203c4ebb96217d2c111c280d990_c28b3ee4-7cbb-49de-be85-1d06969f8400.jpg"
+  },
+  {
+    "id": "idea:base-organica-feliz-cumpleanos-reflex",
+    "name_es": "Base orgánica Feliz Cumpleaños reflex con colgantes plata",
+    "structure_category": "centerpiece",
+    "structure_variant": null,
+    "render_url": "https://miniaturas-decoracion.185-147-157-25.sslip.io/r/0f/0f93931cebc57a7fa12ca563f06cedadc6f58ffe889392ae9143093f361fdcf8.webp",
+    "thumbnail_url": "https://sempertex.com/cdn/shop/articles/Base-Organica-FC-Reflex-740-570_06ba9d0c-53b1-4fd8-ad05-affe72be98b3.jpg"
+  },
+  {
+    "id": "idea:algas-marinas",
+    "name_es": "Algas marinas de tubitos con burbujas",
+    "structure_category": "figure",
+    "structure_variant": null,
+    "render_url": "https://miniaturas-decoracion.185-147-157-25.sslip.io/r/2c/2cb4d2b3addf988d08d13720472fc12a20cf3f26ed612fb05f30816ebaad7d02.webp",
+    "thumbnail_url": "https://sempertex.com/cdn/shop/articles/Algas-Marinas-Reflex-Verde-Lima_9baa2b38-0ecb-4da6-8659-eeb2f6e446c6.jpg"
+  },
+  {
+    "id": "idea:ancla-azul-caribe",
+    "name_es": "Ancla azul caribe",
+    "structure_category": "figure",
+    "structure_variant": null,
+    "render_url": "https://miniaturas-decoracion.185-147-157-25.sslip.io/r/bf/bffae2894d27d2eb0eff898ceca6e62c2afe84fb985ea1768b19bd2cf80df280.webp",
+    "thumbnail_url": "https://sempertex.com/cdn/shop/articles/15544ff4892537a3b8aa71b6288e504a_4857ebcf-e467-41b4-b169-52e0232e5aef.jpg"
+  },
+  {
+    "id": "idea:arana",
+    "name_es": "Araña colgante de patas en rizo",
+    "structure_category": "figure",
+    "structure_variant": null,
+    "render_url": "https://miniaturas-decoracion.185-147-157-25.sslip.io/r/7d/7d1db0786239ab96b76bc3066ae41d4f29f5538eda0eb4044b87a6af3055176e.webp",
+    "thumbnail_url": "https://sempertex.com/cdn/shop/articles/7f2ceb1cfcc5259bc5dc4819332b4930_b8a92879-1cc2-4071-a26b-d209b7ebaa8f.jpg"
+  }
+]

@@ -1,0 +1,14 @@
+{
+  "n": 26,
+  "id": "base-organica:columna-cine-negro-rojo-oro",
+  "model": "fal-ai/flux-2/edit",
+  "palette": [
+    "005",
+    "080",
+    "570"
+  ],
+  "place": "boda_jardin",
+  "status": "completed",
+  "mime": "image/png",
+  "completed": "2026-11-13T01:57:29.824Z"
+}

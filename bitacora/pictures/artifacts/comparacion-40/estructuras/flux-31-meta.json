@@ -1,0 +1,14 @@
+{
+  "n": 31,
+  "id": "base-organica:columna-champana-inclinada",
+  "model": "fal-ai/flux-2/edit",
+  "palette": [
+    "005",
+    "038",
+    "041"
+  ],
+  "place": "fiesta_infantil",
+  "status": "completed",
+  "mime": "image/png",
+  "completed": "2026-11-13T01:58:08.814Z"
+}

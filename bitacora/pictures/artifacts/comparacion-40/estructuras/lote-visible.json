@@ -1,0 +1,178 @@
+[
+  {
+    "numero": 1,
+    "id": "celebra:arco_azul_linea_plata",
+    "nombre": "Arco azul con línea plateada",
+    "preview": "01.webp",
+    "preview_existe": true,
+    "flux_existente": false
+  },
+  {
+    "numero": 2,
+    "id": "panel:arco",
+    "nombre": "Arco clásico",
+    "preview": "02.webp",
+    "preview_existe": true,
+    "flux_existente": false
+  },
+  {
+    "numero": 3,
+    "id": "asistente:deco-real-01-305",
+    "nombre": "Arco clásico en espiral blanco y negro",
+    "preview": "03.webp",
+    "preview_existe": true,
+    "flux_existente": false
+  },
+  {
+    "numero": 4,
+    "id": "motor:oficial-arco",
+    "nombre": "Arco clásico redondo",
+    "preview": "04.webp",
+    "preview_existe": true,
+    "flux_existente": false
+  },
+  {
+    "numero": 5,
+    "id": "celebra:arco_tramos_rosados",
+    "nombre": "Arco de tramos perla, fucsia y rosado",
+    "preview": "05.webp",
+    "preview_existe": true,
+    "flux_existente": false
+  },
+  {
+    "numero": 6,
+    "id": "idea:arco-espiral",
+    "nombre": "Arco espiral vino, verde y perla",
+    "preview": "06.webp",
+    "preview_existe": true,
+    "flux_existente": false
+  },
+  {
+    "numero": 11,
+    "id": "panel:arco_organico",
+    "nombre": "Arco orgánico",
+    "preview": "11.webp",
+    "preview_existe": true,
+    "flux_existente": false
+  },
+  {
+    "numero": 12,
+    "id": "motor:oficial-arco_asimetrico",
+    "nombre": "Arco orgánico asimétrico",
+    "preview": "candidato-12.webp",
+    "preview_existe": true,
+    "flux_existente": true
+  },
+  {
+    "numero": 13,
+    "id": "base-organica:arco-cromado-negro-oro-plata",
+    "nombre": "Arco orgánico cromado negro, oro y plata",
+    "preview": "13.webp",
+    "preview_existe": true,
+    "flux_existente": false
+  },
+  {
+    "numero": 14,
+    "id": "base-organica:arco-naranja-azul-naval-racimos",
+    "nombre": "Arco orgánico de racimos naranja y azul naval",
+    "preview": "14.webp",
+    "preview_existe": true,
+    "flux_existente": false
+  },
+  {
+    "numero": 17,
+    "id": "motor:oficial-columna",
+    "nombre": "Columna clásica de cuartetos",
+    "preview": "17.webp",
+    "preview_existe": true,
+    "flux_existente": false
+  },
+  {
+    "numero": 22,
+    "id": "celebra:columna_bloques_pirata",
+    "nombre": "Columna por bloques de 4 colores",
+    "preview": "22.webp",
+    "preview_existe": true,
+    "flux_existente": false
+  },
+  {
+    "numero": 23,
+    "id": "panel:columna_irregular",
+    "nombre": "Columna irregular",
+    "preview": "23.webp",
+    "preview_existe": true,
+    "flux_existente": false
+  },
+  {
+    "numero": 24,
+    "id": "motor:oficial-columna_asimetrica",
+    "nombre": "Columna orgánica asimétrica",
+    "preview": "24.webp",
+    "preview_existe": true,
+    "flux_existente": false
+  },
+  {
+    "numero": 25,
+    "id": "base-organica:columna-cuatro-franjas",
+    "nombre": "Columna orgánica de cuatro franjas de color",
+    "preview": "25.webp",
+    "preview_existe": true,
+    "flux_existente": false
+  },
+  {
+    "numero": 26,
+    "id": "base-organica:columna-cine-negro-rojo-oro",
+    "nombre": "Columna orgánica negra, roja y oro con remate dorado",
+    "preview": "26.webp",
+    "preview_existe": true,
+    "flux_existente": false
+  },
+  {
+    "numero": 28,
+    "id": "base-organica:columna-recta-multicolor-tierra",
+    "nombre": "Columna orgánica recta multicolor rosa, café y naranja",
+    "preview": "28.webp",
+    "preview_existe": true,
+    "flux_existente": false
+  },
+  {
+    "numero": 29,
+    "id": "base-organica:columna-pastel-pascua",
+    "nombre": "Columna orgánica recta pastel de seis colores",
+    "preview": "29.webp",
+    "preview_existe": true,
+    "flux_existente": false
+  },
+  {
+    "numero": 31,
+    "id": "base-organica:columna-champana-inclinada",
+    "nombre": "Columna inclinada blanco perla y oro tipo espuma de champaña",
+    "preview": "31.webp",
+    "preview_existe": true,
+    "flux_existente": false
+  },
+  {
+    "numero": 33,
+    "id": "motor:oficial-semiarco",
+    "nombre": "Semiarco orgánico",
+    "preview": "candidato-33.webp",
+    "preview_existe": true,
+    "flux_existente": true
+  },
+  {
+    "numero": 35,
+    "id": "base-organica:semiarco-fucsia-rosa-plata",
+    "nombre": "Semiarco orgánico fucsia, rosa y plata en J",
+    "preview": "35.webp",
+    "preview_existe": true,
+    "flux_existente": false
+  },
+  {
+    "numero": 36,
+    "id": "referencia:medio-arco-oro-rosa-confeti",
+    "nombre": "Medio arco dorado, rosa y confeti que baja por la izquierda",
+    "preview": "candidato-36.webp",
+    "preview_existe": true,
+    "flux_existente": true
+  }
+]

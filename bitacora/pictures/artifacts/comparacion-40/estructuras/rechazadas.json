@@ -1,0 +1,142 @@
+[
+  {
+    "numero": 7,
+    "id": "idea:arco-polka-azul",
+    "name_es": "Arco polka azul: cuartetos blancos con franja azul",
+    "structure_category": "arch",
+    "structure_variant": "classic",
+    "curation_status": "reviewed",
+    "render_url": "https://miniaturas-decoracion.185-147-157-25.sslip.io/r/97/978885bc1400c364aa639073c902f8c12e3d8a037ca4c34f7ee4bf9c947fe455.webp",
+    "thumbnail_url": "https://sempertex.com/cdn/shop/articles/4f86287bafe8b2b376b8d755a4c30f0c_afcc6ad7-f535-494f-b849-0d0bed3b4b63.jpg"
+  },
+  {
+    "numero": 8,
+    "id": "idea:arco-trenza-dos-colores",
+    "name_es": "Arco trenza dos colores",
+    "structure_category": "arch",
+    "structure_variant": "classic",
+    "curation_status": "reviewed",
+    "render_url": "https://miniaturas-decoracion.185-147-157-25.sslip.io/r/40/40237435c7c0d5bbef54886d35c48e682b0f89e088120977954e78d717a92ebe.webp",
+    "thumbnail_url": "https://sempertex.com/cdn/shop/articles/8b890aa4259ff2c4871339d448c066cd_c9985a82-cd47-49d6-8570-4c58e1f0391e.jpg"
+  },
+  {
+    "numero": 9,
+    "id": "base-organica:arco-asimetrico-oro-perlado",
+    "name_es": "Arco asimétrico dorado perlado de un solo color",
+    "structure_category": "arch",
+    "structure_variant": "organic",
+    "curation_status": "reviewed",
+    "render_url": "https://miniaturas-decoracion.185-147-157-25.sslip.io/r/6a/6ae106dd6a00aff2d1ebcafcc178c859d7a97645268fb4907c04ea98c0059ce4.webp",
+    "thumbnail_url": "https://cdn.shopify.com/s/files/1/0320/5854/0091/products/columna-organica-por-metros-709234.jpg?width=1400"
+  },
+  {
+    "numero": 10,
+    "id": "base-organica:arco-l-cromado-negro-oro-plata",
+    "name_es": "Arco en L cromado negro, oro y plata",
+    "structure_category": "arch",
+    "structure_variant": "organic",
+    "curation_status": "reviewed",
+    "render_url": "https://miniaturas-decoracion.185-147-157-25.sslip.io/r/12/12876d3dcd11f2ec93119ec9367ba44fb0af74c8eeb0fd0ddefc210a2e58cd13.webp",
+    "thumbnail_url": "https://cdn.shopify.com/s/files/1/0649/6908/1023/files/Chrome-Organic-Balloon-Semi-Arch-for-Elegant-Parties.png"
+  },
+  {
+    "numero": 15,
+    "id": "motor:oficial-arco_no_denso",
+    "name_es": "Arco orgánico no denso",
+    "structure_category": "arch",
+    "structure_variant": "organic",
+    "curation_status": "reviewed",
+    "render_url": "https://miniaturas-decoracion.185-147-157-25.sslip.io/r/38/3879d68a7198da1ba753b83d35334f41bdbbff2017cec1e790fe7b680bae881e.webp",
+    "thumbnail_url": null
+  },
+  {
+    "numero": 16,
+    "id": "asistente:deco-real-06-columna-globos-alta-colorida-cinta-dorada-sobre-",
+    "name_es": "Columna clásica arcoíris con cinta dorada",
+    "structure_category": "column",
+    "structure_variant": "classic",
+    "curation_status": "reviewed",
+    "render_url": "https://miniaturas-decoracion.185-147-157-25.sslip.io/r/0e/0e6eb02311c01ab6b77c097e97a4eebc13402f8212b3d9ffff6830a0cf7e60a7.webp",
+    "thumbnail_url": "/biblioteca-sempertex/referencias/real-06-columna-globos-alta-colorida-cinta-dorada-sobre-.jpg"
+  },
+  {
+    "numero": 18,
+    "id": "panel:columna",
+    "name_es": "Columna clásica de cuartetos",
+    "structure_category": "column",
+    "structure_variant": "classic",
+    "curation_status": "reviewed",
+    "render_url": "https://miniaturas-decoracion.185-147-157-25.sslip.io/r/a3/a35fcb9cb096c0598d90799c8ca1a1416e3c1cd1ac61b365d194df65efae1147.webp",
+    "thumbnail_url": null
+  },
+  {
+    "numero": 19,
+    "id": "celebra:columna_franjas_alternando_tamanos",
+    "name_es": "Columna en franjas alternando tamaños",
+    "structure_category": "column",
+    "structure_variant": "classic",
+    "curation_status": "reviewed",
+    "render_url": "https://miniaturas-decoracion.185-147-157-25.sslip.io/r/93/93010d41cd4c8c3a98c9969db834aa99f62f844d349090e8b5038c9143cf3f37.webp",
+    "thumbnail_url": null
+  },
+  {
+    "numero": 20,
+    "id": "celebra:columna_espiral_pastel",
+    "name_es": "Columna espiral pastel de 4 colores",
+    "structure_category": "column",
+    "structure_variant": "classic",
+    "curation_status": "reviewed",
+    "render_url": "https://miniaturas-decoracion.185-147-157-25.sslip.io/r/2f/2fb67dede6478f952d9e828480e5e1f980bd0ceb7b3600a82452a71ff3e37f6a.webp",
+    "thumbnail_url": null
+  },
+  {
+    "numero": 21,
+    "id": "celebra:columna_espiral_roja_azul",
+    "name_es": "Columna espiral roja y azul",
+    "structure_category": "column",
+    "structure_variant": "classic",
+    "curation_status": "reviewed",
+    "render_url": "https://miniaturas-decoracion.185-147-157-25.sslip.io/r/4c/4c88a764270a750de2750dfe96ea9ac356ae34805a097cd9337a5534a5253336.webp",
+    "thumbnail_url": null
+  },
+  {
+    "numero": 27,
+    "id": "motor:oficial-columna_no_densa",
+    "name_es": "Columna orgánica no densa",
+    "structure_category": "column",
+    "structure_variant": "organic",
+    "curation_status": "reviewed",
+    "render_url": "https://miniaturas-decoracion.185-147-157-25.sslip.io/r/1f/1fa4640bbfd4297d49a4b8ca6a4f858aa33b9822d492e917e39fe4f478cb6284.webp",
+    "thumbnail_url": null
+  },
+  {
+    "numero": 30,
+    "id": "panel:columna_libre",
+    "name_es": "Columna forma libre",
+    "structure_category": "column",
+    "structure_variant": "organic",
+    "curation_status": "auto",
+    "render_url": "https://miniaturas-decoracion.185-147-157-25.sslip.io/r/72/72644c2774203af4d4d5b305f3c0fc130fafec377fa3f2d2f8886b028f252cd6.webp",
+    "thumbnail_url": null
+  },
+  {
+    "numero": 34,
+    "id": "motor:oficial-semiarco_asimetrico",
+    "name_es": "Semiarco orgánico asimétrico",
+    "structure_category": "semi-arch",
+    "structure_variant": "organic",
+    "curation_status": "reviewed",
+    "render_url": "https://miniaturas-decoracion.185-147-157-25.sslip.io/r/fe/fe95f60f97defacbe86b9d56ef1262f4ea3ea53b318d1560897643ed30cd4531.webp",
+    "thumbnail_url": null
+  },
+  {
+    "numero": 32,
+    "id": "panel:columna_organica",
+    "name_es": "Columna orgánica",
+    "structure_category": "column",
+    "structure_variant": "organic",
+    "curation_status": "auto",
+    "render_url": "https://miniaturas-decoracion.185-147-157-25.sslip.io/r/e0/e0822bab1bc0fccca3fbf01ad1d779b71186014b545c12c4814b51043dc5605c.webp",
+    "thumbnail_url": null
+  }
+]

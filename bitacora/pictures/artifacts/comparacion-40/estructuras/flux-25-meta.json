@@ -1,0 +1,14 @@
+{
+  "n": 25,
+  "id": "base-organica:columna-cuatro-franjas",
+  "model": "fal-ai/flux-2/edit",
+  "palette": [
+    "005",
+    "038",
+    "041"
+  ],
+  "place": "salon_elegante",
+  "status": "completed",
+  "mime": "image/png",
+  "completed": "2026-11-13T01:57:14.639Z"
+}

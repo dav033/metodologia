@@ -1,0 +1,13 @@
+{
+  "n": 12,
+  "model": "fal-ai/flux-2/edit",
+  "palette": [
+    "005",
+    "012",
+    "050"
+  ],
+  "place": "boda_jardin",
+  "status": "completed",
+  "mime": "image/png",
+  "completed": "2026-11-13T01:46:41.157Z"
+}

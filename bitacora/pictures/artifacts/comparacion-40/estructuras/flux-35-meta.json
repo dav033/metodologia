@@ -1,0 +1,14 @@
+{
+  "n": 35,
+  "id": "base-organica:semiarco-fucsia-rosa-plata",
+  "model": "fal-ai/flux-2/edit",
+  "palette": [
+    "015",
+    "020",
+    "041"
+  ],
+  "place": "boda_jardin",
+  "status": "completed",
+  "mime": "image/png",
+  "completed": "2026-11-13T01:58:24.006Z"
+}

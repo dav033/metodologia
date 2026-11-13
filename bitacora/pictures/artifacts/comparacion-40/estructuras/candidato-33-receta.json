@@ -1,0 +1,181 @@
+{
+  "kind": "scene-pieces",
+  "pieces": [
+    {
+      "id": "EST_01_SEMIARCO",
+      "pieza": {
+        "tipo": "organico",
+        "flores": null,
+        "opciones": {
+          "suelo": true,
+          "vista": {
+            "x": 0,
+            "y": 0,
+            "z": 1
+          },
+          "tramos": [
+            {
+              "id": "semiarco",
+              "tapas": {
+                "fin": true
+              },
+              "grosor": [
+                {
+                  "t": 0,
+                  "radioCm": 35
+                },
+                {
+                  "t": 0.2,
+                  "radioCm": 35
+                },
+                {
+                  "t": 0.9,
+                  "radioCm": 23.1
+                },
+                {
+                  "t": 1,
+                  "radioCm": 18.48
+                }
+              ],
+              "mezcla": [
+                {
+                  "t": 0,
+                  "pesos": {
+                    "R-12": 0.5599999999999999,
+                    "R-18": 0.35,
+                    "R-24": 0.25
+                  }
+                },
+                {
+                  "t": 0.22,
+                  "pesos": {
+                    "R-9": 0.08571428571428572,
+                    "R-12": 0.7,
+                    "R-18": 0.3,
+                    "R-24": 0.08
+                  }
+                },
+                {
+                  "t": 0.55,
+                  "pesos": {
+                    "R-9": 0.27142857142857146,
+                    "R-12": 0.7,
+                    "R-18": 0.12
+                  }
+                },
+                {
+                  "t": 1,
+                  "pesos": {
+                    "R-9": 0.33571428571428574,
+                    "R-12": 0.7,
+                    "R-18": 0.03
+                  }
+                }
+              ],
+              "nombre": "Semiarco orgánico",
+              "recorrido": [
+                {
+                  "x": -60,
+                  "y": 18.2,
+                  "z": 0
+                },
+                {
+                  "x": -57.7,
+                  "y": 54.5,
+                  "z": 0
+                },
+                {
+                  "x": -50.9,
+                  "y": 89.5,
+                  "z": 0
+                },
+                {
+                  "x": -39.8,
+                  "y": 121.7,
+                  "z": 0
+                },
+                {
+                  "x": -24.9,
+                  "y": 150,
+                  "z": 0
+                },
+                {
+                  "x": -6.7,
+                  "y": 173.2,
+                  "z": 0
+                },
+                {
+                  "x": 14.1,
+                  "y": 190.4,
+                  "z": 0
+                },
+                {
+                  "x": 36.6,
+                  "y": 201,
+                  "z": 0
+                },
+                {
+                  "x": 60,
+                  "y": 204.6,
+                  "z": 0
+                }
+              ],
+              "irregularidad": 0.12
+            }
+          ],
+          "colores": [
+            {
+              "peso": 33,
+              "codigo": "040",
+              "porFormato": true
+            },
+            {
+              "peso": 33,
+              "codigo": "005",
+              "porFormato": true
+            },
+            {
+              "peso": 33,
+              "codigo": "970",
+              "porFormato": true
+            }
+          ],
+          "relleno": [
+            {
+              "trios": false,
+              "maximo": 14,
+              "formatoId": "R-9",
+              "infladoCm": 18
+            },
+            {
+              "trios": true,
+              "maximo": 15,
+              "racimo": 4,
+              "formatoId": "R-5",
+              "infladoCm": 12
+            }
+          ],
+          "semilla": 1638,
+          "densidad": 1.15,
+          "inflados": {
+            "R-5": 12,
+            "R-9": 17,
+            "R-12": 25,
+            "R-18": 34,
+            "R-24": 48
+          },
+          "huecosFlores": 0,
+          "variacionInflado": 0.07
+        }
+      },
+      "nombre": "Semiarco",
+      "colocacion": {
+        "en": "piso",
+        "xCm": 0,
+        "zCm": -160,
+        "giroGrados": 0
+      }
+    }
+  ],
+  "version": 1
+}
