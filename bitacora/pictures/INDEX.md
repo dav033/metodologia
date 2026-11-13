@@ -1,6 +1,6 @@
 # Index — pictures
 
-_Generated 2026-11-13 07:07 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-11-13 09:18 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md) · [Glossary](GLOSSARY.md)  
 **Web:** [project](http://127.0.0.1:8765/p/pictures) · [graph](http://127.0.0.1:8765/p/pictures/graph)  
@@ -59,6 +59,7 @@ _Generated 2026-11-13 07:07 by `bitacora.py index`. Do not edit by hand._
 | [REQ-029](requirements/REQ-029-modular-balloon-analysis-one-ai-per-stag/SPEC.md) | Modular balloon analysis: one AI per stage, exact rings for classic columns and arches, assisted training | `in-progress` | [in-progress](requirements/REQ-029-modular-balloon-analysis-one-ai-per-stag/PLAN.md) |  |
 | [REQ-030](requirements/REQ-030-whatsapp-assistant-registration-daily-co/SPEC.md) | WhatsApp assistant: registration, daily conversation limit, palette advice, background prompts | `done` | — |  |
 | [REQ-031](requirements/REQ-031-distributors-and-mbp-tables-sketch-cart/SPEC.md) | Distributors and MBP tables, sketch cart with simulated Shopify, pending orders answered by WhatsApp, nearest-distributor order e-mail with PDF | `in-progress (in production 2026-11-12, main b410c690b; flags off, awaiting owner)` | [draft](requirements/REQ-031-distributors-and-mbp-tables-sketch-cart/PLAN.md) |  |
+| [REQ-032](requirements/REQ-032-conversation-problem-order-and-person-tr/SPEC.md) | Conversation, problem, order and person tracking (WhatsApp bot, web assistant, orders) | `clarifying` | [in-progress](requirements/REQ-032-conversation-problem-order-and-person-tr/PLAN.md) |  |
 
 ## Top pending (urgency, then complexity)
 
@@ -72,11 +73,11 @@ _Generated 2026-11-13 07:07 by `bitacora.py index`. Do not edit by hand._
 
 ## Recent decisions
 
+- D-116 — 2026-11-13 · Training sets are data over one marking store; ring canvas with zoom and fine marks
 - D-115 — 2026-11-12 · Explicit personal-data authorization (Law 1581) on WhatsApp and for distributors
 - D-114 — 2026-11-12 · WhatsApp converses through the web's guided assistant
 - D-113 — 2026-11-12 · Ring reads: photo border, design gaps, second read decides exact columns
 - D-112 — Sketch cart and distributor directory: three swappable ports, orders in the shared Postgres, flags off by default (2026-11-12)
-- D-111 — WhatsApp becomes an assistant behind a registration gate and a daily conversation limit (2026-11-11)
 
 ## Timeline
 

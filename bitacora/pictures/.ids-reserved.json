@@ -64,6 +64,11 @@
    "id": "D-110",
    "by": "session 1b10587f: modular balloon analysis",
    "at": "2026-11-11T21:04:39"
+  },
+  {
+   "id": "D-116",
+   "by": "claude-luis c641992b: marking training sets",
+   "at": "2026-11-13T07:19:22"
   }
  ],
  "P": [
@@ -121,6 +126,16 @@
    "id": "P-323",
    "by": "session 1b10587f: REQ-029 follow-ups",
    "at": "2026-11-11T21:04:43"
+  },
+  {
+   "id": "P-330",
+   "by": "claude-luis c641992b: training follow-ups",
+   "at": "2026-11-13T07:19:23"
+  },
+  {
+   "id": "P-332",
+   "by": "claude-luis c641992b: whatsapp recreate follow-ups",
+   "at": "2026-11-13T09:28:47"
   }
  ]
 }

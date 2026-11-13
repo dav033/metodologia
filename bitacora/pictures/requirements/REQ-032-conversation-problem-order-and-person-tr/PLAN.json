@@ -1,0 +1,323 @@
+{
+  "schema_version": "1.3.0",
+  "plan_id": "REQ-032",
+  "revision": 1,
+  "spec_ref": "SPEC.md",
+  "milestones": [
+    {
+      "id": "M1",
+      "title": "Event store and writer"
+    },
+    {
+      "id": "M2",
+      "title": "Bot instrumentation"
+    },
+    {
+      "id": "M3",
+      "title": "Admin API and UI (timeline, person)"
+    },
+    {
+      "id": "M4",
+      "title": "Problems"
+    },
+    {
+      "id": "M5",
+      "title": "Web assistant and retention"
+    },
+    {
+      "id": "M6",
+      "title": "Release"
+    }
+  ],
+  "requirements": [
+    "R1",
+    "R10",
+    "R2",
+    "R3",
+    "R4",
+    "R5",
+    "R6",
+    "R7",
+    "R8",
+    "R9"
+  ],
+  "tasks": [
+    {
+      "id": "T1",
+      "milestone_id": "M1",
+      "title": "Migration 071 `seguimiento_eventos` + `seguimiento_problemas` with indexes and grants",
+      "after": [],
+      "expected_paths": [
+        "scripts/migrations/071_seguimiento.sql"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npm run rag:migrate -- --dry-run",
+          "purpose": "verify command declared in PLAN.md"
+        }
+      ],
+      "covers": [
+        "R2",
+        "R7",
+        "R8"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T2",
+      "milestone_id": "M1",
+      "title": "Event contract (zod), classifier (log event → type/severity/step), text masking",
+      "after": [],
+      "expected_paths": [
+        "src/features/tracking/domain/**"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npx tsx --test src/features/tracking/**/*.test.ts",
+          "purpose": "verify command declared in PLAN.md"
+        }
+      ],
+      "covers": [
+        "R1",
+        "R2"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T3",
+      "milestone_id": "M1",
+      "title": "Bot writer: bounded queue, deadline, drop counter, conversation id (6 h rule)",
+      "after": [
+        "T1",
+        "T2"
+      ],
+      "expected_paths": [
+        "services/telegram-globos/src/seguimiento/**"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npm test -w services/telegram-globos -- seguimiento",
+          "purpose": "verify command declared in PLAN.md"
+        }
+      ],
+      "covers": [
+        "R3",
+        "R4"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T4",
+      "milestone_id": "M2",
+      "title": "Tee `log` into the writer; record inbound texts; link `pedido_id` on order events",
+      "after": [
+        "T3"
+      ],
+      "expected_paths": [
+        "services/telegram-globos/src/**"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npm test",
+          "purpose": "verify command declared in PLAN.md"
+        }
+      ],
+      "covers": [
+        "R1",
+        "R2",
+        "R6"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T5",
+      "milestone_id": "M2",
+      "title": "Disposable-DB integration test: a sketch + count + order produces the expected timeline; a dead DB does not break a turn",
+      "after": [
+        "T4"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "REQ031_TEST_DATABASE_URL=… npm test",
+          "purpose": "verify command declared in PLAN.md"
+        }
+      ],
+      "covers": [
+        "R3",
+        "R6"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T6",
+      "milestone_id": "M3",
+      "title": "Author UI contract seguimiento@v1 (list, timeline, person page, states)",
+      "after": [],
+      "expected_paths": [
+        "design/contracts/seguimiento@v1.md"
+      ],
+      "covers": [
+        "R5"
+      ],
+      "kind": "design",
+      "verification": []
+    },
+    {
+      "id": "T7",
+      "milestone_id": "M3",
+      "title": "Read APIs: conversations list, person timeline, person summary (permission, no-store, pagination, zod)",
+      "after": [
+        "T1"
+      ],
+      "expected_paths": [
+        "src/app/api/admin/seguimiento/**"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npx tsx --test src/features/tracking/**/*.test.ts",
+          "purpose": "verify command declared in PLAN.md"
+        }
+      ],
+      "covers": [
+        "R5",
+        "R6"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T8",
+      "milestone_id": "M3",
+      "title": "Pages `/admin/seguimiento` (Conversaciones) and Persona, linked from `/admin/whatsapp` and `/admin/pedidos`",
+      "after": [
+        "T6",
+        "T7"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npx tsc --noEmit",
+          "purpose": "verify command declared in PLAN.md"
+        }
+      ],
+      "covers": [
+        "US-1",
+        "US-3"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T9",
+      "milestone_id": "M3",
+      "title": "Review rendered UI against seguimiento@v1",
+      "after": [
+        "T8"
+      ],
+      "covers": [],
+      "kind": "audit",
+      "verification": []
+    },
+    {
+      "id": "T10",
+      "milestone_id": "M4",
+      "title": "Derived problems queries (errors, stuck orders, stuck/abandoned conversations, limits), grouping, reviewed/resolved state API",
+      "after": [
+        "T7"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npx tsx --test src/features/tracking/**/*.test.ts",
+          "purpose": "verify command declared in PLAN.md"
+        }
+      ],
+      "covers": [
+        "R7",
+        "R8"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T11",
+      "milestone_id": "M4",
+      "title": "Problems page with filters, counts, links, review/resolve with note",
+      "after": [
+        "T6",
+        "T10",
+        "T8"
+      ],
+      "covers": [
+        "US-2"
+      ],
+      "kind": "implement",
+      "verification": []
+    },
+    {
+      "id": "T12",
+      "milestone_id": "M5",
+      "title": "Explore and instrument web assistant / counter / sketch events with account id (`canal = 'web'`)",
+      "after": [
+        "T7"
+      ],
+      "covers": [
+        "R10",
+        "US-4"
+      ],
+      "kind": "implement",
+      "verification": []
+    },
+    {
+      "id": "T13",
+      "milestone_id": "M5",
+      "title": "Retention job: clear texts > 90 days (idempotent, bounded, logged), scheduled",
+      "after": [
+        "T1"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npx tsx --test src/features/tracking/**/*.test.ts",
+          "purpose": "verify command declared in PLAN.md"
+        }
+      ],
+      "covers": [
+        "R9",
+        "US-5"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T14",
+      "milestone_id": "M6",
+      "title": "Production: backup, apply 071 alone, grant to bot role, deploy web (push to main) and bot; smoke check with the owner's own number",
+      "after": [
+        "T5",
+        "T9",
+        "T11",
+        "T12",
+        "T13"
+      ],
+      "covers": [
+        "all"
+      ],
+      "kind": "implement",
+      "verification": []
+    },
+    {
+      "id": "T15",
+      "milestone_id": "M6",
+      "title": "Independent audit of the consolidated diff (privacy: masking, permission, retention; reliability: non-blocking)",
+      "after": [
+        "T14"
+      ],
+      "covers": [],
+      "kind": "audit",
+      "verification": []
+    }
+  ]
+}
