@@ -4,412 +4,1459 @@
   "pieces": [
     {
       "id": "referencia-rueda-dorada",
-      "nombre": "Aro orgánico",
+      "nombre": "Aro orgánico dorado",
       "pieza": {
         "tipo": "organico",
         "opciones": {
           "semilla": 41,
           "tramos": [
             {
-              "id": "anillo_exterior",
-              "nombre": "Anillo de fuera",
+              "id": "aro",
+              "nombre": "Aro",
               "recorrido": [
                 {
                   "x": 0,
-                  "y": 13,
+                  "y": 30,
                   "z": 0
                 },
                 {
-                  "x": 19.4,
-                  "y": 15.2,
+                  "x": 19.1,
+                  "y": 31.9,
                   "z": 0
                 },
                 {
-                  "x": 37.7,
-                  "y": 21.6,
+                  "x": 37.5,
+                  "y": 37.5,
                   "z": 0
                 },
                 {
-                  "x": 54.2,
-                  "y": 32,
+                  "x": 54.4,
+                  "y": 46.5,
                   "z": 0
                 },
                 {
-                  "x": 68,
-                  "y": 45.8,
+                  "x": 69.3,
+                  "y": 58.7,
                   "z": 0
                 },
                 {
-                  "x": 78.4,
-                  "y": 62.3,
+                  "x": 81.5,
+                  "y": 73.6,
                   "z": 0
                 },
                 {
-                  "x": 84.8,
-                  "y": 80.6,
+                  "x": 90.5,
+                  "y": 90.5,
                   "z": 0
                 },
                 {
-                  "x": 87,
-                  "y": 100,
+                  "x": 96.1,
+                  "y": 108.9,
                   "z": 0
                 },
                 {
-                  "x": 84.8,
-                  "y": 119.4,
+                  "x": 98,
+                  "y": 128,
                   "z": 0
                 },
                 {
-                  "x": 78.4,
-                  "y": 137.7,
+                  "x": 96.1,
+                  "y": 147.1,
                   "z": 0
                 },
                 {
-                  "x": 68,
-                  "y": 154.2,
+                  "x": 90.5,
+                  "y": 165.5,
                   "z": 0
                 },
                 {
-                  "x": 54.2,
-                  "y": 168,
+                  "x": 81.5,
+                  "y": 182.4,
                   "z": 0
                 },
                 {
-                  "x": 37.7,
-                  "y": 178.4,
+                  "x": 69.3,
+                  "y": 197.3,
                   "z": 0
                 },
                 {
-                  "x": 19.4,
-                  "y": 184.8,
+                  "x": 54.4,
+                  "y": 209.5,
                   "z": 0
                 },
                 {
-                  "x": 0,
-                  "y": 187,
+                  "x": 37.5,
+                  "y": 218.5,
                   "z": 0
                 },
                 {
-                  "x": -19.4,
-                  "y": 184.8,
-                  "z": 0
-                },
-                {
-                  "x": -37.7,
-                  "y": 178.4,
-                  "z": 0
-                },
-                {
-                  "x": -54.2,
-                  "y": 168,
-                  "z": 0
-                },
-                {
-                  "x": -68,
-                  "y": 154.2,
-                  "z": 0
-                },
-                {
-                  "x": -78.4,
-                  "y": 137.7,
-                  "z": 0
-                },
-                {
-                  "x": -84.8,
-                  "y": 119.4,
-                  "z": 0
-                },
-                {
-                  "x": -87,
-                  "y": 100,
-                  "z": 0
-                },
-                {
-                  "x": -84.8,
-                  "y": 80.6,
-                  "z": 0
-                },
-                {
-                  "x": -78.4,
-                  "y": 62.3,
-                  "z": 0
-                },
-                {
-                  "x": -68,
-                  "y": 45.8,
-                  "z": 0
-                },
-                {
-                  "x": -54.2,
-                  "y": 32,
-                  "z": 0
-                },
-                {
-                  "x": -37.7,
-                  "y": 21.6,
-                  "z": 0
-                },
-                {
-                  "x": -19.4,
-                  "y": 15.2,
+                  "x": 19.1,
+                  "y": 224.1,
                   "z": 0
                 },
                 {
                   "x": 0,
-                  "y": 13,
+                  "y": 226,
+                  "z": 0
+                },
+                {
+                  "x": -19.1,
+                  "y": 224.1,
+                  "z": 0
+                },
+                {
+                  "x": -37.5,
+                  "y": 218.5,
+                  "z": 0
+                },
+                {
+                  "x": -54.4,
+                  "y": 209.5,
+                  "z": 0
+                },
+                {
+                  "x": -69.3,
+                  "y": 197.3,
+                  "z": 0
+                },
+                {
+                  "x": -81.5,
+                  "y": 182.4,
+                  "z": 0
+                },
+                {
+                  "x": -90.5,
+                  "y": 165.5,
+                  "z": 0
+                },
+                {
+                  "x": -96.1,
+                  "y": 147.1,
+                  "z": 0
+                },
+                {
+                  "x": -98,
+                  "y": 128,
+                  "z": 0
+                },
+                {
+                  "x": -96.1,
+                  "y": 108.9,
+                  "z": 0
+                },
+                {
+                  "x": -90.5,
+                  "y": 90.5,
+                  "z": 0
+                },
+                {
+                  "x": -81.5,
+                  "y": 73.6,
+                  "z": 0
+                },
+                {
+                  "x": -69.3,
+                  "y": 58.7,
+                  "z": 0
+                },
+                {
+                  "x": -54.4,
+                  "y": 46.5,
+                  "z": 0
+                },
+                {
+                  "x": -37.5,
+                  "y": 37.5,
+                  "z": 0
+                },
+                {
+                  "x": -19.1,
+                  "y": 31.9,
+                  "z": 0
+                },
+                {
+                  "x": 0,
+                  "y": 30,
                   "z": 0
                 }
               ],
               "grosor": [
                 {
                   "t": 0,
-                  "radioCm": 13
+                  "radioCm": 31
                 },
                 {
                   "t": 1,
-                  "radioCm": 13
+                  "radioCm": 31
                 }
               ],
               "mezcla": [
                 {
                   "t": 0,
                   "pesos": {
-                    "R-18": 0.18,
-                    "R-12": 0.65,
-                    "R-9": 0.17
+                    "R-12": 0.7,
+                    "R-9": 0.3
                   }
                 },
                 {
                   "t": 1,
                   "pesos": {
-                    "R-18": 0.18,
-                    "R-12": 0.65,
-                    "R-9": 0.17
+                    "R-12": 0.7,
+                    "R-9": 0.3
                   }
                 }
               ],
-              "irregularidad": 0.04,
-              "tapas": {},
-              "cerrado": true
-            },
-            {
-              "id": "anillo_interior",
-              "nombre": "Anillo de dentro",
-              "recorrido": [
-                {
-                  "x": 0,
-                  "y": 39.2,
-                  "z": 6
-                },
-                {
-                  "x": 13.5,
-                  "y": 40.7,
-                  "z": 6
-                },
-                {
-                  "x": 26.4,
-                  "y": 45.2,
-                  "z": 6
-                },
-                {
-                  "x": 37.9,
-                  "y": 52.5,
-                  "z": 6
-                },
-                {
-                  "x": 47.5,
-                  "y": 62.1,
-                  "z": 6
-                },
-                {
-                  "x": 54.8,
-                  "y": 73.6,
-                  "z": 6
-                },
-                {
-                  "x": 59.3,
-                  "y": 86.5,
-                  "z": 6
-                },
-                {
-                  "x": 60.8,
-                  "y": 100,
-                  "z": 6
-                },
-                {
-                  "x": 59.3,
-                  "y": 113.5,
-                  "z": 6
-                },
-                {
-                  "x": 54.8,
-                  "y": 126.4,
-                  "z": 6
-                },
-                {
-                  "x": 47.5,
-                  "y": 137.9,
-                  "z": 6
-                },
-                {
-                  "x": 37.9,
-                  "y": 147.5,
-                  "z": 6
-                },
-                {
-                  "x": 26.4,
-                  "y": 154.8,
-                  "z": 6
-                },
-                {
-                  "x": 13.5,
-                  "y": 159.3,
-                  "z": 6
-                },
-                {
-                  "x": 0,
-                  "y": 160.8,
-                  "z": 6
-                },
-                {
-                  "x": -13.5,
-                  "y": 159.3,
-                  "z": 6
-                },
-                {
-                  "x": -26.4,
-                  "y": 154.8,
-                  "z": 6
-                },
-                {
-                  "x": -37.9,
-                  "y": 147.5,
-                  "z": 6
-                },
-                {
-                  "x": -47.5,
-                  "y": 137.9,
-                  "z": 6
-                },
-                {
-                  "x": -54.8,
-                  "y": 126.4,
-                  "z": 6
-                },
-                {
-                  "x": -59.3,
-                  "y": 113.5,
-                  "z": 6
-                },
-                {
-                  "x": -60.8,
-                  "y": 100,
-                  "z": 6
-                },
-                {
-                  "x": -59.3,
-                  "y": 86.5,
-                  "z": 6
-                },
-                {
-                  "x": -54.8,
-                  "y": 73.6,
-                  "z": 6
-                },
-                {
-                  "x": -47.5,
-                  "y": 62.1,
-                  "z": 6
-                },
-                {
-                  "x": -37.9,
-                  "y": 52.5,
-                  "z": 6
-                },
-                {
-                  "x": -26.4,
-                  "y": 45.2,
-                  "z": 6
-                },
-                {
-                  "x": -13.5,
-                  "y": 40.7,
-                  "z": 6
-                },
-                {
-                  "x": 0,
-                  "y": 39.2,
-                  "z": 6
-                }
-              ],
-              "grosor": [
-                {
-                  "t": 0,
-                  "radioCm": 24
-                },
-                {
-                  "t": 1,
-                  "radioCm": 24
-                }
-              ],
-              "mezcla": [
-                {
-                  "t": 0,
-                  "pesos": {
-                    "R-18": 0.18,
-                    "R-12": 0.65,
-                    "R-9": 0.17
-                  }
-                },
-                {
-                  "t": 1,
-                  "pesos": {
-                    "R-18": 0.18,
-                    "R-12": 0.65,
-                    "R-9": 0.17
-                  }
-                }
-              ],
-              "irregularidad": 0.16,
+              "irregularidad": 0.12,
               "tapas": {},
               "cerrado": true
             }
           ],
           "inflados": {
-            "R-24": 48,
-            "R-18": 34,
-            "R-12": 25,
-            "R-9": 17,
-            "R-5": 12
+            "R-18": 42,
+            "R-12": 26,
+            "R-9": 20,
+            "R-5": 11
           },
           "variacionInflado": 0.07,
           "relleno": [
             {
               "formatoId": "R-9",
-              "infladoCm": 18,
+              "infladoCm": 19,
               "trios": false
             },
             {
               "formatoId": "R-5",
-              "infladoCm": 12,
-              "trios": true
+              "infladoCm": 11,
+              "trios": true,
+              "racimo": 4,
+              "maximo": 12
             }
           ],
           "colores": [
             {
               "codigo": "005",
-              "peso": 40
+              "peso": 38
             },
             {
               "codigo": "071",
               "peso": 30
             },
             {
-              "codigo": "970",
-              "peso": 30
+              "codigo": "661",
+              "peso": 8
+            },
+            {
+              "codigo": "870",
+              "peso": 22
             }
           ],
-          "suelo": false,
+          "fijos": [
+            {
+              "formatoId": "R-9",
+              "codigo": "005",
+              "x": -40.7,
+              "y": 208.8,
+              "infladoCm": 23
+            },
+            {
+              "formatoId": "R-18",
+              "codigo": "661",
+              "x": -12,
+              "y": 198.5,
+              "infladoCm": 41.9
+            },
+            {
+              "formatoId": "R-9",
+              "codigo": "870",
+              "x": -64.6,
+              "y": 222.3,
+              "infladoCm": 20
+            },
+            {
+              "formatoId": "R-9",
+              "codigo": "071",
+              "x": -81.4,
+              "y": 209,
+              "infladoCm": 21.5
+            },
+            {
+              "formatoId": "R-12",
+              "codigo": "005",
+              "x": -98.1,
+              "y": 195.3,
+              "infladoCm": 24.8
+            },
+            {
+              "formatoId": "R-9",
+              "codigo": "870",
+              "x": -62.6,
+              "y": 203.1,
+              "infladoCm": 21.5
+            },
+            {
+              "formatoId": "R-9",
+              "codigo": "071",
+              "x": -78.5,
+              "y": 185.1,
+              "infladoCm": 23
+            },
+            {
+              "formatoId": "R-9",
+              "codigo": "870",
+              "x": -38.7,
+              "y": 185.3,
+              "infladoCm": 20.4
+            },
+            {
+              "formatoId": "R-12",
+              "codigo": "005",
+              "x": -97.4,
+              "y": 172.8,
+              "infladoCm": 24.8
+            },
+            {
+              "formatoId": "R-9",
+              "codigo": "005",
+              "x": -114.5,
+              "y": 177.6,
+              "infladoCm": 21.5
+            },
+            {
+              "formatoId": "R-9",
+              "codigo": "005",
+              "x": -69.1,
+              "y": 165.5,
+              "infladoCm": 23
+            },
+            {
+              "formatoId": "R-9",
+              "codigo": "870",
+              "x": -64.9,
+              "y": 150.4,
+              "infladoCm": 20
+            },
+            {
+              "formatoId": "R-9",
+              "codigo": "870",
+              "x": -85.4,
+              "y": 155.4,
+              "infladoCm": 20
+            },
+            {
+              "formatoId": "R-18",
+              "codigo": "661",
+              "x": -82.6,
+              "y": 128.5,
+              "infladoCm": 40
+            },
+            {
+              "formatoId": "R-9",
+              "codigo": "071",
+              "x": -123.7,
+              "y": 137.5,
+              "infladoCm": 23
+            },
+            {
+              "formatoId": "R-9",
+              "codigo": "005",
+              "x": -24.9,
+              "y": 225.3,
+              "infladoCm": 23
+            },
+            {
+              "formatoId": "R-12",
+              "codigo": "870",
+              "x": 15.2,
+              "y": 248.1,
+              "infladoCm": 24.4
+            },
+            {
+              "formatoId": "R-9",
+              "codigo": "071",
+              "x": -11.6,
+              "y": 243.4,
+              "infladoCm": 23
+            },
+            {
+              "formatoId": "R-9",
+              "codigo": "071",
+              "x": -2.3,
+              "y": 226.1,
+              "infladoCm": 20.7
+            },
+            {
+              "formatoId": "R-12",
+              "codigo": "870",
+              "x": 16.8,
+              "y": 214,
+              "infladoCm": 25.9
+            },
+            {
+              "formatoId": "R-9",
+              "codigo": "870",
+              "x": 17.3,
+              "y": 193.5,
+              "infladoCm": 20
+            },
+            {
+              "formatoId": "R-9",
+              "codigo": "005",
+              "x": 40,
+              "y": 226.5,
+              "infladoCm": 23
+            },
+            {
+              "formatoId": "R-9",
+              "codigo": "071",
+              "x": 58.2,
+              "y": 233.5,
+              "infladoCm": 21.5
+            },
+            {
+              "formatoId": "R-9",
+              "codigo": "071",
+              "x": 68.9,
+              "y": 217.2,
+              "infladoCm": 21.5
+            },
+            {
+              "formatoId": "R-9",
+              "codigo": "071",
+              "x": 35.7,
+              "y": 200.8,
+              "infladoCm": 23
+            },
+            {
+              "formatoId": "R-12",
+              "codigo": "870",
+              "x": 84.9,
+              "y": 202,
+              "infladoCm": 25.2
+            },
+            {
+              "formatoId": "R-12",
+              "codigo": "870",
+              "x": 69,
+              "y": 185.3,
+              "infladoCm": 24.1
+            },
+            {
+              "formatoId": "R-9",
+              "codigo": "870",
+              "x": 46.9,
+              "y": 178.1,
+              "infladoCm": 20
+            },
+            {
+              "formatoId": "R-9",
+              "codigo": "005",
+              "x": 103.3,
+              "y": 191.7,
+              "infladoCm": 20.7
+            },
+            {
+              "formatoId": "R-12",
+              "codigo": "005",
+              "x": 90.3,
+              "y": 177.2,
+              "infladoCm": 24.1
+            },
+            {
+              "formatoId": "R-9",
+              "codigo": "071",
+              "x": 109.8,
+              "y": 168.8,
+              "infladoCm": 20.7
+            },
+            {
+              "formatoId": "R-12",
+              "codigo": "071",
+              "x": 68.8,
+              "y": 163.2,
+              "infladoCm": 25.2
+            },
+            {
+              "formatoId": "R-12",
+              "codigo": "071",
+              "x": 92,
+              "y": 153.9,
+              "infladoCm": 25.2
+            },
+            {
+              "formatoId": "R-9",
+              "codigo": "870",
+              "x": 117.6,
+              "y": 147.2,
+              "infladoCm": 20
+            },
+            {
+              "formatoId": "R-12",
+              "codigo": "661",
+              "x": 69.7,
+              "y": 140.5,
+              "infladoCm": 25.9
+            },
+            {
+              "formatoId": "R-9",
+              "codigo": "870",
+              "x": 84.8,
+              "y": 131.2,
+              "infladoCm": 22.2
+            },
+            {
+              "formatoId": "R-12",
+              "codigo": "005",
+              "x": -112.6,
+              "y": 119.4,
+              "infladoCm": 25.9
+            },
+            {
+              "formatoId": "R-9",
+              "codigo": "870",
+              "x": -92.1,
+              "y": 97.2,
+              "infladoCm": 22.2
+            },
+            {
+              "formatoId": "R-9",
+              "codigo": "870",
+              "x": -119.9,
+              "y": 100,
+              "infladoCm": 20
+            },
+            {
+              "formatoId": "R-9",
+              "codigo": "870",
+              "x": -113.3,
+              "y": 75.3,
+              "infladoCm": 23
+            },
+            {
+              "formatoId": "R-12",
+              "codigo": "071",
+              "x": -92.3,
+              "y": 73,
+              "infladoCm": 25.9
+            },
+            {
+              "formatoId": "R-9",
+              "codigo": "071",
+              "x": -72.9,
+              "y": 101.3,
+              "infladoCm": 20.7
+            },
+            {
+              "formatoId": "R-12",
+              "codigo": "005",
+              "x": -70.3,
+              "y": 64.5,
+              "infladoCm": 24.1
+            },
+            {
+              "formatoId": "R-12",
+              "codigo": "005",
+              "x": -88.1,
+              "y": 49.9,
+              "infladoCm": 25.2
+            },
+            {
+              "formatoId": "R-9",
+              "codigo": "071",
+              "x": -105.2,
+              "y": 56.8,
+              "infladoCm": 20.4
+            },
+            {
+              "formatoId": "R-12",
+              "codigo": "870",
+              "x": -68.5,
+              "y": 35.9,
+              "infladoCm": 25.9
+            },
+            {
+              "formatoId": "R-9",
+              "codigo": "870",
+              "x": -51.1,
+              "y": 72.7,
+              "infladoCm": 20
+            },
+            {
+              "formatoId": "R-12",
+              "codigo": "071",
+              "x": -36.7,
+              "y": 46.1,
+              "infladoCm": 25.9
+            },
+            {
+              "formatoId": "R-9",
+              "codigo": "661",
+              "x": -30.3,
+              "y": 23.9,
+              "infladoCm": 23
+            },
+            {
+              "formatoId": "R-9",
+              "codigo": "005",
+              "x": -78.8,
+              "y": 24.8,
+              "infladoCm": 22.2
+            },
+            {
+              "formatoId": "R-18",
+              "codigo": "661",
+              "x": 40.9,
+              "y": 47.7,
+              "infladoCm": 40.7
+            },
+            {
+              "formatoId": "R-9",
+              "codigo": "005",
+              "x": 11.5,
+              "y": 42.2,
+              "infladoCm": 21.5
+            },
+            {
+              "formatoId": "R-9",
+              "codigo": "870",
+              "x": 52.3,
+              "y": 13.5,
+              "infladoCm": 20
+            },
+            {
+              "formatoId": "R-12",
+              "codigo": "005",
+              "x": 64.9,
+              "y": 28.2,
+              "infladoCm": 24.1
+            },
+            {
+              "formatoId": "R-9",
+              "codigo": "005",
+              "x": 70.1,
+              "y": 13.7,
+              "infladoCm": 20
+            },
+            {
+              "formatoId": "R-9",
+              "codigo": "005",
+              "x": 70,
+              "y": 53.4,
+              "infladoCm": 23
+            },
+            {
+              "formatoId": "R-9",
+              "codigo": "005",
+              "x": 83.1,
+              "y": 39.2,
+              "infladoCm": 20.7
+            },
+            {
+              "formatoId": "R-9",
+              "codigo": "071",
+              "x": 69.8,
+              "y": 98,
+              "infladoCm": 23
+            },
+            {
+              "formatoId": "R-9",
+              "codigo": "870",
+              "x": 68.3,
+              "y": 75.8,
+              "infladoCm": 21.5
+            },
+            {
+              "formatoId": "R-9",
+              "codigo": "870",
+              "x": 91.6,
+              "y": 56.8,
+              "infladoCm": 20.7
+            },
+            {
+              "formatoId": "R-9",
+              "codigo": "071",
+              "x": 115.2,
+              "y": 91.5,
+              "infladoCm": 23
+            },
+            {
+              "formatoId": "R-9",
+              "codigo": "870",
+              "x": 109.7,
+              "y": 69.9,
+              "infladoCm": 20
+            },
+            {
+              "formatoId": "R-12",
+              "codigo": "005",
+              "x": 95,
+              "y": 102.7,
+              "infladoCm": 25.2
+            },
+            {
+              "formatoId": "R-9",
+              "codigo": "005",
+              "x": 50.8,
+              "y": 74.9,
+              "infladoCm": 20
+            },
+            {
+              "formatoId": "R-9",
+              "codigo": "005",
+              "x": 72,
+              "y": 118.6,
+              "infladoCm": 21.5
+            },
+            {
+              "formatoId": "R-9",
+              "codigo": "005",
+              "x": 107.3,
+              "y": 120.3,
+              "infladoCm": 20
+            },
+            {
+              "formatoId": "R-9",
+              "codigo": "005",
+              "x": 122.6,
+              "y": 110.8,
+              "infladoCm": 20.4
+            },
+            {
+              "formatoId": "R-9",
+              "codigo": "005",
+              "x": 101.9,
+              "y": 41.5,
+              "infladoCm": 20
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "005",
+              "x": -48.8,
+              "y": 246.8,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "005",
+              "x": -36.8,
+              "y": 246.8,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "005",
+              "x": -28.8,
+              "y": 241.2,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "005",
+              "x": -56.7,
+              "y": 239.6,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "005",
+              "x": -46.3,
+              "y": 238.7,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "005",
+              "x": -38.6,
+              "y": 234.2,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "005",
+              "x": -65.7,
+              "y": 234.5,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "005",
+              "x": -50.2,
+              "y": 230.1,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "005",
+              "x": -40.8,
+              "y": 224.6,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "005",
+              "x": -51.5,
+              "y": 220.4,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "071",
+              "x": -49.3,
+              "y": 195,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "071",
+              "x": -62.5,
+              "y": 187.6,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "071",
+              "x": -52.9,
+              "y": 185.8,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "071",
+              "x": -49.8,
+              "y": 179.6,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "071",
+              "x": -60.3,
+              "y": 178.6,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "071",
+              "x": -55.2,
+              "y": 171.2,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "071",
+              "x": -46.5,
+              "y": 173,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "071",
+              "x": -57.8,
+              "y": 163.5,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "071",
+              "x": -48.2,
+              "y": 161.8,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "870",
+              "x": -116.5,
+              "y": 158.9,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "870",
+              "x": -108,
+              "y": 159.5,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "870",
+              "x": -99.7,
+              "y": 154.1,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "870",
+              "x": -115.8,
+              "y": 146.9,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "870",
+              "x": -106.7,
+              "y": 146.6,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "870",
+              "x": -95.3,
+              "y": 143.9,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "870",
+              "x": 7.3,
+              "y": 239.1,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "870",
+              "x": 28.6,
+              "y": 240.2,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "870",
+              "x": 19.1,
+              "y": 237,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "870",
+              "x": 12.1,
+              "y": 229.8,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "870",
+              "x": 24.6,
+              "y": 228.5,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "071",
+              "x": 53.5,
+              "y": 217.1,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "071",
+              "x": 58.6,
+              "y": 208.1,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "071",
+              "x": 44.1,
+              "y": 211.5,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "071",
+              "x": 49.7,
+              "y": 202.8,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "071",
+              "x": 69.4,
+              "y": 201.2,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "071",
+              "x": 43.2,
+              "y": 186.8,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "071",
+              "x": 49.6,
+              "y": 192.9,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "071",
+              "x": 58.8,
+              "y": 197.8,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "071",
+              "x": 52.4,
+              "y": 183.8,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "071",
+              "x": 55.9,
+              "y": 174.8,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "071",
+              "x": 45.8,
+              "y": 163.6,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "005",
+              "x": 106.7,
+              "y": 145.2,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "005",
+              "x": 125.7,
+              "y": 151.8,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "005",
+              "x": 127.2,
+              "y": 141.4,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "005",
+              "x": 97.4,
+              "y": 138.2,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "005",
+              "x": 116.3,
+              "y": 133.1,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "005",
+              "x": 133.6,
+              "y": 134.5,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "005",
+              "x": 107.1,
+              "y": 134.8,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "005",
+              "x": 123.5,
+              "y": 133.7,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "005",
+              "x": 93.1,
+              "y": 119.3,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "005",
+              "x": 120.7,
+              "y": 123.9,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "005",
+              "x": 126.5,
+              "y": 125.3,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "870",
+              "x": -98.1,
+              "y": 111.5,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "870",
+              "x": -106.1,
+              "y": 104.6,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "870",
+              "x": -108.1,
+              "y": 94.7,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "870",
+              "x": -113.7,
+              "y": 88.1,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "870",
+              "x": -105.4,
+              "y": 84.7,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "005",
+              "x": -61.5,
+              "y": 96.6,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "005",
+              "x": -54.8,
+              "y": 99.9,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "005",
+              "x": -68.8,
+              "y": 87.6,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "005",
+              "x": -61.2,
+              "y": 88.7,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "005",
+              "x": -55.5,
+              "y": 88.6,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "005",
+              "x": -78.2,
+              "y": 89.8,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "005",
+              "x": -62.5,
+              "y": 79.4,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "005",
+              "x": -76.9,
+              "y": 79.5,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "870",
+              "x": -54,
+              "y": 61.1,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "870",
+              "x": -40.4,
+              "y": 63.3,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "870",
+              "x": -63.8,
+              "y": 49.7,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "870",
+              "x": -54.5,
+              "y": 40.8,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "870",
+              "x": -52.6,
+              "y": 51,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "071",
+              "x": 57.6,
+              "y": 87.9,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "071",
+              "x": 80.4,
+              "y": 93.7,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "071",
+              "x": 90.5,
+              "y": 86.6,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "071",
+              "x": 100.7,
+              "y": 86.6,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "071",
+              "x": 80.7,
+              "y": 83.4,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "071",
+              "x": 85,
+              "y": 74,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "071",
+              "x": 94.8,
+              "y": 77.3,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "071",
+              "x": 105,
+              "y": 78,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "071",
+              "x": 81.5,
+              "y": 64.2,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "071",
+              "x": 99.7,
+              "y": 69.2,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "071",
+              "x": -54.3,
+              "y": 26.5,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "071",
+              "x": -47.1,
+              "y": 32.8,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "071",
+              "x": -61,
+              "y": 20.2,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "071",
+              "x": -46.2,
+              "y": 20.3,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "071",
+              "x": -40.9,
+              "y": 12.8,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "071",
+              "x": -57.8,
+              "y": 14.3,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "071",
+              "x": -47.6,
+              "y": 10.2,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "071",
+              "x": -51.3,
+              "y": 5.5,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "071",
+              "x": -37.7,
+              "y": 6.9,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "005",
+              "x": 14.4,
+              "y": 23,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "005",
+              "x": 26.7,
+              "y": 24.8,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "005",
+              "x": 40.2,
+              "y": 24.4,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "005",
+              "x": 49.9,
+              "y": 22.5,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "005",
+              "x": 5.1,
+              "y": 15.2,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "005",
+              "x": 18.9,
+              "y": 14.6,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "005",
+              "x": 31.6,
+              "y": 16.6,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "005",
+              "x": 42.6,
+              "y": 15.4,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "005",
+              "x": 6.5,
+              "y": 7,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "005",
+              "x": 19.5,
+              "y": 5.5,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "005",
+              "x": 33,
+              "y": 7.9,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "005",
+              "x": 40.3,
+              "y": 6,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "005",
+              "x": 16.1,
+              "y": 5.5,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "005",
+              "x": 27.9,
+              "y": 5.5,
+              "infladoCm": 11
+            },
+            {
+              "formatoId": "R-5",
+              "codigo": "005",
+              "x": 38.1,
+              "y": 5.5,
+              "infladoCm": 11
+            }
+          ],
+          "suelo": true,
           "huecosFlores": 0,
           "vista": {
             "x": 0,
@@ -425,6 +1472,260 @@
         "zCm": -160,
         "giroGrados": 0
       }
+    },
+    {
+      "id": "referencia-rueda-dorada-ramo",
+      "nombre": "Ramo seco de la base",
+      "pieza": {
+        "tipo": "organico",
+        "opciones": {
+          "semilla": 48,
+          "tramos": [
+            {
+              "id": "ramo",
+              "nombre": "Base del ramo",
+              "recorrido": [
+                {
+                  "x": -30,
+                  "y": 22,
+                  "z": 0
+                },
+                {
+                  "x": -14,
+                  "y": 38,
+                  "z": 4
+                },
+                {
+                  "x": 0,
+                  "y": 46,
+                  "z": 6
+                },
+                {
+                  "x": 14,
+                  "y": 38,
+                  "z": 4
+                },
+                {
+                  "x": 26,
+                  "y": 22,
+                  "z": 0
+                }
+              ],
+              "grosor": [
+                {
+                  "t": 0,
+                  "radioCm": 16
+                },
+                {
+                  "t": 0.5,
+                  "radioCm": 22
+                },
+                {
+                  "t": 1,
+                  "radioCm": 16
+                }
+              ],
+              "mezcla": [
+                {
+                  "t": 0,
+                  "pesos": {
+                    "R-12": 0.6,
+                    "R-9": 0.4
+                  }
+                },
+                {
+                  "t": 1,
+                  "pesos": {
+                    "R-12": 0.6,
+                    "R-9": 0.4
+                  }
+                }
+              ],
+              "irregularidad": 0.1,
+              "tapas": {
+                "inicio": true,
+                "fin": true
+              }
+            }
+          ],
+          "inflados": {
+            "R-12": 25,
+            "R-9": 19,
+            "R-5": 11
+          },
+          "variacionInflado": 0.06,
+          "relleno": [
+            {
+              "formatoId": "R-5",
+              "infladoCm": 11,
+              "trios": true,
+              "racimo": 3
+            }
+          ],
+          "colores": [
+            {
+              "codigo": "071",
+              "peso": 40
+            },
+            {
+              "codigo": "661",
+              "peso": 30
+            },
+            {
+              "codigo": "005",
+              "peso": 30
+            }
+          ],
+          "suelo": true,
+          "huecosFlores": 12,
+          "vista": {
+            "x": 0,
+            "y": 0.9,
+            "z": 1
+          }
+        },
+        "flores": {
+          "semilla": 44,
+          "tallosPorRacimo": 5,
+          "proporcion": [
+            {
+              "tipo": "pampa",
+              "colorId": "beige",
+              "peso": 6
+            },
+            {
+              "tipo": "pampa",
+              "colorId": "crema",
+              "peso": 4
+            },
+            {
+              "tipo": "hoja_seca",
+              "colorId": "beige",
+              "peso": 7
+            }
+          ]
+        }
+      },
+      "colocacion": {
+        "en": "piso",
+        "xCm": -10,
+        "zCm": -124,
+        "giroGrados": 0
+      }
+    },
+    {
+      "id": "referencia-rueda-dorada-rosas",
+      "nombre": "Rosas blancas del ramo",
+      "pieza": {
+        "tipo": "organico",
+        "opciones": {
+          "semilla": 52,
+          "tramos": [
+            {
+              "id": "rosas",
+              "nombre": "Base de las rosas",
+              "recorrido": [
+                {
+                  "x": -20,
+                  "y": 11,
+                  "z": 0
+                },
+                {
+                  "x": 0,
+                  "y": 13,
+                  "z": 0
+                },
+                {
+                  "x": 18,
+                  "y": 11,
+                  "z": 0
+                }
+              ],
+              "grosor": [
+                {
+                  "t": 0,
+                  "radioCm": 9
+                },
+                {
+                  "t": 1,
+                  "radioCm": 9
+                }
+              ],
+              "mezcla": [
+                {
+                  "t": 0,
+                  "pesos": {
+                    "R-5": 1
+                  }
+                },
+                {
+                  "t": 1,
+                  "pesos": {
+                    "R-5": 1
+                  }
+                }
+              ],
+              "irregularidad": 0.08,
+              "tapas": {}
+            }
+          ],
+          "inflados": {
+            "R-5": 11
+          },
+          "variacionInflado": 0.05,
+          "relleno": [],
+          "colores": [
+            {
+              "codigo": "005",
+              "peso": 1
+            }
+          ],
+          "suelo": true,
+          "huecosFlores": 2,
+          "vista": {
+            "x": 0,
+            "y": 0.15,
+            "z": 1
+          }
+        },
+        "flores": {
+          "semilla": 54,
+          "tallosPorRacimo": 5,
+          "proporcion": [
+            {
+              "tipo": "rosa",
+              "colorId": "blanca",
+              "peso": 2
+            },
+            {
+              "tipo": "rosa",
+              "colorId": "marfil",
+              "peso": 1
+            }
+          ]
+        }
+      },
+      "colocacion": {
+        "en": "piso",
+        "xCm": -12,
+        "zCm": -94,
+        "giroGrados": 0
+      }
+    }
+  ],
+  "estructuras": [
+    {
+      "nombre": "Aro orgánico dorado",
+      "nodos": [
+        "referencia-rueda-dorada"
+      ]
+    },
+    {
+      "nombre": "Ramo seco con rosas",
+      "nodos": [
+        "referencia-rueda-dorada-ramo",
+        "referencia-rueda-dorada-rosas"
+      ]
     }
   ]
 }
