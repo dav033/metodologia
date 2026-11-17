@@ -196,3 +196,11 @@ Designer-kit decisions belong to metodologia: D-136 supersedes D-135 (real libra
 owner choice/finalizer and fresh history). See [canonical decision log](../metodologia/DECISIONS.md) and
 [evidence notes](../metodologia/briefs/designer-kit-v2.notes.md). No separate dev architecture decision was made.
 
+## D-022 — Customer-facing WhatsApp piece names describe form, never the source palette
+- **Date:** 2026-11-13 · **Status:** Accepted
+- **Context:** Curated WhatsApp pieces are modelled from reference photos, and some visible labels carried their source colours although the shopper has already chosen a different palette.
+- **Decision:** Keep reference colours only as internal provenance. Customer-facing labels name the decoration's form or construction; the channel presents itself as `Asistente de decoración Sempertex`.
+- **Alternatives:** retain the photographed palette in the label — rejected because it contradicts the selected palette and makes the catalogue look colour-locked.
+- **Consequences:** + labels match the generated decoration; − source file identifiers and technical comments may retain the original photo description.
+- **Source:** [day log](2026-11/W3/2026-11-13.md) · session 01a1d5d0
+
